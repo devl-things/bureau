@@ -181,6 +181,7 @@ namespace Bureau.UI.Web.Components.Account.Pages
 
         private async Task UserEmailConfirmationAsync(ApplicationUser user)
         {
+            //op op
             Logger.LogInformation("User created an account using {Name} provider.", _externalLoginInfo.LoginProvider);
 
             string userId = await UserManager.GetUserIdAsync(user);
