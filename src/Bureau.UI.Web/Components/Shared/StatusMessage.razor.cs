@@ -38,20 +38,28 @@ namespace Bureau.UI.Web.Components.Shared
 
         public void SetError(string message)
         {
-            Message = message;
-            Type = "danger";
+            Set(message, "danger");
+        }
+
+        public void SetWarning(string message) 
+        {
+            Set(message, "warning");
         }
 
         public void SetSuccess(string message)
         {
-            Message = message;
-            Type = "success";
+            Set(message, "success");
         }
 
         public void SetInfo(string message)
         {
+            Set(message, "info");
+        }
+
+        private void Set(string message, string type) 
+        {
             Message = message;
-            Type = "info";
+            Type = type;
         }
     }
 }

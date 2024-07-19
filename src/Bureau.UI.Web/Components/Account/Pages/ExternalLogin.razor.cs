@@ -11,6 +11,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
 using Bureau.UI.Web.Components.Account.Shared;
 using Bureau.UI.Web.Components.Shared;
+using Bureau.UI.Web.Validation;
 
 namespace Bureau.UI.Web.Components.Account.Pages
 {
@@ -124,7 +125,14 @@ namespace Bureau.UI.Web.Components.Account.Pages
                 user = await UserManager.FindByNameAsync(Input.UserNameOrEmail);
                 if (user is null)
                 {
-                    StatusMessage.SetError("Such account doesn't exist. Either create new without a password or state some other account.");
+                    StatusMessage.SetError("Such account doesn't exist. Either omit password and create new one, or insert correct username/password combination.");
+                    return;
+                }
+                if (user.PasswordHash is null) 
+                {
+                    StatusMessage.SetWarning(@"There is an existing account, however, that account has no password set. 
+    Please log in to that account, with the existing external login method, and set a password. 
+    Then you can associate it with additional external login methods.");
                     return;
                 }
                 SignInResult signInResult = await SignInManager.CheckPasswordSignInAsync(user, Input.Password, lockoutOnFailure: false);
@@ -223,8 +231,7 @@ namespace Bureau.UI.Web.Components.Account.Pages
 
         private sealed class InputModel
         {
-            //[EmailAddress]
-            // TODO #7
+            [EmailAddressFormat]
             [Display(Name = "Email")]
             public string? Email { get; set; } = null;
 
@@ -245,7 +252,7 @@ namespace Bureau.UI.Web.Components.Account.Pages
                 errorMessage = string.Empty;
                 if (HasPassword) {
                     //if password is defined then username or email should be defined
-                    if (string.IsNullOrWhiteSpace(Email) || string.IsNullOrWhiteSpace(UserName))
+                    if (string.IsNullOrWhiteSpace(Email) && string.IsNullOrWhiteSpace(UserName))
                     {
                         errorMessage = "When using existing account, you need to state either user name, or email. If user name is left empty it'll be the same as email";
                         return true;
