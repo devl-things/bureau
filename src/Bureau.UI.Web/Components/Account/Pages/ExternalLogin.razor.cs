@@ -176,12 +176,6 @@ namespace Bureau.UI.Web.Components.Account.Pages
                 SetMessage(result);
                 return;
             }
-            await UserEmailConfirmationAsync(user);
-        }
-
-        private async Task UserEmailConfirmationAsync(ApplicationUser user)
-        {
-            //op op
             Logger.LogInformation("User created an account using {Name} provider.", _externalLoginInfo.LoginProvider);
 
             string userId = await UserManager.GetUserIdAsync(user);
@@ -196,7 +190,7 @@ namespace Bureau.UI.Web.Components.Account.Pages
             // If account confirmation is required, we need to show the link if we don't have a real email sender
             if (UserManager.Options.SignIn.RequireConfirmedAccount)
             {
-                RedirectManager.RedirectTo("Account/RegisterConfirmation", new() { ["email"] = Input.Email });
+                RedirectManager.RedirectTo("Account/RegisterConfirmation", new() { ["userName"] = Input.UserNameOrEmail });
             }
 
             await SignInManager.SignInAsync(user, isPersistent: false, _externalLoginInfo.LoginProvider);
