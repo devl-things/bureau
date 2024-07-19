@@ -41,8 +41,7 @@ namespace Bureau.UI.Web.Components.Account.Pages
         public async Task RegisterUser(EditContext editContext)
         {
             var user = CreateUser();
-            string userName = string.IsNullOrWhiteSpace(Input.UserName) ? Input.Email : Input.UserName;
-            await UserStore.SetUserNameAsync(user, userName, CancellationToken.None);
+            await UserStore.SetUserNameAsync(user, Input.UserNameOrEmail, CancellationToken.None);
             var emailStore = GetEmailStore();
             await emailStore.SetEmailAsync(user, Input.Email, CancellationToken.None);
             var result = await UserManager.CreateAsync(user, Input.Password);
@@ -68,7 +67,7 @@ namespace Bureau.UI.Web.Components.Account.Pages
             {
                 RedirectManager.RedirectTo(
                     "Account/RegisterConfirmation",
-                    new() { ["userName"] = userName, ["returnUrl"] = ReturnUrl });
+                    new() { ["userName"] = Input.UserNameOrEmail, ["returnUrl"] = ReturnUrl });
             }
 
             await SignInManager.SignInAsync(user, isPersistent: false);
@@ -107,6 +106,8 @@ namespace Bureau.UI.Web.Components.Account.Pages
             [MaxLength(256,ErrorMessage = "The {0} must be at max {1} characters long.")]
             [Display(Name = "User name", Description = "If empty it'll be the same as email")]
             public string UserName { get; set; } = "";
+
+            public string UserNameOrEmail { get { return string.IsNullOrWhiteSpace(UserName) ? Email : UserName; } }
 
             [Required]
             [StringLength(100, ErrorMessage = "The {0} must be at least {2} and at max {1} characters long.", MinimumLength = 6)]
