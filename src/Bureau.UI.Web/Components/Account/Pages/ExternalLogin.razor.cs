@@ -42,7 +42,7 @@ namespace Bureau.UI.Web.Components.Account.Pages
         [Inject]
         public required SignInManager<ApplicationUser> SignInManager { get; init; }
         [Inject]
-        public required UserManager<ApplicationUser> UserManager { get; init; }
+        public required BureauUserManager UserManager { get; init; }
         [Inject]
         public required IUserStore<ApplicationUser> UserStore { get; init; }
         [Inject]

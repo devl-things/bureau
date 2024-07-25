@@ -45,6 +45,8 @@ namespace Bureau.UI.Web
                 options.User.RequireUniqueEmail = true;
             })
                 .AddEntityFrameworkStores<ApplicationDbContext>()
+                .AddUserStore<BureauUserStore>()
+                .AddUserManager<BureauUserManager>()
                 .AddSignInManager()
                 .AddDefaultTokenProviders();
 
