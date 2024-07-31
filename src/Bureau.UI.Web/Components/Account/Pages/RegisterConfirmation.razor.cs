@@ -1,4 +1,5 @@
-﻿using Bureau.UI.Web.Components.Shared;
+﻿using Bureau.UI.Web.Components.Account.Managers;
+using Bureau.UI.Web.Components.Shared;
 using Bureau.UI.Web.Data;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Identity;

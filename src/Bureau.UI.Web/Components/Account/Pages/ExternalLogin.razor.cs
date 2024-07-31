@@ -1,77 +1,74 @@
-﻿using Bureau.UI.Web.Data;
+﻿using Bureau.UI.Web.Components.Account.Managers;
+using Bureau.UI.Web.Components.Account.PageAddresses;
+using Bureau.UI.Web.Components.Shared;
+using Bureau.UI.Web.Data;
+using Bureau.UI.Web.Utils;
+using Bureau.UI.Web.Validation;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.WebUtilities;
 using System.ComponentModel.DataAnnotations;
 using System.Security.Claims;
-using System.Text.Encodings.Web;
 using System.Text;
-using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
-using Microsoft.IdentityModel.Tokens;
-using Bureau.UI.Web.Components.Account.Shared;
-using Bureau.UI.Web.Components.Shared;
-using Bureau.UI.Web.Validation;
+using System.Text.Encodings.Web;
 
 namespace Bureau.UI.Web.Components.Account.Pages
 {
     public partial class ExternalLogin
     {
-        public const string LoginCallbackAction = "LoginCallback";
-                
-        private ExternalLoginInfo _externalLoginInfo = default!;
-        private string? ProviderDisplayName => _externalLoginInfo.ProviderDisplayName;
+        private ExternalLoginInfo? _externalLoginInfo;
+        private string? _providerDisplayName => _externalLoginInfo?.ProviderDisplayName;
 
-        private StatusMessageInput StatusMessage = new StatusMessageInput();
+        private StatusMessageInput _statusMessage = new StatusMessageInput();
 
-        [SupplyParameterFromQuery(Name = "ReturnUrl")]
+        [SupplyParameterFromQuery(Name = QueryParameterNames.ReturnUrl)]
         private string? _returnUrl { get; set; }
 
-        [SupplyParameterFromQuery(Name = "RemoteError")]
+        [SupplyParameterFromQuery(Name = QueryParameterNames.RemoteError)]
         private string? _remoteError { get; set; }
 
-        [SupplyParameterFromQuery(Name = "Action")]
+        [SupplyParameterFromQuery(Name = QueryParameterNames.Action)]
         private string? _action { get; set; }
 
         [CascadingParameter]
         private HttpContext _httpContext { get; set; } = default!;
 
         [SupplyParameterFromForm]
-        private InputModel Input { get; set; } = new();
+        private InputModel _input { get; set; } = new();
 
+#pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring as nullable.
         [Inject]
-        public required SignInManager<ApplicationUser> SignInManager { get; init; }
+        private SignInManager<ApplicationUser> _signInManager { get; init; }
         [Inject]
-        public required BureauUserManager UserManager { get; init; }
+        private BureauUserManager _userManager { get; init; }
         [Inject]
-        public required IUserStore<ApplicationUser> UserStore { get; init; }
+        private IUserStore<ApplicationUser> _userStore { get; init; }
         [Inject]
-        public required IEmailSender<ApplicationUser> EmailSender { get; init; }
+        private IEmailSender<ApplicationUser> _emailSender { get; init; }
         [Inject]
-        public required NavigationManager NavigationManager { get; init; }
+        private IdentityRedirectManager _redirectManager { get; init; }
         [Inject]
-        internal IdentityRedirectManager RedirectManager { get; init; }
-        [Inject]
-        public required ILogger<ExternalLogin> Logger { get; init; }
+        private ILogger<ExternalLogin> _logger { get; init; }
+#pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring as nullable.
 
         protected override async Task OnInitializedAsync()
         {
             if (_remoteError is not null)
             {
-                RedirectManager.RedirectToWithStatus("Account/Login", $"Error from external provider: {_remoteError}", _httpContext);
+                _logger.LogError(LogMessages.ErrorFromExternalProvider, _remoteError);
+                _redirectManager.RedirectToWithStatus(UriPages.Login, string.Format(LogMessages.ErrorFromExternalProvider, _remoteError), _httpContext);
             }
 
-            var info = await SignInManager.GetExternalLoginInfoAsync();
-            if (info is null)
+            _externalLoginInfo = await _signInManager.GetExternalLoginInfoAsync();
+            if (_externalLoginInfo is null)
             {
-                RedirectManager.RedirectToWithStatus("Account/Login", "Error loading external login information.", _httpContext);
+                _logger.LogError(LogMessages.ErrorLoadingExternalLogin);
+                _redirectManager.RedirectToWithStatus(UriPages.Login, LogMessages.ErrorLoadingExternalLogin, _httpContext);
             }
-
-            _externalLoginInfo = info;
 
             if (HttpMethods.IsGet(_httpContext.Request.Method))
             {
-                if (_action == LoginCallbackAction)
+                if (_action == CallbackActionNames.Login)
                 {
                     await OnLoginCallbackAsync();
                     return;
@@ -79,90 +76,104 @@ namespace Bureau.UI.Web.Components.Account.Pages
 
                 // We should only reach this page via the login callback, so redirect back to
                 // the login page if we get here some other way.
-                RedirectManager.RedirectTo("Account/Login");
+                _redirectManager.RedirectTo(UriPages.Login);
             }
         }
 
         private async Task OnLoginCallbackAsync()
         {
             // Sign in the user with this external login provider if the user already has a login.
-            var result = await SignInManager.ExternalLoginSignInAsync(
-                _externalLoginInfo.LoginProvider,
-                _externalLoginInfo.ProviderKey,
+            SignInResult result = await _signInManager.ExternalLoginSignInAsync(
+                loginProvider: _externalLoginInfo?.LoginProvider!,
+                providerKey: _externalLoginInfo?.ProviderKey!,
                 isPersistent: false,
                 bypassTwoFactor: true);
 
             if (result.Succeeded)
             {
-                Logger.LogInformation(
-                    "{Name} logged in with {LoginProvider} provider.",
-                    _externalLoginInfo.Principal.Identity?.Name,
-                    _externalLoginInfo.LoginProvider);
-                RedirectManager.RedirectTo(_returnUrl);
+                _logger.Info(LogMessages.UserLoginInWithProvider,
+                    _externalLoginInfo?.Principal.Identity?.Name,
+                    _externalLoginInfo?.LoginProvider);
+                _redirectManager.RedirectTo(_returnUrl);
             }
             else if (result.IsLockedOut)
             {
-                RedirectManager.RedirectTo("Account/Lockout");
+                _redirectManager.RedirectTo(UriPages.Lockout);
             }
 
             // If the user does not have an account, then ask the user to create an account.
-            if (_externalLoginInfo.Principal.HasClaim(c => c.Type == ClaimTypes.Email))
+            if (TryGetEmail(out string email)) 
             {
-                Input.Email = _externalLoginInfo.Principal.FindFirstValue(ClaimTypes.Email) ?? "";
+                _input.Email = email;
             }
         }
 
         private async Task OnValidSubmitAsync()
         {
-            if (Input.HasErrors(out string errorMessage)) 
+            if (_input.HasErrors(out string errorMessage)) 
             {
-                StatusMessage.SetError(errorMessage);
+                _statusMessage.SetError(errorMessage);
                 return;
             }
             ApplicationUser? user;
-            if (Input.HasPassword)
+            if (_input.HasPassword)
             {
-                user = await UserManager.FindByNameAsync(Input.UserNameOrEmail);
+                user = await _userManager.FindByNameAsync(_input.UserNameOrEmail);
                 if (user is null)
                 {
-                    StatusMessage.SetError("Such account doesn't exist. Either omit password and create new one, or insert correct username/password combination.");
+                    _statusMessage.SetError(UIMessages.AccountDoesntExist);
                     return;
                 }
                 if (user.PasswordHash is null) 
                 {
-                    StatusMessage.SetWarning(@"There is an existing account, however, that account has no password set. 
-    Please log in to that account, with the existing external login method, and set a password. 
-    Then you can associate it with additional external login methods.");
+                    _statusMessage.SetWarning(UIMessages.ExistingUserByWrongPassword);
                     return;
                 }
-                SignInResult signInResult = await SignInManager.CheckPasswordSignInAsync(user, Input.Password, lockoutOnFailure: false);
+
+                if (TryGetEmail(out string email)) 
+                {
+                    ApplicationUser? userByEmail = await _userManager.FindByEmailAsync(email);
+                    if (userByEmail is not null && user.Id != userByEmail.Id)
+                    {
+                        _logger.LogError(LogMessages.UserTriedDuplicatingAccount, _externalLoginInfo!.LoginProvider, _externalLoginInfo.ProviderKey, user.UserName, userByEmail.UserName);
+                        _statusMessage.SetError(UIMessages.ExistingDoubleUser);
+                        return;
+                    }
+                }
+
+                SignInResult signInResult = await _signInManager.CheckPasswordSignInAsync(user, _input.Password, lockoutOnFailure: false);
                 if (signInResult.RequiresTwoFactor)
                 {
                     // TODO #6
-                    RedirectManager.RedirectTo(
-                        "Account/LoginWith2fa",
-                        new() { ["returnUrl"] = _returnUrl, ["rememberMe"] = false });
+                    _redirectManager.RedirectTo(new LoginWith2faPageAddress(_returnUrl!, false));
                 }
                 else if (signInResult.IsLockedOut)
                 {
                     // TODO #5
-                    Logger.LogWarning("User account locked out.");
-                    RedirectManager.RedirectTo("Account/Lockout");
+                    _logger.Warning(LogMessages.UserLockedOut, _input.UserNameOrEmail);
+                    _redirectManager.RedirectTo(UriPages.Lockout);
                 }
                 else if (!signInResult.Succeeded)
                 {
-                    StatusMessage.SetError("Error: Invalid login attempt.");
+                    _statusMessage.SetError(UIMessages.InvalidLogin);
                     return;
                 }
             }
             else
             {
-                user = CreateUserInstance();
-                IUserEmailStore<ApplicationUser> emailStore = GetEmailStore();
-                await UserStore.SetUserNameAsync(user, Input.UserNameOrEmail, CancellationToken.None);
-                await emailStore.SetEmailAsync(user, Input.Email, CancellationToken.None);
+                if (!TryCreateUser(out user)) 
+                {
+                    return;
+                }
+                IUserEmailStore<ApplicationUser> emailStore;
+                if (!TryGetEmailStore(out emailStore)) 
+                {
+                    return;
+                }
+                await _userStore.SetUserNameAsync(user, _input.UserNameOrEmail, CancellationToken.None);
+                await emailStore.SetEmailAsync(user, _input.Email, CancellationToken.None);
 
-                IdentityResult userCreationResult = await UserManager.CreateAsync(user);
+                IdentityResult userCreationResult = await _userManager.CreateAsync(user);
                 if (!userCreationResult.Succeeded)
                 {
                     SetMessage(userCreationResult);
@@ -170,58 +181,84 @@ namespace Bureau.UI.Web.Components.Account.Pages
                 }
             }
 
-            IdentityResult result = await UserManager.AddLoginAsync(user, _externalLoginInfo);
+            IdentityResult result = await _userManager.AddLoginAsync(user, _externalLoginInfo);
             if (!result.Succeeded) 
             {
                 SetMessage(result);
                 return;
             }
-            Logger.LogInformation("User created an account using {Name} provider.", _externalLoginInfo.LoginProvider);
+            _logger.Info(LogMessages.UserCreatedWithProvider, user.UserName, _externalLoginInfo.LoginProvider);
 
-            string userId = await UserManager.GetUserIdAsync(user);
-            string code = await UserManager.GenerateEmailConfirmationTokenAsync(user);
+            string userId = await _userManager.GetUserIdAsync(user);
+            string code = await _userManager.GenerateEmailConfirmationTokenAsync(user);
             code = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(code));
 
-            var callbackUrl = NavigationManager.GetUriWithQueryParameters(
-                NavigationManager.ToAbsoluteUri("Account/ConfirmEmail").AbsoluteUri,
-                new Dictionary<string, object?> { ["userId"] = userId, ["code"] = code });
-            await EmailSender.SendConfirmationLinkAsync(user, Input.Email, HtmlEncoder.Default.Encode(callbackUrl));
+            string callbackUrl = _redirectManager.GetUriForBasePageAddress(new ConfirmEmailPageAddress(userId, code));
+
+            await _emailSender.SendConfirmationLinkAsync(user, _input.Email, HtmlEncoder.Default.Encode(callbackUrl));
 
             // If account confirmation is required, we need to show the link if we don't have a real email sender
-            if (UserManager.Options.SignIn.RequireConfirmedAccount)
+            if (_userManager.Options.SignIn.RequireConfirmedAccount)
             {
-                RedirectManager.RedirectTo("Account/RegisterConfirmation", new() { ["userName"] = Input.UserNameOrEmail });
+                _redirectManager.RedirectTo(new RegisterConfirmationPageAddress(_input.UserNameOrEmail));
             }
 
-            await SignInManager.SignInAsync(user, isPersistent: false, _externalLoginInfo.LoginProvider);
-            RedirectManager.RedirectTo(_returnUrl);
+            await _signInManager.SignInAsync(user, isPersistent: false, _externalLoginInfo.LoginProvider);
+            _redirectManager.RedirectTo(_returnUrl);
         }
 
+
+        private bool TryGetEmail(out string email) 
+        {
+            email = string.Empty;
+            if (_externalLoginInfo!.Principal.HasClaim(c => c.Type == ClaimTypes.Email))
+            {
+                email = _externalLoginInfo.Principal.FindFirstValue(ClaimTypes.Email)!;
+                if (!string.IsNullOrWhiteSpace(email)) 
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        //TODO #12-2
         private void SetMessage(IdentityResult result)
         {
-            StatusMessage.SetError($"Error: {string.Join(",", result.Errors.Select(error => error.Description))}");
+            _statusMessage.SetError($"Error: {string.Join(",", result.Errors.Select(error => error.Description))}");
         }
 
-        private ApplicationUser CreateUserInstance()
+        //TODO #12-2
+        private bool TryCreateUser(out ApplicationUser user)
         {
             try
             {
-                return Activator.CreateInstance<ApplicationUser>();
+                user = Activator.CreateInstance<ApplicationUser>();
+                return true;
             }
             catch
             {
-                throw new InvalidOperationException($"Can't create an instance of '{nameof(ApplicationUser)}'. " +
-                    $"Ensure that '{nameof(ApplicationUser)}' is not an abstract class and has a parameterless constructor");
+                _statusMessage.SetError(UIMessages.CriticalError);
+#pragma warning disable CA2017 // Parameter count mismatch
+                _logger.LogCritical(message: LogMessages.InstanceCreation, nameof(ApplicationUser));
+#pragma warning restore CA2017 // Parameter count mismatch
+                user = null!;
+                return false;
             }
         }
 
-        private IUserEmailStore<ApplicationUser> GetEmailStore()
+        //TODO #12-2
+        private bool TryGetEmailStore(out IUserEmailStore<ApplicationUser> emailStore)
         {
-            if (!UserManager.SupportsUserEmail)
+            if (!_userManager.SupportsUserEmail)
             {
-                throw new NotSupportedException("The default UI requires a user store with email support.");
+                _logger.LogCritical(message: LogMessages.EmailStoreNotSupported);
+                _statusMessage.SetError(UIMessages.CriticalError);
+                emailStore = null!;
+                return false;
             }
-            return (IUserEmailStore<ApplicationUser>)UserStore;
+            emailStore = (IUserEmailStore<ApplicationUser>)_userStore;
+            return true;
         }
 
         private sealed class InputModel

@@ -1,3 +1,4 @@
+using Bureau.UI.Web.Components.Account;
 using Bureau.UI.Web.Components.Account.Pages;
 using Bureau.UI.Web.Components.Account.Pages.Manage;
 using Bureau.UI.Web.Data;
@@ -10,7 +11,7 @@ using Microsoft.Extensions.Primitives;
 using System.Security.Claims;
 using System.Text.Json;
 
-namespace Microsoft.AspNetCore.Routing
+namespace Bureau.UI.Web.Components.Account.Managers
 {
     internal static class IdentityComponentsEndpointRouteBuilderExtensions
     {
@@ -29,7 +30,7 @@ namespace Microsoft.AspNetCore.Routing
             {
                 IEnumerable<KeyValuePair<string, StringValues>> query = [
                     new("ReturnUrl", returnUrl),
-                    new("Action", ExternalLogin.LoginCallbackAction)];
+                    new("Action", CallbackActionNames.Login)];
 
                 var redirectUrl = UriHelper.BuildRelative(
                     context.Request.PathBase,

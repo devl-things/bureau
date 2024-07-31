@@ -1,4 +1,9 @@
-﻿using Bureau.UI.Web.Data;
+﻿using Bureau.UI.Web.Components.Account.Managers;
+using Bureau.UI.Web.Components.Account.PageAddresses;
+using Bureau.UI.Web.Components.Helpers;
+using Bureau.UI.Web.Components.Shared;
+using Bureau.UI.Web.Data;
+using Bureau.UI.Web.Utils;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Identity;
@@ -8,32 +13,35 @@ namespace Bureau.UI.Web.Components.Account.Pages
 {
     public partial class Login
     {
-        private string? errorMessage;
+
+        private StatusMessageInput _statusMessage = new StatusMessageInput();
 
         [CascadingParameter]
-        private HttpContext HttpContext { get; set; } = default!;
+        private HttpContext _httpContext { get; set; } = default!;
 
         [SupplyParameterFromForm]
-        private InputModel Input { get; set; } = new();
+        private InputModel _input { get; set; } = new();
 
         [SupplyParameterFromQuery]
-        private string? ReturnUrl { get; set; }
+        private string? _returnUrl { get; set; }
 
+
+#pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring as nullable.
         [Inject]
-        public required SignInManager<ApplicationUser> SignInManager { get; init; }
+        private SignInManager<ApplicationUser> _signInManager { get; init; }
         [Inject]
-        public required ILogger<Login> Logger { get; init; }
+        private ILogger<Login> _logger { get; init; }
         [Inject]
-        public required NavigationManager NavigationManager { get; init; }
-        [Inject]
-        internal IdentityRedirectManager RedirectManager { get; init; }
+        private IdentityRedirectManager _redirectManager { get; init; }
+#pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring as nullable.
+
 
         protected override async Task OnInitializedAsync()
         {
-            if (HttpMethods.IsGet(HttpContext.Request.Method))
+            if (HttpMethods.IsGet(_httpContext.Request.Method))
             {
                 // Clear the existing external cookie to ensure a clean login process
-                await HttpContext.SignOutAsync(IdentityConstants.ExternalScheme);
+                await _httpContext.SignOutAsync(IdentityConstants.ExternalScheme);
             }
         }
 
@@ -41,26 +49,24 @@ namespace Bureau.UI.Web.Components.Account.Pages
         {
             // This doesn't count login failures towards account lockout
             // To enable password failures to trigger account lockout, set lockoutOnFailure: true
-            var result = await SignInManager.PasswordSignInAsync(Input.UserName, Input.Password, Input.RememberMe, lockoutOnFailure: false);
+            var result = await _signInManager.PasswordSignInAsync(_input.UserName, _input.Password, _input.RememberMe, lockoutOnFailure: false);
             if (result.Succeeded)
             {
-                Logger.LogInformation("User logged in.");
-                RedirectManager.RedirectTo(ReturnUrl);
+                _logger.Info(LogMessages.UserLogin, _input.UserName);
+                _redirectManager?.RedirectTo(_returnUrl);
             }
             else if (result.RequiresTwoFactor)
             {
-                RedirectManager.RedirectTo(
-                    "Account/LoginWith2fa",
-                    new() { ["returnUrl"] = ReturnUrl, ["rememberMe"] = Input.RememberMe });
+                _redirectManager?.RedirectTo(new LoginWith2faPageAddress(_returnUrl!, _input.RememberMe));
             }
             else if (result.IsLockedOut)
             {
-                Logger.LogWarning("User account locked out.");
-                RedirectManager.RedirectTo("Account/Lockout");
+                _logger.Warning(LogMessages.UserLockedOut, _input.UserName);
+                _redirectManager?.RedirectTo(UriPages.Lockout);
             }
             else
             {
-                errorMessage = "Error: Invalid login attempt.";
+                _statusMessage.SetError(UIMessages.InvalidLogin);
             }
         }
 

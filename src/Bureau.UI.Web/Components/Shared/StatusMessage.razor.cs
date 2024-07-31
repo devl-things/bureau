@@ -1,4 +1,5 @@
-﻿using Bureau.UI.Web.Components.Account;
+﻿using Bureau.UI.Web.Components.Account.Managers;
+using Bureau.UI.Web.Components.Helpers;
 using Microsoft.AspNetCore.Components;
 
 namespace Bureau.UI.Web.Components.Shared
@@ -23,11 +24,12 @@ namespace Bureau.UI.Web.Components.Shared
 
         protected override void OnInitialized()
         {
-            _messageFromCookie = HttpContext.Request.Cookies[IdentityRedirectManager.StatusCookieName];
+            // TODO #11
+            _messageFromCookie = HttpContext.Request.Cookies[CookieNames.IdentityStatusMessage];
 
             if (_messageFromCookie is not null)
             {
-                HttpContext.Response.Cookies.Delete(IdentityRedirectManager.StatusCookieName);
+                HttpContext.Response.Cookies.Delete(CookieNames.IdentityStatusMessage);
             }
         }
     }

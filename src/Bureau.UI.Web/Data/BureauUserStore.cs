@@ -7,7 +7,7 @@ namespace Bureau.UI.Web.Data
 {
     public class BureauUserStore : UserStore<ApplicationUser, IdentityRole, ApplicationDbContext, string, IdentityUserClaim<string>, IdentityUserRole<string>, ApplicationUserLogin, IdentityUserToken<string>, IdentityRoleClaim<string>>
     {
-        ExternalLoginInfo _login;
+        ExternalLoginInfo? _login;
 
         public BureauUserStore(ApplicationDbContext context, IdentityErrorDescriber? describer = null) : base(context, describer)
         {
@@ -21,7 +21,7 @@ namespace Bureau.UI.Web.Data
         protected override ApplicationUserLogin CreateUserLogin(ApplicationUser user, UserLoginInfo login)
         {
             ApplicationUserLogin l = base.CreateUserLogin(user, login);
-            l.Email = _login.Principal.HasClaim(c => c.Type == ClaimTypes.Email) ? _login.Principal.FindFirstValue(ClaimTypes.Email) : string.Empty;
+            l.Email = _login != null && _login.Principal.HasClaim(c => c.Type == ClaimTypes.Email) ? _login.Principal.FindFirstValue(ClaimTypes.Email) : string.Empty;
             return l;
         }
     }
