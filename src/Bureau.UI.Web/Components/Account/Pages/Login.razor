@@ -1,4 +1,4 @@
-﻿@page "/Account/Login"
+﻿@attribute [Route(UriPages.Login)]
 
 <PageTitle>Log in</PageTitle>
 
@@ -6,25 +6,25 @@
 <div class="row">
     <div class="col-md-4">
         <section>
-            <StatusMessage Message="@errorMessage" />
-            <EditForm Model="Input" method="post" OnValidSubmit="LoginUser" FormName="login">
+            <StatusMessage Message="@_statusMessage.Message" Type="@_statusMessage.Type" />
+            <EditForm Model="_input" method="post" OnValidSubmit="LoginUser" FormName="login">
                 <DataAnnotationsValidator />
                 <h2>Use a local account to log in.</h2>
                 <hr />
                 <ValidationSummary class="text-danger" role="alert" />
                 <div class="form-floating mb-3">
-                    <InputText @bind-Value="Input.UserName" class="form-control" autocomplete="username" aria-required="true" placeholder="name@example.com" />
+                    <InputText @bind-Value="_input.UserName" class="form-control" autocomplete="username" aria-required="true" placeholder="name@example.com" />
                     <label for="username" class="form-label">User Name</label>
-                    <ValidationMessage For="() => Input.UserName" class="text-danger" />
+                    <ValidationMessage For="() => _input.UserName" class="text-danger" />
                 </div>
                 <div class="form-floating mb-3">
-                    <InputText type="password" @bind-Value="Input.Password" class="form-control" autocomplete="current-password" aria-required="true" placeholder="password" />
+                    <InputText type="password" @bind-Value="_input.Password" class="form-control" autocomplete="current-password" aria-required="true" placeholder="password" />
                     <label for="password" class="form-label">Password</label>
-                    <ValidationMessage For="() => Input.Password" class="text-danger" />
+                    <ValidationMessage For="() => _input.Password" class="text-danger" />
                 </div>
                 <div class="checkbox mb-3">
                     <label class="form-label">
-                        <InputCheckbox @bind-Value="Input.RememberMe" class="darker-border-checkbox form-check-input" />
+                        <InputCheckbox @bind-Value="_input.RememberMe" class="darker-border-checkbox form-check-input" />
                         Remember me
                     </label>
                 </div>
@@ -36,7 +36,7 @@
                         <a href="Account/ForgotPassword">Forgot your password?</a>
                     </p>
                     <p>
-                        <a href="@(NavigationManager.GetUriWithQueryParameters("Account/Register", new Dictionary<string, object?> { ["ReturnUrl"] = ReturnUrl }))">Register as a new user</a>
+                        <a href="@(_redirectManager.GetUriForBasePageAddress(new RegisterPageAddress(_returnUrl!)))">Register as a new user</a>
                     </p>
                     <p>
                         <a href="Account/ResendEmailConfirmation">Resend email confirmation</a>

@@ -1,7 +1,7 @@
 using Bureau.UI.Web.Data;
 using Microsoft.AspNetCore.Identity;
 
-namespace Bureau.UI.Web.Components.Account
+namespace Bureau.UI.Web.Components.Account.Managers
 {
     internal sealed class IdentityUserAccessor(UserManager<ApplicationUser> userManager, IdentityRedirectManager redirectManager)
     {

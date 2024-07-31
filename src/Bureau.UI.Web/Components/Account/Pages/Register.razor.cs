@@ -8,92 +8,120 @@ using System.Text.Encodings.Web;
 using System.Text;
 using Microsoft.Extensions.Logging;
 using System.ComponentModel;
+using Bureau.UI.Web.Components.Account.Managers;
+using Bureau.UI.Web.Components.Shared;
+using Bureau.UI.Web.Components.Account.PageAddresses;
+using Bureau.UI.Web.Utils;
 
 namespace Bureau.UI.Web.Components.Account.Pages
 {
     public partial class Register
     {
-        private IEnumerable<IdentityError>? _identityErrors;
+        private StatusMessageInput _statusMessage = new StatusMessageInput();
 
         [SupplyParameterFromForm]
-        private InputModel Input { get; set; } = new();
+        private InputModel _input { get; set; } = new();
 
-        [SupplyParameterFromQuery(Name = "ReturnUrl")]
-        private string? ReturnUrl { get; set; }
+        [SupplyParameterFromQuery(Name = QueryParameterNames.ReturnUrl)]
+        private string? _returnUrl { get; set; }
 
-        private string? Message => _identityErrors is null ? null : $"Error: {string.Join(", ", _identityErrors.Select(error => error.Description))}";
+#pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring as nullable.
+        [Inject]
+        private UserManager<ApplicationUser> _userManager { get; init; }
+        [Inject]
+        private IUserStore<ApplicationUser> _userStore { get; init; }
+        [Inject]
+        private SignInManager<ApplicationUser> _signInManager { get; init; }
+        [Inject]
+        private IEmailSender<ApplicationUser> _emailSender { get; init; }
+        [Inject]
+        private ILogger<Register> _logger { get; init; }
+        [Inject]
+        private IdentityRedirectManager _redirectManager { get; init; }
+#pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring as nullable.
 
-        [Inject]
-        public required UserManager<ApplicationUser> UserManager { get; init; }
-        [Inject]
-        public required IUserStore<ApplicationUser> UserStore { get; init; }
-        [Inject]
-        public required SignInManager<ApplicationUser> SignInManager { get; init; }
-        [Inject]
-        public required IEmailSender<ApplicationUser> EmailSender { get; init; }
-        [Inject]
-        public required ILogger<Register> Logger { get; init; }
-        [Inject]
-        public required NavigationManager NavigationManager { get; init; }
-        [Inject]
-        internal IdentityRedirectManager RedirectManager { get; init; }
 
         public async Task RegisterUser(EditContext editContext)
         {
-            var user = CreateUser();
-            await UserStore.SetUserNameAsync(user, Input.UserNameOrEmail, CancellationToken.None);
-            var emailStore = GetEmailStore();
-            await emailStore.SetEmailAsync(user, Input.Email, CancellationToken.None);
-            var result = await UserManager.CreateAsync(user, Input.Password);
-
-            if (!result.Succeeded)
+            ApplicationUser user;
+            if (!TryCreateUser(out user)) 
             {
-                _identityErrors = result.Errors;
                 return;
             }
 
-            Logger.LogInformation("User created a new account with password.");
-
-            var userId = await UserManager.GetUserIdAsync(user);
-            var code = await UserManager.GenerateEmailConfirmationTokenAsync(user);
-            code = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(code));
-            var callbackUrl = NavigationManager.GetUriWithQueryParameters(
-                NavigationManager.ToAbsoluteUri("Account/ConfirmEmail").AbsoluteUri,
-                new Dictionary<string, object?> { ["userId"] = userId, ["code"] = code, ["returnUrl"] = ReturnUrl });
-
-            await EmailSender.SendConfirmationLinkAsync(user, Input.Email, HtmlEncoder.Default.Encode(callbackUrl));
-
-            if (UserManager.Options.SignIn.RequireConfirmedAccount)
+            await _userStore.SetUserNameAsync(user, _input.UserNameOrEmail, CancellationToken.None);
+            IUserEmailStore<ApplicationUser> emailStore;
+            if (!TryGetEmailStore(out emailStore)) 
             {
-                RedirectManager.RedirectTo(
-                    "Account/RegisterConfirmation",
-                    new() { ["userName"] = Input.UserNameOrEmail, ["returnUrl"] = ReturnUrl });
+                return;
             }
 
-            await SignInManager.SignInAsync(user, isPersistent: false);
-            RedirectManager.RedirectTo(ReturnUrl);
+            await emailStore.SetEmailAsync(user, _input.Email, CancellationToken.None);
+
+            IdentityResult result = await _userManager.CreateAsync(user, _input.Password);
+
+            if (!result.Succeeded)
+            {
+                SetMessage(result);
+                return;
+            }
+
+            _logger.Info(LogMessages.UserCreatedWithPassword, user.UserName!);
+
+            string userId = await _userManager.GetUserIdAsync(user);
+            string code = await _userManager.GenerateEmailConfirmationTokenAsync(user);
+            code = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(code));
+
+            string callbackUrl = _redirectManager.GetUriForBasePageAddress(new ConfirmEmailPageAddress(userId, code, _returnUrl));
+
+            await _emailSender.SendConfirmationLinkAsync(user, _input.Email, HtmlEncoder.Default.Encode(callbackUrl));
+
+            if (_userManager.Options.SignIn.RequireConfirmedAccount)
+            {
+                _redirectManager.RedirectTo(new RegisterConfirmationPageAddress(_input.UserNameOrEmail, _returnUrl));
+            }
+
+            await _signInManager.SignInAsync(user, isPersistent: false);
+            _redirectManager.RedirectTo(_returnUrl);
         }
 
-        private ApplicationUser CreateUser()
+        //TODO #12-2
+        private void SetMessage(IdentityResult result)
+        {
+            _statusMessage.SetError($"Error: {string.Join(",", result.Errors.Select(error => error.Description))}");
+        }
+
+        //TODO #12-2
+        private bool TryCreateUser(out ApplicationUser user)
         {
             try
             {
-                return Activator.CreateInstance<ApplicationUser>();
+                user = Activator.CreateInstance<ApplicationUser>();
+                return true;
             }
             catch
             {
-                throw new InvalidOperationException($"Can't create an instance of '{nameof(ApplicationUser)}'. " +
-                    $"Ensure that '{nameof(ApplicationUser)}' is not an abstract class and has a parameterless constructor.");
+                _statusMessage.SetError(UIMessages.CriticalError);
+#pragma warning disable CA2017 // Parameter count mismatch
+                _logger.LogCritical(message: LogMessages.InstanceCreation, nameof(ApplicationUser));
+#pragma warning restore CA2017 // Parameter count mismatch
+                user = null!;
+                return false;
             }
         }
 
-        private IUserEmailStore<ApplicationUser> GetEmailStore()
+        //TODO #12-2
+        private bool TryGetEmailStore(out IUserEmailStore<ApplicationUser> emailStore)
         {
-            if (!UserManager.SupportsUserEmail)
+            if (!_userManager.SupportsUserEmail)
             {
-                throw new NotSupportedException("The default UI requires a user store with email support.");
+                _logger.LogCritical(message: LogMessages.EmailStoreNotSupported);
+                _statusMessage.SetError(UIMessages.CriticalError);
+                emailStore = null!;
+                return false;
             }
-            return (IUserEmailStore<ApplicationUser>)UserStore;
+            emailStore = (IUserEmailStore<ApplicationUser>)_userStore;
+            return true;
         }
 
         private sealed class InputModel

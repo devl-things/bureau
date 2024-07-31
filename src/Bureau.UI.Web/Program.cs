@@ -1,9 +1,10 @@
 using Bureau.UI.Web.Components;
-using Bureau.UI.Web.Components.Account;
+using Bureau.UI.Web.Components.Account.Managers;
 using Bureau.UI.Web.Data;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using System.Reflection;
 
 namespace Bureau.UI.Web
 {
@@ -11,7 +12,7 @@ namespace Bureau.UI.Web
     {
         public static void Main(string[] args)
         {
-            var builder = WebApplication.CreateBuilder(args);
+            WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
             // Add services to the container.
             builder.Services.AddRazorComponents()
@@ -45,6 +46,8 @@ namespace Bureau.UI.Web
                 options.User.RequireUniqueEmail = true;
             })
                 .AddEntityFrameworkStores<ApplicationDbContext>()
+                .AddUserStore<BureauUserStore>()
+                .AddUserManager<BureauUserManager>()
                 .AddSignInManager()
                 .AddDefaultTokenProviders();
 

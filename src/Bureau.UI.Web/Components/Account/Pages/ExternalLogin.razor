@@ -1,40 +1,40 @@
-﻿@page "/Account/ExternalLogin"
+﻿@attribute [Route(UriPages.ExternalLogin)]
 
 <PageTitle>Register</PageTitle>
-<StatusMessage Message="@StatusMessage.Message" Type="@StatusMessage.Type" />
+<StatusMessage Message="@_statusMessage.Message" Type="@_statusMessage.Type" />
 <h1>Register</h1>
-<h2>Associate your @ProviderDisplayName account.</h2>
+<h2>Associate your @_providerDisplayName account.</h2>
 <hr />
 
 <div  class="alert alert-info">
-    You've successfully authenticated with <strong>@ProviderDisplayName</strong>.
+    You've successfully authenticated with <strong>@_providerDisplayName</strong>.
     Please enter an email address for this site below and click the Register button to finish
     logging in.
 </div>
 
 <div class="row">
     <div class="col-md-4">
-        <EditForm Model="Input" OnValidSubmit="OnValidSubmitAsync" FormName="confirmation" method="post">
+        <EditForm Model="_input" OnValidSubmit="OnValidSubmitAsync" FormName="confirmation" method="post">
             <DataAnnotationsValidator />
             <ValidationSummary class="text-danger" role="alert" />
             <div class="form-floating mb-3">
-                <InputText @bind-Value="Input.UserName" class="form-control" autocomplete="username" placeholder="Please enter your username." />
+                <InputText @bind-Value="_input.UserName" class="form-control" autocomplete="username" placeholder="Please enter your username." />
                 <label for="username" class="form-label">User Name - if left empty it'll be email</label>
-                <ValidationMessage For="() => Input.UserName" />
+                <ValidationMessage For="() => _input.UserName" />
             </div>
             <div class="form-floating mb-3">
-                <InputText @bind-Value="Input.Email" class="form-control" autocomplete="username" placeholder="Please enter your email." />
+                <InputText @bind-Value="_input.Email" class="form-control" autocomplete="username" placeholder="Please enter your email." />
                 <label for="email" class="form-label">Email</label>
-                <ValidationMessage For="() => Input.Email" />
+                <ValidationMessage For="() => _input.Email" />
             </div>
             <hr />
             <div class="alert alert-light">
                 If you want to register this login to existing account fill out the password of existing account.
             </div>
             <div class="form-floating mb-3">
-                <InputText type="password" @bind-Value="Input.Password" class="form-control" autocomplete="new-password" aria-required="true" placeholder="password" />
+                <InputText type="password" @bind-Value="_input.Password" class="form-control" autocomplete="new-password" aria-required="true" placeholder="password" />
                 <label for="password">Password</label>
-                <ValidationMessage For="() => Input.Password" class="text-danger" />
+                <ValidationMessage For="() => _input.Password" class="text-danger" />
             </div>
             <button type="submit" class="w-100 btn btn-lg btn-primary">Register</button>
         </EditForm>
