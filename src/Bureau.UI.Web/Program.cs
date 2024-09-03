@@ -1,5 +1,6 @@
 using Bureau.UI.Web.Components;
 using Bureau.UI.Web.Components.Account.Managers;
+using Bureau.UI.Web.Components.Helpers;
 using Bureau.UI.Web.Data;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -17,6 +18,10 @@ namespace Bureau.UI.Web
             // Add services to the container.
             builder.Services.AddRazorComponents()
                 .AddInteractiveServerComponents();
+
+            builder.Services.AddBlazorBootstrap();
+
+            builder.Services.AddScoped<BureauNavigationManager>();
 
             builder.Services.AddCascadingAuthenticationState();
             builder.Services.AddScoped<IdentityUserAccessor>();

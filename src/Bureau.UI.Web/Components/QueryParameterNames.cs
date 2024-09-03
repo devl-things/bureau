@@ -1,4 +1,4 @@
-﻿namespace Bureau.UI.Web.Components.Account
+﻿namespace Bureau.UI.Web.Components
 {
     internal static class QueryParameterNames
     {

@@ -1,4 +1,3 @@
-using Bureau.UI.Web.Components.Account;
 using Bureau.UI.Web.Components.Account.Pages;
 using Bureau.UI.Web.Components.Account.Pages.Manage;
 using Bureau.UI.Web.Data;
@@ -26,7 +25,7 @@ namespace Bureau.UI.Web.Components.Account.Managers
                 HttpContext context,
                 [FromServices] SignInManager<ApplicationUser> signInManager,
                 [FromForm] string provider,
-                [FromForm] string returnUrl) =>
+                [FromForm(Name = QueryParameterNames.ReturnUrl)] string returnUrl) =>
             {
                 IEnumerable<KeyValuePair<string, StringValues>> query = [
                     new("ReturnUrl", returnUrl),

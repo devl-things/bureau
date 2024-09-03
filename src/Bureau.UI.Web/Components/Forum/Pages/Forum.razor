@@ -1,0 +1,117 @@
+﻿@attribute [Route(UriPages.ForumHome)]
+@rendermode InteractiveServer
+
+<div class="row mb-3">
+    <div class="col-2">
+        <NavLink class="nav-link d-inline-block" href="@UriPages.ForumBoard" data-toggle="tooltip" title="Create new">
+            <span class="align-middle badge bg-dark">Boards</span>
+        </NavLink>
+        <span class="badge bg-light text-dark">Sections</span>
+        <span class="badge bg-dark">Posts</span>@* <h4 class="mb-0">Boards</h4> *@
+    </div>
+    <div class="col-9">
+        <InputText @bind-Value="customerName" class="form-control"></InputText>
+        @* <AutoComplete @bind-Value="customerName"
+                      TItem="Customer"
+                      DataProvider="CustomersDataProvider"
+                      PropertyName="CustomerName"
+                      Placeholder="Search..."
+                      StringComparison="StringComparison.Ordinal"
+                      OnChanged="(Customer customer) => OnAutoCompleteChanged(customer)" /> *@
+    </div>
+    <div class="col-1">
+        <NavLink class="nav-link" href="@UriPages.ForumHome" data-toggle="tooltip" title="Create new">
+            <Icon Name="IconName.Plus" Size="IconSize.x2"></Icon>
+        </NavLink>
+    </div>
+</div>
+<div>
+    <div class="row">
+        <div class="col-1"></div>
+        <div class="col-11">
+            <div class="card mb-2">
+                <div class="card-header">
+                    <Icon Name="IconName.ChatRightText" Class="me-2"></Icon><span>User</span><small class="float-end" data-toggle="tooltip" title="Last post"><em>23.07.2024</em></small>
+                </div>
+                <div class="card-body">
+                    @* Last message in this board *@
+                    <blockquote class="blockquote fs-6 mb-0">
+                        <p>Last <mark>ups</mark>message in this board</p>
+                        <footer class="blockquote-footer">in Section <cite title="Source Title">Cyprus</cite></footer>
+                    </blockquote>
+                </div>
+                <div class="card-footer">
+                    <span class="badge bg-secondary">Travel</span>
+
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="card mb-2">
+        <div class="card-header">
+            <Icon Name="IconName.Clipboard" Class="me-2"></Icon><span>Board name</span><small class="float-end" data-toggle="tooltip" title="Last post"><em>23.07.2024</em></small>
+        </div>
+        <div class="card-body">
+            @* Last message in this board *@
+            <blockquote class="blockquote fs-6 mb-0">
+                <p>Last <mark>ups</mark>message in this board</p>
+                <footer class="blockquote-footer">in Section <cite title="Source Title">Cyprus</cite></footer>
+            </blockquote>
+        </div>
+        <div class="card-footer">
+            <span class="badge bg-secondary">Travel</span>
+        </div>
+    </div>
+    <div class="card mb-2">
+        <div class="card-header">
+            <Icon Name="IconName.CardText" Class="me-2"></Icon><span>Section name</span><small class="float-end" data-toggle="tooltip" title="Last post"><em>23.07.2024</em></small>
+        </div>
+        <div class="card-body">
+            @* Last message in this board *@
+            <blockquote class="blockquote fs-6 mb-0">
+                <p>Last <mark>ups</mark>message in this section</p>
+                <footer class="blockquote-footer">from User <cite title="Source Title">What</cite></footer>
+            </blockquote>
+        </div>
+        <div class="card-footer">
+            <span class="badge bg-secondary">Travel</span>
+            <span class="badge bg-secondary">Cyprus</span>
+        </div>
+    </div>
+    <div class="card mb-2">
+        <div class="card-header">
+            <Icon Name="IconName.ChatRightText" Class="me-2"></Icon><span>User</span><small class="float-end" data-toggle="tooltip" title="Last post"><em>23.07.2024</em></small>
+        </div>
+        <div class="card-body">
+            @* Last message in this board *@
+            <blockquote class="blockquote fs-6 mb-0">
+                <p>Last <mark>ups</mark>message in this board</p>
+                <footer class="blockquote-footer">in Section <cite title="Source Title">Cyprus</cite></footer>
+            </blockquote>
+        </div>
+        <div class="card-footer">
+            <span class="badge bg-secondary">Travel</span>
+            
+        </div>
+    </div>
+    <div class="card">
+        <div class="card-header">
+            <Icon Name="IconName.ChatRightText" Class="me-2"></Icon><span>User</span><small class="float-end" data-toggle="tooltip" title="Last post"><em>23.07.2024</em></small>
+        </div>
+        <div class="card-body">
+            Last message in this board
+            <blockquote class="blockquote fs-6 mb-0">
+                <p>Last <mark>ups</mark>message in this board</p>
+                <footer class="blockquote-footer">in Section <cite title="Source Title">Cyprus</cite></footer>
+            </blockquote>
+        </div>
+    </div>
+</div>
+
+@* <Card>
+    <CardBody>
+        <CardTitle>Special title treatment</CardTitle>
+        <CardText>With supporting text below as a natural lead-in to additional content.</CardText>
+        <Button Color="ButtonColor.Primary" To="#" Type="ButtonType.Link">Go somewhere</Button>
+    </CardBody>
+</Card> *@
