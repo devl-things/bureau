@@ -1,0 +1,50 @@
+﻿@using Microsoft.AspNetCore.Components.Web;
+@typeparam T
+
+<div class="form-group">
+    <div class="same-width" @onfocusout="HideDropdown">
+        <input type="search"
+               class="form-control"
+               value="@_searchTerm"
+               placeholder="@Placeholder"
+               onclick="@ShowDropdown" 
+               oninput="@OnInput"/>
+
+        @if (_isDropdownVisible)
+        {
+            <div class="dropdown-menu show">
+                @if (_filteredItems.Count > 0)
+                {
+                    @foreach (T option in _filteredItems)
+                    {
+                        <button type="button"
+                                class="dropdown-item btn-sm"
+                                onclick="@((MouseEventArgs e) => Selected(e, option))">
+                            @option.Name
+                        </button>
+                    }
+                }
+                else
+                {
+                    <button type="button" class="dropdown-item btn btn-outline-secondary btn-sm">No items available</button>
+                }
+                @if (_isAddNewVisible)
+                {
+                    <div class="dropdown-divider"></div>
+                    <button type="button" class="dropdown-item btn-sm" onclick="@AddNewItem">
+                        Add New: @_searchTerm
+                    </button>
+                }
+            </div>
+        }
+    </div>
+    <div class="mt-2">
+        @foreach (T item in _args.Items)
+        {
+            <div class="btn btn-xxs m-1 rounded-m font-900 shadow-s bg-green-dark d-inline-flex">
+                @item.Name
+                <div class="ms-2" onclick="@(() => RemoveItem(item))"><i class="fa fa-times font-16"></i></div>
+            </div>
+        }
+    </div>
+</div>

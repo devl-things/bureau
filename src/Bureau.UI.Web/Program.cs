@@ -1,10 +1,19 @@
+using Bureau.Cache.Configurations;
+using Bureau.Google.Calendar.Configurations;
+using Bureau.Google.Calendar.UI.Constants;
+using Bureau.Identity.Managers;
+using Bureau.Identity.UI.Constants;
+using Bureau.Identity.UI.Server.Configurations;
 using Bureau.UI.Web.Components;
-using Bureau.UI.Web.Components.Account.Managers;
-using Bureau.UI.Web.Data;
+using Bureau.UI.Managers;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using System.Reflection;
+using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
+using Bureau.Identity.Configurations;
+using Bureau.UI.Server.Configurations;
 
 namespace Bureau.UI.Web
 {
@@ -14,51 +23,172 @@ namespace Bureau.UI.Web
         {
             WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
+            var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
+
             // Add services to the container.
             builder.Services.AddRazorComponents()
                 .AddInteractiveServerComponents();
 
+            builder.Services.AddHttpContextAccessor();
+
             builder.Services.AddCascadingAuthenticationState();
-            builder.Services.AddScoped<IdentityUserAccessor>();
-            builder.Services.AddScoped<IdentityRedirectManager>();
+            //builder.Services.AddScoped<BureauIdentityManager>();
+            builder.Services.AddScoped<BureauRedirectManager>();
             builder.Services.AddScoped<AuthenticationStateProvider, IdentityRevalidatingAuthenticationStateProvider>();
+
+
+
+
+            //builder.Services.AddIdentityServer()
+            //   .AddApiAuthorization<ApplicationUser, ApplicationDbContext>();
+
+            //builder.Services.AddAuthentication(IdentityConstants.BearerScheme)
+            //    .AddBearerToken(IdentityConstants.BearerScheme)
+            //    .AddGoogle(options =>
+            //     {
+            //         options.ClientId = builder.Configuration["Authentication:Google:ClientId"];
+            //         options.ClientSecret = builder.Configuration["Authentication:Google:ClientSecret"];
+            //         options.ClaimActions.MapJsonKey("urn:google:picture", "picture");
+            //         options.Scope.Add("https://www.googleapis.com/auth/calendar");
+            //         options.AccessType = "offline";
+            //         options.SaveTokens = true;
+            //     });
+            builder.Services.AddAuthorizationBuilder();
 
             builder.Services.AddAuthentication(options =>
                 {
                     options.DefaultScheme = IdentityConstants.ApplicationScheme;
                     options.DefaultSignInScheme = IdentityConstants.ExternalScheme;
+
+                    //options.DefaultChallengeScheme = "oidc";
+                    //options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+                    //options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+                    //options.DefaultScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+                    //options.DefaultSignInScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+
                 })
-                .AddGoogle(googleOptions =>
+                //.AddOpenIdConnect("oidc", options => 
+                //{
+                //    options.Authority = "https://localhost:7136"; // Blazor Server URL (Identity Provider)
+                //    options.ClientId = "blazor-client";           // Client ID for the Blazor WASM app
+                //    options.ClientSecret = "your-client-secret";  // Your secret (can be omitted if using public client)
+                //    options.ResponseType = "code";
+                //    options.Scope.Add("openid");
+                //    options.Scope.Add("profile");
+                //    options.SaveTokens = true;
+                //})
+                //.AddBearerToken()
+                //.AddIdentityServerJwt()
+                //.AddJwtBearer(options =>
+                //{
+                //    options.TokenValidationParameters = new TokenValidationParameters
+                //    {
+                //        ValidateIssuer = true,
+                //        ValidateAudience = true,
+                //        ValidateLifetime = true,
+                //        ValidateIssuerSigningKey = true,
+                //        ValidIssuer = "https://localhost:7136",
+                //        ValidAudience = "https://localhost:7157",
+                //        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes("your-signing-key"))
+                //    };
+                //})
+                //.AddOAuth(IdentityConstants.ApplicationScheme, options =>
+                //{
+                //    options.AuthorizationEndpoint = "https://localhost:7136/connect/authorize";
+                //    options.TokenEndpoint = "https://localhost:7136/connect/token";
+                //    options.ClientId = "BlazorWasmClient";
+                //    options.ClientSecret = "ClientSecret";
+                //    options.SaveTokens = true;
+                //    options.CallbackPath = "/signin-oauth";
+                //    options.Scope.Add("profile");
+                //    options.Scope.Add("email");
+                //})
+                //.AddCookie()
+                .AddGoogle(options =>
                 {
-                    googleOptions.ClientId = builder.Configuration["Authentication:Google:ClientId"];
-                    googleOptions.ClientSecret = builder.Configuration["Authentication:Google:ClientSecret"];
+                    options.ClientId = builder.Configuration["Authentication:Google:ClientId"];
+                    options.ClientSecret = builder.Configuration["Authentication:Google:ClientSecret"];
+                    options.ClaimActions.MapJsonKey("urn:google:picture", "picture");
+                    options.Scope.Add("https://www.googleapis.com/auth/calendar");
+                    options.AccessType = "offline";
+                    options.SaveTokens = true;
                 })
                 .AddIdentityCookies();
 
-            var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
-            builder.Services.AddDbContext<ApplicationDbContext>(options =>
-                options.UseSqlServer(connectionString));
+            // https://github.com/dotnet/blazor-samples/blob/main/8.0/BlazorWebAssemblyStandaloneWithIdentity/Backend/Program.cs
+            // Configure app cookie
+            //
+            // The default values, which are appropriate for hosting the Backend and
+            // BlazorWasmAuth apps on the same domain, are Lax and SameAsRequest. 
+            // For more information on these settings, see:
+            // https://learn.microsoft.com/aspnet/core/blazor/security/webassembly/standalone-with-identity#cross-domain-hosting-same-site-configuration
+            builder.Services.ConfigureApplicationCookie(options =>
+            {
+                options.Cookie.SameSite = SameSiteMode.Lax;
+                options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
+            });
+
+
+
             builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
-            builder.Services.AddIdentityCore<ApplicationUser>(options =>
+
+            //builder.Services.AddAuthorizationBuilder();
+
+           
+
+            builder.Services.AddCors(options => options.AddPolicy(
+                "wasm",
+                policy => policy.WithOrigins([builder.Configuration["BackendUrl"] ?? "https://localhost:7136",
+                    builder.Configuration["FrontendUrl"] ?? "https://localhost:7157"])
+                    .AllowAnyMethod()
+                    .AllowAnyHeader()
+                    .AllowCredentials()));
+
+            #region Identity
+            builder.Services.AddBureauIdentity(connectionString);
+            #endregion
+
+            #region Cache
+            builder.Services.AddBureauCache();
+            #endregion
+
+            #region Modules
+            builder.Services.AddGoogleCalendarModule(options =>
             {
-                options.SignIn.RequireConfirmedAccount = true;
-                options.User.RequireUniqueEmail = true;
-            })
-                .AddEntityFrameworkStores<ApplicationDbContext>()
-                .AddUserStore<BureauUserStore>()
-                .AddUserManager<BureauUserManager>()
-                .AddSignInManager()
-                .AddDefaultTokenProviders();
+                options.ClientId = builder.Configuration["Authentication:Google:ClientId"];
+                options.ClientSecret = builder.Configuration["Authentication:Google:ClientSecret"];
+                options.ClaimActions.MapJsonKey("urn:google:picture", "picture");
+                options.Scope.Add("https://www.googleapis.com/auth/calendar");
+                options.AccessType = "offline";
+                options.SaveTokens = true;
+            });
+            #endregion
 
-            builder.Services.AddSingleton<IEmailSender<ApplicationUser>, IdentityNoOpEmailSender>();
+            builder.Services.AddBureauUIManagers();
 
+            builder.Services.AddControllersWithViews();
+
+            builder.Services.AddEndpointsApiExplorer();
+            builder.Services.AddSwaggerGen();
+            
             var app = builder.Build();
+
+            app.UseCors("wasm");
+
+            #region Identity
+
+            app.MapAdditionalIdentityEndpoints();
+            app.UseBureauIdentity();
+
+            #endregion
 
             // Configure the HTTP request pipeline.
             if (app.Environment.IsDevelopment())
             {
                 app.UseMigrationsEndPoint();
+                app.UseSwagger();
+                app.UseSwaggerUI();
             }
             else
             {
@@ -69,16 +199,31 @@ namespace Bureau.UI.Web
 
             app.UseHttpsRedirection();
 
+            
+
+            app.MapPost("/data-processing-1", ([FromBody] FormModel model) =>
+    Results.Text($"{model.Message.Length} characters"))
+        .RequireAuthorization();
+
             app.UseStaticFiles();
             app.UseAntiforgery();
 
+            app.MapControllers();
+
             app.MapRazorComponents<App>()
+                .AddAdditionalAssemblies(typeof(BureauGoogleCalendarUIUris).Assembly)
+                .AddAdditionalAssemblies(typeof(BureauIdentityUIUris).Assembly)
                 .AddInteractiveServerRenderMode();
 
-            // Add additional endpoints required by the Identity /Account Razor components.
-            app.MapAdditionalIdentityEndpoints();
+            app.MapBureauAPI();
+
 
             app.Run();
+        }
+
+        class FormModel
+        {
+            public string Message { get; set; } = string.Empty;
         }
     }
 }

@@ -1,0 +1,15 @@
+﻿@page "/sample"
+
+<h3>@_message</h3>
+
+<EditForm Model="Model1" OnSubmit="Submit1" FormName="ProcessData1">
+    <div>
+        <label>
+            Message:
+            <InputText @bind-Value="Model1!.Message" />
+        </label>
+    </div>
+    <div>
+        <button type="submit">Submit</button>
+    </div>
+</EditForm>

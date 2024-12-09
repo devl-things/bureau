@@ -1,0 +1,10 @@
+﻿.same-width {
+    position: relative;
+}
+    .same-width .dropdown-menu {
+        width: 100%; /* Ensures it matches the width of the input field */
+        position: absolute; /* Positions the dropdown absolutely relative to input */
+        top: 100%; /* Places the dropdown directly below the input */
+        left: 0; /* Aligns with the left edge of the input */
+        z-index: 1000; /* Ensures dropdown appears above other content */
+    }
