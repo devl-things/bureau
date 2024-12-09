@@ -324,7 +324,7 @@ AppPackages/
 sql
 TestResults
 [Tt]est[Rr]esult*
-*.Cache
+# #### *.Cache
 ClientBin
 [Ss]tyle[Cc]op.*
 ~$*

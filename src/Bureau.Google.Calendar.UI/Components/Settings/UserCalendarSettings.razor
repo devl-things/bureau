@@ -1,0 +1,22 @@
+﻿@using Bureau.Google.Calendar.Models
+
+@attribute [Route(BureauGoogleCalendarUIUris.CalendarSettings)]
+@rendermode @(new InteractiveServerRenderMode(prerender: false))
+@inherits AuthComponentBase
+
+<h3>Google Calendar Settings</h3>
+
+<button class="btn btn-primary" @onclick="DoMagic">Click me</button>
+
+<p>@_message</p>
+
+@foreach (CalendarListModel item in _calendars)
+{
+    <p>@item.LoginEmail</p>
+    <ul>
+    @foreach (CalendarModel calendar in item.Calendars)
+    {
+            <li style="color:@calendar.BackgroundColor">@string.Format("{0} {1} {2} {3}",calendar.Name, calendar.Id, calendar.Description, calendar.Summary)</li>
+    }
+    </ul>
+}

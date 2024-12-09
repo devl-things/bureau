@@ -1,0 +1,12 @@
+﻿@attribute [Route(UriPages.PoCGCalendar)]
+
+@rendermode @(new InteractiveServerRenderMode(prerender: false))
+
+@using Microsoft.AspNetCore.Authorization
+@attribute [Authorize]
+
+<h3>GCalendar</h3>
+
+<button class="btn btn-primary" @onclick="DoMagic">Click me</button>
+
+<p>@_message</p>

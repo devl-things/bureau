@@ -1,0 +1,23 @@
+﻿.weekdays {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+    max-width: 400px; /* Adjust as necessary */
+    margin: 20px auto;
+}
+
+    .weekdays label {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .weekdays span {
+        font-weight: bold;
+        margin-bottom: 5px;
+    }
+
+    .weekdays input[type="checkbox"] {
+        width: 20px;
+        height: 20px;
+    }
