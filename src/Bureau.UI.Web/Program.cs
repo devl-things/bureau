@@ -167,7 +167,7 @@ namespace Bureau.UI.Web
 
             builder.Services.AddBureauUIManagers();
 
-            builder.Services.AddControllersWithViews();
+           // builder.Services.AddControllersWithViews();
 
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
@@ -205,10 +205,11 @@ namespace Bureau.UI.Web
     Results.Text($"{model.Message.Length} characters"))
         .RequireAuthorization();
 
+            app.UseDefaultFiles();
             app.UseStaticFiles();
             app.UseAntiforgery();
 
-            app.MapControllers();
+            //app.MapControllers();
 
             app.MapRazorComponents<App>()
                 .AddAdditionalAssemblies(typeof(BureauGoogleCalendarUIUris).Assembly)
@@ -217,6 +218,25 @@ namespace Bureau.UI.Web
 
             app.MapBureauAPI();
 
+            // [react] example
+            app.MapGet("/api/weatherforecast", (HttpContext httpContext) =>
+            {
+                var summaries = new[]
+                {
+                    "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
+                };
+                var forecast = Enumerable.Range(1, 5).Select(index =>
+                    new
+                    {
+                        Date = DateTime.Now.AddDays(index),
+                        TemperatureC = Random.Shared.Next(-20, 55),
+                        Summary = summaries[Random.Shared.Next(summaries.Length)]
+                    })
+                    .ToArray();
+                return forecast;
+            })
+            .WithName("GetWeatherForecast");
+            //app.MapFallbackToFile("/react-spa-app/index.html");
 
             app.Run();
         }
