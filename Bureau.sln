@@ -51,6 +51,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Bureau.UI.Client", "src\Bur
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Bureau.Identity.UI.Client.Mock", "tests\Bureau.Identity.UI.Client.Mock\Bureau.Identity.UI.Client.Mock.csproj", "{016BDE09-673D-448E-B412-8C77C761ECA5}"
 EndProject
+Project("{54A90642-561A-4BB1-A94E-469ADEE60C69}") = "bureau-ui-react-app", "src\bureau-ui-react-app\bureau-ui-react-app.esproj", "{43D2DC3A-02C3-BFE4-D8B1-9F0231163AF3}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -133,6 +135,12 @@ Global
 		{016BDE09-673D-448E-B412-8C77C761ECA5}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{016BDE09-673D-448E-B412-8C77C761ECA5}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{016BDE09-673D-448E-B412-8C77C761ECA5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{43D2DC3A-02C3-BFE4-D8B1-9F0231163AF3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{43D2DC3A-02C3-BFE4-D8B1-9F0231163AF3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{43D2DC3A-02C3-BFE4-D8B1-9F0231163AF3}.Debug|Any CPU.Deploy.0 = Debug|Any CPU
+		{43D2DC3A-02C3-BFE4-D8B1-9F0231163AF3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{43D2DC3A-02C3-BFE4-D8B1-9F0231163AF3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{43D2DC3A-02C3-BFE4-D8B1-9F0231163AF3}.Release|Any CPU.Deploy.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -157,6 +165,7 @@ Global
 		{29A1DD42-2607-4253-85E6-AD29559FCE98} = {FD0E61F3-4A3F-4981-B061-09717A8785BD}
 		{D243DA9B-AEF0-48DC-AFB0-8D0A7C17F3CE} = {FD0E61F3-4A3F-4981-B061-09717A8785BD}
 		{016BDE09-673D-448E-B412-8C77C761ECA5} = {BE4D0CE7-AB02-4F75-8A1A-288347BB9F1C}
+		{43D2DC3A-02C3-BFE4-D8B1-9F0231163AF3} = {FD0E61F3-4A3F-4981-B061-09717A8785BD}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {6647AABA-B91A-4688-A5DB-FD9E9261D495}
