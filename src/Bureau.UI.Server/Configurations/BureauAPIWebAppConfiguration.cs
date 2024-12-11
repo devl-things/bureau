@@ -17,13 +17,13 @@ namespace Bureau.UI.Server.Configurations
         {
             RouteGroupBuilder apiBuilder = app.MapGroup("api");
 
-            RouteGroupBuilder entryRouteBuilder = apiBuilder.MapGroup("entry");
+            RouteGroupBuilder entryRouteBuilder = apiBuilder.MapGroup("notes");
 
-            entryRouteBuilder.MapPost("notes", NotesMethod.CreateNote)
-                .WithName(BureauAPIRouteNames.CreateNote);
+            entryRouteBuilder.MapPost("text", NotesMethod.CreateTextNote)
+                .WithName(BureauAPIRouteNames.CreateTextNote);
 
             entryRouteBuilder.MapGet("notes/{id}", NotesMethod.GetNoteById)
-               .WithName(BureauAPIRouteNames.GetNoteById);
+               .WithName(BureauAPIRouteNames.GetTextNoteById);
         }
     }
 }
