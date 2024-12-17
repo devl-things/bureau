@@ -3,6 +3,9 @@ import react from '@vitejs/plugin-react';
 
 export default defineConfig({
     plugins: [react()],
+    build: {
+        sourcemap: true
+      }
 });
 
 //export default defineConfig({
@@ -12,4 +15,11 @@ export default defineConfig({
 //        outDir: '../Bureau.UI.Web/wwwroot/react-spa-app', // Output to ASP.NET's wwwroot
 //        emptyOutDir: true, // Clean the output directory before building
 //    },
+// if needed
+// css: {
+//   preprocessorOptions: {
+//     scss: {
+//       additionalData: `@import "./src/styles/variables.scss";`, // Automatically include variables
+//     },
+//   },
 //});

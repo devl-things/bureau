@@ -14,12 +14,12 @@ namespace Bureau.UI.Server.API.Methods
     internal static class NotesMethod
     {
 
-        public static IResult CreateNote(NoteModel note, LinkGenerator linkGenerator, HttpContext httpContext)
+        public static IResult CreateTextNote(TextNoteModel note, LinkGenerator linkGenerator, HttpContext httpContext)
         {
             // Generate the full URL for the newly created note
             var url = linkGenerator.GetUriByAddress(
                 httpContext,
-                BureauAPIRouteNames.GetNoteById, // Name of the route we want to link to
+                BureauAPIRouteNames.GetTextNoteById, // Name of the route we want to link to
                 new RouteValueDictionary
                 {
                     { "id", note.Id }
@@ -34,7 +34,7 @@ namespace Bureau.UI.Server.API.Methods
         public static IResult GetNoteById(string id)
         {
             // Dummy data for demonstration; you’d retrieve this from a database
-            var note = new NoteModel { Id = id };
+            var note = new TextNoteModel { Id = id };
             return Results.Ok(note);
         }
     }

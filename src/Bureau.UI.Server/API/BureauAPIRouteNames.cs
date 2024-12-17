@@ -8,7 +8,7 @@ namespace Bureau.UI.Server.API
 {
     public class BureauAPIRouteNames
     {
-        public const string CreateNote = "CreateNote";
-        public const string GetNoteById = "GetNoteById";
+        public const string CreateTextNote = "create-text-note";
+        public const string GetTextNoteById = "get-text-note-by-id";
     }
 }
