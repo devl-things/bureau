@@ -1,17 +1,10 @@
-﻿using Bureau.UI.API.Models;
+﻿using Bureau.UI.API.V1.Models;
 using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net.Http;
-using System.Text;
-using System.Threading.Tasks;
 
-namespace Bureau.UI.Server.API.Methods
+namespace Bureau.UI.API.V1.Methods
 {
-    internal static class NotesMethod
+    internal static class NotesMethods
     {
 
         public static IResult CreateTextNote(TextNoteModel note, LinkGenerator linkGenerator, HttpContext httpContext)

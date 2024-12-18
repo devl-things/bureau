@@ -16,6 +16,7 @@ namespace Bureau.UI.Server.Configurations
 
             services.AddScoped<BureauNavigationManager>();
             services.AddScoped<BureauRedirectManager>();
+
         }
     }
 }

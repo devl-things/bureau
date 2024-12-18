@@ -10,4 +10,13 @@ namespace Bureau.Core.Models
     {
         public string Id { get; set; }
     }
+
+    public struct Reference : IReference
+    {
+        public string Id { get; set; }
+        public Reference(string id)
+        {
+            Id = id;
+        }
+    }
 }

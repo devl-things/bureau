@@ -1,4 +1,4 @@
-﻿namespace Bureau.UI.API.Models
+﻿namespace Bureau.UI.API.V1.Models
 {
     public class TagModel
     {

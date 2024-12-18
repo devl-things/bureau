@@ -6,9 +6,9 @@ using System.Threading.Tasks;
 
 namespace Bureau.Core.Models
 {
-    public class ExternalRecord<T> : FlexibleRecord<T>
+    public class FlexibleRecord<T> : BaseRecord
     {
-        public DateTime LastSync { get; set; }
-        public bool Changed { get; set; }
+        public string Type { get; set; } = default!;
+        public T Data { get; set; } = default!;
     }
 }

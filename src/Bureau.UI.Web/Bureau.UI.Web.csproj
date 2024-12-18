@@ -21,20 +21,18 @@
 		<PackageReference Include="Microsoft.AspNetCore.Diagnostics.EntityFrameworkCore" />
 		<PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" />
 		<PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" />
-		<PackageReference Include="Swashbuckle.AspNetCore" />
-	</ItemGroup>
-
-	<ItemGroup>
-		<ProjectReference Include="..\Bureau.Cache\Bureau.Cache.csproj" />
-		<ProjectReference Include="..\Bureau.Google.Calendar.UI\Bureau.Google.Calendar.UI.csproj" />
-		<ProjectReference Include="..\Bureau.Identity.UI.Server\Bureau.Identity.UI.Server.csproj" />
-		<ProjectReference Include="..\Bureau.Identity\Bureau.Identity.csproj" />
 	</ItemGroup>
 
 	<ItemGroup>
 		<Folder Include="Components\Shared\" />
 	</ItemGroup>
 
+	<ItemGroup>
+	  <ProjectReference Include="..\..\tests\Bureau.Data.Mock\Bureau.Data.Mock.csproj" />
+	  <ProjectReference Include="..\Bureau.UI.API\Bureau.UI.API.csproj" />
+	</ItemGroup>
+
+	<!-- Uncomment to build and publish the SPA along with the server app
 	<PropertyGroup>
 		<SpaRoot>../bureau-ui-react-app/</SpaRoot>
 		<DefaultItemExcludes>$(SpaRoot)node_modules\**</DefaultItemExcludes>
@@ -44,4 +42,5 @@
 		<Exec Command="npm install" WorkingDirectory="$(SpaRoot)" />
 		<Exec Command="npm run build" WorkingDirectory="$(SpaRoot)" />
 	</Target>
+	-->
 </Project>
