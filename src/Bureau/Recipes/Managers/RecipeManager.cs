@@ -1,43 +1,57 @@
 ﻿using Bureau.Core;
+using Bureau.Core.Comparers;
+using Bureau.Core.Factories;
+using Bureau.Core.Models;
+using Bureau.Models;
+using Bureau.Recipes.Abstractions.Factories;
+using Bureau.Recipes.Factories;
+using Bureau.Recipes.Handlers;
 using Bureau.Recipes.Models;
 using Bureau.Recipes.Services;
 
 namespace Bureau.Recipes.Managers
 {
+    //TODO userId?? as updatedAt
     internal class RecipeManager : IRecipeManager
     {
-        private readonly IRecipeService _recipeService;
-        public RecipeManager(IRecipeService recipeService)
+        private readonly IRecipeCommandHandler _recipeCommandHandler;
+        private readonly IRecipeQueryHandler _recipeQueryHandler;
+        public RecipeManager(IRecipeCommandHandler recipeCommandHandler, IRecipeQueryHandler recipeQueryHandler)
         {
-            _recipeService = recipeService;
+            _recipeCommandHandler = recipeCommandHandler;
+            _recipeQueryHandler = recipeQueryHandler;
         }
-        public async Task<Result<RecipeModel>> GetRecipeAsync(string id, CancellationToken cancellationToken = default)
-        {
-            Result<RecipeAggregate> recipeAggregateResult = await _recipeService.GetRecipeAggregateAsync(id, cancellationToken).ConfigureAwait(false);
 
-            if(recipeAggregateResult.IsError)
+        public async Task<Result<RecipeDto>> UpdateRecipeAsync(RecipeDto recipeModel, CancellationToken cancellationToken)
+        {
+            Result<IReference> result = await _recipeCommandHandler.UpdateRecipeAsync(recipeModel, cancellationToken);
+            if (result.IsError)
             {
-                return recipeAggregateResult.Error;
+                return result.Error;
             }
 
-            RecipeModel result = CreateModel(recipeAggregateResult.Value);
-
-            return result;
+            Result<RecipeDto> finalResult = await _recipeQueryHandler.GetRecipeAsync(result.Value.Id, cancellationToken);
+            if (finalResult.IsError)
+            {
+                return finalResult.Error;
+            }
+            return finalResult.Value;
         }
 
-        private RecipeModel CreateModel(RecipeAggregate aggregate) 
-        {        
-            return new RecipeModel()
+        public async Task<Result<RecipeDto>> InsertRecipeAsync(RecipeDto recipeModel, CancellationToken cancellationToken)
+        {
+            Result<IReference> result = await _recipeCommandHandler.InsertRecipeAsync(recipeModel, cancellationToken);
+            if (result.IsError)
             {
-                Id = aggregate.Header.Id,
-                Name = aggregate.Header.Title,
-                Ingredients = aggregate.Ingredients.Select(i => i.Title).ToList(),
-                Instructions = aggregate.Details.Data.Instructions,
-                PreparationTime = aggregate.Details.Data.PreparationTime,
-                Servings = aggregate.Details.Data.Servings,
-                CreatedAt = aggregate.Header.CreatedAt,
-                UpdatedAt = aggregate.Header.UpdatedAt,
-            };
+                return result.Error;
+            }
+
+            Result<RecipeDto> finalResult = await _recipeQueryHandler.GetRecipeAsync(result.Value.Id, cancellationToken);
+            if (finalResult.IsError)
+            {
+                return finalResult.Error;
+            }
+            return finalResult.Value;
         }
     }
 }

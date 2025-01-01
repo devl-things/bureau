@@ -27,7 +27,7 @@
   <Class Name="Bureau.Core.Models.Edge">
     <Position X="1.25" Y="1.5" Width="1.5" />
     <TypeIdentifier>
-      <HashCode>AAACAAAAAAAIAAAAAAAAAAAAAAAAAAAoAAAAAAAgAAA=</HashCode>
+      <HashCode>AAACEAAAAAAICAAAACAAAAAAAAAAAAAoAAAAAAAgAAE=</HashCode>
       <FileName>Models\Edge.cs</FileName>
     </TypeIdentifier>
     <Lollipop Position="0.2" />

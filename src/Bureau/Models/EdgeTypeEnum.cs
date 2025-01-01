@@ -8,7 +8,14 @@ namespace Bureau.Models
 {
     internal enum EdgeTypeEnum
     {
-        Details = 0,
-        Items = 1,
+        Details = 10,
+        Items = 11,
+        Group = 12,
+
+        #region Recipe
+
+        Recipe = 100,
+        
+        #endregion Recipe
     }
 }

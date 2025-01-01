@@ -29,6 +29,7 @@
 
 	<ItemGroup>
 	  <ProjectReference Include="..\..\tests\Bureau.Data.Mock\Bureau.Data.Mock.csproj" />
+	  <ProjectReference Include="..\Bureau.Data.Postgres\Bureau.Data.Postgres.csproj" />
 	  <ProjectReference Include="..\Bureau.UI.API\Bureau.UI.API.csproj" />
 	</ItemGroup>
 

@@ -13,5 +13,7 @@ namespace Bureau.UI.API.Models
     public class ApiResponse<T> : ApiResponse
     {
         public required T Data { get; set; }         // Actual payload
+
+        public PaginationData? Pagination { get; set; } // Pagination data
     }
 }

@@ -1,15 +1,13 @@
 ﻿using Bureau.Core;
+using Bureau.Core.Models.Data;
+using Bureau.Core.Models;
 using Bureau.Recipes.Models;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Bureau.Recipes.Managers
 {
     public interface IRecipeManager
     {
-        Task<Result<RecipeModel>> GetRecipeAsync(string id, CancellationToken cancellationToken = default);
+        Task<Result<RecipeDto>> UpdateRecipeAsync(RecipeDto recipeModel, CancellationToken cancellationToken);
+        Task<Result<RecipeDto>> InsertRecipeAsync(RecipeDto recipeModel, CancellationToken cancellationToken);
     }
 }

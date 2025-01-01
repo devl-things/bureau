@@ -10,5 +10,9 @@ namespace Bureau.Core.Models
     {
         public DateTime LastSync { get; set; }
         public bool Changed { get; set; }
+
+        public ExternalRecord(string id) : base(id)
+        {
+        }
     }
 }

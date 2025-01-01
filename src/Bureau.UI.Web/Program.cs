@@ -1,5 +1,6 @@
 using Bureau.Core.Repositories;
-using Bureau.Data.Mock.Repositories;
+using Bureau.Data.Postgres.Configurations;
+using Bureau.Recipes.Configurations;
 using Bureau.UI.API.Configurations;
 
 namespace Bureau.UI.Web
@@ -10,8 +11,9 @@ namespace Bureau.UI.Web
         {
             WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
-            builder.Services.AddScoped<ITermEntryRepository, MockTermEntryRepository>();
-            
+            //builder.Services.AddScoped<ITermEntryRepository, MockTermEntryRepository>();
+            builder.Services.AddBureauDataPostgres(builder.Configuration);
+
             builder.Services.AddBureauAPI();
 
             #region before

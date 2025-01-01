@@ -59,6 +59,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Bureau", "src\Bureau\Bureau
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Bureau.Data.Mock", "tests\Bureau.Data.Mock\Bureau.Data.Mock.csproj", "{8D6177DC-D8CA-4321-B929-FD94F0B66A1B}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Bureau.Data.Postgres", "src\Bureau.Data.Postgres\Bureau.Data.Postgres.csproj", "{566B7545-6616-429D-A4A5-BB27B80EEE05}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -159,6 +161,10 @@ Global
 		{8D6177DC-D8CA-4321-B929-FD94F0B66A1B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{8D6177DC-D8CA-4321-B929-FD94F0B66A1B}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{8D6177DC-D8CA-4321-B929-FD94F0B66A1B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{566B7545-6616-429D-A4A5-BB27B80EEE05}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{566B7545-6616-429D-A4A5-BB27B80EEE05}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{566B7545-6616-429D-A4A5-BB27B80EEE05}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{566B7545-6616-429D-A4A5-BB27B80EEE05}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -187,6 +193,7 @@ Global
 		{C32BB783-9D6D-4B6D-8D42-6A7647BB3E80} = {FD0E61F3-4A3F-4981-B061-09717A8785BD}
 		{FD600799-1472-4098-ABCA-9EED395788E8} = {6D3BE044-1845-4ECB-8B4D-75FCD0D6F1AE}
 		{8D6177DC-D8CA-4321-B929-FD94F0B66A1B} = {BE4D0CE7-AB02-4F75-8A1A-288347BB9F1C}
+		{566B7545-6616-429D-A4A5-BB27B80EEE05} = {65E3CA85-EF32-4223-B48E-859A4EDC03A7}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {6647AABA-B91A-4688-A5DB-FD9E9261D495}

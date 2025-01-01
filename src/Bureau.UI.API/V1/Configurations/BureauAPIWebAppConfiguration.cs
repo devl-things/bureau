@@ -35,7 +35,7 @@ namespace Bureau.UI.API.V1.Configurations
                 .WithApiVersionSet(versionSet)
                 .MapToApiVersion(1);
 
-            recipesGroup.MapDelete("{id}", RecipesMethods.UpdateRecipe)
+            recipesGroup.MapDelete("{id}", RecipesMethods.DeleteRecipe)
                 .WithName(BureauAPIRouteNames.DeleteRecipes)
                 .WithApiVersionSet(versionSet)
                 .MapToApiVersion(1);

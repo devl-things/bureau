@@ -44,6 +44,31 @@
         public static implicit operator Result<T>(Exception exception) { return new Result<T>(new ResultError(exception)); }
     }
 
+    public struct PaginatedResult<T>
+    {
+        public T Value { get; }
+        public PaginationMetadata Pagination { get; }
+        public ResultError Error { get; }
+        public bool IsSuccess { get; }
+        public bool IsError { get { return !IsSuccess; } }
+        internal PaginatedResult(T value, PaginationMetadata pagination, bool isSuccess, ResultError resultError)
+        {
+            Value = value;
+            Pagination = pagination;
+            IsSuccess = isSuccess;
+            Error = resultError;
+        }
+
+        public PaginatedResult(T value, PaginationMetadata pagination) : this(value, pagination, true, default) { }
+        public PaginatedResult(ResultError error) : this(default!, default, false, error) { }
+
+        public static implicit operator PaginatedResult<T>(T successData) { return new PaginatedResult<T>(successData, default); }
+
+        public static implicit operator PaginatedResult<T>(ResultError error) { return new PaginatedResult<T>(error); }
+        public static implicit operator PaginatedResult<T>(string errorMessage) { return new PaginatedResult<T>(new ResultError(errorMessage)); }
+        public static implicit operator PaginatedResult<T>(Exception exception) { return new PaginatedResult<T>(new ResultError(exception)); }
+    }
+
     public struct ResultError 
     {
         public string ErrorMessage { get; }

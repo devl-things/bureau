@@ -9,7 +9,7 @@ namespace Bureau.UI.API.Models
             return new ApiResponse()
             {
                 Status = ApiResponse.StatusError,
-                //TODO
+                Message = $"{result.ErrorMessage} {result.Exception?.ToString()}"
             };
         }
     }

@@ -8,7 +8,11 @@ namespace Bureau.Core.Models
 {
     public class FlexibleRecord<T> : BaseRecord
     {
-        public string Type { get; set; } = default!;
         public T Data { get; set; } = default!;
+        public FlexibleRecord(string id)
+        {
+            Id = id;
+            Status = RecordStatus.Active;
+        }
     }
 }

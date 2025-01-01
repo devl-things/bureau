@@ -10,4 +10,8 @@
     <ProjectReference Include="..\..\src\Bureau.Core\Bureau.Core.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Repositories\" />
+  </ItemGroup>
+
 </Project>

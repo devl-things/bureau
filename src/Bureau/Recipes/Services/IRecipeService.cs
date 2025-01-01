@@ -1,15 +1,13 @@
 ﻿using Bureau.Core;
+using Bureau.Core.Models;
 using Bureau.Recipes.Models;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Bureau.Recipes.Services
 {
+    [Obsolete("This interface is obsolete. Use IRecipeManager instead.")]
     internal interface IRecipeService
     {
-        Task<Result<RecipeAggregate>> GetRecipeAggregateAsync(string id, CancellationToken cancellationToken);
+        Task<Result<RecipeAggregate>> GetRecipeAggregateAsync(IReference id, CancellationToken cancellationToken);
+        Task<Result<RecipeAggregate>> UpdateRecipeAggregateAsync(RecipeAggregate recipeAggregate, CancellationToken cancellationToken);
     }
 }
