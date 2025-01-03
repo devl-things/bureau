@@ -18,11 +18,14 @@ namespace Bureau.Recipes.Handlers
 {
     internal class RecipeQueryHandler : IRecipeQueryHandler, IInternalRecipeQueryHandler
     {
-        private readonly IRepository _repository;
+        private readonly IRecordQueryRepository<EdgeTypeSearchRequest, BaseAggregateModel> _edgeTypeRepository;
+        private readonly IRecordQueryRepository<IdSearchRequest, AggregateModel> _idRepository;
 
-        public RecipeQueryHandler(IRepository repository)
+        public RecipeQueryHandler(IRecordQueryRepository<EdgeTypeSearchRequest, BaseAggregateModel> edgeTypeRepository,
+            IRecordQueryRepository<IdSearchRequest, AggregateModel> idRepository)
         {
-            _repository = repository;
+            _edgeTypeRepository = edgeTypeRepository;
+            _idRepository = idRepository;
         }
         public async Task<Result<RecipeDto>> GetRecipeAsync(string id, CancellationToken cancellationToken = default)
         {
@@ -46,12 +49,12 @@ namespace Bureau.Recipes.Handlers
             {
                 EdgeType = (int)EdgeTypeEnum.Recipe,
                 Active = true,
-                FilterRequestType = EdgeRequestType.RootNode,
+                FilterRequestType = EdgeRequestType.Edge | EdgeRequestType.RootNode,
                 SelectReferences = EdgeRequestType.Edge | EdgeRequestType.TargetNode,
                 SelectRecordTypes = RecordRequestType.Edges | RecordRequestType.TermEntries | RecordRequestType.FlexRecords,
             };
 
-            Result<BaseAggregateModel> result = await _repository.FetchRecordsAsync(edgeTypeSearchRequest, cancellationToken).ConfigureAwait(false);
+            Result<BaseAggregateModel> result = await _edgeTypeRepository.FetchRecordsAsync(edgeTypeSearchRequest, cancellationToken).ConfigureAwait(false);
             if (result.IsError)
             {
                 return result.Error;
@@ -69,7 +72,7 @@ namespace Bureau.Recipes.Handlers
                 SelectRecordTypes = RecordRequestType.Edges | RecordRequestType.TermEntries | RecordRequestType.FlexRecords,
             };
 
-            return await _repository.FetchRecordsAsync(idSearchRequest, cancellationToken).ConfigureAwait(false);
+            return await _idRepository.FetchRecordsAsync(idSearchRequest, cancellationToken).ConfigureAwait(false);
         }
     }
 }

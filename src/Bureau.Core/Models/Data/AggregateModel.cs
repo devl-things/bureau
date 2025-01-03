@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Bureau.Core.Factories;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -19,6 +20,18 @@ namespace Bureau.Core.Models.Data
     public class AggregateModel : BaseAggregateModel
     {
         public required IReference MainReference { get; set; }
+
+        public AggregateModel()
+        {
+            
+        }
+        public AggregateModel(BaseAggregateModel baseModel)
+        {
+            TermEntries = baseModel.TermEntries;
+            FlexRecords = baseModel.FlexRecords;
+            Edges = baseModel.Edges;
+            Pagination = baseModel.Pagination;
+        }
     }
 
     public class ExtendedAggregateModel : AggregateModel

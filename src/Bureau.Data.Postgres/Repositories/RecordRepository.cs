@@ -10,6 +10,7 @@ using Bureau.Data.Postgres.Handlers;
 using Bureau.Data.Postgres.Mappers;
 using Bureau.Data.Postgres.Models;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using Npgsql;
 using System.Linq;
 using System.Text;
@@ -19,16 +20,33 @@ namespace Bureau.Data.Postgres.Repositories
 {
     internal class RecordRepository : IRepository
     {
-        private readonly BureauContext _dbContext;
-        private readonly string? _connectionString;
         //TODO put in options
         private readonly int BATCH_SIZE = 1000;
-        public RecordRepository(BureauContext dbContext)
+
+        private const string SELECT_EDGES = @"
+        SELECT 
+            ""Id"", 
+            ""SourceNodeId"", 
+            ""TargetNodeId"", 
+            ""EdgeType"", 
+            ""Active"", 
+            ""ParentNodeId"", 
+            ""RootNodeId"", 
+            ""Order""
+        FROM public.""Edges""";
+
+        private readonly ILogger<RecordRepository> _logger;
+
+        private readonly BureauContext _dbContext;
+        private readonly string? _connectionString;
+        public RecordRepository(ILogger<RecordRepository> logger, BureauContext dbContext)
         {
+            _logger = logger;
             _dbContext = dbContext;
             _connectionString = _dbContext.Database.GetConnectionString();
         }
         //TODO [refactor] FetchRecords methods
+        [Obsolete("Use IRecordQueryRepository")]
         public async Task<Result<AggregateModel>> FetchRecordsAsync(IdSearchRequest idSearchRequest, CancellationToken cancellationToken)
         {
             if (idSearchRequest.FilterReferenceId is null) 
@@ -132,8 +150,7 @@ namespace Bureau.Data.Postgres.Repositories
 
             return aggregateModel;
         }
-
-
+        [Obsolete("Use IRecordQueryRepository")]
         public async Task<Result<BaseAggregateModel>> FetchRecordsAsync(EdgeTypeSearchRequest edgeTypeSearchRequest, CancellationToken cancellationToken)
         {
             BaseAggregateModel aggregateModel = new BaseAggregateModel();
@@ -224,39 +241,17 @@ namespace Bureau.Data.Postgres.Repositories
             IdSearchRequest idSearchRequest,
             CancellationToken cancellationToken)
         {
-            var edges = new List<Postgres.Models.Edge>();
-
             // Build dynamic WHERE clause based on FilterRequestType flags
-            var filterConditions = new List<string>();
-
-            if (idSearchRequest.FilterRequestType.HasFlag(EdgeRequestType.Edge))
-                filterConditions.Add("\"Id\" = @ReferenceId");
-
-            if (idSearchRequest.FilterRequestType.HasFlag(EdgeRequestType.SourceNode))
-                filterConditions.Add("\"SourceNodeId\" = @ReferenceId");
-
-            if (idSearchRequest.FilterRequestType.HasFlag(EdgeRequestType.TargetNode))
-                filterConditions.Add("\"TargetNodeId\" = @ReferenceId");
-
-            if (idSearchRequest.FilterRequestType.HasFlag(EdgeRequestType.RootNode))
-                filterConditions.Add("\"RootNodeId\" = @ReferenceId");
-
             // Combine conditions into a single WHERE clause
-            var whereClause = string.Join(" OR ", filterConditions);
+            string whereClause = PrepareEdgeFilterType(idSearchRequest.FilterRequestType, "= @ReferenceId");
 
-            string query = string.Format(@"
-        SELECT 
-            ""Id"", 
-            ""SourceNodeId"", 
-            ""TargetNodeId"", 
-            ""EdgeType"", 
-            ""Active"", 
-            ""ParentNodeId"", 
-            ""RootNodeId"", 
-            ""Order""
-        FROM public.""Edges""
-        WHERE {0};", whereClause);
+            string query = $@"
+        {SELECT_EDGES}
+        WHERE {whereClause};";
 
+            _logger.Debug(query);
+
+            List<Postgres.Models.Edge> edges = new List<Postgres.Models.Edge>();
             using (var command = new NpgsqlCommand(query, connection))
             {
                 command.Parameters.AddWithValue("@ReferenceId", NpgsqlTypes.NpgsqlDbType.Uuid, Guid.Parse(idSearchRequest.FilterReferenceId.Id));
@@ -265,17 +260,7 @@ namespace Bureau.Data.Postgres.Repositories
                 {
                     while (await reader.ReadAsync(cancellationToken))
                     {
-                        edges.Add(new Postgres.Models.Edge
-                        {
-                            Id = reader.GetGuid(0),
-                            SourceNodeId = reader.GetGuid(1),
-                            TargetNodeId = reader.GetGuid(2),
-                            EdgeType = reader.GetInt32(3),
-                            Active = reader.GetBoolean(4),
-                            ParentNodeId = reader.IsDBNull(5) ? (Guid?)null : reader.GetGuid(5),
-                            RootNodeId = reader.GetGuid(6),
-                            Order = reader.IsDBNull(7) ? (int?)null : reader.GetInt32(7)
-                        });
+                        edges.Add(ReadEdge(reader));
                     }
                 }
             }
@@ -288,40 +273,22 @@ namespace Bureau.Data.Postgres.Repositories
             EdgeTypeSearchRequest edgeTypeSearchRequest,
             CancellationToken cancellationToken)
         {
-            List<Postgres.Models.Edge> edges = new List<Postgres.Models.Edge>();
-            
-            string whereClause = string.Empty;
-            if (edgeTypeSearchRequest.Active.HasValue) 
-            {
-                whereClause = " AND \"Active\" = @EdgeActive";
-            }
-            //TODO [first] filter by FilterRequestType
-            string query = string.Format(@"
-        SELECT 
-            ""Id"", 
-            ""SourceNodeId"", 
-            ""TargetNodeId"", 
-            ""EdgeType"", 
-            ""Active"", 
-            ""ParentNodeId"", 
-            ""RootNodeId"", 
-            ""Order""
-        FROM public.""Edges""
-        WHERE ""EdgeType"" = @EdgeType
-            {0}
-        UNION ALL
-        SELECT 
-            ""Id"", 
-            ""SourceNodeId"", 
-            ""TargetNodeId"", 
-            ""EdgeType"", 
-            ""Active"", 
-            ""ParentNodeId"", 
-            ""RootNodeId"", 
-            ""Order""
-        FROM public.""Edges""
-        WHERE ""RootNodeId"" in (SELECT ""Id"" FROM public.""Edges"" WHERE ""EdgeType"" = @EdgeType {0});", whereClause);
+            const string edgesCondition = $"in (SELECT \"Id\" FROM FilteredEdges)";
+            string edgesWhereClause = PrepareEdgeFilterType(edgeTypeSearchRequest.FilterRequestType, edgesCondition);
 
+            string basicWhereClause = "WHERE \"EdgeType\" = @EdgeType";
+            if (edgeTypeSearchRequest.Active.HasValue)
+            {
+                basicWhereClause = " AND \"Active\" = @EdgeActive";
+            }
+
+            string query = $@"
+    WITH FilteredEdges AS (SELECT ""Id"" FROM public.""Edges"" WHERE {basicWhereClause})
+    {SELECT_EDGES}
+    WHERE {edgesWhereClause}";
+
+            _logger.Debug(query);
+            List<Postgres.Models.Edge> edges = new List<Postgres.Models.Edge>();
             using (var command = new NpgsqlCommand(query, connection))
             {
                 command.Parameters.AddWithValue("@EdgeType", NpgsqlTypes.NpgsqlDbType.Integer, edgeTypeSearchRequest.EdgeType);
@@ -330,26 +297,50 @@ namespace Bureau.Data.Postgres.Repositories
                     command.Parameters.AddWithValue("@EdgeActive", NpgsqlTypes.NpgsqlDbType.Boolean, edgeTypeSearchRequest.Active.Value);
                 }
 
-                using (var reader = await command.ExecuteReaderAsync(cancellationToken))
+                using (NpgsqlDataReader reader = await command.ExecuteReaderAsync(cancellationToken))
                 {
                     while (await reader.ReadAsync(cancellationToken))
                     {
-                        edges.Add(new Postgres.Models.Edge
-                        {
-                            Id = reader.GetGuid(0),
-                            SourceNodeId = reader.GetGuid(1),
-                            TargetNodeId = reader.GetGuid(2),
-                            EdgeType = reader.GetInt32(3),
-                            Active = reader.GetBoolean(4),
-                            ParentNodeId = reader.IsDBNull(5) ? (Guid?)null : reader.GetGuid(5),
-                            RootNodeId = reader.GetGuid(6),
-                            Order = reader.IsDBNull(7) ? (int?)null : reader.GetInt32(7)
-                        });
+                        edges.Add(ReadEdge(reader));
                     }
                 }
             }
 
             return edges;
+        }
+
+        private Postgres.Models.Edge ReadEdge(NpgsqlDataReader reader)
+        {
+            return new Postgres.Models.Edge
+            {
+                Id = reader.GetGuid(0),
+                SourceNodeId = reader.GetGuid(1),
+                TargetNodeId = reader.GetGuid(2),
+                EdgeType = reader.GetInt32(3),
+                Active = reader.GetBoolean(4),
+                ParentNodeId = reader.IsDBNull(5) ? (Guid?)null : reader.GetGuid(5),
+                RootNodeId = reader.GetGuid(6),
+                Order = reader.IsDBNull(7) ? (int?)null : reader.GetInt32(7)
+            };
+        }
+
+        private static string PrepareEdgeFilterType(EdgeRequestType edgeRequestType, string edgeCondition)
+        {
+            List<string> filterConditions = new List<string>();
+
+            if (edgeRequestType.HasFlag(EdgeRequestType.Edge))
+                filterConditions.Add($"\"Id\" {edgeCondition}");
+
+            if (edgeRequestType.HasFlag(EdgeRequestType.SourceNode))
+                filterConditions.Add($"\"SourceNodeId\" {edgeCondition}");
+
+            if (edgeRequestType.HasFlag(EdgeRequestType.TargetNode))
+                filterConditions.Add($"\"TargetNodeId\" {edgeCondition}");
+
+            if (edgeRequestType.HasFlag(EdgeRequestType.RootNode))
+                filterConditions.Add($"\"RootNodeId\" {edgeCondition}");
+
+            return string.Join(" OR ", filterConditions);
         }
 
         private async Task<Dictionary<Guid, Record>> FetchRecordsByIdsAsync(
