@@ -111,7 +111,7 @@ namespace Bureau.UI.API.V1.Methods
                 {
                     Status = ApiResponse.StatusSuccess,
                     Data = new List<RecipeResponseModel>(recipes.Value.Count),
-                    Pagination = recipes.Pagination.ToPaginationData()
+                    Pagination = new PaginationData(recipes.Pagination)
                 };
                 recipes.Value.ForEach(x => response.Data.Add(x.ToResponseModel()));
                 return Results.Ok(response);

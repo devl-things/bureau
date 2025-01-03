@@ -26,7 +26,8 @@ namespace Bureau.Data.Postgres.Configurations
             {
                 options.UseNpgsql(connectionString);
             });
-            services.AddScoped<IRepository, RecordRepository>();
+            services.AddScoped<IRecordCommandRepository, RecordCommandRepository>();
+            services.AddScoped<ITermRepository, RecordCommandRepository>();
             services.AddScoped<IRecordQueryRepository<EdgeTypeSearchRequest, BaseAggregateModel>, EdgeTypeSearchQueryRepository>();
             services.AddScoped<IRecordQueryRepository<IdSearchRequest, AggregateModel>, IdSearchQueryRepository>();
 

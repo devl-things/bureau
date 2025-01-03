@@ -1,6 +1,6 @@
 ﻿using Bureau.Core;
 
-namespace Bureau.Recipes.Abstractions.Factories
+namespace Bureau.Recipes.Factories
 {
     public static class RecipeResultErrorFactory
     {

@@ -6,14 +6,14 @@ using Bureau.Core.Repositories;
 using Bureau.Recipes.Models;
 using Bureau.Core.Comparers;
 using Bureau.Models;
-using Bureau.Recipes.Abstractions.Factories;
-using static Bureau.Recipes.Factories.AggregateModelFactory;
+using Bureau.Recipes.Factories;
 
 namespace Bureau.Recipes.Handlers
 {
     internal class RecipeCommandHandler : IRecipeCommandHandler
     {
-        private readonly IRepository _repository;
+        private readonly IRecordCommandRepository _repository;
+        private readonly ITermRepository _termRepository;
         private readonly IInternalRecipeQueryHandler _queryHandler;
 
         private Dictionary<string, TermEntry> _termEntriesByLabel;
@@ -24,9 +24,12 @@ namespace Bureau.Recipes.Handlers
 
         private RecipeDto _recipeDto = default!;
         private string _recipeId = default!;
-        public RecipeCommandHandler(IRepository repository, IInternalRecipeQueryHandler queryHandler)
+        public RecipeCommandHandler(IRecordCommandRepository repository, 
+            ITermRepository termRepository,
+            IInternalRecipeQueryHandler queryHandler)
         {
             _repository = repository;
+            _termRepository = termRepository;
             _queryHandler = queryHandler;
 
             _termEntriesByLabel = new Dictionary<string, TermEntry>();
@@ -85,7 +88,7 @@ namespace Bureau.Recipes.Handlers
                 RequestType = TermRequestType.Label
             };
 
-            Result<Dictionary<string, TermEntry>> termsResult = await _repository.FetchTermRecordsAsync(termSearchRequest, cancellationToken);
+            Result<Dictionary<string, TermEntry>> termsResult = await _termRepository.FetchTermRecordsAsync(termSearchRequest, cancellationToken);
 
             if (termsResult.IsError)
             {

@@ -1,18 +1,11 @@
 ﻿using Bureau.Core;
-using Bureau.Core.Comparers;
 using Bureau.Core.Factories;
 using Bureau.Core.Models;
 using Bureau.Core.Models.Data;
 using Bureau.Core.Repositories;
 using Bureau.Models;
-using Bureau.Recipes.Abstractions.Factories;
 using Bureau.Recipes.Factories;
 using Bureau.Recipes.Models;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Bureau.Recipes.Handlers
 {
@@ -21,12 +14,14 @@ namespace Bureau.Recipes.Handlers
         private readonly IRecordQueryRepository<EdgeTypeSearchRequest, BaseAggregateModel> _edgeTypeRepository;
         private readonly IRecordQueryRepository<IdSearchRequest, AggregateModel> _idRepository;
 
-        public RecipeQueryHandler(IRecordQueryRepository<EdgeTypeSearchRequest, BaseAggregateModel> edgeTypeRepository,
+        public RecipeQueryHandler(
+            IRecordQueryRepository<EdgeTypeSearchRequest, BaseAggregateModel> edgeTypeRepository,
             IRecordQueryRepository<IdSearchRequest, AggregateModel> idRepository)
         {
             _edgeTypeRepository = edgeTypeRepository;
             _idRepository = idRepository;
         }
+
         public async Task<Result<RecipeDto>> GetRecipeAsync(string id, CancellationToken cancellationToken = default)
         {
             if(!BureauReferenceFactory.TryCreateReference(id, out IReference referenceId))

@@ -1,6 +1,5 @@
 ﻿using Bureau.Recipes.Handlers;
 using Bureau.Recipes.Managers;
-using Bureau.Recipes.Services;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Bureau.Recipes.Configurations
