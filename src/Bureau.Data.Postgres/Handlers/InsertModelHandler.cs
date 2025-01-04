@@ -4,33 +4,61 @@ using Bureau.Core.Models;
 using Bureau.Core;
 using Bureau.Data.Postgres.Mappers;
 using dbModels = Bureau.Data.Postgres.Models;
-using System.Runtime.CompilerServices;
 using Bureau.Data.Postgres.Models;
-using Npgsql;
-using System.Text;
-using Bureau.Core.Comparers;
 
 namespace Bureau.Data.Postgres.Handlers
 {
-    internal class AggregateModelHandler
+    internal interface IModelHandler 
     {
-        private AggregateModel _insertRequest;
+        public Result HandleAggregate();
+    }
+    internal class BaseModelHandler
+    {
+        protected Dictionary<IReference, Guid> _newRecordIds;
+
+        public BaseModelHandler(int capacity)
+        {
+            _newRecordIds = new Dictionary<IReference, Guid>(capacity, new Core.Comparers.ReferenceComparer());
+        }
+        public BaseModelHandler() : this(0)
+        {
+        }
+        protected bool TryGetGuid(IReference reference, out Guid guid)
+        {
+            if (BureauReferenceFactory.IsTempId(reference.Id))
+            {
+                if (_newRecordIds.TryGetValue(reference, out Guid tempId))
+                {
+                    guid = tempId;
+                    return true;
+                }
+                guid = Guid.Empty;
+                return false;
+            }
+            else
+            {
+                return Guid.TryParse(reference.Id, out guid);
+            }
+        }
+    }
+    internal class InsertModelHandler : BaseModelHandler, IModelHandler
+    {
+        private InsertAggregateModel _insertRequest;
 
         private DateTime _updatedAt = default;
         private List<IReference> _updateRecords;
         private List<Record> _newRecords;
-        private Dictionary<IReference, Guid> _newRecordIds;
+        
         private List<dbModels.TermEntry> _newTermEntries;
         private List<dbModels.Edge> _newEdgeRecords;
         private List<dbModels.Edge> _updateEdgeRecords;
         private List<FlexibleRecord> _newFlexibleRecords;
         private List<FlexibleRecord> _updateFlexibleRecords;
         private IReference _mainReference = BureauReferenceFactory.EmptyReference;
-        public AggregateModelHandler(AggregateModel insertRequest)
+        public InsertModelHandler(InsertAggregateModel insertRequest) : base(insertRequest.TermEntries.Count + insertRequest.Edges.Count)
         {
             _insertRequest = insertRequest;
             _updateRecords = new List<IReference>(_insertRequest.TermEntries.Count + _insertRequest.Edges.Count);
-            _newRecordIds = new Dictionary<IReference, Guid>(_insertRequest.TermEntries.Count + _insertRequest.Edges.Count, new Core.Comparers.ReferenceComparer());
             _newRecords = new List<Record>(_insertRequest.TermEntries.Count + _insertRequest.Edges.Count);
             _newTermEntries = new List<dbModels.TermEntry>(_insertRequest.TermEntries.Count);
             _newEdgeRecords = new List<dbModels.Edge>(_insertRequest.Edges.Count);
@@ -200,58 +228,64 @@ namespace Bureau.Data.Postgres.Handlers
             return edgeEntry;
         }
 
-        protected bool TryGetGuid(IReference reference, out Guid guid)
+        
+    }
+
+    internal class UpdateModelHandler : InsertModelHandler
+    {
+        private RemoveModelHandler _deleteHandler;
+        public UpdateModelHandler(UpdateAggregateModel insertRequest) : base(insertRequest)
         {
-            if (BureauReferenceFactory.IsTempId(reference.Id))
+            _deleteHandler = new RemoveModelHandler(insertRequest);
+        }
+
+        public HashSet<Guid> RemoveRecords { get { return _deleteHandler.RemoveRecords; } }
+        public HashSet<Guid> RemoveEdgeRecords { get { return _deleteHandler.RemoveEdgeRecords; } }
+        public HashSet<Guid> RemoveFlexibleRecords { get { return _deleteHandler.RemoveFlexibleRecords; } }
+
+        public override Result HandleAggregate()
+        {
+            Result result = base.HandleAggregate();
+            if (result.IsError) 
             {
-                if (_newRecordIds.TryGetValue(reference, out Guid tempId))
-                {
-                    guid = tempId;
-                    return true;
-                }
-                guid = Guid.Empty;
-                return false;
+                return result.Error;
             }
-            else
-            {
-                return Guid.TryParse(reference.Id, out guid);
-            }
+
+            return _deleteHandler.HandleAggregate();
         }
     }
 
-    internal class ExtendedAggregateModelHandler : AggregateModelHandler
+    internal class RemoveModelHandler : IModelHandler
     {
-        private ExtendedAggregateModel _insertRequest;
+        private IRemoveAggregateModel _request;
         private HashSet<Guid> _removeRecordIds;
         private HashSet<Guid> _removeFlexIds;
         private HashSet<Guid> _removeEdgeIds;
-        public ExtendedAggregateModelHandler(ExtendedAggregateModel insertRequest) : base(insertRequest)
+        public RemoveModelHandler(IRemoveAggregateModel request)
         {
-            _insertRequest = insertRequest;
-            _removeRecordIds = new HashSet<Guid>(insertRequest.FlexRecordsToDelete.Count + insertRequest.EdgesToDelete.Count);
-            _removeFlexIds = new HashSet<Guid>(insertRequest.FlexRecordsToDelete.Count);
-            _removeEdgeIds = new HashSet<Guid>(insertRequest.EdgesToDelete.Count);
+            _request = request;
+            _removeRecordIds = new HashSet<Guid>(request.EdgesToDelete.Count);
+            _removeFlexIds = new HashSet<Guid>(request.FlexRecordsToDelete.Count);
+            _removeEdgeIds = new HashSet<Guid>(request.EdgesToDelete.Count);
         }
 
         public HashSet<Guid> RemoveRecords { get { return _removeRecordIds; } }
         public HashSet<Guid> RemoveEdgeRecords { get { return _removeEdgeIds; } }
         public HashSet<Guid> RemoveFlexibleRecords { get { return _removeFlexIds; } }
 
-        public override Result HandleAggregate()
+        public Result HandleAggregate()
         {
-            base.HandleAggregate();
-
-            foreach (IReference item in _insertRequest.FlexRecordsToDelete)
+            foreach (IReference item in _request.FlexRecordsToDelete)
             {
-                if (TryGetGuid(item, out Guid guid))
+                if (Guid.TryParse(item.Id, out Guid guid))
                 {
                     _removeFlexIds.Add(guid);
                 }
             }
 
-            foreach (IReference item in _insertRequest.EdgesToDelete)
+            foreach (IReference item in _request.EdgesToDelete)
             {
-                if (TryGetGuid(item, out Guid guid))
+                if (Guid.TryParse(item.Id, out Guid guid))
                 {
                     _removeEdgeIds.Add(guid);
                     _removeRecordIds.Add(guid);

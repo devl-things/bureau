@@ -47,6 +47,35 @@ namespace Bureau.Recipes.Handlers
             return await ExecuteCommandRecipeAsync(recipeDto, cancellationToken, InternalInsertRecipeAsync);
         }
 
+        public async Task<Result> DeleteRecipeAsync(string id, CancellationToken cancellationToken)
+        {
+            if (BureauReferenceFactory.IsTempId(id))
+            {
+                return RecipeResultErrorFactory.RecipeIdBadFormat(id);
+            }
+
+            Result<InsertAggregateModel> existingRecipeResult = await _queryHandler.InternalGetRecipeAggregateAsync(BureauReferenceFactory.CreateReference(id), cancellationToken).ConfigureAwait(false);
+            if (existingRecipeResult.IsError)
+            {
+                return existingRecipeResult.Error;
+            }
+            RemoveAggregateModel removeRecipe = new RemoveAggregateModel()
+            {
+                EdgesToDelete = new HashSet<Edge>(existingRecipeResult.Value.Edges.Count, new ReferenceComparer()),
+                FlexRecordsToDelete = new HashSet<FlexRecord>(existingRecipeResult.Value.FlexRecords.Count, new ReferenceComparer())
+            };
+            foreach (Edge edge in existingRecipeResult.Value.Edges)
+            {
+                removeRecipe.EdgesToDelete.Add(edge);
+                if (existingRecipeResult.Value.FlexRecords.TryGetValue(new FlexRecord(edge.Id), out FlexRecord? flexRecord))
+                {
+                    removeRecipe.FlexRecordsToDelete.Add(flexRecord);
+                }
+            }
+
+            return await _repository.DeleteAggregateAsync(removeRecipe, cancellationToken);
+        }
+
         private async Task<Result<IReference>> ExecuteCommandRecipeAsync(RecipeDto recipeDto, CancellationToken cancellationToken, Func<CancellationToken, Task<Result<IReference>>> operation)
         {
             _recipeDto = recipeDto;
@@ -141,7 +170,7 @@ namespace Bureau.Recipes.Handlers
                 return RecipeResultErrorFactory.RecipeIdBadFormat(_recipeId);
             }
 
-            Result<AggregateModel> existingRecipeResult = await _queryHandler.InternalGetRecipeAggregateAsync(BureauReferenceFactory.CreateReference(_recipeId), cancellationToken).ConfigureAwait(false);
+            Result<InsertAggregateModel> existingRecipeResult = await _queryHandler.InternalGetRecipeAggregateAsync(BureauReferenceFactory.CreateReference(_recipeId), cancellationToken).ConfigureAwait(false);
             if (existingRecipeResult.IsError)
             {
                 return existingRecipeResult.Error;
@@ -203,7 +232,7 @@ namespace Bureau.Recipes.Handlers
             }
 
 
-            ExtendedAggregateModel updateRecipe = new ExtendedAggregateModel()
+            UpdateAggregateModel updateRecipe = new UpdateAggregateModel()
             {
                 MainReference = recipeEdge,
                 TermEntries = new HashSet<TermEntry>(_termEntriesByLabel.Values, new ReferenceComparer()),
@@ -353,7 +382,7 @@ namespace Bureau.Recipes.Handlers
                 return flexResult.Error;
             }
 
-            AggregateModel newRecipe = new AggregateModel()
+            InsertAggregateModel newRecipe = new InsertAggregateModel()
             {
                 MainReference = recipeEdge,
                 TermEntries = new HashSet<TermEntry>(_termEntriesByLabel.Values, new ReferenceComparer()),
@@ -440,6 +469,5 @@ namespace Bureau.Recipes.Handlers
 
             return await _repository.InsertAggregateAsync(newRecipe, cancellationToken);
         }
-
     }
 }

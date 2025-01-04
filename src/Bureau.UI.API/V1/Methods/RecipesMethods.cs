@@ -2,31 +2,17 @@
 using Bureau.Recipes.Handlers;
 using Bureau.Recipes.Managers;
 using Bureau.Recipes.Models;
-using Bureau.UI.API.Mappers;
 using Bureau.UI.API.Models;
 using Bureau.UI.API.V1.Mappers;
 using Bureau.UI.API.V1.Models.Recipes;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
-using System.Threading;
 
 namespace Bureau.UI.API.V1.Methods
 {
     internal static class RecipesMethods
     {
-        public static RecipeResponseModel DummyResponse = new RecipeResponseModel()
-        {
-            Id = Guid.NewGuid().ToString(),
-            Name = "Novi",
-            Ingredients = new List<string>()
-        };
-        public static RecipeResponseModel DummyResponse2 = new RecipeResponseModel()
-        {
-            Id = Guid.NewGuid().ToString(),
-            Name = "Novi 2",
-            Ingredients = new List<string>()
-        };
         public static async Task<IResult> CreateRecipe(
             CancellationToken cancellationToken,
             HttpContext httpContext,
@@ -72,20 +58,16 @@ namespace Bureau.UI.API.V1.Methods
             return Results.Ok(response.Value);
         }
 
-        public static IResult DeleteRecipe(string id)
+        public static async Task<IResult> DeleteRecipe(string id, CancellationToken cancellationToken, [FromServices] IRecipeManager manager)
         {
-            ApiResponse response = new ApiResponse()
+            Result response = await manager.DeleteRecipeAsync(id, cancellationToken).ConfigureAwait(false);
+            if (response.IsError)
             {
-                Status = ApiResponse.StatusSuccess,
-                Message = "jesam"
-            };
-
-            // Dummy data for demonstration; you’d retrieve this from a database
-            return Results.Ok(response);
+                return Results.BadRequest(response.Error.ToApiResponse());
+            }
+            return Results.Ok(response.ToApiResponse("Deletion succeeded."));
         }
 
-
-        // Handler method for the GET request
         public static async Task<IResult> GetRecipeById(string id, CancellationToken cancellationToken, [FromServices] IRecipeQueryHandler handler)
         {
             Result<RecipeDto> recipe = await handler.GetRecipeAsync(id, cancellationToken).ConfigureAwait(false);
@@ -101,10 +83,17 @@ namespace Bureau.UI.API.V1.Methods
             return Results.BadRequest(recipe.Error.ToApiResponse());
         }
 
-        //TODO [first] add pagination
-        public static async Task<IResult> GetRecipes(CancellationToken cancellationToken, [FromServices] IRecipeQueryHandler handler)
+        public static async Task<IResult> GetRecipes(CancellationToken cancellationToken, [FromServices] IRecipeQueryHandler handler, [FromQuery] int? page, [FromQuery] int? limit)
         {
-            PaginatedResult<List<RecipeDto>> recipes = await handler.GetRecipesAsync(cancellationToken).ConfigureAwait(false);
+            if ((page.HasValue && page < 1) || (limit.HasValue && limit < 1))
+            {
+                return Results.BadRequest(new ApiResponse
+                {
+                    Status = ApiResponse.StatusError,
+                    Message = "Page and limit must be greater than zero."
+                });
+            }
+            PaginatedResult<List<RecipeDto>> recipes = await handler.GetRecipesAsync(page, limit, cancellationToken).ConfigureAwait(false);
             if (recipes.IsSuccess)
             {
                 ApiResponse<List<RecipeResponseModel>> response = new ApiResponse<List<RecipeResponseModel>>()

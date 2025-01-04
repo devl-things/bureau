@@ -1,67 +1,46 @@
-```csharp
-RecipeAggregate aggregate = new RecipeAggregate()
-{
-    Header = new TermEntry()
-    {
-        Id = id,
-        Title = "Fritaja"
-    },
-    Details = new FlexibleRecord<RecipeDetails>()
-    {
-        Type = typeof(RecipeDetails).AssemblyQualifiedName!,
-        Data = new RecipeDetails()
-        {
-            Instructions = "Zmuckaj",
-            PreparationTime = "45 min",
-            Servings = 1,
-        }
-    },
-    Ingredients = new HashSet<TermEntry>() { new TermEntry()
-{
-    Title = "jaja"
-} },
-    IngredientsDetails = new HashSet<FlexibleRecord<QuantityDetails>>()
-    {
-        new FlexibleRecord<QuantityDetails>()
-        {
-            Type = typeof(QuantityDetails).AssemblyQualifiedName!,
-            Data = new QuantityDetails()
-            {
-                Unit = "lopate"
-            }
-        }
-    }
-};
-aggregate.Edges = new HashSet<Edge>()
-{
-    new Edge()
-    {
-        Active = true,
-        EdgeType = (int)EdgeTypeEnum.Details,
-        SourceNode = aggregate.Header,
-        TargetNode = aggregate.Details
-    },
-    new Edge()
-    {
-        Active = true,
-        EdgeType = (int)EdgeTypeEnum.Items,
-        SourceNode = aggregate.Header,
-        TargetNode = aggregate.Ingredients.First()
-    },
-};
-```
-
+### V1
 ```json
 {
-    "id": "sdf",
-    "createdAt": "0001-01-01T00:00:00",
-    "updatedAt": "0001-01-01T00:00:00",
-    "name": "Fritaja",
+    "id": "60630052-6f4f-4931-aa12-6512b40f3b33", // 1
+    "createdAt": "2025-01-01T11:01:00.279315Z", 
+    "updatedAt": "2025-01-01T11:01:00.279512Z",
+    "name": "string3", //{RecipeName}
     "ingredients": [
-      "jaja"
+    "sunka" //{Item1}
     ],
-    "instructions": "Zmuckaj",
-    "preparationTime": "45 min",
-    "servings": 1
-  },
+    "instructions": "string", // NoteDetails 
+    "preparationTime": "string", // RecipeDetails
+    "servings": 0 // RecipeDetails
+}
 ```
+## Edge
+|Id|SourceNodeId|Type|TargetNodeId|Parent|RootNodeId
+|-|-|-|-|-|-|
+|1|HT|Recipe|HT|/|1|
+|2|HT|Group|GR1|1|1|
+|3|HT|Group|GR2|1|1|
+|4|GR1|Items|I1|2|1|
+|5|GR1|Items|I2|2|1|
+|6|GR1|Items|I3|2|1|
+|7|GR2|Items|I2|3|1|
+
+## Term Entry
+|Id|Title|
+|-|-|
+|HT|{RecipeName}|
+|GR1|{GroupName}|
+|GR2|{RecipeName}|
+|I1|{Item1}|
+|I2|{Item2}|
+|I3|{Item3}|
+
+## Flexible Records
+|Id|Type|Example|
+|-|-|-|
+|1|RecipeDetails|{"PreparationTime":"string","Servings":0}|
+|2|NoteDetails|{"Note":"string"}|
+|2|NoteDetails||
+|4|QuantityDetails|TBD|
+|5|QuantityDetails||
+|6|QuantityDetails||
+|7|QuantityDetails||

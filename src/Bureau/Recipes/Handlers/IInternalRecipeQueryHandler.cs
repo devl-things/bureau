@@ -6,6 +6,6 @@ namespace Bureau.Recipes.Handlers
 {
     internal interface IInternalRecipeQueryHandler
     {
-        Task<Result<AggregateModel>> InternalGetRecipeAggregateAsync(IReference id, CancellationToken cancellationToken);
+        Task<Result<InsertAggregateModel>> InternalGetRecipeAggregateAsync(IReference id, CancellationToken cancellationToken);
     }
 }

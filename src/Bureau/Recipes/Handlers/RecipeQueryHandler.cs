@@ -1,4 +1,5 @@
 ﻿using Bureau.Core;
+using Bureau.Core.Configuration;
 using Bureau.Core.Factories;
 using Bureau.Core.Models;
 using Bureau.Core.Models.Data;
@@ -6,18 +7,21 @@ using Bureau.Core.Repositories;
 using Bureau.Models;
 using Bureau.Recipes.Factories;
 using Bureau.Recipes.Models;
+using Microsoft.Extensions.Options;
 
 namespace Bureau.Recipes.Handlers
 {
     internal class RecipeQueryHandler : IRecipeQueryHandler, IInternalRecipeQueryHandler
     {
-        private readonly IRecordQueryRepository<EdgeTypeSearchRequest, BaseAggregateModel> _edgeTypeRepository;
-        private readonly IRecordQueryRepository<IdSearchRequest, AggregateModel> _idRepository;
+        private readonly BureauOptions _options;
+        private readonly IRecordQueryRepository<EdgeTypeSearchRequest, QueryAggregateModel> _edgeTypeRepository;
+        private readonly IRecordQueryRepository<IdSearchRequest, InsertAggregateModel> _idRepository;
 
-        public RecipeQueryHandler(
-            IRecordQueryRepository<EdgeTypeSearchRequest, BaseAggregateModel> edgeTypeRepository,
-            IRecordQueryRepository<IdSearchRequest, AggregateModel> idRepository)
+        public RecipeQueryHandler(IOptions<BureauOptions> options,
+            IRecordQueryRepository<EdgeTypeSearchRequest, QueryAggregateModel> edgeTypeRepository,
+            IRecordQueryRepository<IdSearchRequest, InsertAggregateModel> idRepository)
         {
+            _options = options.Value;
             _edgeTypeRepository = edgeTypeRepository;
             _idRepository = idRepository;
         }
@@ -29,7 +33,7 @@ namespace Bureau.Recipes.Handlers
                 return RecipeResultErrorFactory.RecipeIdBadFormat(id);
             }
 
-            Result<AggregateModel> result = await InternalGetRecipeAggregateAsync(referenceId, cancellationToken).ConfigureAwait(false);
+            Result<InsertAggregateModel> result = await InternalGetRecipeAggregateAsync(referenceId, cancellationToken).ConfigureAwait(false);
 
             if (result.IsError)
             {
@@ -38,8 +42,13 @@ namespace Bureau.Recipes.Handlers
             return RecipeDtoFactory.Create(result.Value);
         }
 
-        public async Task<PaginatedResult<List<RecipeDto>>> GetRecipesAsync(CancellationToken cancellationToken)
+        public async Task<PaginatedResult<List<RecipeDto>>> GetRecipesAsync(int? page, int? limit, CancellationToken cancellationToken)
         {
+            if (limit.HasValue && limit > _options.MaximumLimit) 
+            {
+                return ResultErrorFactory.InvalidLimit(limit.Value, _options.MaximumLimit);
+            }
+
             EdgeTypeSearchRequest edgeTypeSearchRequest = new EdgeTypeSearchRequest()
             {
                 EdgeType = (int)EdgeTypeEnum.Recipe,
@@ -47,9 +56,10 @@ namespace Bureau.Recipes.Handlers
                 FilterRequestType = EdgeRequestType.Edge | EdgeRequestType.RootNode,
                 SelectReferences = EdgeRequestType.Edge | EdgeRequestType.TargetNode,
                 SelectRecordTypes = RecordRequestType.Edges | RecordRequestType.TermEntries | RecordRequestType.FlexRecords,
+                Pagination = new PaginationMetadata(page.HasValue ? page.Value : 1, limit.HasValue ? limit.Value: _options.DefaultLimit)
             };
 
-            Result<BaseAggregateModel> result = await _edgeTypeRepository.FetchRecordsAsync(edgeTypeSearchRequest, cancellationToken).ConfigureAwait(false);
+            Result<QueryAggregateModel> result = await _edgeTypeRepository.FetchRecordsAsync(edgeTypeSearchRequest, cancellationToken).ConfigureAwait(false);
             if (result.IsError)
             {
                 return result.Error;
@@ -57,7 +67,7 @@ namespace Bureau.Recipes.Handlers
             return RecipeDtoFactory.CreatePaged(result.Value);
         }
 
-        public async Task<Result<AggregateModel>> InternalGetRecipeAggregateAsync(IReference id, CancellationToken cancellationToken)
+        public async Task<Result<InsertAggregateModel>> InternalGetRecipeAggregateAsync(IReference id, CancellationToken cancellationToken)
         {
             IdSearchRequest idSearchRequest = new IdSearchRequest()
             {

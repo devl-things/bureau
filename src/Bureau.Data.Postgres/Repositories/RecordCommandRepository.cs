@@ -1,16 +1,20 @@
 ﻿using Bureau.Core;
 using Bureau.Core.Comparers;
+using Bureau.Core.Configuration;
 using Bureau.Core.Extensions;
 using Bureau.Core.Factories;
 using Bureau.Core.Models;
 using Bureau.Core.Models.Data;
 using Bureau.Core.Repositories;
+using Bureau.Data.Postgres.Configurations;
 using Bureau.Data.Postgres.Contexts;
 using Bureau.Data.Postgres.Handlers;
 using Bureau.Data.Postgres.Mappers;
 using Bureau.Data.Postgres.Models;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using Npgsql;
 using System.Linq;
 using System.Text;
@@ -20,17 +24,17 @@ namespace Bureau.Data.Postgres.Repositories
 {
     internal class RecordCommandRepository : IRecordCommandRepository, ITermRepository
     {
-        //TODO put in options
-        private readonly int BATCH_SIZE = 1000;
+        private BureauOptions _options;
 
         private readonly ILogger<RecordCommandRepository> _logger;
 
         private readonly BureauContext _dbContext;
         private readonly string? _connectionString;
-        public RecordCommandRepository(ILogger<RecordCommandRepository> logger, BureauContext dbContext)
+        public RecordCommandRepository(ILogger<RecordCommandRepository> logger, IOptions<BureauOptions> options, BureauContext dbContext)
         {
             _logger = logger;
             _dbContext = dbContext;
+            _options = options.Value;
             _connectionString = _dbContext.Database.GetConnectionString();
         }
 
@@ -65,9 +69,50 @@ namespace Bureau.Data.Postgres.Repositories
             }
         }
 
-        public async Task<Result<IReference>> InsertAggregateAsync(AggregateModel insertRequest, CancellationToken cancellationToken)
+        public async Task<Result> DeleteAggregateAsync(IRemoveAggregateModel request, CancellationToken cancellationToken) 
         {
-            AggregateModelHandler handler = new AggregateModelHandler(insertRequest);
+            RemoveModelHandler handler = new RemoveModelHandler(request);
+            Result result = handler.HandleAggregate();
+            if (result.IsError)
+            {
+                return result.Error;
+            }
+            try
+            {
+                using (IDbContextTransaction transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken))
+                {
+                    try
+                    {
+                        await _dbContext.FlexibleRecords
+                            .Where(x => handler.RemoveFlexibleRecords.Contains(x.Id))
+                            .ExecuteDeleteAsync(cancellationToken);
+                        await _dbContext.Edges
+                            .Where(x => handler.RemoveEdgeRecords.Contains(x.Id))
+                            .ExecuteDeleteAsync(cancellationToken);
+                        await _dbContext.Records
+                            .Where(x => handler.RemoveRecords.Contains(x.Id))
+                            .ExecuteDeleteAsync(cancellationToken);
+                        await transaction.CommitAsync(cancellationToken);
+                    }
+                    catch (Exception ex)
+                    {
+                        await transaction.RollbackAsync(cancellationToken);
+                        _logger.LogError(exception: ex, nameof(DeleteAggregateAsync));
+                        return ResultErrorFactory.UnexpectedError();
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(exception: ex, nameof(DeleteAggregateAsync));
+                return ResultErrorFactory.UnexpectedError();
+            }
+            return true;
+        }
+
+        public async Task<Result<IReference>> InsertAggregateAsync(InsertAggregateModel insertRequest, CancellationToken cancellationToken)
+        {
+            InsertModelHandler handler = new InsertModelHandler(insertRequest);
             Result result = handler.HandleAggregate();
             if (result.IsError)
             {
@@ -97,9 +142,9 @@ namespace Bureau.Data.Postgres.Repositories
                         }
                         catch (Exception ex)
                         {
-                            // Rollback transaction in case of an error
                             await transaction.RollbackAsync(cancellationToken);
-                            return ex.Message;
+                            _logger.LogError(exception: ex, nameof(InsertAggregateAsync));
+                            return ResultErrorFactory.UnexpectedError();
                         }
                     }
                 }
@@ -107,15 +152,15 @@ namespace Bureau.Data.Postgres.Repositories
             catch (Exception ex)
             {
                 _logger.LogError(exception: ex, nameof(InsertAggregateAsync));
-                return ex.Message;
+                return ResultErrorFactory.UnexpectedError();
             }
 
             return new Result<IReference>(handler.MainReference);
         }
 
-        public async Task<Result<IReference>> UpdateAggregateAsync(ExtendedAggregateModel updateRequest, CancellationToken cancellationToken)
+        public async Task<Result<IReference>> UpdateAggregateAsync(UpdateAggregateModel updateRequest, CancellationToken cancellationToken)
         {
-            ExtendedAggregateModelHandler handler = new ExtendedAggregateModelHandler(updateRequest);
+            UpdateModelHandler handler = new UpdateModelHandler(updateRequest);
             Result result = handler.HandleAggregate();
             if (result.IsError)
             {
@@ -154,9 +199,9 @@ namespace Bureau.Data.Postgres.Repositories
                         }
                         catch (Exception ex)
                         {
-                            // Rollback transaction in case of an error
                             await transaction.RollbackAsync(cancellationToken);
-                            return ex.Message;
+                            _logger.LogError(exception: ex, nameof(UpdateAggregateAsync));
+                            return ResultErrorFactory.UnexpectedError();
                         }
                     }
                 }
@@ -164,7 +209,7 @@ namespace Bureau.Data.Postgres.Repositories
             catch (Exception ex)
             {
                 _logger.LogError(exception: ex, nameof(UpdateAggregateAsync));
-                return ex.Message;
+                return ResultErrorFactory.UnexpectedError();
             }
 
             return new Result<IReference>(handler.MainReference);
@@ -318,7 +363,7 @@ namespace Bureau.Data.Postgres.Repositories
                 counter++;
 
                 // Execute batch when the batch size is reached
-                if (counter % BATCH_SIZE == 0)
+                if (counter % _options.BatchProcessingSize == 0)
                 {
                     await ExecuteBatchAsync(connection, transaction, batchCommand, parameters, cancellationToken);
                     batchCommand.Clear();
@@ -366,7 +411,7 @@ namespace Bureau.Data.Postgres.Repositories
                 counter++;
 
                 // Execute batch when the batch size is reached
-                if (counter % BATCH_SIZE == 0)
+                if (counter % _options.BatchProcessingSize == 0)
                 {
                     await ExecuteBatchAsync(connection, transaction, batchCommand, parameters, cancellationToken);
                     batchCommand.Clear();
@@ -422,7 +467,7 @@ namespace Bureau.Data.Postgres.Repositories
                 counter++;
 
                 // Execute batch when the batch size is reached
-                if (counter % BATCH_SIZE == 0)
+                if (counter % _options.BatchProcessingSize == 0)
                 {
                     await ExecuteBatchAsync(connection, transaction, batchCommand, parameters, cancellationToken);
                     batchCommand.Clear();
@@ -470,7 +515,7 @@ namespace Bureau.Data.Postgres.Repositories
                 counter++;
 
                 // Execute batch when the batch size is reached
-                if (counter % BATCH_SIZE == 0)
+                if (counter % _options.BatchProcessingSize == 0)
                 {
                     await ExecuteBatchAsync(connection, transaction, batchCommand, parameters, cancellationToken);
                     batchCommand.Clear();

@@ -37,15 +37,18 @@ namespace Bureau.Data.Postgres.Repositories
         }
 
         public string ConnectionString { get { return _connectionString; }  set { _connectionString = value; } }
+
+        protected PaginationMetadata Pagination { get; set; } = new PaginationMetadata();
+
         protected EdgeRequestType SelectReferences { get { return _selectReferences; } set { _selectReferences = value; } }
         protected RecordRequestType SelectRecordTypes { get { return _selectRecordTypes; } set { _selectRecordTypes = value; } }
-        public async Task<Result<BaseAggregateModel>> FetchRecordsAsync(CancellationToken cancellationToken) 
+        public async Task<Result<QueryAggregateModel>> FetchRecordsAsync(CancellationToken cancellationToken) 
         {
             if (string.IsNullOrWhiteSpace(_connectionString)) 
             {
                 return "Connection string is required";
             }
-            BaseAggregateModel aggregateModel = new BaseAggregateModel();
+            QueryAggregateModel aggregateModel = new QueryAggregateModel(Pagination);
             Dictionary<Guid, Record> records;
             // Step 1: Create the main connection for filtering edges and fetching records
             await using (NpgsqlConnection mainConnection = new NpgsqlConnection(_connectionString))

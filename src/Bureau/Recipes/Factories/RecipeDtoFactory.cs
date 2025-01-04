@@ -10,7 +10,7 @@ namespace Bureau.Recipes.Factories
 {
     internal static class RecipeDtoFactoryExtension 
     {
-        internal static Result SetDetails(this RecipeDto dto, BaseAggregateModel aggregate, Edge edge)
+        internal static Result SetDetails(this RecipeDto dto, QueryAggregateModel aggregate, Edge edge)
         {
             dto.Id = edge.Id;
             if (!aggregate.TermEntries.TryGetValue(new TermEntry(edge.SourceNode.Id), out TermEntry? header))
@@ -41,7 +41,7 @@ namespace Bureau.Recipes.Factories
 
     internal class RecipeDtoFactory
     {
-        public static Result<RecipeDto> Create(AggregateModel aggregate) 
+        public static Result<RecipeDto> Create(InsertAggregateModel aggregate) 
         {
             RecipeDto currentRecipe = RecipeDto.EmptyRecipe();
             HashSet<RecipeSubGroupDto> currentGroups = new HashSet<RecipeSubGroupDto>(new ReferenceComparer());
@@ -56,7 +56,7 @@ namespace Bureau.Recipes.Factories
             return currentRecipe;
         }
 
-        public static PaginatedResult<List<RecipeDto>> CreatePaged(BaseAggregateModel aggregate)
+        public static PaginatedResult<List<RecipeDto>> CreatePaged(QueryAggregateModel aggregate)
         {
             Dictionary<string, RecipeDto> recipes = new Dictionary<string, RecipeDto>();
             List<RecipeDto> result = new List<RecipeDto>();
@@ -71,10 +71,10 @@ namespace Bureau.Recipes.Factories
                     return tempResult.Error;
                 }
             }
-            return result;
+            return new PaginatedResult<List<RecipeDto>>(result, aggregate.Pagination);
         }
 
-        private static Result HandleEdge(BaseAggregateModel aggregate, Edge edge, RecipeDto currentRecipe, HashSet<RecipeSubGroupDto> currentGroups)
+        private static Result HandleEdge(QueryAggregateModel aggregate, Edge edge, RecipeDto currentRecipe, HashSet<RecipeSubGroupDto> currentGroups)
         {
             switch (edge.EdgeType)
             {
@@ -142,7 +142,7 @@ namespace Bureau.Recipes.Factories
             return recipe;
         }
 
-        private static Result<RecipeSubGroupDto> CreateGroup(BaseAggregateModel aggregate, string groupEdgeId, string groupTermId)
+        private static Result<RecipeSubGroupDto> CreateGroup(QueryAggregateModel aggregate, string groupEdgeId, string groupTermId)
         {
             if (!aggregate.TermEntries.TryGetValue(new TermEntry(groupTermId), out TermEntry? groupTerm))
             {

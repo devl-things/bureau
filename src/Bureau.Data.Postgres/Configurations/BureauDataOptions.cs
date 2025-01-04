@@ -9,6 +9,5 @@ namespace Bureau.Data.Postgres.Configurations
     internal class BureauDataOptions
     {
         public string ConnectionString { get; set; } = string.Empty;
-
     }
 }

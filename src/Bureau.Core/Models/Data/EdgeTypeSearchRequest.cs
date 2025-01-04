@@ -31,5 +31,7 @@
         /// What records types should be selected
         /// </summary>
         public RecordRequestType SelectRecordTypes { get; set; }
+
+        public PaginationMetadata Pagination { get; set; }
     }
 }

@@ -12,5 +12,13 @@ namespace Bureau.UI.API.Models
                 Message = $"{result.ErrorMessage} {result.Exception?.ToString()}"
             };
         }
+        internal static ApiResponse ToApiResponse(this Result result, string? successMessage = null)
+        {
+            return new ApiResponse()
+            {
+                Status = ApiResponse.StatusSuccess,
+                Message = successMessage
+            };
+        }
     }
 }

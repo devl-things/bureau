@@ -28,8 +28,8 @@ namespace Bureau.Data.Postgres.Configurations
             });
             services.AddScoped<IRecordCommandRepository, RecordCommandRepository>();
             services.AddScoped<ITermRepository, RecordCommandRepository>();
-            services.AddScoped<IRecordQueryRepository<EdgeTypeSearchRequest, BaseAggregateModel>, EdgeTypeSearchQueryRepository>();
-            services.AddScoped<IRecordQueryRepository<IdSearchRequest, AggregateModel>, IdSearchQueryRepository>();
+            services.AddScoped<IRecordQueryRepository<EdgeTypeSearchRequest, QueryAggregateModel>, EdgeTypeSearchQueryRepository>();
+            services.AddScoped<IRecordQueryRepository<IdSearchRequest, InsertAggregateModel>, IdSearchQueryRepository>();
 
             return services;
         }

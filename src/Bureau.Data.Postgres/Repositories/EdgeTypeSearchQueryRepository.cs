@@ -10,7 +10,7 @@ using Npgsql;
 
 namespace Bureau.Data.Postgres.Repositories
 {
-    internal class EdgeTypeSearchQueryRepository : BaseRecordQueryRepository, IRecordQueryRepository<EdgeTypeSearchRequest, BaseAggregateModel>
+    internal class EdgeTypeSearchQueryRepository : BaseRecordQueryRepository, IRecordQueryRepository<EdgeTypeSearchRequest, QueryAggregateModel>
     {
         private readonly ILogger<EdgeTypeSearchQueryRepository> _logger;
         private readonly BureauDataOptions _options;
@@ -24,13 +24,14 @@ namespace Bureau.Data.Postgres.Repositories
             ConnectionString = _options.ConnectionString;
         }
 
-        public async Task<Result<BaseAggregateModel>> FetchRecordsAsync(EdgeTypeSearchRequest edgeTypeSearchRequest, CancellationToken cancellationToken)
+        public async Task<Result<QueryAggregateModel>> FetchRecordsAsync(EdgeTypeSearchRequest edgeTypeSearchRequest, CancellationToken cancellationToken)
         {
             _edgeTypeSearchRequest = edgeTypeSearchRequest;
             SelectReferences = _edgeTypeSearchRequest.SelectReferences;
             SelectRecordTypes = _edgeTypeSearchRequest.SelectRecordTypes;
+            Pagination = _edgeTypeSearchRequest.Pagination;
 
-            Result<BaseAggregateModel> aggregateModelResult = await FetchRecordsAsync(cancellationToken);
+            Result<QueryAggregateModel> aggregateModelResult = await FetchRecordsAsync(cancellationToken);
             if (aggregateModelResult.IsError)
             {
                 return aggregateModelResult.Error;
@@ -49,14 +50,22 @@ namespace Bureau.Data.Postgres.Repositories
                 basicWhereClause = $"{basicWhereClause} AND \"Active\" = @EdgeActive";
             }
 
+            string countQuery = $@"SELECT count(""Id"") FROM public.""Edges"" {basicWhereClause}";
+
             string query = $@"
-    WITH FilteredEdges AS (SELECT ""Id"" FROM public.""Edges"" {basicWhereClause})
+    WITH FilteredEdges AS (
+        SELECT e.""Id"" 
+        FROM public.""Edges"" e
+	        INNER JOIN public.""Records"" r ON e.""Id"" = r.""Id""
+        {basicWhereClause}
+        ORDER BY ""r"".""CreatedAt"" desc
+        OFFSET {_edgeTypeSearchRequest.Pagination.Offset} LIMIT {_edgeTypeSearchRequest.Pagination.Limit}  )
     {SELECT_EDGES}
     WHERE {edgesWhereClause}";
 
             _logger.Debug(query);
             List<Postgres.Models.Edge> edges = new List<Postgres.Models.Edge>();
-            using (var command = new NpgsqlCommand(query, connection))
+            using (NpgsqlCommand command = new NpgsqlCommand(query, connection))
             {
                 command.Parameters.AddWithValue("@EdgeType", NpgsqlTypes.NpgsqlDbType.Integer, _edgeTypeSearchRequest.EdgeType);
                 if (_edgeTypeSearchRequest.Active.HasValue)
@@ -70,6 +79,13 @@ namespace Bureau.Data.Postgres.Repositories
                     {
                         edges.Add(ReadEdge(reader));
                     }
+                }
+
+                command.CommandText = countQuery;
+                object? scalarResult = await command.ExecuteScalarAsync(cancellationToken).ConfigureAwait(false);
+                if (scalarResult != null && scalarResult != DBNull.Value) 
+                {
+                    Pagination.TotalItems = Convert.ToInt32(scalarResult);
                 }
             }
 

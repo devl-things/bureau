@@ -47,5 +47,10 @@ namespace Bureau.Recipes.Managers
             }
             return finalResult.Value;
         }
+
+        public Task<Result> DeleteRecipeAsync(string id, CancellationToken cancellationToken)
+        {
+            return _recipeCommandHandler.DeleteRecipeAsync(id, cancellationToken);
+        }
     }
 }

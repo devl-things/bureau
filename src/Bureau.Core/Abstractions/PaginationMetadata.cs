@@ -1,16 +1,22 @@
 ﻿namespace Bureau.Core
 {
-    public struct PaginationMetadata
+    public class PaginationMetadata
     {
-        public int CurrentPage { get; }
-        public int PageSize { get; }
-        public int TotalItems { get; }
+        public int Page { get; }
+        public int Limit { get; }
+        
+        public int Offset { get { return Page < 1 ? 0 : (Page - 1)*Limit; } }
+        public int TotalItems { get; set; }
 
-        public PaginationMetadata(int currentPage, int pageSize, int totalItems)
+        public PaginationMetadata(int page, int limit)
         {
-            CurrentPage = currentPage;
-            PageSize = pageSize;
-            TotalItems = totalItems;
+            Page = page;
+            Limit = limit;
+        }
+
+        public PaginationMetadata() : this(1,1)
+        {
+            TotalItems = 1;
         }
     }
 }

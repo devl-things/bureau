@@ -11,7 +11,7 @@ using Npgsql;
 
 namespace Bureau.Data.Postgres.Repositories
 {
-    internal class IdSearchQueryRepository : BaseRecordQueryRepository, IRecordQueryRepository<IdSearchRequest, AggregateModel>
+    internal class IdSearchQueryRepository : BaseRecordQueryRepository, IRecordQueryRepository<IdSearchRequest, InsertAggregateModel>
     {
         private readonly ILogger<IdSearchQueryRepository> _logger;
         private readonly BureauDataOptions _options;
@@ -24,7 +24,7 @@ namespace Bureau.Data.Postgres.Repositories
             ConnectionString = _options.ConnectionString;
         }
 
-        public async Task<Result<AggregateModel>> FetchRecordsAsync(IdSearchRequest idSearchRequest, CancellationToken cancellationToken)
+        public async Task<Result<InsertAggregateModel>> FetchRecordsAsync(IdSearchRequest idSearchRequest, CancellationToken cancellationToken)
         {
             if (idSearchRequest.FilterReferenceId is null)
             {
@@ -34,7 +34,7 @@ namespace Bureau.Data.Postgres.Repositories
             SelectReferences = _idSearchRequest.SelectReferences;
             SelectRecordTypes = _idSearchRequest.SelectRecordTypes;
 
-            Result<BaseAggregateModel> aggregateModelResult = await FetchRecordsAsync(cancellationToken);
+            Result<QueryAggregateModel> aggregateModelResult = await FetchRecordsAsync(cancellationToken);
             if (aggregateModelResult.IsError) 
             {
                 return aggregateModelResult.Error;
@@ -44,7 +44,7 @@ namespace Bureau.Data.Postgres.Repositories
                 return "Reference Id not found in the database";
             }
 
-            AggregateModel result = new AggregateModel(aggregateModelResult.Value)
+            InsertAggregateModel result = new InsertAggregateModel(aggregateModelResult.Value)
             {
                 MainReference = BureauReferenceFactory.CreateReference(_idSearchRequest.FilterReferenceId.Id)
             };
@@ -76,7 +76,6 @@ namespace Bureau.Data.Postgres.Repositories
                     }
                 }
             }
-
             return edges;
         }
 

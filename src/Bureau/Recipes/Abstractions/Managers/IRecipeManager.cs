@@ -9,5 +9,6 @@ namespace Bureau.Recipes.Managers
     {
         Task<Result<RecipeDto>> UpdateRecipeAsync(RecipeDto recipeModel, CancellationToken cancellationToken);
         Task<Result<RecipeDto>> InsertRecipeAsync(RecipeDto recipeModel, CancellationToken cancellationToken);
+        Task<Result> DeleteRecipeAsync(string id, CancellationToken cancellationToken);
     }
 }
