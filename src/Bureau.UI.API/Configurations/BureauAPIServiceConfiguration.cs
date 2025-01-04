@@ -25,9 +25,15 @@ namespace Bureau.UI.API.Configurations
             // api versioning
             services.AddApiVersioning(options => 
             {
-                options.DefaultApiVersion = new Asp.Versioning.ApiVersion(1);
+                options.DefaultApiVersion = BureauAPIVersion.Version1;
                 options.AssumeDefaultVersionWhenUnspecified = true;
                 options.ApiVersionReader = new HeaderApiVersionReader("api-version");
+
+                // TIPS other chatgpt suggestions
+                //  X-API-Version: Use if your organization prefers explicit custom headers.
+                //  API-Version: Use for a cleaner, modern approach.
+                //  Accept-Version: Use if you want to align versioning with content negotiation.
+                //  Version: Use for simplicity in small or internal APIs.
             })
                 .AddApiExplorer(options => 
                 {

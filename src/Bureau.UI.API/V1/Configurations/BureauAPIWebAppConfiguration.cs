@@ -1,44 +1,42 @@
 ﻿using Bureau.UI.API.V1.Methods;
-using Bureau.UI.API.Models;
 using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Diagnostics;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using Asp.Versioning.Conventions;
 using Asp.Versioning.Builder;
-
+using Bureau.UI.API.Configurations;
 
 namespace Bureau.UI.API.V1.Configurations
 {
-    public static class BureauAPIWebAppConfiguration
+    public static partial class BureauAPIWebAppConfiguration
     {
         internal static void MapRecipesV1(this RouteGroupBuilder apiGroupBuilder, ApiVersionSet versionSet)
         {
+            
             RouteGroupBuilder recipesGroup = apiGroupBuilder.MapGroup(BureauAPIRouteNames.RecipesGroup);
 
             recipesGroup.MapGet("", RecipesMethods.GetRecipes)
-                .WithName(BureauAPIRouteNames.GetRecipes)
+                .WithName($"{BureauAPIRouteNames.GetRecipes}-{BureauAPIVersion.Version1}")
                 .WithApiVersionSet(versionSet)
-                .MapToApiVersion(1);
+                .MapToApiVersion(BureauAPIVersion.Version1);
             recipesGroup.MapGet("{id}", RecipesMethods.GetRecipeById)
-                .WithName(BureauAPIRouteNames.GetRecipeById)
+                .WithName($"{BureauAPIRouteNames.GetRecipeById}-{BureauAPIVersion.Version1}")
                 .WithApiVersionSet(versionSet)
-                .MapToApiVersion(1);
+                .MapToApiVersion(BureauAPIVersion.Version1);
 
             recipesGroup.MapPost("", RecipesMethods.CreateRecipe)
-                .WithName(BureauAPIRouteNames.CreateRecipes)
+                .WithName($"{BureauAPIRouteNames.CreateRecipes}-{BureauAPIVersion.Version1}")
                 .WithApiVersionSet(versionSet)
-                .MapToApiVersion(1);
+                .MapToApiVersion(BureauAPIVersion.Version1);
 
             recipesGroup.MapPut("{id}", RecipesMethods.UpdateRecipe)
-                .WithName(BureauAPIRouteNames.UpdateRecipes)
+                .WithName($"{BureauAPIRouteNames.UpdateRecipes}-{BureauAPIVersion.Version1}")
                 .WithApiVersionSet(versionSet)
-                .MapToApiVersion(1);
+                .MapToApiVersion(BureauAPIVersion.Version1);
 
             recipesGroup.MapDelete("{id}", RecipesMethods.DeleteRecipe)
-                .WithName(BureauAPIRouteNames.DeleteRecipes)
+                .WithName($"{BureauAPIRouteNames.DeleteRecipes}-{BureauAPIVersion.Version1}")
                 .WithApiVersionSet(versionSet)
-                .MapToApiVersion(1);
+                .MapToApiVersion(BureauAPIVersion.Version1);
         }
 
         internal static void MapNotesV1(this RouteGroupBuilder apiGroupBuilder, ApiVersionSet versionSet)
@@ -48,12 +46,12 @@ namespace Bureau.UI.API.V1.Configurations
             entryRouteBuilder.MapPost("text", NotesMethods.CreateTextNote)
                 .WithName(BureauAPIRouteNames.CreateTextNote)
                 .WithApiVersionSet(versionSet)
-                .MapToApiVersion(1);
+                .MapToApiVersion(BureauAPIVersion.Version1);
 
             entryRouteBuilder.MapGet($"{{id}}", NotesMethods.GetNoteById)
                .WithName(BureauAPIRouteNames.GetTextNoteById)
                .WithApiVersionSet(versionSet)
-                .MapToApiVersion(1);
+                .MapToApiVersion(BureauAPIVersion.Version1);
         }
     }
 }

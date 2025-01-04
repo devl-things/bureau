@@ -13,6 +13,35 @@
     "servings": 0 // RecipeDetails
 }
 ```
+### V2
+```json
+{
+    "id": "60630052-6f4f-4931-aa12-6512b40f3b33", // 1
+    "createdAt": "2025-01-01T11:01:00.279315Z", 
+    "updatedAt": "2025-01-01T11:01:00.279512Z",
+    "name": "Radiošnite", //{RecipeName}
+    "layers": [
+        { 
+            "name": "Tijesto", // {GroupName1}
+            "ingredients": [
+                "brašno", // {Item1}
+                "šećer", // {Item2}
+                "mlijeko"
+            ],
+            "instructions": "Zmiksati", // NoteDetails 
+        },
+        { 
+            "name": "Krema", // {GroupName2}
+            "ingredients": [
+                "šećer" //{Item2}
+            ],
+            "instructions": "Zmiksati", // NoteDetails 
+        }
+    ],
+    "preparationTime": "1 h", // RecipeDetails
+    "servings": 20 // RecipeDetails
+}
+```
 ## Edge
 |Id|SourceNodeId|Type|TargetNodeId|Parent|RootNodeId
 |-|-|-|-|-|-|
@@ -28,8 +57,8 @@
 |Id|Title|
 |-|-|
 |HT|{RecipeName}|
-|GR1|{GroupName}|
-|GR2|{RecipeName}|
+|GR1|{GroupName1}|
+|GR2|{GroupName2}|
 |I1|{Item1}|
 |I2|{Item2}|
 |I3|{Item3}|

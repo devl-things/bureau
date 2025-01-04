@@ -1,28 +1,32 @@
 ﻿using Bureau.Recipes.Models;
-using Bureau.UI.API.V1.Models.Recipes;
+using Bureau.UI.API.V2.Models.Recipes;
+using System.Runtime.CompilerServices;
 
-namespace Bureau.UI.API.V1.Mappers
+namespace Bureau.UI.API.V2.Mappers
 {
     internal static class RecipeRequestModelMapper
     {
         internal static RecipeDto ToDto(this RecipeRequestModel recipe)
         {
-            return new RecipeDto()
+            RecipeDto result = new RecipeDto()
             {
                 Name = recipe.Name,
-                SubGroups = new List<RecipeSubGroupDto>()
-                {
-                    new RecipeSubGroupDto(string.Empty)
-                    {
-                        Name = recipe.Name,
-                        Ingredients = recipe.Ingredients,
-                        Instructions = recipe.Instructions
-                    }
-                },
+                SubGroups = recipe.Layers.Select(x => x.ToSubGroupDto()).ToList(),
                 PreparationTime = recipe.PreparationTime,
                 Servings = recipe.Servings,
                 CreatedAt = DateTime.Now.ToUniversalTime(),
                 UpdatedAt = DateTime.Now.ToUniversalTime()
+            };
+            return result;
+        }
+
+        internal static RecipeSubGroupDto ToSubGroupDto(this RecipeLayer layer) 
+        {
+            return new RecipeSubGroupDto(string.Empty)
+            {
+                Name = layer.Name,
+                Ingredients = layer.Ingredients,
+                Instructions = layer.Instructions
             };
         }
 

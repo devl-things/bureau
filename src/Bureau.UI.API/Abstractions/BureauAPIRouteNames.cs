@@ -1,4 +1,4 @@
-﻿namespace Bureau.UI.API.V1
+﻿namespace Bureau.UI.API
 {
     public class BureauAPIRouteNames
     {

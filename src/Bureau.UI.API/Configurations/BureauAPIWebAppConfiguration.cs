@@ -1,19 +1,14 @@
-﻿using Asp.Versioning;
-using Asp.Versioning.ApiExplorer;
+﻿using Asp.Versioning.ApiExplorer;
 using Asp.Versioning.Builder;
 using Asp.Versioning.Conventions;
 using Bureau.UI.API.Models;
 using Bureau.UI.API.V1.Configurations;
+using Bureau.UI.API.V2.Configurations;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Hosting;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Bureau.UI.API.Configurations
 {
@@ -22,7 +17,8 @@ namespace Bureau.UI.API.Configurations
         public static void MapBureauAPI(this WebApplication app)
         {
             ApiVersionSet versionSet = app.NewApiVersionSet()
-                .HasApiVersion(1)
+                .HasApiVersion(BureauAPIVersion.Version1)
+                .HasApiVersion(BureauAPIVersion.Version2)
                 .ReportApiVersions()
                 .Build();
 
@@ -31,6 +27,7 @@ namespace Bureau.UI.API.Configurations
             RouteGroupBuilder apiBuilder = app.MapGroup("api");
 
             apiBuilder.MapRecipesV1(versionSet);
+            apiBuilder.MapRecipesV2(versionSet);
 
             app.MapBureauOpenApiExplorer();
 
