@@ -2,9 +2,9 @@
 {
     public class QueryAggregateModel
     {
-        public HashSet<TermEntry> TermEntries { get; set; }
-        public HashSet<FlexRecord> FlexRecords { get; set; }
-        public HashSet<Edge> Edges { get; set; }
+        public HashSet<TermEntry> TermEntries { get; set; } = default!;
+        public HashSet<FlexRecord> FlexRecords { get; set; } = default!;
+        public HashSet<Edge> Edges { get; set; } = default!;
 
         public PaginationMetadata Pagination { get; set; }
 
