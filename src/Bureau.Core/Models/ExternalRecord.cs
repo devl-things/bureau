@@ -6,12 +6,13 @@ using System.Threading.Tasks;
 
 namespace Bureau.Core.Models
 {
-    internal class ExternalRecord<T> : BaseRecord
+    public class ExternalRecord<T> : FlexibleRecord<T>
     {
-        public string Type { get; set; } = default!;
-        public T Data { get; set; } = default!;
-
         public DateTime LastSync { get; set; }
         public bool Changed { get; set; }
+
+        public ExternalRecord(string id) : base(id)
+        {
+        }
     }
 }

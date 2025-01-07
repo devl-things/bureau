@@ -1,5 +1,5 @@
-﻿using Bureau.Identity.Models;
-using Bureau.Identity.Managers;
+﻿//using Bureau.Identity.Models;
+//using Bureau.Identity.Managers;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -20,8 +20,8 @@ namespace Bureau.UI.Web.Components.Pages
 
         //[Inject]
         //private IGoogleAuthProvider GoogleAuth { get; set; }
-        [Inject]
-        private IUserManager _userManager { get; init; }
+        //[Inject]
+        //private IUserManager _userManager { get; init; }
         //[Inject]
         //private SignInManager<ApplicationUser> _signInManager { get; init; }
 

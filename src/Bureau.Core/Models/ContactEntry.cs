@@ -10,5 +10,6 @@ namespace Bureau.Core.Models
     {
         public string Name { get; set; } = default!;
         public string Label { get { return Name; } }
+
     }
 }

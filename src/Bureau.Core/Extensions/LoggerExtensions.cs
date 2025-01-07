@@ -4,6 +4,13 @@ namespace Bureau.Core.Extensions
 {
     public static class LoggerExtensions
     {
+        public static void Debug(this ILogger logger, string message) 
+        {
+            if (logger.IsEnabled(LogLevel.Debug))
+            {
+                logger.LogDebug(message);
+            }
+        }
         public static void Info(this ILogger logger, string message, string arg)
         {
             if (logger.IsEnabled(LogLevel.Information))

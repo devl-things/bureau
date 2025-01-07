@@ -1,4 +1,4 @@
-﻿using Bureau.Google.Calendar.UI.Constants;
+﻿//using Bureau.Google.Calendar.UI.Constants;
 using Microsoft.EntityFrameworkCore.Metadata;
 using System.Reflection;
 
@@ -25,7 +25,7 @@ namespace Bureau.UI.Web.Components.Helpers
             //return returnAssemblies.ToList();
             Assembly[] assemblies = new Assembly[]
             {
-                typeof(BureauGoogleCalendarUIUris).Assembly
+                //typeof(BureauGoogleCalendarUIUris).Assembly
             };
 
             return assemblies;

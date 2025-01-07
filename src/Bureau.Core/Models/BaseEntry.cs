@@ -7,5 +7,6 @@ namespace Bureau.Core.Models
         public string ProviderName { get; set; } = BureauConstants.BureauProvider;
 
         public string? ExternalId { get; set; }
+
     }
 }

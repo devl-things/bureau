@@ -8,7 +8,7 @@
     </TypeIdentifier>
     <Lollipop Position="0.2" />
   </Class>
-  <Class Name="Bureau.Core.Models.BaseRecord" Collapsed="true">
+  <Class Name="Bureau.Core.Models.BaseRecord">
     <Position X="15.75" Y="1.25" Width="1.5" />
     <TypeIdentifier>
       <HashCode>AAACEAAEAAAACAAAACAAAAAAAAAAAAAAAAAAAAAAAAE=</HashCode>
@@ -27,9 +27,10 @@
   <Class Name="Bureau.Core.Models.Edge">
     <Position X="1.25" Y="1.5" Width="1.5" />
     <TypeIdentifier>
-      <HashCode>AAAAAAAAAAAIAAAAAAAAAAAAAAAAAAAoAAAAAAAgAAA=</HashCode>
+      <HashCode>AAACEAAAAAAICAAAACAAAAAAAAAAAAAoAAAAAAAgAAE=</HashCode>
       <FileName>Models\Edge.cs</FileName>
     </TypeIdentifier>
+    <Lollipop Position="0.2" />
   </Class>
   <Class Name="Bureau.Core.Models.MaterialEntry">
     <Position X="14.25" Y="6.5" Width="1.5" />
@@ -46,7 +47,7 @@
     </TypeIdentifier>
   </Class>
   <Class Name="Bureau.Core.Models.LocationRecord" Collapsed="true">
-    <Position X="21.75" Y="4.5" Width="1.5" />
+    <Position X="23" Y="4.5" Width="1.5" />
     <TypeIdentifier>
       <HashCode>AAAAAAAAAEAAAQAMoAAIgAAAAAIAAAAAAAIABAAAAAA=</HashCode>
       <FileName>Models\LocationRecord.cs</FileName>
@@ -61,9 +62,9 @@
     <Lollipop Position="0.2" />
   </Class>
   <Class Name="Bureau.Core.Models.ExternalRecord&lt;T&gt;">
-    <Position X="19.25" Y="5.75" Width="1.5" />
+    <Position X="19.75" Y="4.5" Width="1.5" />
     <TypeIdentifier>
-      <HashCode>AAAAAAAAAAAAAAAABAAAAAAAAAAAABAAAQCAAAAAAAA=</HashCode>
+      <HashCode>AAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAACAAAAAAAA=</HashCode>
       <FileName>Models\ExternalRecord.cs</FileName>
     </TypeIdentifier>
   </Class>
@@ -75,20 +76,27 @@
     </TypeIdentifier>
   </Class>
   <Class Name="Bureau.Core.Models.CheckedRecord">
-    <Position X="21.75" Y="7" Width="1.5" />
+    <Position X="21.5" Y="6.25" Width="1.5" />
     <TypeIdentifier>
       <HashCode>AAAAAAAAAAAAAACAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
       <FileName>Models\CheckedRecord.cs</FileName>
     </TypeIdentifier>
   </Class>
   <Class Name="Bureau.Core.Models.NoteRecord">
-    <Position X="19.25" Y="8" Width="1.5" />
+    <Position X="17.5" Y="6.5" Width="1.5" />
     <TypeIdentifier>
       <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEAAAA=</HashCode>
       <FileName>Models\NoteRecord.cs</FileName>
     </TypeIdentifier>
   </Class>
-  <Interface Name="Bureau.Core.Models.ITag" Collapsed="true">
+  <Class Name="Bureau.Core.Models.FlexibleRecord&lt;T&gt;">
+    <Position X="17.5" Y="4.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAABAAAQAAAAAAAAA=</HashCode>
+      <FileName>Models\FlexibleRecord.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Interface Name="Bureau.Core.Models.ITag">
     <Position X="8.25" Y="4.25" Width="1.5" />
     <TypeIdentifier>
       <HashCode>AAACAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
