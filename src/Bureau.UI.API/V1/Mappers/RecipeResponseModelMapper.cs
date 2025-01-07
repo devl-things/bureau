@@ -10,7 +10,7 @@ namespace Bureau.UI.API.V1.Models.Recipes
             {
                 Id = recipe.Id,
                 Name = recipe.Name,
-                Ingredients = recipe.SubGroups.FirstOrDefault()?.Ingredients ?? new List<string>(),
+                Ingredients = recipe.SubGroups.FirstOrDefault()?.Ingredients.Select(x => x.Ingredient).ToList() ?? new List<string>(),
                 Instructions = recipe.SubGroups.FirstOrDefault()?.Instructions ?? null,
                 PreparationTime = recipe.PreparationTime,
                 Servings = recipe.Servings,

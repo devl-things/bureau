@@ -113,7 +113,7 @@ namespace Bureau.Recipes.Factories
                     {
                         return RecipeResultErrorFactory.IngredientNotFound(edge.TargetNode.Id);
                     }
-                    group.Ingredients.Add(ingredient.Title);
+                    group.Ingredients.Add(new RecipeIngredient(ingredient.Title));
                     //TODO ingredient details
                     return true;
                 default:
@@ -151,7 +151,7 @@ namespace Bureau.Recipes.Factories
             RecipeSubGroupDto group = new RecipeSubGroupDto(groupEdgeId)
             {
                 Name = groupTerm.Title,
-                Ingredients = new List<string>(),
+                Ingredients = new List<RecipeIngredient>(),
             };
 
             if (aggregate.FlexRecords.TryGetValue(new FlexRecord(groupEdgeId), out FlexRecord? instructionFlex))

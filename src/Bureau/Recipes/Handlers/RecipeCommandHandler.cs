@@ -103,9 +103,9 @@ namespace Bureau.Recipes.Handlers
             foreach (RecipeSubGroupDto group in _recipeDto.SubGroups)
             {
                 AddTermEntryTitle(group.Name);
-                foreach (string ingredient in group.Ingredients)
+                foreach (RecipeIngredient ingredient in group.Ingredients)
                 {
-                    AddTermEntryTitle(ingredient);
+                    AddTermEntryTitle(ingredient.Ingredient);
                 }
             }
         }
@@ -306,11 +306,11 @@ namespace Bureau.Recipes.Handlers
                     updateRecipe.FlexRecordsToDelete.Add(existingInstructions!.Entry);
                 }
 
-                foreach (string ingredient in group.Ingredients)
+                foreach (RecipeIngredient ingredient in group.Ingredients)
                 {
-                    if (!TryGetTermEntry(ingredient, out TermEntry ingredientEntry))
+                    if (!TryGetTermEntry(ingredient.Ingredient, out TermEntry ingredientEntry))
                     {
-                        return RecipeResultErrorFactory.UnknownTerm(ingredient);
+                        return RecipeResultErrorFactory.UnknownTerm(ingredient.Ingredient);
                     }
                     Edge ingredientEdge = new Edge(GetNewTempId())
                     {
@@ -428,11 +428,11 @@ namespace Bureau.Recipes.Handlers
                     newRecipe.FlexRecords.Add(flexResult.Value);
                 }
 
-                foreach (string ingredient in group.Ingredients)
+                foreach (RecipeIngredient ingredient in group.Ingredients)
                 {
-                    if (!TryGetTermEntry(ingredient, out TermEntry ingredientEntry))
+                    if (!TryGetTermEntry(ingredient.Ingredient, out TermEntry ingredientEntry))
                     {
-                        return RecipeResultErrorFactory.UnknownTerm(ingredient);
+                        return RecipeResultErrorFactory.UnknownTerm(ingredient.Ingredient);
                     }
                     Edge ingredientEdge = new Edge(GetNewTempId())
                     {

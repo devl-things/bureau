@@ -23,7 +23,7 @@ namespace Bureau.UI.API.V2.Models.Recipes
             return new RecipeLayer()
             {
                 Name = group.Name,
-                Ingredients = group.Ingredients,
+                Ingredients = group.Ingredients.Select(x => x.Ingredient).ToList(),
                 Instructions = group.Instructions
             };
         }
