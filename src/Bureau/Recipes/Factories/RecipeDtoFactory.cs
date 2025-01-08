@@ -113,8 +113,8 @@ namespace Bureau.Recipes.Factories
                     {
                         return RecipeResultErrorFactory.IngredientNotFound(edge.TargetNode.Id);
                     }
-                    group.Ingredients.Add(new RecipeIngredient(ingredient.Title));
-                    //TODO ingredient details
+                    QuantityDetails quantityDetails = GetQuantityDetails(aggregate, edge.Id);
+                    group.Ingredients.Add(new RecipeIngredient(ingredient.Title) { Quantity = quantityDetails });                  
                     return true;
                 default:
                     return RecipeResultErrorFactory.UnknownEdgeType(edge.Id, edge.EdgeType);
@@ -142,6 +142,19 @@ namespace Bureau.Recipes.Factories
             return recipe;
         }
 
+        private static QuantityDetails GetQuantityDetails(QueryAggregateModel aggregate, string edgeId) 
+        {
+            if (aggregate.FlexRecords.TryGetValue(new FlexRecord(edgeId), out FlexRecord? quantityFlex))
+            {
+                Result<FlexibleRecord<QuantityDetails>> quantityResult = FlexibleRecordFactory.CreateFlexibleRecord<QuantityDetails>(quantityFlex);
+                if (quantityResult.IsSuccess)
+                {
+                    return quantityResult.Value.Data;
+                }
+                //TODO log info if IsError
+            }
+            return default;
+        }
         private static Result<RecipeSubGroupDto> CreateGroup(QueryAggregateModel aggregate, string groupEdgeId, string groupTermId)
         {
             if (!aggregate.TermEntries.TryGetValue(new TermEntry(groupTermId), out TermEntry? groupTerm))

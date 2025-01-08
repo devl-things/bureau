@@ -127,7 +127,6 @@ namespace Bureau.Data.Postgres.Handlers
                 {
                     return "FlexRecord is missing required references.";
                 }
-
                 if (BureauReferenceFactory.IsTempId(item.Id))
                 {
                     _newFlexibleRecords.Add(flexRecord);

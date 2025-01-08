@@ -329,7 +329,41 @@ namespace Bureau.Recipes.Handlers
                         ingredientEdge = existingIngredientEdge.Entry;
                     }
                     updateRecipe.Edges.Add(ingredientEdge);
-                    //TODO ingredients details
+
+                    bool existingQuantityExist = existingFlexById.TryGetValue(ingredientEdge.Id, out ChangedEntry<FlexRecord>? existingQuantity);
+
+                    if (ingredient.HasQuantity())
+                    {
+                        flexResult = FlexRecordFactory
+                            .CreateFlexRecord(new FlexibleRecord<QuantityDetails>(ingredientEdge.Id)
+                            {
+                                CreatedAt = _recipeDto.CreatedAt,
+                                UpdatedAt = _recipeDto.UpdatedAt,
+                                Data = ingredient.Quantity,
+                            });
+                        if (flexResult.IsError)
+                        {
+                            return flexResult.Error;
+                        }
+                    }
+
+                    if (ingredient.HasQuantity() && existingQuantityExist)
+                    {
+                        existingQuantity!.Entry.UpdatedAt = ingredientEdge.UpdatedAt;
+                        existingQuantity!.Entry.DataType = flexResult.Value.DataType;
+                        existingQuantity!.Entry.Data = flexResult.Value.Data;
+                        existingQuantity.IsChanged = true;
+                        updateRecipe.FlexRecords.Add(existingQuantity.Entry);
+                    }
+                    else if (ingredient.HasQuantity())
+                    {
+                        updateRecipe.FlexRecords.Add(flexResult.Value);
+                    }
+                    else if (existingQuantityExist)
+                    {
+                        existingQuantity!.IsChanged = true;
+                        updateRecipe.FlexRecordsToDelete.Add(existingQuantity!.Entry);
+                    }
                 }
             }
 
@@ -445,25 +479,21 @@ namespace Bureau.Recipes.Handlers
                         EdgeType = (int)EdgeTypeEnum.Items,
                     };
                     newRecipe.Edges.Add(ingredientEdge);
-                    //TODO ingredients details
-                    //flexResult = FlexRecordFactory
-                    //    .CreateFlexRecord(new FlexibleRecord<QuantityDetails>()
-                    //{
-                    //    Id = ingredientEdge.Id,
-                    //    CreatedAt = recipeModel.CreatedAt,
-                    //    UpdatedAt = recipeModel.UpdatedAt,
-                    //    Data = new QuantityDetails()
-                    //    {
-                    //        Quantity = 1,
-                    //        Unit = "unit",
-                    //    },
-                    //    Status = RecordStatus.Active,
-                    //})
-                    //if (flexResult.IsError)
-                    //{
-                    //    return flexResult.Error;
-                    //}
-                    //result.FlexRecords.Add(flexResult.Value);
+                    if (ingredient.HasQuantity()) {
+                        flexResult = FlexRecordFactory
+                            .CreateFlexRecord(new FlexibleRecord<QuantityDetails>(ingredientEdge.Id)
+                            {
+                                CreatedAt = _recipeDto.CreatedAt,
+                                UpdatedAt = _recipeDto.UpdatedAt,
+                                Data = ingredient.Quantity,
+                                Status = RecordStatus.Active,
+                            });
+                        if (flexResult.IsError)
+                        {
+                            return flexResult.Error;
+                        }
+                        newRecipe.FlexRecords.Add(flexResult.Value);
+                    }
                 }
             }
 
