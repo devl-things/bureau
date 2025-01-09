@@ -9,6 +9,17 @@ namespace Bureau.UI.API.V1.Configurations
 {
     public static partial class BureauAPIWebAppConfiguration
     {
+        internal static void MapRecipes(this RouteGroupBuilder apiGroupBuilder, ApiVersionSet versionSet) 
+        {
+            RouteGroupBuilder recipesGroup = apiGroupBuilder.MapGroup(BureauAPIRouteNames.RecipesGroup);
+
+            recipesGroup.MapDelete("{id}", RecipesMethods.DeleteRecipe)
+                .WithName($"{BureauAPIRouteNames.DeleteRecipes}")
+                .WithApiVersionSet(versionSet)
+                .MapToApiVersion(BureauAPIVersion.Version1)
+                .MapToApiVersion(BureauAPIVersion.Version2)
+                .MapToApiVersion(BureauAPIVersion.Version3);
+        }
         internal static void MapRecipesV1(this RouteGroupBuilder apiGroupBuilder, ApiVersionSet versionSet)
         {
             
@@ -30,11 +41,6 @@ namespace Bureau.UI.API.V1.Configurations
 
             recipesGroup.MapPut("{id}", RecipesMethods.UpdateRecipe)
                 .WithName($"{BureauAPIRouteNames.UpdateRecipes}-{BureauAPIVersion.Version1}")
-                .WithApiVersionSet(versionSet)
-                .MapToApiVersion(BureauAPIVersion.Version1);
-
-            recipesGroup.MapDelete("{id}", RecipesMethods.DeleteRecipe)
-                .WithName($"{BureauAPIRouteNames.DeleteRecipes}-{BureauAPIVersion.Version1}")
                 .WithApiVersionSet(versionSet)
                 .MapToApiVersion(BureauAPIVersion.Version1);
         }

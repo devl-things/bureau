@@ -28,6 +28,7 @@ namespace Bureau.UI.API.Configurations
 
             RouteGroupBuilder apiBuilder = app.MapGroup("api");
 
+            apiBuilder.MapRecipes(versionSet);
             apiBuilder.MapRecipesV1(versionSet);
             apiBuilder.MapRecipesV2(versionSet);
             apiBuilder.MapRecipesV3(versionSet);

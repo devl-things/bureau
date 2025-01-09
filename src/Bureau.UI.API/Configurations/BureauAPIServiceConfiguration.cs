@@ -1,4 +1,5 @@
 ﻿using Asp.Versioning;
+using Bureau.Recipes.Configurations;
 using Bureau.UI.API.OpenApi;
 using Bureau.UI.API.V1.Configurations;
 using Microsoft.Extensions.DependencyInjection;
@@ -42,7 +43,7 @@ namespace Bureau.UI.API.Configurations
 
             //services.AddProblemDetails();
 
-            services.AddRecipes();
+            services.AddBureauRecipes();
         }
     }
 }
