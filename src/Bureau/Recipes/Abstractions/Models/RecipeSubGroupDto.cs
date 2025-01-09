@@ -7,7 +7,7 @@ namespace Bureau.Recipes.Models
     {
         public string Id { get; set; } = string.Empty;
         public required string Name { get; set; }
-        public required List<string> Ingredients { get; set; }
+        public required List<RecipeIngredient> Ingredients { get; set; }
         public string? Instructions { get; set; }
 
         [SetsRequiredMembers]
@@ -15,7 +15,7 @@ namespace Bureau.Recipes.Models
         {
             Id = id;
             Name = string.Empty;
-            Ingredients = new List<string>(0);
+            Ingredients = new List<RecipeIngredient>(0);
         }
     }
 }

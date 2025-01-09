@@ -60,9 +60,9 @@
         }
 
         public PaginatedResult(T value, PaginationMetadata pagination) : this(value, pagination, true, default) { }
-        public PaginatedResult(ResultError error) : this(default!, default, false, error) { }
+        public PaginatedResult(ResultError error) : this(default!, default!, false, error) { }
 
-        public static implicit operator PaginatedResult<T>(T successData) { return new PaginatedResult<T>(successData, default); }
+        public static implicit operator PaginatedResult<T>(T successData) { return new PaginatedResult<T>(successData, default!); }
 
         public static implicit operator PaginatedResult<T>(ResultError error) { return new PaginatedResult<T>(error); }
         public static implicit operator PaginatedResult<T>(string errorMessage) { return new PaginatedResult<T>(new ResultError(errorMessage)); }

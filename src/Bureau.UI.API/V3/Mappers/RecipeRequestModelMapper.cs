@@ -1,8 +1,8 @@
 ﻿using Bureau.Recipes.Models;
-using Bureau.UI.API.V2.Models.Recipes;
+using Bureau.UI.API.V3.Models.Recipes;
 using System.Runtime.CompilerServices;
 
-namespace Bureau.UI.API.V2.Mappers
+namespace Bureau.UI.API.V3.Mappers
 {
     internal static class RecipeRequestModelMapper
     {
@@ -25,7 +25,12 @@ namespace Bureau.UI.API.V2.Mappers
             return new RecipeSubGroupDto(string.Empty)
             {
                 Name = layer.Name,
-                Ingredients = layer.Ingredients.Select(x => new RecipeIngredient(x)).ToList(),
+                Ingredients = layer.Ingredients
+                    .Select(x => new Bureau.Recipes.Models.RecipeIngredient(x.Name) 
+                    { 
+                        Quantity = new Bureau.Models.QuantityDetails() { Quantity = x.Quantity, Unit = x.Unit } 
+                    })
+                    .ToList(),
                 Instructions = layer.Instructions
             };
         }

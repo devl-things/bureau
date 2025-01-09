@@ -4,6 +4,7 @@ using Asp.Versioning.Conventions;
 using Bureau.UI.API.Models;
 using Bureau.UI.API.V1.Configurations;
 using Bureau.UI.API.V2.Configurations;
+using Bureau.UI.API.V3.Configurations;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Http;
@@ -19,6 +20,7 @@ namespace Bureau.UI.API.Configurations
             ApiVersionSet versionSet = app.NewApiVersionSet()
                 .HasApiVersion(BureauAPIVersion.Version1)
                 .HasApiVersion(BureauAPIVersion.Version2)
+                .HasApiVersion(BureauAPIVersion.Version3)
                 .ReportApiVersions()
                 .Build();
 
@@ -28,6 +30,7 @@ namespace Bureau.UI.API.Configurations
 
             apiBuilder.MapRecipesV1(versionSet);
             apiBuilder.MapRecipesV2(versionSet);
+            apiBuilder.MapRecipesV3(versionSet);
 
             app.MapBureauOpenApiExplorer();
 

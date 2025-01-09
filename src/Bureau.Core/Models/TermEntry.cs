@@ -1,5 +1,4 @@
 ﻿using Bureau.Core.Extensions;
-using System.Text.RegularExpressions;
 
 namespace Bureau.Core.Models
 {
@@ -7,7 +6,7 @@ namespace Bureau.Core.Models
     {
         public string Title { get; private set; } = string.Empty;
 
-        public string Label { get; private set; }
+        public string Label { get; private set; } = string.Empty;
 
         public TermEntry(string id)
         {

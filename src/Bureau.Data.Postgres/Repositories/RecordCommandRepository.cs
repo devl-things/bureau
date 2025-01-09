@@ -16,6 +16,7 @@ using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Npgsql;
+using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using dbModels = Bureau.Data.Postgres.Models;
@@ -178,6 +179,7 @@ namespace Bureau.Data.Postgres.Repositories
                             await BulkInsertRecordsAsync(connection, transaction, handler.NewRecords, cancellationToken);
                             _dbContext.Database.SetDbConnection(connection);
                             await _dbContext.Database.UseTransactionAsync(transaction, cancellationToken);
+                            //TODO [first] bug updatedAt is not updated because is not
                             await _dbContext.Records
                                 .Where(x => handler.UpdateRecords.Select(x => x.Id).Contains(x.Id.ToString()))
                                 .ExecuteUpdateAsync(te => te.SetProperty(e => e.UpdatedAt, e => e.UpdatedAt));
@@ -187,6 +189,8 @@ namespace Bureau.Data.Postgres.Repositories
                             await _dbContext.Edges
                                 .Where(x => handler.RemoveEdgeRecords.Contains(x.Id))
                                 .ExecuteDeleteAsync(cancellationToken);
+                            //TODO [IMPROVE] [first] no removing of the records because we cannot know that record is not used someplace else,
+                            //there should be a separate service to handle that
                             await _dbContext.Records
                                 .Where(x => handler.RemoveRecords.Contains(x.Id))
                                 .ExecuteDeleteAsync(cancellationToken);
@@ -214,7 +218,8 @@ namespace Bureau.Data.Postgres.Repositories
 
             return new Result<IReference>(handler.MainReference);
         }
-
+        //TODO [IMPROVE] [first] use copy command not multiple inserts
+        //TODO [IMPROVE] [first] with merge there is no need to have insert and update separated
         protected async Task BulkUpdateFlexibleRecordsAsync(
             NpgsqlConnection connection,
             NpgsqlTransaction transaction,
@@ -254,13 +259,22 @@ namespace Bureau.Data.Postgres.Repositories
 
             // Step 3: Perform the bulk update using a join
             var updateCommand = @"
-    UPDATE public.""FlexibleRecords"" AS fr
-    SET
-        ""DataType"" = t.""DataType"",
-        ""Data"" = t.""Data""
-    FROM TempFlexibleRecords AS t
-    WHERE fr.""Id"" = t.""Id"";";
-
+    MERGE INTO public.""FlexibleRecords"" AS target
+    USING TempFlexibleRecords AS source
+    ON target.""Id"" = source.""Id""
+    WHEN MATCHED THEN
+        UPDATE SET ""DataType"" = source.""DataType"", ""Data"" = source.""Data""
+    WHEN NOT MATCHED THEN
+        INSERT (""Id"", ""DataType"", ""Data"")
+        VALUES (source.""Id"", source.""DataType"", source.""Data"");";
+            //TIPS this is for older versions of postgres < v15
+            //INSERT INTO ""FlexibleRecords"" ("Id", "DataType", "Data")
+            //SELECT "Id", "DataType", "Data"
+            //FROM ""TempFlexibleRecords""
+            //ON CONFLICT("Id") 
+            //DO UPDATE
+            //SET "DataType" = EXCLUDED."DataType",
+            //    "Data" = EXCLUDED."Data";
             using (var command = new NpgsqlCommand(updateCommand, connection, transaction))
             {
                 await command.ExecuteNonQueryAsync(cancellationToken);

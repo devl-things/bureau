@@ -15,7 +15,7 @@ namespace Bureau.UI.API.V1.Mappers
                     new RecipeSubGroupDto(string.Empty)
                     {
                         Name = recipe.Name,
-                        Ingredients = recipe.Ingredients,
+                        Ingredients = recipe.Ingredients.Select(x => new RecipeIngredient(x)).ToList(),
                         Instructions = recipe.Instructions
                     }
                 },

@@ -1,6 +1,6 @@
 ﻿using Bureau.Recipes.Models;
 
-namespace Bureau.UI.API.V2.Models.Recipes
+namespace Bureau.UI.API.V3.Models.Recipes
 {
     internal static class RecipeResponseModelMapper
     {
@@ -23,7 +23,13 @@ namespace Bureau.UI.API.V2.Models.Recipes
             return new RecipeLayer()
             {
                 Name = group.Name,
-                Ingredients = group.Ingredients.Select(x => x.Ingredient).ToList(),
+                Ingredients = group.Ingredients
+                    .Select(x => new Bureau.UI.API.V3.Models.Recipes.RecipeIngredient() 
+                    { 
+                        Name = x.Ingredient, 
+                        Quantity = x.Quantity.Quantity ?? 0,
+                        Unit = x.Quantity.Unit
+                    }).ToList(),
                 Instructions = group.Instructions
             };
         }
