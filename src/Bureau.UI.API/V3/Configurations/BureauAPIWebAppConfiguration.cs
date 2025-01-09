@@ -32,11 +32,6 @@ namespace Bureau.UI.API.V3.Configurations
                 .WithName($"{BureauAPIRouteNames.UpdateRecipes}-{BureauAPIVersion.Version3}")
                 .WithApiVersionSet(versionSet)
                 .MapToApiVersion(BureauAPIVersion.Version3);
-
-            recipesGroup.MapDelete("{id}", RecipesMethods.DeleteRecipe)
-                .WithName($"{BureauAPIRouteNames.DeleteRecipes}-{BureauAPIVersion.Version3}")
-                .WithApiVersionSet(versionSet)
-                .MapToApiVersion(BureauAPIVersion.Version3);
         }
     }
 }

@@ -57,16 +57,6 @@ namespace Bureau.UI.API.V2.Methods
             return Results.Ok(response.Value);
         }
 
-        public static async Task<IResult> DeleteRecipe(string id, CancellationToken cancellationToken, [FromServices] IRecipeManager manager)
-        {
-            Result response = await manager.DeleteRecipeAsync(id, cancellationToken).ConfigureAwait(false);
-            if (response.IsError)
-            {
-                return Results.BadRequest(response.Error.ToApiResponse());
-            }
-            return Results.Ok(response.ToApiResponse("Deletion succeeded."));
-        }
-
         public static async Task<IResult> GetRecipeById(string id, CancellationToken cancellationToken, [FromServices] IRecipeQueryHandler handler)
         {
             Result<RecipeDto> recipe = await handler.GetRecipeAsync(id, cancellationToken).ConfigureAwait(false);
