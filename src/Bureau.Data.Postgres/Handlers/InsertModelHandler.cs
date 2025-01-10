@@ -5,6 +5,8 @@ using Bureau.Core;
 using Bureau.Data.Postgres.Mappers;
 using dbModels = Bureau.Data.Postgres.Models;
 using Bureau.Data.Postgres.Models;
+using System;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
 
 namespace Bureau.Data.Postgres.Handlers
 {
@@ -45,9 +47,7 @@ namespace Bureau.Data.Postgres.Handlers
     {
         private InsertAggregateModel _insertRequest;
 
-        private DateTime _updatedAt = default;
-        private List<IReference> _updateRecords;
-        private List<Record> _newRecords;
+        private List<Record> _records;
         
         private List<dbModels.TermEntry> _newTermEntries;
         private List<dbModels.Edge> _newEdgeRecords;
@@ -58,8 +58,7 @@ namespace Bureau.Data.Postgres.Handlers
         public InsertModelHandler(InsertAggregateModel insertRequest) : base(insertRequest.TermEntries.Count + insertRequest.Edges.Count)
         {
             _insertRequest = insertRequest;
-            _updateRecords = new List<IReference>(_insertRequest.TermEntries.Count + _insertRequest.Edges.Count);
-            _newRecords = new List<Record>(_insertRequest.TermEntries.Count + _insertRequest.Edges.Count);
+            _records = new List<Record>(_insertRequest.TermEntries.Count + _insertRequest.Edges.Count);
             _newTermEntries = new List<dbModels.TermEntry>(_insertRequest.TermEntries.Count);
             _newEdgeRecords = new List<dbModels.Edge>(_insertRequest.Edges.Count);
             _updateEdgeRecords = new List<dbModels.Edge>(_insertRequest.Edges.Count);
@@ -74,9 +73,7 @@ namespace Bureau.Data.Postgres.Handlers
         /// <summary>
         /// There shouldn't be duplicates, but!s
         /// </summary>
-        public List<Record> NewRecords { get { return _newRecords; } }
-
-        public List<IReference> UpdateRecords { get { return _updateRecords; } }
+        public List<Record> Records { get { return _records; } }
 
         public List<dbModels.TermEntry> NewTermEntries { get { return _newTermEntries; } }
 
@@ -86,18 +83,14 @@ namespace Bureau.Data.Postgres.Handlers
         public List<dbModels.FlexibleRecord> NewFlexibleRecords { get { return _newFlexibleRecords; } }
         public List<dbModels.FlexibleRecord> UpdateFlexibleRecords { get { return _updateFlexibleRecords; } }
 
-        private void SetUpdatedAt(DateTime updatedAt)
-        {
-            if (_updatedAt == default)
-            {
-                _updatedAt = updatedAt;
-            }
-        }
-
         public virtual Result HandleAggregate()
         {
-            ProcessTermEntries();
-            Result result = ProcessEdges();
+            Result result = ProcessTermEntries();
+            if (result.IsError)
+            {
+                return result.Error;
+            }
+            result = ProcessEdges();
             if (result.IsError)
             {
                 return result.Error;
@@ -143,17 +136,20 @@ namespace Bureau.Data.Postgres.Handlers
         {
             foreach (Core.Models.Edge edge in _insertRequest.Edges)
             {
+                Guid guid;
                 if (BureauReferenceFactory.IsTempId(edge.Id))
                 {
-                    Guid guid = Guid.NewGuid();
+                    guid = Guid.NewGuid();
                     _newRecordIds.Add(edge, guid);
-                    _newRecords.Add(edge.ToRecord(guid));
                 }
                 else
                 {
-                    _updateRecords.Add(edge);
-                    SetUpdatedAt(edge.UpdatedAt);
+                    if (!Guid.TryParse(edge.Id, out guid)) 
+                    {
+                        return "Id malformed";
+                    }
                 }
+                _records.Add(edge.ToRecord(guid));
             }
 
             foreach (Core.Models.Edge edge in _insertRequest.Edges)
@@ -175,7 +171,7 @@ namespace Bureau.Data.Postgres.Handlers
             return true;
         }
 
-        private void ProcessTermEntries()
+        private Result ProcessTermEntries()
         {
             foreach (Core.Models.TermEntry term in _insertRequest.TermEntries)
             {
@@ -185,14 +181,18 @@ namespace Bureau.Data.Postgres.Handlers
                     _newRecordIds.Add(term, guid);
                     dbModels.TermEntry termEntry = term.ToDBTermEntry(guid);
                     _newTermEntries.Add(termEntry);
-                    _newRecords.Add(termEntry.Record);
+                    _records.Add(termEntry.Record);
                 }
                 else
                 {
-                    _updateRecords.Add(term);
-                    SetUpdatedAt(term.UpdatedAt);
+                    if (!Guid.TryParse(term.Id, out Guid guid))
+                    {
+                        return "Id malformed";
+                    }
+                    _records.Add(term.ToRecord(guid));
                 }
             }
+            return true;
         }
 
         private Result<dbModels.Edge> CreateEdge(Core.Models.Edge edge)
