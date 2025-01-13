@@ -1,7 +1,4 @@
-﻿using Bureau.Core.Factories;
-using Bureau.Core.Models;
-
-namespace Bureau.Recipes.Models
+﻿namespace Bureau.Recipes.Models
 {
     public class RecipeDto
     {

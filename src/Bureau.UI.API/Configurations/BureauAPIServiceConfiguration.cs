@@ -1,7 +1,6 @@
 ﻿using Asp.Versioning;
 using Bureau.Recipes.Configurations;
 using Bureau.UI.API.OpenApi;
-using Bureau.UI.API.V1.Configurations;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using Swashbuckle.AspNetCore.SwaggerGen;
@@ -24,7 +23,7 @@ namespace Bureau.UI.API.Configurations
             });
 
             // api versioning
-            services.AddApiVersioning(options => 
+            services.AddApiVersioning(options =>
             {
                 options.DefaultApiVersion = BureauAPIVersion.Version1;
                 options.AssumeDefaultVersionWhenUnspecified = true;
@@ -36,7 +35,7 @@ namespace Bureau.UI.API.Configurations
                 //  Accept-Version: Use if you want to align versioning with content negotiation.
                 //  Version: Use for simplicity in small or internal APIs.
             })
-                .AddApiExplorer(options => 
+                .AddApiExplorer(options =>
                 {
                     options.GroupNameFormat = "'v'VVV";
                 });

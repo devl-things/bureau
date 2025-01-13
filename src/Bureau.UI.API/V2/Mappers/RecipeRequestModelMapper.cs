@@ -1,6 +1,5 @@
 ﻿using Bureau.Recipes.Models;
 using Bureau.UI.API.V2.Models.Recipes;
-using System.Runtime.CompilerServices;
 
 namespace Bureau.UI.API.V2.Mappers
 {
@@ -20,7 +19,7 @@ namespace Bureau.UI.API.V2.Mappers
             return result;
         }
 
-        internal static RecipeSubGroupDto ToSubGroupDto(this RecipeLayer layer) 
+        internal static RecipeSubGroupDto ToSubGroupDto(this RecipeLayer layer)
         {
             return new RecipeSubGroupDto(string.Empty)
             {

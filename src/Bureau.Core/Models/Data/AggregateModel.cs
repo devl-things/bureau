@@ -19,9 +19,9 @@
     {
         public required IReference MainReference { get; set; }
 
-        public InsertAggregateModel(): base(new PaginationMetadata())
+        public InsertAggregateModel() : base(new PaginationMetadata())
         {
-            
+
         }
         public InsertAggregateModel(QueryAggregateModel baseModel) : base(baseModel.Pagination)
         {
@@ -38,7 +38,7 @@
         public required HashSet<Edge> EdgesToDelete { get; set; }
     }
 
-    public interface IRemoveAggregateModel 
+    public interface IRemoveAggregateModel
     {
         public HashSet<FlexRecord> FlexRecordsToDelete { get; set; }
         public HashSet<Edge> EdgesToDelete { get; set; }

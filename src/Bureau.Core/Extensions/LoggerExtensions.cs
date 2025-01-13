@@ -4,7 +4,7 @@ namespace Bureau.Core.Extensions
 {
     public static class LoggerExtensions
     {
-        public static void Debug(this ILogger logger, string message) 
+        public static void Debug(this ILogger logger, string message)
         {
             if (logger.IsEnabled(LogLevel.Debug))
             {
@@ -18,17 +18,17 @@ namespace Bureau.Core.Extensions
                 logger.LogInformation(message, arg);
             }
         }
-        public static void Info(this ILogger logger, string message, params object?[] args) 
+        public static void Info(this ILogger logger, string message, params object?[] args)
         {
-            if (logger.IsEnabled(LogLevel.Information)) 
+            if (logger.IsEnabled(LogLevel.Information))
             {
                 logger.LogInformation(message, args);
             }
         }
 
-        public static void Warning(this ILogger logger, string message) 
+        public static void Warning(this ILogger logger, string message)
         {
-            if (logger.IsEnabled(LogLevel.Warning)) 
+            if (logger.IsEnabled(LogLevel.Warning))
             {
                 logger.LogWarning(message);
             }
@@ -42,12 +42,12 @@ namespace Bureau.Core.Extensions
             }
         }
 
-        public static void Warning(this ILogger logger, ResultError error) 
+        public static void Warning(this ILogger logger, ResultError error)
         {
             if (logger.IsEnabled(LogLevel.Warning))
             {
                 string baseMessage = $"Message: {error.ErrorMessage}";
-                if (error.Exception != null) 
+                if (error.Exception != null)
                 {
                     baseMessage = $"{baseMessage}; Exception: {error.Exception.ToString()}";
                 }

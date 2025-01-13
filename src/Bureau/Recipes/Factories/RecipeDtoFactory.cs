@@ -8,7 +8,7 @@ using Bureau.Recipes.Models;
 
 namespace Bureau.Recipes.Factories
 {
-    internal static class RecipeDtoFactoryExtension 
+    internal static class RecipeDtoFactoryExtension
     {
         internal static Result SetDetails(this RecipeDto dto, QueryAggregateModel aggregate, Edge edge)
         {
@@ -41,7 +41,7 @@ namespace Bureau.Recipes.Factories
 
     internal class RecipeDtoFactory
     {
-        public static Result<RecipeDto> Create(InsertAggregateModel aggregate) 
+        public static Result<RecipeDto> Create(InsertAggregateModel aggregate)
         {
             RecipeDto currentRecipe = RecipeDto.EmptyRecipe();
             HashSet<RecipeSubGroupDto> currentGroups = new HashSet<RecipeSubGroupDto>(new ReferenceComparer());
@@ -96,7 +96,7 @@ namespace Bureau.Recipes.Factories
                 case (int)EdgeTypeEnum.Items:
                     if (edge.ParentNode == null)
                     {
-                        return RecipeResultErrorFactory.ParentNodeNotFound(edge.Id);
+                        return ResultErrorFactory.ParentNodeNotFound(edge.Id);
                     }
                     if (!currentGroups.TryGetValue(new RecipeSubGroupDto(edge.ParentNode!.Id), out RecipeSubGroupDto? group))
                     {
@@ -114,10 +114,10 @@ namespace Bureau.Recipes.Factories
                         return RecipeResultErrorFactory.IngredientNotFound(edge.TargetNode.Id);
                     }
                     QuantityDetails quantityDetails = GetQuantityDetails(aggregate, edge.Id);
-                    group.Ingredients.Add(new RecipeIngredient(ingredient.Title) { Quantity = quantityDetails });                  
+                    group.Ingredients.Add(new RecipeIngredient(ingredient.Title) { Quantity = quantityDetails });
                     return true;
                 default:
-                    return RecipeResultErrorFactory.UnknownEdgeType(edge.Id, edge.EdgeType);
+                    return RecipeResultErrorFactory.UnknownRecipeEdgeType(edge.Id, edge.EdgeType);
             }
         }
 
@@ -133,7 +133,7 @@ namespace Bureau.Recipes.Factories
 
         private static RecipeDto GetOrAddRecipe(ref Dictionary<string, RecipeDto> recipes, string id, ref List<RecipeDto> result)
         {
-            if (!recipes.TryGetValue(id, out RecipeDto? recipe)) 
+            if (!recipes.TryGetValue(id, out RecipeDto? recipe))
             {
                 recipe = RecipeDto.EmptyRecipe();
                 recipes.Add(id, recipe);
@@ -142,7 +142,7 @@ namespace Bureau.Recipes.Factories
             return recipe;
         }
 
-        private static QuantityDetails GetQuantityDetails(QueryAggregateModel aggregate, string edgeId) 
+        private static QuantityDetails GetQuantityDetails(QueryAggregateModel aggregate, string edgeId)
         {
             if (aggregate.FlexRecords.TryGetValue(new FlexRecord(edgeId), out FlexRecord? quantityFlex))
             {
@@ -159,7 +159,7 @@ namespace Bureau.Recipes.Factories
         {
             if (!aggregate.TermEntries.TryGetValue(new TermEntry(groupTermId), out TermEntry? groupTerm))
             {
-                return RecipeResultErrorFactory.GroupNotFound(groupTermId);
+                return RecipeResultErrorFactory.RecipeGroupNotFound(groupTermId);
             }
             RecipeSubGroupDto group = new RecipeSubGroupDto(groupEdgeId)
             {
@@ -176,7 +176,7 @@ namespace Bureau.Recipes.Factories
                 }
                 group.Instructions = instructionResult.Value.Data.Note;
             }
-            return group;            
+            return group;
         }
     }
 }

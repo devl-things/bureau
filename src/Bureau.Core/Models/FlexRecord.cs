@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace Bureau.Core.Models
+﻿namespace Bureau.Core.Models
 {
     public class FlexRecord : BaseRecord
     {
@@ -15,7 +9,7 @@ namespace Bureau.Core.Models
             Id = id;
         }
 
-        public FlexRecord Clone(string id) 
+        public FlexRecord Clone(string id)
         {
             return new FlexRecord(id)
             {

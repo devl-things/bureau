@@ -28,7 +28,7 @@ namespace Bureau.Recipes.Handlers
 
         public async Task<Result<RecipeDto>> GetRecipeAsync(string id, CancellationToken cancellationToken = default)
         {
-            if(!BureauReferenceFactory.TryCreateReference(id, out IReference referenceId))
+            if (!BureauReferenceFactory.TryCreateReference(id, out IReference referenceId))
             {
                 return RecipeResultErrorFactory.RecipeIdBadFormat(id);
             }
@@ -44,7 +44,7 @@ namespace Bureau.Recipes.Handlers
 
         public async Task<PaginatedResult<List<RecipeDto>>> GetRecipesAsync(int? page, int? limit, CancellationToken cancellationToken)
         {
-            if (limit.HasValue && limit > _options.MaximumLimit) 
+            if (limit.HasValue && limit > _options.MaximumLimit)
             {
                 return ResultErrorFactory.InvalidLimit(limit.Value, _options.MaximumLimit);
             }
@@ -56,7 +56,7 @@ namespace Bureau.Recipes.Handlers
                 FilterRequestType = EdgeRequestType.Edge | EdgeRequestType.RootNode,
                 SelectReferences = EdgeRequestType.Edge | EdgeRequestType.TargetNode,
                 SelectRecordTypes = RecordRequestType.Edges | RecordRequestType.TermEntries | RecordRequestType.FlexRecords,
-                Pagination = new PaginationMetadata(page.HasValue ? page.Value : 1, limit.HasValue ? limit.Value: _options.DefaultLimit)
+                Pagination = new PaginationMetadata(page.HasValue ? page.Value : 1, limit.HasValue ? limit.Value : _options.DefaultLimit)
             };
 
             Result<QueryAggregateModel> result = await _edgeTypeRepository.FetchRecordsAsync(edgeTypeSearchRequest, cancellationToken).ConfigureAwait(false);

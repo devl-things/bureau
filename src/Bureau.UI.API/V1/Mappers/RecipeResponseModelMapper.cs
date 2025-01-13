@@ -5,7 +5,7 @@ namespace Bureau.UI.API.V1.Models.Recipes
     internal static class RecipeResponseModelMapper
     {
         internal static RecipeResponseModel ToResponseModel(this RecipeDto recipe)
-        { 
+        {
             return new RecipeResponseModel()
             {
                 Id = recipe.Id,

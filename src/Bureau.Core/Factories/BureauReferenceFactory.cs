@@ -29,7 +29,7 @@ namespace Bureau.Core.Factories
 
         public static bool TryCreateReference(string id, out IReference reference)
         {
-            if(Guid.TryParse(id, out _))
+            if (Guid.TryParse(id, out _))
             {
                 reference = new Reference(id);
                 return true;

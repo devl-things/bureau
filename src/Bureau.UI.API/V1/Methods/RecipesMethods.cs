@@ -21,7 +21,7 @@ namespace Bureau.UI.API.V1.Methods
             [FromServices] LinkGenerator linkGenerator)
         {
             Result<RecipeDto> recipeResult = await manager.InsertRecipeAsync(recipe.ToDto(), cancellationToken).ConfigureAwait(false);
-            if(recipeResult.IsError)
+            if (recipeResult.IsError)
             {
                 return Results.BadRequest(recipeResult.Error.ToApiResponse());
             }
@@ -45,9 +45,9 @@ namespace Bureau.UI.API.V1.Methods
         }
 
         public static async Task<IResult> UpdateRecipe(
-            string id, 
-            CancellationToken cancellationToken, 
-            [FromBody] RecipeRequestModel recipe, 
+            string id,
+            CancellationToken cancellationToken,
+            [FromBody] RecipeRequestModel recipe,
             [FromServices] IRecipeManager manager)
         {
             Result<RecipeDto> response = await manager.UpdateRecipeAsync(recipe.ToDto(id), cancellationToken).ConfigureAwait(false);
