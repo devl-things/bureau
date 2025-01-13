@@ -12,7 +12,7 @@ namespace Bureau.UI.API.V2.Models.Recipes
         public int? Servings { get; set; }
 
     }
-    public class RecipeLayer 
+    public class RecipeLayer
     {
         [Required]
         public required string Name { get; set; }

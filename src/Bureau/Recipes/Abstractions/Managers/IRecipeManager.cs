@@ -1,6 +1,4 @@
 ﻿using Bureau.Core;
-using Bureau.Core.Models.Data;
-using Bureau.Core.Models;
 using Bureau.Recipes.Models;
 
 namespace Bureau.Recipes.Managers

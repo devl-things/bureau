@@ -20,10 +20,10 @@
         public static implicit operator Result(string errorMessage) { return new Result(new ResultError(errorMessage)); }
         public static implicit operator Result(Exception exception) { return new Result(new ResultError(exception)); }
     }
-    public struct Result<T> 
+    public struct Result<T>
     {
         public T Value { get; }
-        
+
         public ResultError Error { get; }
         public bool IsSuccess { get; }
         public bool IsError { get { return !IsSuccess; } }
@@ -69,7 +69,7 @@
         public static implicit operator PaginatedResult<T>(Exception exception) { return new PaginatedResult<T>(new ResultError(exception)); }
     }
 
-    public struct ResultError 
+    public struct ResultError
     {
         public string ErrorMessage { get; }
         public Exception? Exception { get; }

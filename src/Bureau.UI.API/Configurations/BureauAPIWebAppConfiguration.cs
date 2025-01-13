@@ -1,6 +1,5 @@
 ﻿using Asp.Versioning.ApiExplorer;
 using Asp.Versioning.Builder;
-using Asp.Versioning.Conventions;
 using Bureau.UI.API.Models;
 using Bureau.UI.API.V1.Configurations;
 using Bureau.UI.API.V2.Configurations;
@@ -38,7 +37,7 @@ namespace Bureau.UI.API.Configurations
             //app.UseExceptionManager();
         }
 
-        internal static void MapBureauOpenApiExplorer(this WebApplication app) 
+        internal static void MapBureauOpenApiExplorer(this WebApplication app)
         {
             if (app.Environment.IsDevelopment())
             {

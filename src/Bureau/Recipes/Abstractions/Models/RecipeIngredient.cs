@@ -12,7 +12,7 @@ namespace Bureau.Recipes.Models
             Ingredient = ingredient;
         }
 
-        public bool HasQuantity() 
+        public bool HasQuantity()
         {
             return !Quantity.IsEmpty();
         }

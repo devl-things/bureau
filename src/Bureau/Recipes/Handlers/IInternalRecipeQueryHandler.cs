@@ -1,6 +1,6 @@
-﻿using Bureau.Core.Models.Data;
+﻿using Bureau.Core;
 using Bureau.Core.Models;
-using Bureau.Core;
+using Bureau.Core.Models.Data;
 
 namespace Bureau.Recipes.Handlers
 {

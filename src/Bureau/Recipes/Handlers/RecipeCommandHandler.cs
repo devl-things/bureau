@@ -1,12 +1,12 @@
 ﻿using Bureau.Core;
-using Bureau.Core.Factories;
-using Bureau.Core.Models.Data;
-using Bureau.Core.Models;
-using Bureau.Core.Repositories;
-using Bureau.Recipes.Models;
 using Bureau.Core.Comparers;
+using Bureau.Core.Factories;
+using Bureau.Core.Models;
+using Bureau.Core.Models.Data;
+using Bureau.Core.Repositories;
 using Bureau.Models;
 using Bureau.Recipes.Factories;
+using Bureau.Recipes.Models;
 
 namespace Bureau.Recipes.Handlers
 {
@@ -24,7 +24,7 @@ namespace Bureau.Recipes.Handlers
 
         private RecipeDto _recipeDto = default!;
         private string _recipeId = default!;
-        public RecipeCommandHandler(IRecordCommandRepository repository, 
+        public RecipeCommandHandler(IRecordCommandRepository repository,
             ITermRepository termRepository,
             IInternalRecipeQueryHandler queryHandler)
         {
@@ -157,7 +157,7 @@ namespace Bureau.Recipes.Handlers
         private void AddTermEntryTitle(string title)
         {
             string label = TermEntry.GetLabel(title);
-            if (_termEntryLabels.Add(label)) 
+            if (_termEntryLabels.Add(label))
             {
                 _termEntryTitleByLabel.Add(label, title);
             }
@@ -175,13 +175,13 @@ namespace Bureau.Recipes.Handlers
             {
                 return existingRecipeResult.Error;
             }
-            Dictionary<string, ChangedEntry<Edge>> existingEdgesBySTTKey = new Dictionary<string, ChangedEntry<Edge>>(existingRecipeResult.Value.Edges.Count);
+            Dictionary<string, ChangedRecord<Edge>> existingEdgesBySTTKey = new Dictionary<string, ChangedRecord<Edge>>(existingRecipeResult.Value.Edges.Count);
 
             Edge recipeEdge = default!;
             foreach (Edge edge in existingRecipeResult.Value.Edges)
             {
-                ChangedEntry<Edge> edgeChanged = new ChangedEntry<Edge>(edge);
-                if (existingRecipeResult.Value.MainReference.Equals(edge)) 
+                ChangedRecord<Edge> edgeChanged = new ChangedRecord<Edge>(edge);
+                if (existingRecipeResult.Value.MainReference.Equals(edge))
                 {
                     edgeChanged.IsChanged = true;
                     recipeEdge = edge;
@@ -189,14 +189,14 @@ namespace Bureau.Recipes.Handlers
                 existingEdgesBySTTKey.Add(edge.SourceTypeTargetKey(), edgeChanged);
             }
             //recipe edge should remain the same always even if recipe name changes
-            if (recipeEdge == default) 
+            if (recipeEdge == default)
             {
                 return RecipeResultErrorFactory.RecipeNotFound(existingRecipeResult.Value.MainReference.Id);
             }
 
             if (!TryGetTermEntry(_recipeDto.Name, out TermEntry headerEntry))
             {
-                return RecipeResultErrorFactory.UnknownTerm(_recipeDto.Name);
+                return ResultErrorFactory.UnknownTerm(_recipeDto.Name);
             }
             recipeEdge.SourceNode = BureauReferenceFactory.CreateReference(headerEntry.Id);
             recipeEdge.TargetNode = BureauReferenceFactory.CreateReference(headerEntry.Id);
@@ -220,9 +220,9 @@ namespace Bureau.Recipes.Handlers
             }
             FlexRecord details = flexResult.Value;
 
-            Dictionary<string, ChangedEntry<FlexRecord>> existingFlexById = existingRecipeResult.Value.FlexRecords
-                .ToDictionary(k => k.Id, v => new ChangedEntry<FlexRecord>(v));
-            if (existingFlexById.TryGetValue(recipeEdge.Id, out ChangedEntry<FlexRecord>? existingDetails))
+            Dictionary<string, ChangedRecord<FlexRecord>> existingFlexById = existingRecipeResult.Value.FlexRecords
+                .ToDictionary(k => k.Id, v => new ChangedRecord<FlexRecord>(v));
+            if (existingFlexById.TryGetValue(recipeEdge.Id, out ChangedRecord<FlexRecord>? existingDetails))
             {
                 existingDetails!.Entry.UpdatedAt = _recipeDto.UpdatedAt;
                 existingDetails!.Entry.DataType = flexResult.Value.DataType;
@@ -246,7 +246,7 @@ namespace Bureau.Recipes.Handlers
             {
                 if (!TryGetTermEntry(group.Name, out TermEntry groupEntry))
                 {
-                    return RecipeResultErrorFactory.UnknownTerm(group.Name);
+                    return ResultErrorFactory.UnknownTerm(group.Name);
                 }
 
                 Edge groupEdge = new Edge(GetNewTempId())
@@ -259,7 +259,7 @@ namespace Bureau.Recipes.Handlers
                     UpdatedAt = _recipeDto.UpdatedAt,
                     EdgeType = (int)EdgeTypeEnum.Group,
                 };
-                if (existingEdgesBySTTKey.TryGetValue(groupEdge.SourceTypeTargetKey(), out ChangedEntry<Edge>? existingGroupEdge))
+                if (existingEdgesBySTTKey.TryGetValue(groupEdge.SourceTypeTargetKey(), out ChangedRecord<Edge>? existingGroupEdge))
                 {
                     existingGroupEdge!.Entry.UpdatedAt = recipeEdge.UpdatedAt;
                     existingGroupEdge.IsChanged = true;
@@ -268,7 +268,7 @@ namespace Bureau.Recipes.Handlers
                 updateRecipe.Edges.Add(groupEdge);
 
                 bool newInstructionsExist = !string.IsNullOrWhiteSpace(group.Instructions);
-                bool existingInstructionsExist = existingFlexById.TryGetValue(groupEdge.Id, out ChangedEntry<FlexRecord>? existingInstructions);
+                bool existingInstructionsExist = existingFlexById.TryGetValue(groupEdge.Id, out ChangedRecord<FlexRecord>? existingInstructions);
 
                 if (newInstructionsExist)
                 {
@@ -310,7 +310,7 @@ namespace Bureau.Recipes.Handlers
                 {
                     if (!TryGetTermEntry(ingredient.Ingredient, out TermEntry ingredientEntry))
                     {
-                        return RecipeResultErrorFactory.UnknownTerm(ingredient.Ingredient);
+                        return ResultErrorFactory.UnknownTerm(ingredient.Ingredient);
                     }
                     Edge ingredientEdge = new Edge(GetNewTempId())
                     {
@@ -322,7 +322,7 @@ namespace Bureau.Recipes.Handlers
                         UpdatedAt = _recipeDto.UpdatedAt,
                         EdgeType = (int)EdgeTypeEnum.Items,
                     };
-                    if (existingEdgesBySTTKey.TryGetValue(ingredientEdge.SourceTypeTargetKey(), out ChangedEntry<Edge>? existingIngredientEdge))
+                    if (existingEdgesBySTTKey.TryGetValue(ingredientEdge.SourceTypeTargetKey(), out ChangedRecord<Edge>? existingIngredientEdge))
                     {
                         existingIngredientEdge!.Entry.UpdatedAt = recipeEdge.UpdatedAt;
                         existingIngredientEdge.IsChanged = true;
@@ -330,7 +330,7 @@ namespace Bureau.Recipes.Handlers
                     }
                     updateRecipe.Edges.Add(ingredientEdge);
 
-                    bool existingQuantityExist = existingFlexById.TryGetValue(ingredientEdge.Id, out ChangedEntry<FlexRecord>? existingQuantity);
+                    bool existingQuantityExist = existingFlexById.TryGetValue(ingredientEdge.Id, out ChangedRecord<FlexRecord>? existingQuantity);
 
                     if (ingredient.HasQuantity())
                     {
@@ -367,11 +367,11 @@ namespace Bureau.Recipes.Handlers
                 }
             }
 
-            foreach (ChangedEntry<Edge> item in existingEdgesBySTTKey.Values.Where(x => !x.IsChanged))
+            foreach (ChangedRecord<Edge> item in existingEdgesBySTTKey.Values.Where(x => !x.IsChanged))
             {
                 updateRecipe.EdgesToDelete.Add(item.Entry);
             }
-            foreach (ChangedEntry<FlexRecord> item in existingFlexById.Values.Where(x => !x.IsChanged))
+            foreach (ChangedRecord<FlexRecord> item in existingFlexById.Values.Where(x => !x.IsChanged))
             {
                 updateRecipe.FlexRecordsToDelete.Add(item.Entry);
             }
@@ -387,7 +387,7 @@ namespace Bureau.Recipes.Handlers
 
             if (!TryGetTermEntry(_recipeDto.Name, out TermEntry headerEntry))
             {
-                return RecipeResultErrorFactory.UnknownTerm(_recipeDto.Name);
+                return ResultErrorFactory.UnknownTerm(_recipeDto.Name);
             }
 
             Edge recipeEdge = new Edge(_recipeId)
@@ -428,7 +428,7 @@ namespace Bureau.Recipes.Handlers
             {
                 if (!TryGetTermEntry(group.Name, out TermEntry groupEntry))
                 {
-                    return RecipeResultErrorFactory.UnknownTerm(group.Name);
+                    return ResultErrorFactory.UnknownTerm(group.Name);
                 }
 
                 Edge groupEdge = new Edge(GetNewTempId())
@@ -466,7 +466,7 @@ namespace Bureau.Recipes.Handlers
                 {
                     if (!TryGetTermEntry(ingredient.Ingredient, out TermEntry ingredientEntry))
                     {
-                        return RecipeResultErrorFactory.UnknownTerm(ingredient.Ingredient);
+                        return ResultErrorFactory.UnknownTerm(ingredient.Ingredient);
                     }
                     Edge ingredientEdge = new Edge(GetNewTempId())
                     {
@@ -479,7 +479,8 @@ namespace Bureau.Recipes.Handlers
                         EdgeType = (int)EdgeTypeEnum.Items,
                     };
                     newRecipe.Edges.Add(ingredientEdge);
-                    if (ingredient.HasQuantity()) {
+                    if (ingredient.HasQuantity())
+                    {
                         flexResult = FlexRecordFactory
                             .CreateFlexRecord(new FlexibleRecord<QuantityDetails>(ingredientEdge.Id)
                             {

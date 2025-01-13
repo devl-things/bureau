@@ -3,7 +3,7 @@ using Bureau.Core.Factories;
 
 namespace Bureau.Core.Models
 {
-    public class Edge: BaseRecord
+    public class Edge : BaseRecord
     {
         public required IReference SourceNode { get; set; }
         public required IReference TargetNode { get; set; }
@@ -25,9 +25,9 @@ namespace Bureau.Core.Models
             return $"{SourceNode.Id}_{EdgeType}_{TargetNode.Id}";
         }
 
-        public static Edge EmptyEdgeWithId(string id) 
+        public static Edge EmptyEdgeWithId(string id)
         {
-            return new Edge(id) 
+            return new Edge(id)
             {
                 SourceNode = BureauReferenceFactory.EmptyReference,
                 TargetNode = BureauReferenceFactory.EmptyReference,

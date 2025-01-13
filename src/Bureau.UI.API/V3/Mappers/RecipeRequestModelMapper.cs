@@ -1,6 +1,5 @@
 ﻿using Bureau.Recipes.Models;
 using Bureau.UI.API.V3.Models.Recipes;
-using System.Runtime.CompilerServices;
 
 namespace Bureau.UI.API.V3.Mappers
 {
@@ -20,15 +19,15 @@ namespace Bureau.UI.API.V3.Mappers
             return result;
         }
 
-        internal static RecipeSubGroupDto ToSubGroupDto(this RecipeLayer layer) 
+        internal static RecipeSubGroupDto ToSubGroupDto(this RecipeLayer layer)
         {
             return new RecipeSubGroupDto(string.Empty)
             {
                 Name = layer.Name,
                 Ingredients = layer.Ingredients
-                    .Select(x => new Bureau.Recipes.Models.RecipeIngredient(x.Name) 
-                    { 
-                        Quantity = new Bureau.Models.QuantityDetails() { Quantity = x.Quantity, Unit = x.Unit } 
+                    .Select(x => new Bureau.Recipes.Models.RecipeIngredient(x.Name)
+                    {
+                        Quantity = new Bureau.Models.QuantityDetails() { Quantity = x.Quantity, Unit = x.Unit }
                     })
                     .ToList(),
                 Instructions = layer.Instructions

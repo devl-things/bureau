@@ -1,10 +1,5 @@
-﻿using Bureau.Core.Models.Data;
-using Bureau.Core.Models;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using Bureau.Core.Models;
+using Bureau.Core.Models.Data;
 
 namespace Bureau.Core.Repositories
 {

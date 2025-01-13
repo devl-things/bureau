@@ -7,7 +7,7 @@ namespace Bureau.Models
         public decimal? Quantity { get; set; }
         public string? Unit { get; set; }
 
-        public bool IsEmpty() 
+        public bool IsEmpty()
         {
             return !Quantity.HasValue && string.IsNullOrWhiteSpace(Unit);
         }

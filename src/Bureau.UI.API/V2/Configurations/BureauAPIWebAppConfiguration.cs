@@ -1,9 +1,9 @@
-﻿using Bureau.UI.API.V2.Methods;
+﻿using Asp.Versioning.Builder;
+using Asp.Versioning.Conventions;
+using Bureau.UI.API.Configurations;
+using Bureau.UI.API.V2.Methods;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Routing;
-using Asp.Versioning.Conventions;
-using Asp.Versioning.Builder;
-using Bureau.UI.API.Configurations;
 
 
 namespace Bureau.UI.API.V2.Configurations
@@ -12,7 +12,7 @@ namespace Bureau.UI.API.V2.Configurations
     {
         internal static void MapRecipesV2(this RouteGroupBuilder apiGroupBuilder, ApiVersionSet versionSet)
         {
-            
+
             RouteGroupBuilder recipesGroup = apiGroupBuilder.MapGroup(BureauAPIRouteNames.RecipesGroup);
 
             recipesGroup.MapGet("", RecipesMethods.GetRecipes)

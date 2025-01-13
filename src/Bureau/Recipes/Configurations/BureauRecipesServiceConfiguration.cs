@@ -6,7 +6,7 @@ namespace Bureau.Recipes.Configurations
 {
     public static class BureauRecipesServiceConfiguration
     {
-        public static IServiceCollection AddBureauRecipes(this IServiceCollection services) 
+        public static IServiceCollection AddBureauRecipes(this IServiceCollection services)
         {
             services.AddScoped<IRecipeCommandHandler, RecipeCommandHandler>();
             services.AddScoped<IInternalRecipeQueryHandler, RecipeQueryHandler>();
