@@ -18,6 +18,7 @@ using Microsoft.Extensions.Options;
 using Npgsql;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.NetworkInformation;
 using System.Text;
 using dbModels = Bureau.Data.Postgres.Models;
 
@@ -128,17 +129,12 @@ namespace Bureau.Data.Postgres.Repositories
                     {
                         try
                         { 
-                            await BulkInsertRecordsAsync(connection, transaction, handler.NewRecords, cancellationToken);
-                            _dbContext.Database.SetDbConnection(connection);
-                            await _dbContext.Database.UseTransactionAsync(transaction, cancellationToken);
-                            await _dbContext.Records
-                                .Where(x => handler.UpdateRecords.Select(x => x.Id).Contains(x.Id.ToString()))
-                                .ExecuteUpdateAsync(te => te.SetProperty(e => e.UpdatedAt, e => e.UpdatedAt));
+                            await BulkMergeRecordsAsync(connection, transaction, handler.Records, cancellationToken);
                             await BulkInsertTermEntriesAsync(connection, transaction, handler.NewTermEntries, cancellationToken);
                             await BulkInsertEdgesAsync(connection, transaction, handler.NewEdgeRecords, cancellationToken);
                             await BulkUpdateEdgesAsync(connection, transaction, handler.UpdateEdgeRecords, cancellationToken);
                             await BulkInsertFlexibleRecordsAsync(connection, transaction, handler.NewFlexibleRecords, cancellationToken);
-                            await BulkUpdateFlexibleRecordsAsync(connection, transaction, handler.UpdateFlexibleRecords, cancellationToken);
+                            await BulkMergeFlexibleRecordsAsync(connection, transaction, handler.UpdateFlexibleRecords, cancellationToken);
                             await transaction.CommitAsync(cancellationToken);
                         }
                         catch (Exception ex)
@@ -176,13 +172,9 @@ namespace Bureau.Data.Postgres.Repositories
                     {
                         try
                         {
-                            await BulkInsertRecordsAsync(connection, transaction, handler.NewRecords, cancellationToken);
+                            await BulkMergeRecordsAsync(connection, transaction, handler.Records, cancellationToken);
                             _dbContext.Database.SetDbConnection(connection);
                             await _dbContext.Database.UseTransactionAsync(transaction, cancellationToken);
-                            //TODO [first] bug updatedAt is not updated because is not
-                            await _dbContext.Records
-                                .Where(x => handler.UpdateRecords.Select(x => x.Id).Contains(x.Id.ToString()))
-                                .ExecuteUpdateAsync(te => te.SetProperty(e => e.UpdatedAt, e => e.UpdatedAt));
                             await _dbContext.FlexibleRecords
                                 .Where(x => handler.RemoveFlexibleRecords.Contains(x.Id))
                                 .ExecuteDeleteAsync(cancellationToken);
@@ -198,7 +190,7 @@ namespace Bureau.Data.Postgres.Repositories
                             await BulkInsertEdgesAsync(connection, transaction, handler.NewEdgeRecords, cancellationToken);
                             await BulkUpdateEdgesAsync(connection, transaction, handler.UpdateEdgeRecords, cancellationToken);
                             await BulkInsertFlexibleRecordsAsync(connection, transaction, handler.NewFlexibleRecords, cancellationToken);
-                            await BulkUpdateFlexibleRecordsAsync(connection, transaction, handler.UpdateFlexibleRecords, cancellationToken);
+                            await BulkMergeFlexibleRecordsAsync(connection, transaction, handler.UpdateFlexibleRecords, cancellationToken);
                             await transaction.CommitAsync(cancellationToken);
                         }
                         catch (Exception ex)
@@ -220,7 +212,7 @@ namespace Bureau.Data.Postgres.Repositories
         }
         //TODO [IMPROVE] [first] use copy command not multiple inserts
         //TODO [IMPROVE] [first] with merge there is no need to have insert and update separated
-        protected async Task BulkUpdateFlexibleRecordsAsync(
+        protected async Task BulkMergeFlexibleRecordsAsync(
             NpgsqlConnection connection,
             NpgsqlTransaction transaction,
             List<Postgres.Models.FlexibleRecord> flexibleRecordsToUpdate,
@@ -541,6 +533,75 @@ namespace Bureau.Data.Postgres.Repositories
             if (batchCommand.Length > 0)
             {
                 await ExecuteBatchAsync(connection, transaction, batchCommand, parameters, cancellationToken);
+            }
+        }
+
+        protected async Task BulkMergeRecordsAsync(
+            NpgsqlConnection connection,
+            NpgsqlTransaction transaction,
+            List<Record> recordsToUpdate,
+            CancellationToken cancellationToken)
+        {
+            if (recordsToUpdate == null || recordsToUpdate.Count == 0)
+                return;
+
+            // Step 1: Create a temporary table
+            var createTempTableCommand = @"
+            CREATE TEMP TABLE TempRecords (
+                ""Id"" UUID NOT NULL,
+                ""Status"" INTEGER NOT NULL,
+                ""CreatedAt"" TIMESTAMPTZ NOT NULL,
+                ""CreatedBy"" VARCHAR(40) NOT NULL,
+                ""UpdatedAt"" TIMESTAMPTZ NOT NULL,
+                ""UpdatedBy"" VARCHAR(40) NOT NULL,
+                ""ProviderName"" VARCHAR(20) NOT NULL,
+                ""ExternalId"" VARCHAR(40) NULL
+            ) ON COMMIT DROP; ";
+
+            using (var command = new NpgsqlCommand(createTempTableCommand, connection, transaction))
+            {
+                await command.ExecuteNonQueryAsync(cancellationToken);
+            }
+
+            // Step 2: Insert data into the temporary table
+            using (var writer = connection.BeginBinaryImport(@"
+            COPY TempRecords (""Id"", ""Status"", ""CreatedAt"", ""CreatedBy"", ""UpdatedAt"", ""UpdatedBy"", ""ProviderName"", ""ExternalId"")
+            FROM STDIN(FORMAT BINARY)"))
+            {
+                foreach (var record in recordsToUpdate)
+                {
+                    writer.StartRow();
+                    writer.Write(record.Id, NpgsqlTypes.NpgsqlDbType.Uuid);
+                    writer.Write(record.Status, NpgsqlTypes.NpgsqlDbType.Integer);
+                    writer.Write(record.CreatedAt, NpgsqlTypes.NpgsqlDbType.TimestampTz);
+                    writer.Write(record.CreatedBy, NpgsqlTypes.NpgsqlDbType.Varchar);
+                    writer.Write(record.UpdatedAt, NpgsqlTypes.NpgsqlDbType.TimestampTz);
+                    writer.Write(record.UpdatedBy, NpgsqlTypes.NpgsqlDbType.Varchar);
+                    writer.Write(record.ProviderName, NpgsqlTypes.NpgsqlDbType.Varchar);
+                    writer.Write(record.ExternalId, NpgsqlTypes.NpgsqlDbType.Varchar);
+
+                }
+                writer.Complete();
+            }
+
+            // Step 3: Perform the bulk update using a join
+            var updateCommand = @"
+            MERGE INTO public.""Records"" AS target
+            USING TempRecords AS source
+            ON target.""Id"" = source.""Id""
+            WHEN MATCHED THEN
+                UPDATE SET
+                    ""Status"" = source.""Status"", 
+                    ""UpdatedAt"" = source.""UpdatedAt"", 
+                    ""UpdatedBy"" = source.""UpdatedBy""
+            WHEN NOT MATCHED THEN
+                INSERT(""Id"", ""Status"", ""CreatedAt"", ""CreatedBy"", ""UpdatedAt"", ""UpdatedBy"", ""ProviderName"", ""ExternalId"")
+                VALUES(source.""Id"", source.""Status"", source.""CreatedAt"", source.""CreatedBy"", source.""UpdatedAt"", source.""UpdatedBy"", 
+                    source.""ProviderName"", source.""ExternalId"");";
+
+            using (var command = new NpgsqlCommand(updateCommand, connection, transaction))
+            {
+                await command.ExecuteNonQueryAsync(cancellationToken);
             }
         }
 

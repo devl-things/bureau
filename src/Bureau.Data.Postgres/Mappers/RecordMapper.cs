@@ -9,31 +9,31 @@ namespace Bureau.Data.Postgres.Mappers
 {
     internal static class RecordMapper
     {
-        public static Postgres.Models.Record ToRecord(this Core.Models.BaseEntry termEntry)
+        public static Postgres.Models.Record ToRecord(this Core.Models.BaseEntry baseEntry)
         {
             return new Postgres.Models.Record()
             {
-                ExternalId = termEntry.ExternalId,
-                ProviderName = termEntry.ProviderName,
-                CreatedAt = termEntry.CreatedAt,
-                UpdatedAt = termEntry.UpdatedAt,
-                CreatedBy = termEntry.CreatedBy,
-                UpdatedBy = termEntry.UpdatedBy,
-                Status = (int)termEntry.Status
+                ExternalId = baseEntry.ExternalId,
+                ProviderName = baseEntry.ProviderName,
+                CreatedAt = baseEntry.CreatedAt,
+                UpdatedAt = baseEntry.UpdatedAt,
+                CreatedBy = baseEntry.CreatedBy,
+                UpdatedBy = baseEntry.UpdatedBy,
+                Status = (int)baseEntry.Status
             };
         }
 
-        public static Postgres.Models.Record ToRecord(this Core.Models.BaseRecord termEntry, Guid guid)
+        public static Postgres.Models.Record ToRecord(this Core.Models.BaseRecord baseRecord, Guid guid)
         {
             return new Postgres.Models.Record()
             {
                 Id = guid,
                 ProviderName = BureauConstants.BureauProvider,
-                CreatedAt = termEntry.CreatedAt,
-                UpdatedAt = termEntry.UpdatedAt,
-                CreatedBy = termEntry.CreatedBy,
-                UpdatedBy = termEntry.UpdatedBy,
-                Status = (int)termEntry.Status
+                CreatedAt = baseRecord.CreatedAt,
+                UpdatedAt = baseRecord.UpdatedAt,
+                CreatedBy = baseRecord.CreatedBy,
+                UpdatedBy = baseRecord.UpdatedBy,
+                Status = (int)baseRecord.Status
             };
         }
     }
