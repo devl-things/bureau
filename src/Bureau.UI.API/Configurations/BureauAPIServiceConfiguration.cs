@@ -1,4 +1,6 @@
 ﻿using Asp.Versioning;
+using Bureau.Calendar.Configurations;
+using Bureau.Configurations;
 using Bureau.Recipes.Configurations;
 using Bureau.UI.API.OpenApi;
 using Microsoft.Extensions.DependencyInjection;
@@ -42,7 +44,11 @@ namespace Bureau.UI.API.Configurations
 
             //services.AddProblemDetails();
 
+            services.AddBureauCommon();
+
             services.AddBureauRecipes();
+
+            services.AddBureauCalendar();
         }
     }
 }

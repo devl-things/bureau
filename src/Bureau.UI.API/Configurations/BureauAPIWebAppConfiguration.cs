@@ -32,6 +32,8 @@ namespace Bureau.UI.API.Configurations
             apiBuilder.MapRecipesV2(versionSet);
             apiBuilder.MapRecipesV3(versionSet);
 
+            apiBuilder.MapCalendar(versionSet);
+
             app.MapBureauOpenApiExplorer();
 
             //app.UseExceptionManager();

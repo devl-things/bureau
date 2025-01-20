@@ -2,6 +2,8 @@
 {
     public class ResultErrorFactory
     {
+        public static ResultError RecordIdBadFormat(string recordType, string id) => new ResultError($"Record {recordType} with Id = {id} has a bad format for the requested operation.");
+        public static ResultError InvalidPageAndLimit(int? page, int? limit) => new ResultError($"If defined, page ({page}) and limit ({limit}) must be greater than zero.");
         public static ResultError InvalidLimit(int limit, int maxLimit) => new ResultError($"Limit ({limit}) is not in allowed boundaries ({maxLimit}).");
         public static ResultError InvalidRecord(string recordId) => new ResultError($"Flexible record with Id = {recordId} is invalid.");
         public static ResultError InvalidRecord(string recordId, Exception ex) => new ResultError($"Flexible record with Id = {recordId} is invalid.", ex);
