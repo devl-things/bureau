@@ -1,0 +1,10 @@
+﻿@using Bureau.UI.Managers
+@inject BureauNavigationManager _navigationManager
+
+@code {
+    protected override void OnInitialized()
+    {
+        //TODO change address
+        _navigationManager.NavigationManager.NavigateTo($"Account/Login?returnUrl={Uri.EscapeDataString(_navigationManager.NavigationManager.Uri)}", forceLoad: true);
+    }
+}

@@ -1,0 +1,53 @@
+﻿@attribute [Route(BureauIdentityUIClientUris.Register)]
+
+<div class="card card-style">
+    <div class="content mb-0">
+        <h1 class="text-center font-800 font-40 mb-1 pt-2">Sign Up</h1>
+        <p class="color-highlight text-center font-12">Create an Account. It's free!</p>
+
+        <div class="input-style no-borders has-icon validate-field">
+            <i class="fa fa-user"></i>
+            <input type="name" class="form-control validate-name" id="form1a" placeholder="Name">
+            <label for="form1a" class="color-blue-dark font-10 mt-1">Name</label>
+            <i class="fa fa-times disabled invalid color-red-dark"></i>
+            <i class="fa fa-check disabled valid color-green-dark"></i>
+            <em>(required)</em>
+        </div>
+        <div class="input-style no-borders has-icon validate-field mt-2">
+            <i class="fa fa-at"></i>
+            <input type="email" class="form-control validate-email" id="form1aa" placeholder="Email">
+            <label for="form1aa" class="color-blue-dark font-10 mt-1">Email</label>
+            <i class="fa fa-times disabled invalid color-red-dark"></i>
+            <i class="fa fa-check disabled valid color-green-dark"></i>
+            <em>(required)</em>
+        </div>
+        <div class="input-style no-borders has-icon validate-field mt-2">
+            <i class="fa fa-lock"></i>
+            <input type="password" class="form-control validate-password" id="form3a" placeholder="Choose a Password">
+            <label for="form3a" class="color-blue-dark font-10 mt-1">Choose a Password</label>
+            <i class="fa fa-times disabled invalid color-red-dark"></i>
+            <i class="fa fa-check disabled valid color-green-dark"></i>
+            <em>(required)</em>
+        </div>
+        <div class="input-style no-borders has-icon validate-field mt-2">
+            <i class="fa fa-lock"></i>
+            <input type="password" class="form-control validate-password" id="form3a1" placeholder="Confirm your Password">
+            <label for="form3a1" class="color-blue-dark font-10 mt-1">Confirm your Password</label>
+            <i class="fa fa-times disabled invalid color-red-dark"></i>
+            <i class="fa fa-check disabled valid color-green-dark"></i>
+            <em>(required)</em>
+        </div>
+
+        <a href="page-signup-1.html" class="btn btn-m btn-full rounded-sm shadow-l bg-green-dark text-uppercase font-900 mt-4">Create account</a>
+
+        <div class="divider"></div>
+
+        <p class="text-center">
+            <a href="@BureauIdentityUIClientUris.Login" class="color-theme opacity-50 font-12">Already Registered? Sign in Here</a>
+        </p>
+
+        <a href="#" class="btn btn-icon btn-m btn-full rounded-sm shadow-l bg-facebook text-uppercase font-900 text-start"><i class="fab fa-facebook-f text-center"></i>Register with Facebook</a>
+        <a href="#" class="btn btn-icon btn-m mt-2 mb-4 btn-full rounded-sm shadow-l bg-twitter text-uppercase font-900 text-start"><i class="fab fa-twitter text-center"></i>Register with Twitter</a>
+
+    </div>
+</div>

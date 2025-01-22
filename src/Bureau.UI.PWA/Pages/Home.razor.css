@@ -1,0 +1,7 @@
+﻿.image-blur img {
+    transition: 0.2s ease; /* Smooth transition */
+}
+
+    .image-blur img:hover {
+        filter: blur(2px); /* Apply a 5px blur on hover */
+    }

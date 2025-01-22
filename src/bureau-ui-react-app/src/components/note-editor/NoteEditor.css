@@ -1,0 +1,21 @@
+.editor {
+    border: 1px solid #ccc;
+    padding: 10px;
+    min-height: 200px;
+    overflow-y: auto;
+    cursor: text;
+  }
+  
+  .editor span {
+    font-style: italic; /* Italic text */
+    background-color: #f8f9fa; /* Light gray background for highlighting */
+    padding: 2px 4px; /* Add some padding for better appearance */
+    color: #007bff; /* Text color for spans */
+    border-radius: 3px; /* Optional: rounded corners */
+    cursor: pointer;
+  }
+  
+  .editor span:hover {
+    background-color: #e2e6ea; /* Darker highlight on hover */
+    text-decoration: underline; /* Underline on hover */
+  }

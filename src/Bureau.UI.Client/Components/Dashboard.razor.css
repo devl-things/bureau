@@ -1,0 +1,27 @@
+﻿.badge-container {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.4em 0.6em;
+    background-color: #28a745; /* Main badge color */
+    color: white;
+    font-weight: bold;
+    border-radius: 0.25em;
+    position: relative;
+}
+
+.main-badge {
+    padding-right: 1em; /* Spacing for small badge */
+}
+
+.small-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75em;
+    padding: 0.2em 0.5em;
+    background-color: #ffffff;
+    color: #000000;
+    border-radius: 0.5em;
+    margin-left: 0.4em;
+    position: relative;
+}

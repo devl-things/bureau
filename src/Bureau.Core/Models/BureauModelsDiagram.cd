@@ -1,0 +1,156 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ClassDiagram MajorVersion="1" MinorVersion="1">
+  <Class Name="Bureau.Core.Models.BaseEntry">
+    <Position X="12" Y="3.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAIAAAAAAAAQAAA=</HashCode>
+      <FileName>Models\BaseEntry.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" />
+  </Class>
+  <Class Name="Bureau.Core.Models.BaseRecord">
+    <Position X="15.75" Y="1.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAACEAAEAAAACAAAACAAAAAAAAAAAAAAAAAAAAAAAAE=</HashCode>
+      <FileName>Models\BaseRecord.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" />
+  </Class>
+  <Class Name="Bureau.Core.Models.TermEntry">
+    <Position X="9.5" Y="6.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAEAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Models\TermEntry.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" />
+  </Class>
+  <Class Name="Bureau.Core.Models.Edge">
+    <Position X="1.25" Y="1.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAACEAAAAAAICAAAACAAAAAAAAAAAAAoAAAAAAAgAAE=</HashCode>
+      <FileName>Models\Edge.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" />
+  </Class>
+  <Class Name="Bureau.Core.Models.MaterialEntry">
+    <Position X="14.25" Y="6.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAQAACQAAAABAAAA=</HashCode>
+      <FileName>Models\MaterialEntry.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Bureau.Core.Models.ExpenseRecord" Collapsed="true">
+    <Position X="19.25" Y="2.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAACAAAAAAAAAAAAAAEAAAAEAAAAQAABAAAAAAAAAAA=</HashCode>
+      <FileName>Models\ExpenseRecord.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Bureau.Core.Models.LocationRecord" Collapsed="true">
+    <Position X="23" Y="4.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAEAAAQAMoAAIgAAAAAIAAAAAAAIABAAAAAA=</HashCode>
+      <FileName>Models\LocationRecord.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Bureau.Core.Models.ContactEntry">
+    <Position X="12.25" Y="6.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAEAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Models\ContactEntry.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" />
+  </Class>
+  <Class Name="Bureau.Core.Models.ExternalRecord&lt;T&gt;">
+    <Position X="19.75" Y="4.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAACAAAAAAAA=</HashCode>
+      <FileName>Models\ExternalRecord.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Bureau.Core.Models.AccessGrant">
+    <Position X="1.25" Y="4" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAEAIAAAAAAAIAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Models\AccessGrant.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Bureau.Core.Models.CheckedRecord">
+    <Position X="21.5" Y="6.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAACAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Models\CheckedRecord.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Bureau.Core.Models.NoteRecord">
+    <Position X="17.5" Y="6.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEAAAA=</HashCode>
+      <FileName>Models\NoteRecord.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Bureau.Core.Models.FlexibleRecord&lt;T&gt;">
+    <Position X="17.5" Y="4.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAABAAAQAAAAAAAAA=</HashCode>
+      <FileName>Models\FlexibleRecord.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Interface Name="Bureau.Core.Models.ITag">
+    <Position X="8.25" Y="4.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAACAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Models\ITag.cs</FileName>
+    </TypeIdentifier>
+  </Interface>
+  <Interface Name="Bureau.Core.Models.IAuditable" Collapsed="true">
+    <Position X="6.5" Y="2" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAEAAAAAAACAAAACAAAAAAAAAAAAAAAAAAAAAAAAE=</HashCode>
+      <FileName>Models\IAuditable.cs</FileName>
+    </TypeIdentifier>
+  </Interface>
+  <Interface Name="Bureau.Core.Models.IEntry" Collapsed="true">
+    <Position X="5" Y="6.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Models\IEntry.cs</FileName>
+    </TypeIdentifier>
+  </Interface>
+  <Interface Name="Bureau.Core.Models.IEntryReference">
+    <Position X="4.25" Y="4" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAIAAAAAAAAQAAA=</HashCode>
+      <FileName>Models\IEntryReference.cs</FileName>
+    </TypeIdentifier>
+  </Interface>
+  <Interface Name="Bureau.Core.Models.IReference" Collapsed="true">
+    <Position X="4.25" Y="2" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAACAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Models\IReference.cs</FileName>
+    </TypeIdentifier>
+  </Interface>
+  <Enum Name="Bureau.Core.Models.EdgeType">
+    <Position X="0.5" Y="8.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAABAAIAAAAAAQAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Models\EdgeType.cs</FileName>
+    </TypeIdentifier>
+  </Enum>
+  <Enum Name="Bureau.Core.Models.RecordStatus" Collapsed="true">
+    <Position X="22.25" Y="1.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAGAAAAAAEAAIAAAAAAAgAAAAAAAAAAA=</HashCode>
+      <FileName>Models\RecordStatus.cs</FileName>
+    </TypeIdentifier>
+  </Enum>
+  <Enum Name="Bureau.Core.Models.PermissionLevel">
+    <Position X="2.5" Y="8.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAQAgAAAAAAAAAAAAAAEAAAA=</HashCode>
+      <FileName>Models\PermissionLevel.cs</FileName>
+    </TypeIdentifier>
+  </Enum>
+  <Font Name="Segoe UI" Size="9" />
+</ClassDiagram>

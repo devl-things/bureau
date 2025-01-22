@@ -1,0 +1,26 @@
+﻿@attribute [Route(BureauUIUris.Dashboard)]
+@inherits AuthComponentBase
+
+
+<h3>Dashboard</h3>
+
+<DevLMultiSelect T="Selection" FactoryMethod="Selection.Create"></DevLMultiSelect>
+<DevLOccurrence></DevLOccurrence>
+<h1>Example heading <span class="badge text-bg-secondary">New</span></h1>
+<span class="badge text-bg-primary">Primary</span>
+<span class="badge text-bg-secondary">Secondary</span>
+<span class="badge text-bg-success">Success</span>
+<span class="badge text-bg-danger">Danger</span>
+<span class="badge text-bg-warning">Warning</span>
+<span class="badge text-bg-info">Info</span>
+<span class="badge text-bg-light">Light</span>
+<span class="badge text-bg-dark">Dark</span>
+
+<span class="badge bg-white color-black ms-4 me-n2 mt-1">YES</span>
+
+<div></div>
+
+<div class="btn btn-xxs mb-1 mt-1 rounded-m font-900 shadow-s bg-green-dark d-inline-flex" >
+    With icon and badge
+    <div class="ms-2"><i class="fa fa-times font-16" ></i></div>
+</div>
