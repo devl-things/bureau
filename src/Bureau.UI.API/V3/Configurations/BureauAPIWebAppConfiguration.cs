@@ -1,8 +1,10 @@
 ﻿using Asp.Versioning.Builder;
 using Asp.Versioning.Conventions;
 using Bureau.UI.API.Configurations;
+using Bureau.UI.API.Filters;
 using Bureau.UI.API.V3.Methods;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 
 namespace Bureau.UI.API.V3.Configurations
@@ -15,6 +17,7 @@ namespace Bureau.UI.API.V3.Configurations
             RouteGroupBuilder recipesGroup = apiGroupBuilder.MapGroup(BureauAPIRouteNames.RecipesGroup);
 
             recipesGroup.MapGet("", RecipesMethods.GetRecipes)
+                .AddEndpointFilter<PaginationValidationFilter>()
                 .WithName($"{BureauAPIRouteNames.GetRecipes}-{BureauAPIVersion.Version3}")
                 .WithApiVersionSet(versionSet)
                 .MapToApiVersion(BureauAPIVersion.Version3);

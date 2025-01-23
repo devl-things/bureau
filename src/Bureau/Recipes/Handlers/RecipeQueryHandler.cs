@@ -4,6 +4,7 @@ using Bureau.Core.Factories;
 using Bureau.Core.Models;
 using Bureau.Core.Models.Data;
 using Bureau.Core.Repositories;
+using Bureau.Core.Services;
 using Bureau.Models;
 using Bureau.Recipes.Factories;
 using Bureau.Recipes.Models;
@@ -13,15 +14,15 @@ namespace Bureau.Recipes.Handlers
 {
     internal class RecipeQueryHandler : IRecipeQueryHandler, IInternalRecipeQueryHandler
     {
-        private readonly BureauOptions _options;
+        private readonly IPaginationValidationService _paginationService;
         private readonly IRecordQueryRepository<EdgeTypeSearchRequest, QueryAggregateModel> _edgeTypeRepository;
         private readonly IRecordQueryRepository<IdSearchRequest, InsertAggregateModel> _idRepository;
 
-        public RecipeQueryHandler(IOptions<BureauOptions> options,
+        public RecipeQueryHandler(IPaginationValidationService paginationService,
             IRecordQueryRepository<EdgeTypeSearchRequest, QueryAggregateModel> edgeTypeRepository,
             IRecordQueryRepository<IdSearchRequest, InsertAggregateModel> idRepository)
         {
-            _options = options.Value;
+            _paginationService = paginationService;
             _edgeTypeRepository = edgeTypeRepository;
             _idRepository = idRepository;
         }
@@ -44,11 +45,6 @@ namespace Bureau.Recipes.Handlers
 
         public async Task<PaginatedResult<List<RecipeDto>>> GetRecipesAsync(int? page, int? limit, CancellationToken cancellationToken)
         {
-            if (limit.HasValue && limit > _options.MaximumLimit)
-            {
-                return ResultErrorFactory.InvalidLimit(limit.Value, _options.MaximumLimit);
-            }
-
             EdgeTypeSearchRequest edgeTypeSearchRequest = new EdgeTypeSearchRequest()
             {
                 EdgeType = (int)EdgeTypeEnum.Recipe,
@@ -56,7 +52,7 @@ namespace Bureau.Recipes.Handlers
                 FilterRequestType = EdgeRequestType.Edge | EdgeRequestType.RootNode,
                 SelectReferences = EdgeRequestType.Edge | EdgeRequestType.TargetNode,
                 SelectRecordTypes = RecordRequestType.Edges | RecordRequestType.TermEntries | RecordRequestType.FlexRecords,
-                Pagination = new PaginationMetadata(page.HasValue ? page.Value : 1, limit.HasValue ? limit.Value : _options.DefaultLimit)
+                Pagination = new PaginationMetadata(_paginationService.GetValidPage(page), _paginationService.GetValidLimit(limit))
             };
 
             Result<QueryAggregateModel> result = await _edgeTypeRepository.FetchRecordsAsync(edgeTypeSearchRequest, cancellationToken).ConfigureAwait(false);
