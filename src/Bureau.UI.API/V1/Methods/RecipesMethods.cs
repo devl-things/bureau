@@ -46,12 +46,8 @@ namespace Bureau.UI.API.V1.Methods
             [FromBody] RecipeRequestModel recipe,
             [FromServices] IRecipeManager manager)
         {
-            Result<RecipeDto> response = await manager.UpdateRecipeAsync(recipe.ToDto(id), cancellationToken).ConfigureAwait(false);
-            if (response.IsSuccess)
-            {
-                return Results.Ok(response.ToApiResponse<RecipeDto, RecipeResponseModel>(x => x.ToResponseModel()));
-            }
-            return Results.BadRequest(response.Error.ToApiResponse());
+            Result<RecipeDto> result = await manager.UpdateRecipeAsync(recipe.ToDto(id), cancellationToken).ConfigureAwait(false);
+            return PrepareResult(result);
         }
 
         public static async Task<IResult> DeleteRecipe(string id, CancellationToken cancellationToken, [FromServices] IRecipeManager manager)
@@ -67,11 +63,7 @@ namespace Bureau.UI.API.V1.Methods
         public static async Task<IResult> GetRecipeById(string id, CancellationToken cancellationToken, [FromServices] IRecipeQueryHandler handler)
         {
             Result<RecipeDto> result = await handler.GetRecipeAsync(id, cancellationToken).ConfigureAwait(false);
-            if (result.IsSuccess)
-            {
-                return Results.Ok(result.ToApiResponse<RecipeDto, RecipeResponseModel>(x => x.ToResponseModel()));
-            }
-            return Results.BadRequest(result.Error.ToApiResponse());
+            return PrepareResult(result);
         }
 
         public static async Task<IResult> GetRecipes(CancellationToken cancellationToken, [FromServices] IRecipeQueryHandler handler, [FromQuery] int? page, [FromQuery] int? limit)
@@ -82,6 +74,15 @@ namespace Bureau.UI.API.V1.Methods
                 return Results.Ok(values.ToPagedApiResponse<RecipeDto, RecipeResponseModel>(x => x.ToResponseModel()));
             }
             return Results.BadRequest(values.Error.ToApiResponse());
+        }
+
+        private static IResult PrepareResult(Result<RecipeDto> result)
+        {
+            if (result.IsSuccess)
+            {
+                return Results.Ok(result.ToApiResponse<RecipeDto, RecipeResponseModel>(x => x.ToResponseModel()));
+            }
+            return Results.BadRequest(result.Error.ToApiResponse());
         }
     }
 }
