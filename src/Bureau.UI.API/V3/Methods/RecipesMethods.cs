@@ -74,14 +74,6 @@ namespace Bureau.UI.API.V3.Methods
 
         public static async Task<IResult> GetRecipes(CancellationToken cancellationToken, [FromServices] IRecipeQueryHandler handler, [FromQuery] int? page, [FromQuery] int? limit)
         {
-            if ((page.HasValue && page < 1) || (limit.HasValue && limit < 1))
-            {
-                return Results.BadRequest(new ApiResponse
-                {
-                    Status = ApiResponse.StatusError,
-                    Message = "Page and limit must be greater than zero."
-                });
-            }
             PaginatedResult<List<RecipeDto>> recipes = await handler.GetRecipesAsync(page, limit, cancellationToken).ConfigureAwait(false);
             if (recipes.IsSuccess)
             {
