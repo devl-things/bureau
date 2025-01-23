@@ -1,10 +1,12 @@
-﻿using Bureau.Core;
+﻿using Bureau.Calendar.Models;
+using Bureau.Core;
 using Bureau.Core.Configuration;
 using Bureau.Core.Factories;
 using Bureau.Core.Models;
 using Bureau.Core.Models.Data;
 using Bureau.Core.Repositories;
 using Bureau.Core.Services;
+using Bureau.Factories;
 using Bureau.Models;
 using Bureau.Recipes.Factories;
 using Bureau.Recipes.Models;
@@ -15,14 +17,17 @@ namespace Bureau.Recipes.Handlers
     internal class RecipeQueryHandler : IRecipeQueryHandler, IInternalRecipeQueryHandler
     {
         private readonly IPaginationValidationService _paginationService;
+        private readonly IDtoFactory<RecipeDto> _factory;
         private readonly IRecordQueryRepository<EdgeTypeSearchRequest, QueryAggregateModel> _edgeTypeRepository;
         private readonly IRecordQueryRepository<IdSearchRequest, InsertAggregateModel> _idRepository;
 
         public RecipeQueryHandler(IPaginationValidationService paginationService,
-            IRecordQueryRepository<EdgeTypeSearchRequest, QueryAggregateModel> edgeTypeRepository,
+            IDtoFactory<RecipeDto> factory,
+        IRecordQueryRepository<EdgeTypeSearchRequest, QueryAggregateModel> edgeTypeRepository,
             IRecordQueryRepository<IdSearchRequest, InsertAggregateModel> idRepository)
         {
             _paginationService = paginationService;
+            _factory = factory;
             _edgeTypeRepository = edgeTypeRepository;
             _idRepository = idRepository;
         }
@@ -40,7 +45,7 @@ namespace Bureau.Recipes.Handlers
             {
                 return result.Error;
             }
-            return RecipeDtoFactory.Create(result.Value);
+            return _factory.Create(result.Value);
         }
 
         public async Task<PaginatedResult<List<RecipeDto>>> GetRecipesAsync(int? page, int? limit, CancellationToken cancellationToken)
@@ -60,7 +65,7 @@ namespace Bureau.Recipes.Handlers
             {
                 return result.Error;
             }
-            return RecipeDtoFactory.CreatePaged(result.Value);
+            return _factory.CreatePaged(result.Value);
         }
 
         public async Task<Result<InsertAggregateModel>> InternalGetRecipeAggregateAsync(IReference id, CancellationToken cancellationToken)

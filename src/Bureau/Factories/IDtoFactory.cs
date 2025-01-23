@@ -9,8 +9,4 @@ namespace Bureau.Factories
         PaginatedResult<List<T>> CreatePaged(QueryAggregateModel aggregate);
 
     }
-
-    internal interface IPagedDtoFactory<T>
-    {
-    }
 }

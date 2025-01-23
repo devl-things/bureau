@@ -1,8 +1,10 @@
-﻿using Bureau.Core;
+﻿using Bureau.Calendar.Models;
+using Bureau.Core;
 using Bureau.Core.Comparers;
 using Bureau.Core.Factories;
 using Bureau.Core.Models;
 using Bureau.Core.Models.Data;
+using Bureau.Factories;
 using Bureau.Models;
 using Bureau.Recipes.Models;
 
@@ -39,9 +41,13 @@ namespace Bureau.Recipes.Factories
         }
     }
 
-    internal class RecipeDtoFactory
+    internal class RecipeDtoFactory : IDtoFactory<RecipeDto>
     {
-        public static Result<RecipeDto> Create(InsertAggregateModel aggregate)
+        public RecipeDtoFactory()
+        {
+        }
+
+        public Result<RecipeDto> Create(InsertAggregateModel aggregate)
         {
             RecipeDto currentRecipe = RecipeDto.EmptyRecipe();
             HashSet<RecipeSubGroupDto> currentGroups = new HashSet<RecipeSubGroupDto>(new ReferenceComparer());
@@ -56,7 +62,7 @@ namespace Bureau.Recipes.Factories
             return currentRecipe;
         }
 
-        public static PaginatedResult<List<RecipeDto>> CreatePaged(QueryAggregateModel aggregate)
+        public PaginatedResult<List<RecipeDto>> CreatePaged(QueryAggregateModel aggregate)
         {
             Dictionary<string, RecipeDto> recipes = new Dictionary<string, RecipeDto>();
             List<RecipeDto> result = new List<RecipeDto>();
