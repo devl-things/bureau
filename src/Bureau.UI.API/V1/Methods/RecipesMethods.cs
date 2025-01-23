@@ -6,6 +6,7 @@ using Bureau.UI.API.Models;
 using Bureau.UI.API.V1.Mappers;
 using Bureau.UI.API.V1.Models.Recipes;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
 
@@ -34,12 +35,7 @@ namespace Bureau.UI.API.V1.Methods
                     { "id", recipeResult.Value.Id }
                 }
             );
-            ApiResponse<RecipeResponseModel> response = new ApiResponse<RecipeResponseModel>()
-            {
-                Status = ApiResponse.StatusSuccess,
-                Data = recipeResult.Value.ToResponseModel()
-            };
-            response.Data.Instructions = httpContext.GetRequestedApiVersion()!.ToString();
+            ApiResponse<RecipeResponseModel> response = recipeResult.ToApiResponse<RecipeDto, RecipeResponseModel>(x => x.ToResponseModel());
             // Return Created result with the generated URL
             return Results.Created(url, response);
         }
@@ -70,34 +66,22 @@ namespace Bureau.UI.API.V1.Methods
 
         public static async Task<IResult> GetRecipeById(string id, CancellationToken cancellationToken, [FromServices] IRecipeQueryHandler handler)
         {
-            Result<RecipeDto> recipe = await handler.GetRecipeAsync(id, cancellationToken).ConfigureAwait(false);
-            if (recipe.IsSuccess)
+            Result<RecipeDto> result = await handler.GetRecipeAsync(id, cancellationToken).ConfigureAwait(false);
+            if (result.IsSuccess)
             {
-                ApiResponse<RecipeResponseModel> response = new ApiResponse<RecipeResponseModel>()
-                {
-                    Status = ApiResponse.StatusSuccess,
-                    Data = recipe.Value.ToResponseModel()
-                };
-                return Results.Ok(response);
+                return Results.Ok(result.ToApiResponse<RecipeDto, RecipeResponseModel>(x => x.ToResponseModel()));
             }
-            return Results.BadRequest(recipe.Error.ToApiResponse());
+            return Results.BadRequest(result.Error.ToApiResponse());
         }
 
         public static async Task<IResult> GetRecipes(CancellationToken cancellationToken, [FromServices] IRecipeQueryHandler handler, [FromQuery] int? page, [FromQuery] int? limit)
         {
-            PaginatedResult<List<RecipeDto>> recipes = await handler.GetRecipesAsync(page, limit, cancellationToken).ConfigureAwait(false);
-            if (recipes.IsSuccess)
+            PaginatedResult<List<RecipeDto>> values = await handler.GetRecipesAsync(page, limit, cancellationToken).ConfigureAwait(false);
+            if (values.IsSuccess)
             {
-                ApiResponse<List<RecipeResponseModel>> response = new ApiResponse<List<RecipeResponseModel>>()
-                {
-                    Status = ApiResponse.StatusSuccess,
-                    Data = new List<RecipeResponseModel>(recipes.Value.Count),
-                    Pagination = new PaginationData(recipes.Pagination)
-                };
-                recipes.Value.ForEach(x => response.Data.Add(x.ToResponseModel()));
-                return Results.Ok(response);
+                return Results.Ok(values.ToPagedApiResponse<RecipeDto, RecipeResponseModel>(x => x.ToResponseModel()));
             }
-            return Results.BadRequest(recipes.Error.ToApiResponse());
+            return Results.BadRequest(values.Error.ToApiResponse());
         }
     }
 }
