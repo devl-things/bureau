@@ -47,11 +47,11 @@ namespace Bureau.UI.API.V1.Methods
             [FromServices] IRecipeManager manager)
         {
             Result<RecipeDto> response = await manager.UpdateRecipeAsync(recipe.ToDto(id), cancellationToken).ConfigureAwait(false);
-            if (response.IsError)
+            if (response.IsSuccess)
             {
-                return Results.BadRequest(response.Error.ToApiResponse());
+                return Results.Ok(response.ToApiResponse<RecipeDto, RecipeResponseModel>(x => x.ToResponseModel()));
             }
-            return Results.Ok(response.Value);
+            return Results.BadRequest(response.Error.ToApiResponse());
         }
 
         public static async Task<IResult> DeleteRecipe(string id, CancellationToken cancellationToken, [FromServices] IRecipeManager manager)
