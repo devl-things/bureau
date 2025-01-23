@@ -6,6 +6,11 @@ namespace Bureau.Factories
     internal interface IDtoFactory<T>
     {
         public Result<T> Create(InsertAggregateModel aggregate);
-        PaginatedResult<List<T>> CreatePaged(QueryAggregateModel value);
+        PaginatedResult<List<T>> CreatePaged(QueryAggregateModel aggregate);
+
+    }
+
+    internal interface IPagedDtoFactory<T>
+    {
     }
 }

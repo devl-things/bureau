@@ -8,10 +8,11 @@ using Bureau.Core.Repositories;
 using Bureau.Models;
 using Bureau.Core.Services;
 using Bureau.Providers;
+using Bureau.Handlers;
 
 namespace Bureau.Calendar.Services
 {
-    internal class CalendarProvider : IDtoProvider<CalendarDto>
+    internal class CalendarProvider : IDtoProvider<CalendarDto>, IInternalCalendarQueryHandler
     {
         private readonly IPaginationValidationService _paginationService;
         private readonly IDtoFactory<CalendarDto> _factory;
@@ -28,13 +29,13 @@ namespace Bureau.Calendar.Services
             _idRepository = idRepository;
         }
 
-        private async Task<Result<InsertAggregateModel>> InternalGetCalendarAggregateAsync(IReference referenceId, CancellationToken cancellationToken)
+        public async Task<Result<InsertAggregateModel>> InternalGetAggregateAsync(IReference referenceId, CancellationToken cancellationToken)
         {
             IdSearchRequest idSearchRequest = new IdSearchRequest()
             {
                 FilterReferenceId = referenceId,
                 FilterRequestType = EdgeRequestType.Edge,
-                SelectReferences = EdgeRequestType.Edge,
+                SelectReferences = EdgeRequestType.Edge | EdgeRequestType.TargetNode,
                 SelectRecordTypes = RecordRequestType.Edges | RecordRequestType.TermEntries | RecordRequestType.FlexRecords,
             };
 
@@ -48,7 +49,7 @@ namespace Bureau.Calendar.Services
                 return ResultErrorFactory.RecordIdBadFormat(nameof(Calendar), id);
             }
 
-            Result<InsertAggregateModel> result = await InternalGetCalendarAggregateAsync(referenceId, cancellationToken).ConfigureAwait(false);
+            Result<InsertAggregateModel> result = await InternalGetAggregateAsync(referenceId, cancellationToken).ConfigureAwait(false);
 
             if (result.IsError)
             {

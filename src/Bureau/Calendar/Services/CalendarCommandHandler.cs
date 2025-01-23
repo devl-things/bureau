@@ -1,25 +1,114 @@
-﻿using Bureau.Calendar.Models;
+﻿using Bureau.Calendar.Factories;
+using Bureau.Calendar.Models;
 using Bureau.Core;
+using Bureau.Core.Comparers;
+using Bureau.Core.Factories;
 using Bureau.Core.Models;
+using Bureau.Core.Models.Data;
+using Bureau.Core.Repositories;
 using Bureau.Handlers;
+using Bureau.Recipes.Factories;
+using Bureau.Recipes.Models;
+using System.Reflection.Metadata;
+using System.Threading;
 
 namespace Bureau.Calendar.Services
 {
     internal class CalendarCommandHandler : ICommandHandler<CalendarDto>
     {
-        public Task<Result> DeleteAsync(string id, CancellationToken cancellationToken)
+        private readonly IRecordCommandRepository _repository;
+        private readonly ITermRepository _termRepository;
+        private readonly IInternalCalendarQueryHandler _queryHandler;
+        public CalendarCommandHandler(IRecordCommandRepository repository,
+            ITermRepository termRepository,
+            IInternalCalendarQueryHandler queryHandler)
         {
-            throw new NotImplementedException();
+            _repository = repository;
+            _termRepository = termRepository;
+            _queryHandler = queryHandler;
+        }
+        public async Task<Result> DeleteAsync(string id, CancellationToken cancellationToken)
+        {
+            if (BureauReferenceFactory.IsTempId(id))
+            {
+                return ResultErrorFactory.RecordIdBadFormat(nameof(Calendar), id);
+            }
+            Result<InsertAggregateModel> existingCalendarResult = await _queryHandler.InternalGetAggregateAsync(BureauReferenceFactory.CreateReference(id), cancellationToken).ConfigureAwait(false);
+            if (existingCalendarResult.IsError)
+            {
+                return existingCalendarResult.Error;
+            }
+            RemoveAggregateModel removeRecipe = new RemoveAggregateModel()
+            {
+                EdgesToDelete = new HashSet<Edge>(existingCalendarResult.Value.Edges.Count, new ReferenceComparer()),
+                FlexRecordsToDelete = new HashSet<FlexRecord>(existingCalendarResult.Value.FlexRecords.Count, new ReferenceComparer())
+            };
+            foreach (Edge edge in existingCalendarResult.Value.Edges)
+            {
+                removeRecipe.EdgesToDelete.Add(edge);
+                if (existingCalendarResult.Value.FlexRecords.TryGetValue(new FlexRecord(edge.Id), out FlexRecord? flexRecord))
+                {
+                    removeRecipe.FlexRecordsToDelete.Add(flexRecord);
+                }
+            }
+
+            return await _repository.DeleteAggregateAsync(removeRecipe, cancellationToken);
         }
 
-        public Task<Result<IReference>> InsertAsync(CalendarDto calendarDto, CancellationToken cancellationToken)
+        public async Task<Result<IReference>> InsertAsync(CalendarDto calendarDto, CancellationToken cancellationToken)
         {
-            throw new NotImplementedException();
+            CalendarInsertAggregateFactory factory = new CalendarInsertAggregateFactory(calendarDto);
+
+            Result<Dictionary<string, TermEntry>> existingTermsResult = await FetchTermEntriesAsync(factory.TermLabels, cancellationToken);
+            if (existingTermsResult.IsError)
+            {
+                return existingTermsResult.Error;
+            }
+            factory.UpdateTerms(existingTermsResult.Value);
+
+            Result<InsertAggregateModel> newAggregateResult = factory.CreateAggregate();
+            if (newAggregateResult.IsError) 
+            {
+                return newAggregateResult.Error;
+            }
+
+            return await _repository.InsertAggregateAsync(newAggregateResult.Value, cancellationToken);
         }
 
-        public Task<Result<IReference>> UpdateAsync(CalendarDto calendarDto, CancellationToken cancellationToken)
+        private Task<Result<Dictionary<string, TermEntry>>> FetchTermEntriesAsync(HashSet<string> termLabels, CancellationToken cancellationToken) 
         {
-            throw new NotImplementedException();
+            TermSearchRequest termSearchRequest = new TermSearchRequest()
+            {
+                Terms = termLabels,
+                RequestType = TermRequestType.Label
+            };
+
+            return _termRepository.FetchTermRecordsAsync(termSearchRequest, cancellationToken);
+        }
+
+        public async Task<Result<IReference>> UpdateAsync(CalendarDto calendarDto, CancellationToken cancellationToken)
+        {
+            Result<InsertAggregateModel> existingCalendarResult = await _queryHandler.InternalGetAggregateAsync(BureauReferenceFactory.CreateReference(calendarDto.Id), cancellationToken).ConfigureAwait(false);
+            if (existingCalendarResult.IsError)
+            {
+                return existingCalendarResult.Error;
+            }
+            CalendarUpdateAggregateFactory factory = new CalendarUpdateAggregateFactory(calendarDto, existingCalendarResult.Value);
+
+            Result<Dictionary<string, TermEntry>> existingTermsResult = await FetchTermEntriesAsync(factory.TermLabels, cancellationToken);
+            if (existingTermsResult.IsError)
+            {
+                return existingTermsResult.Error;
+            }
+            factory.UpdateTerms(existingTermsResult.Value);
+
+            Result<UpdateAggregateModel> updateAggregateResult = factory.CreateAggregate();
+            if (updateAggregateResult.IsError)
+            {
+                return updateAggregateResult.Error;
+            }
+
+            return await _repository.UpdateAggregateAsync(updateAggregateResult.Value, cancellationToken);
         }
     }
 }
