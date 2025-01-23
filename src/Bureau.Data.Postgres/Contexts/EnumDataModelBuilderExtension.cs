@@ -48,8 +48,20 @@ namespace Bureau.Data.Postgres.Contexts
                 new EnumData { Id = 11, EnumType = "EdgeTypeEnum", Description = "Items" },
                 new EnumData { Id = 12, EnumType = "EdgeTypeEnum", Description = "Group" },
 
+                // Recurrence frequency
+                new EnumData { Id = 90, EnumType = "RecurrenceFrequency", Description = "Daily" },
+                new EnumData { Id = 91, EnumType = "RecurrenceFrequency", Description = "Weekly" },
+                new EnumData { Id = 92, EnumType = "RecurrenceFrequency", Description = "Monthly" },
+                new EnumData { Id = 93, EnumType = "RecurrenceFrequency", Description = "Yearly" },
+                new EnumData { Id = 94, EnumType = "RecurrenceFrequency", Description = "Minutely" },
+                new EnumData { Id = 95, EnumType = "RecurrenceFrequency", Description = "Secondly" },
+
                 // Recipe values
-                new EnumData { Id = 100, EnumType = "EdgeTypeEnum", Description = "Recipe" }
+                new EnumData { Id = 100, EnumType = "EdgeTypeEnum", Description = "Recipe" },
+
+                // Calendar values
+                new EnumData { Id = 110, EnumType = "EdgeTypeEnum", Description = "Calendar" }
+
             );
         }
     }

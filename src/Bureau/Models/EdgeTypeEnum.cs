@@ -11,5 +11,11 @@
         Recipe = 100,
 
         #endregion Recipe
+
+        #region Calendar
+
+        Calendar = 110,
+
+        #endregion Calendar
     }
 }

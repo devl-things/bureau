@@ -1,4 +1,7 @@
-﻿namespace Bureau.Core.Models.Data
+﻿using Bureau.Core.Factories;
+using System.Dynamic;
+
+namespace Bureau.Core.Models.Data
 {
     public class QueryAggregateModel
     {
@@ -12,7 +15,6 @@
         {
             Pagination = pagination;
         }
-
     }
 
     public class InsertAggregateModel : QueryAggregateModel

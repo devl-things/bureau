@@ -13,6 +13,7 @@ namespace Bureau.Data.Postgres.Contexts
         public DbSet<Edge> Edges { get; set; } = null!;
         public DbSet<TermEntry> TermEntries { get; set; } = null!;
         public DbSet<FlexibleRecord> FlexibleRecords { get; set; } = null!;
+        public DbSet<OccurrenceRecord> OccurrenceRecords { get; set; } = null!;
         public DbSet<EnumData> EnumData { get; set; } = null!;
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -26,6 +27,8 @@ namespace Bureau.Data.Postgres.Contexts
             modelBuilder.ConfigureTermEntry();
 
             modelBuilder.ConfigureFlexibleRecord();
+
+            modelBuilder.ConfigureOccurrenceRecord();
 
             modelBuilder.ConfigureEnumData();
 
