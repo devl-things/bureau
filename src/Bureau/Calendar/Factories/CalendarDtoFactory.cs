@@ -7,7 +7,7 @@ using Bureau.Factories;
 
 namespace Bureau.Calendar.Factories
 {
-    internal class CalendarDtoFactory : IDtoFactory<CalendarDto>, IPagedDtoFactory<CalendarDto>
+    internal class CalendarDtoFactory : IDtoFactory<CalendarDto>
     {
         public Result<CalendarDto> Create(InsertAggregateModel aggregate)
         {
