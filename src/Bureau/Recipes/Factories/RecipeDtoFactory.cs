@@ -1,8 +1,10 @@
-﻿using Bureau.Core;
+﻿using Bureau.Calendar.Models;
+using Bureau.Core;
 using Bureau.Core.Comparers;
 using Bureau.Core.Factories;
 using Bureau.Core.Models;
 using Bureau.Core.Models.Data;
+using Bureau.Factories;
 using Bureau.Models;
 using Bureau.Recipes.Models;
 
@@ -15,7 +17,7 @@ namespace Bureau.Recipes.Factories
             dto.Id = edge.Id;
             if (!aggregate.TermEntries.TryGetValue(new TermEntry(edge.SourceNode.Id), out TermEntry? header))
             {
-                return RecipeResultErrorFactory.RecipeNotFound(edge.SourceNode.Id);
+                return ResultErrorFactory.TermNotFound(edge.SourceNode.Id, $"{nameof(RecipeDto)}.{nameof(RecipeDto.Name)}");
             }
             dto.Name = header.Title;
             dto.CreatedAt = edge.CreatedAt;
@@ -23,7 +25,7 @@ namespace Bureau.Recipes.Factories
 
             if (!aggregate.FlexRecords.TryGetValue(new FlexRecord(edge.Id), out FlexRecord? recipeFlex))
             {
-                return RecipeResultErrorFactory.RecipeNotFound(edge.Id);
+                return ResultErrorFactory.InvalidRecord(edge.Id);
             }
             Result<FlexibleRecord<RecipeDetails>> detailsResult = FlexibleRecordFactory.CreateFlexibleRecord<RecipeDetails>(recipeFlex);
             if (detailsResult.IsError)
@@ -39,9 +41,13 @@ namespace Bureau.Recipes.Factories
         }
     }
 
-    internal class RecipeDtoFactory
+    internal class RecipeDtoFactory : IDtoFactory<RecipeDto>
     {
-        public static Result<RecipeDto> Create(InsertAggregateModel aggregate)
+        public RecipeDtoFactory()
+        {
+        }
+
+        public Result<RecipeDto> Create(InsertAggregateModel aggregate)
         {
             RecipeDto currentRecipe = RecipeDto.EmptyRecipe();
             HashSet<RecipeSubGroupDto> currentGroups = new HashSet<RecipeSubGroupDto>(new ReferenceComparer());
@@ -56,7 +62,7 @@ namespace Bureau.Recipes.Factories
             return currentRecipe;
         }
 
-        public static PaginatedResult<List<RecipeDto>> CreatePaged(QueryAggregateModel aggregate)
+        public PaginatedResult<List<RecipeDto>> CreatePaged(QueryAggregateModel aggregate)
         {
             Dictionary<string, RecipeDto> recipes = new Dictionary<string, RecipeDto>();
             List<RecipeDto> result = new List<RecipeDto>();
@@ -111,13 +117,13 @@ namespace Bureau.Recipes.Factories
                     }
                     if (!aggregate.TermEntries.TryGetValue(new TermEntry(edge.TargetNode.Id), out TermEntry? ingredient))
                     {
-                        return RecipeResultErrorFactory.IngredientNotFound(edge.TargetNode.Id);
+                        return ResultErrorFactory.TermNotFound(edge.TargetNode.Id, nameof(ingredient));
                     }
                     QuantityDetails quantityDetails = GetQuantityDetails(aggregate, edge.Id);
                     group.Ingredients.Add(new RecipeIngredient(ingredient.Title) { Quantity = quantityDetails });
                     return true;
                 default:
-                    return RecipeResultErrorFactory.UnknownRecipeEdgeType(edge.Id, edge.EdgeType);
+                    return ResultErrorFactory.UnknownEdgeType(edge.Id, edge.EdgeType, nameof(Recipes));
             }
         }
 
@@ -159,7 +165,7 @@ namespace Bureau.Recipes.Factories
         {
             if (!aggregate.TermEntries.TryGetValue(new TermEntry(groupTermId), out TermEntry? groupTerm))
             {
-                return RecipeResultErrorFactory.RecipeGroupNotFound(groupTermId);
+                return ResultErrorFactory.TermNotFound(groupTermId, $"{nameof(RecipeDto)}.{nameof(RecipeDto.SubGroups)}");
             }
             RecipeSubGroupDto group = new RecipeSubGroupDto(groupEdgeId)
             {

@@ -55,9 +55,9 @@ namespace Bureau.Calendar.Services
             return await _repository.DeleteAggregateAsync(removeRecipe, cancellationToken);
         }
 
-        public async Task<Result<IReference>> InsertAsync(CalendarDto calendarDto, CancellationToken cancellationToken)
+        public async Task<Result<IReference>> InsertAsync(CalendarDto dto, CancellationToken cancellationToken)
         {
-            CalendarInsertAggregateFactory factory = new CalendarInsertAggregateFactory(calendarDto);
+            CalendarInsertAggregateFactory factory = new CalendarInsertAggregateFactory(dto);
 
             Result<Dictionary<string, TermEntry>> existingTermsResult = await FetchTermEntriesAsync(factory.TermLabels, cancellationToken);
             if (existingTermsResult.IsError)
@@ -86,14 +86,14 @@ namespace Bureau.Calendar.Services
             return _termRepository.FetchTermRecordsAsync(termSearchRequest, cancellationToken);
         }
 
-        public async Task<Result<IReference>> UpdateAsync(CalendarDto calendarDto, CancellationToken cancellationToken)
+        public async Task<Result<IReference>> UpdateAsync(CalendarDto dto, CancellationToken cancellationToken)
         {
-            Result<InsertAggregateModel> existingCalendarResult = await _queryHandler.InternalGetAggregateAsync(BureauReferenceFactory.CreateReference(calendarDto.Id), cancellationToken).ConfigureAwait(false);
+            Result<InsertAggregateModel> existingCalendarResult = await _queryHandler.InternalGetAggregateAsync(BureauReferenceFactory.CreateReference(dto.Id), cancellationToken).ConfigureAwait(false);
             if (existingCalendarResult.IsError)
             {
                 return existingCalendarResult.Error;
             }
-            CalendarUpdateAggregateFactory factory = new CalendarUpdateAggregateFactory(calendarDto, existingCalendarResult.Value);
+            CalendarUpdateAggregateFactory factory = new CalendarUpdateAggregateFactory(dto, existingCalendarResult.Value);
 
             Result<Dictionary<string, TermEntry>> existingTermsResult = await FetchTermEntriesAsync(factory.TermLabels, cancellationToken);
             if (existingTermsResult.IsError)

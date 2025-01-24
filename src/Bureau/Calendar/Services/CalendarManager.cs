@@ -10,14 +10,14 @@ namespace Bureau.Calendar.Services
     internal class CalendarManager : IDtoManager<CalendarDto>
     {
         private readonly TimeProvider _timeProvider;
-        private readonly IDtoProvider<CalendarDto> _queryManager;
+        private readonly IDtoProvider<CalendarDto> _calendarProvider;
         private readonly ICommandHandler<CalendarDto> _commandHandler;
         public CalendarManager(TimeProvider timeProvider,
-            IDtoProvider<CalendarDto> queryManager,
+            IDtoProvider<CalendarDto> calendarProvider,
             ICommandHandler<CalendarDto> commandHandler)
         {
             _timeProvider = timeProvider;
-            _queryManager = queryManager;
+            _calendarProvider = calendarProvider;
             _commandHandler = commandHandler;
         }
 
@@ -26,18 +26,18 @@ namespace Bureau.Calendar.Services
             return _commandHandler.DeleteAsync(id, cancellationToken);
         }
 
-        public async Task<Result<CalendarDto>> InsertAsync(CalendarDto calendarDto, CancellationToken cancellationToken)
+        public async Task<Result<CalendarDto>> InsertAsync(CalendarDto dto, CancellationToken cancellationToken)
         {
-            calendarDto.CreatedAt = _timeProvider.GetUtcNow().UtcDateTime;
-            calendarDto.UpdatedAt = _timeProvider.GetUtcNow().UtcDateTime;
+            dto.CreatedAt = _timeProvider.GetUtcNow().UtcDateTime;
+            dto.UpdatedAt = _timeProvider.GetUtcNow().UtcDateTime;
 
-            Result<IReference> result = await _commandHandler.InsertAsync(calendarDto, cancellationToken);
+            Result<IReference> result = await _commandHandler.InsertAsync(dto, cancellationToken);
             if (result.IsError)
             {
                 return result.Error;
             }
 
-            Result<CalendarDto> finalResult = await _queryManager.GetByIdAsync(result.Value.Id, cancellationToken);
+            Result<CalendarDto> finalResult = await _calendarProvider.GetByIdAsync(result.Value.Id, cancellationToken);
             if (finalResult.IsError)
             {
                 return finalResult.Error;
@@ -45,17 +45,17 @@ namespace Bureau.Calendar.Services
             return finalResult.Value;
         }
 
-        public async Task<Result<CalendarDto>> UpdateAsync(CalendarDto calendarDto, CancellationToken cancellationToken)
+        public async Task<Result<CalendarDto>> UpdateAsync(CalendarDto dto, CancellationToken cancellationToken)
         {
-            calendarDto.UpdatedAt = _timeProvider.GetUtcNow().UtcDateTime;
+            dto.UpdatedAt = _timeProvider.GetUtcNow().UtcDateTime;
 
-            Result<IReference> result = await _commandHandler.UpdateAsync(calendarDto, cancellationToken);
+            Result<IReference> result = await _commandHandler.UpdateAsync(dto, cancellationToken);
             if (result.IsError)
             {
                 return result.Error;
             }
 
-            Result<CalendarDto> finalResult = await _queryManager.GetByIdAsync(result.Value.Id, cancellationToken);
+            Result<CalendarDto> finalResult = await _calendarProvider.GetByIdAsync(result.Value.Id, cancellationToken);
             if (finalResult.IsError)
             {
                 return finalResult.Error;

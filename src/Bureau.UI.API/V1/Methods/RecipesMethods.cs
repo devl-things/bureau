@@ -1,6 +1,6 @@
 ﻿using Bureau.Core;
-using Bureau.Recipes.Handlers;
-using Bureau.Recipes.Managers;
+using Bureau.Managers;
+using Bureau.Providers;
 using Bureau.Recipes.Models;
 using Bureau.UI.API.Models;
 using Bureau.UI.API.V1.Mappers;
@@ -17,10 +17,10 @@ namespace Bureau.UI.API.V1.Methods
             CancellationToken cancellationToken,
             HttpContext httpContext,
             [FromBody] RecipeRequestModel recipe,
-            [FromServices] IRecipeManager manager,
+            [FromServices] IDtoManager<RecipeDto> manager,
             [FromServices] LinkGenerator linkGenerator)
         {
-            Result<RecipeDto> recipeResult = await manager.InsertRecipeAsync(recipe.ToDto(), cancellationToken).ConfigureAwait(false);
+            Result<RecipeDto> recipeResult = await manager.InsertAsync(recipe.ToDto(), cancellationToken).ConfigureAwait(false);
             if (recipeResult.IsError)
             {
                 return Results.BadRequest(recipeResult.Error.ToApiResponse());
@@ -34,12 +34,7 @@ namespace Bureau.UI.API.V1.Methods
                     { "id", recipeResult.Value.Id }
                 }
             );
-            ApiResponse<RecipeResponseModel> response = new ApiResponse<RecipeResponseModel>()
-            {
-                Status = ApiResponse.StatusSuccess,
-                Data = recipeResult.Value.ToResponseModel()
-            };
-            response.Data.Instructions = httpContext.GetRequestedApiVersion()!.ToString();
+            ApiResponse<RecipeResponseModel> response = recipeResult.ToApiResponse<RecipeDto, RecipeResponseModel>(x => x.ToResponseModel());
             // Return Created result with the generated URL
             return Results.Created(url, response);
         }
@@ -48,19 +43,15 @@ namespace Bureau.UI.API.V1.Methods
             string id,
             CancellationToken cancellationToken,
             [FromBody] RecipeRequestModel recipe,
-            [FromServices] IRecipeManager manager)
+            [FromServices] IDtoManager<RecipeDto> manager)
         {
-            Result<RecipeDto> response = await manager.UpdateRecipeAsync(recipe.ToDto(id), cancellationToken).ConfigureAwait(false);
-            if (response.IsError)
-            {
-                return Results.BadRequest(response.Error.ToApiResponse());
-            }
-            return Results.Ok(response.Value);
+            Result<RecipeDto> result = await manager.UpdateAsync(recipe.ToDto(id), cancellationToken).ConfigureAwait(false);
+            return PrepareResult(result);
         }
 
-        public static async Task<IResult> DeleteRecipe(string id, CancellationToken cancellationToken, [FromServices] IRecipeManager manager)
+        public static async Task<IResult> DeleteRecipe(string id, CancellationToken cancellationToken, [FromServices] IDtoManager<RecipeDto> manager)
         {
-            Result response = await manager.DeleteRecipeAsync(id, cancellationToken).ConfigureAwait(false);
+            Result response = await manager.DeleteAsync(id, cancellationToken).ConfigureAwait(false);
             if (response.IsError)
             {
                 return Results.BadRequest(response.Error.ToApiResponse());
@@ -68,36 +59,29 @@ namespace Bureau.UI.API.V1.Methods
             return Results.Ok(response.ToApiResponse("Deletion succeeded."));
         }
 
-        public static async Task<IResult> GetRecipeById(string id, CancellationToken cancellationToken, [FromServices] IRecipeQueryHandler handler)
+        public static async Task<IResult> GetRecipeById(string id, CancellationToken cancellationToken, [FromServices] IDtoProvider<RecipeDto> provider)
         {
-            Result<RecipeDto> recipe = await handler.GetRecipeAsync(id, cancellationToken).ConfigureAwait(false);
-            if (recipe.IsSuccess)
-            {
-                ApiResponse<RecipeResponseModel> response = new ApiResponse<RecipeResponseModel>()
-                {
-                    Status = ApiResponse.StatusSuccess,
-                    Data = recipe.Value.ToResponseModel()
-                };
-                return Results.Ok(response);
-            }
-            return Results.BadRequest(recipe.Error.ToApiResponse());
+            Result<RecipeDto> result = await provider.GetByIdAsync(id, cancellationToken).ConfigureAwait(false);
+            return PrepareResult(result);
         }
 
-        public static async Task<IResult> GetRecipes(CancellationToken cancellationToken, [FromServices] IRecipeQueryHandler handler, [FromQuery] int? page, [FromQuery] int? limit)
+        public static async Task<IResult> GetRecipes(CancellationToken cancellationToken, [FromServices] IDtoProvider<RecipeDto> provider, [FromQuery] int? page, [FromQuery] int? limit)
         {
-            PaginatedResult<List<RecipeDto>> recipes = await handler.GetRecipesAsync(page, limit, cancellationToken).ConfigureAwait(false);
-            if (recipes.IsSuccess)
+            PaginatedResult<List<RecipeDto>> values = await provider.GetAsync(page, limit, cancellationToken).ConfigureAwait(false);
+            if (values.IsSuccess)
             {
-                ApiResponse<List<RecipeResponseModel>> response = new ApiResponse<List<RecipeResponseModel>>()
-                {
-                    Status = ApiResponse.StatusSuccess,
-                    Data = new List<RecipeResponseModel>(recipes.Value.Count),
-                    Pagination = new PaginationData(recipes.Pagination)
-                };
-                recipes.Value.ForEach(x => response.Data.Add(x.ToResponseModel()));
-                return Results.Ok(response);
+                return Results.Ok(values.ToPagedApiResponse<RecipeDto, RecipeResponseModel>(x => x.ToResponseModel()));
             }
-            return Results.BadRequest(recipes.Error.ToApiResponse());
+            return Results.BadRequest(values.Error.ToApiResponse());
+        }
+
+        private static IResult PrepareResult(Result<RecipeDto> result)
+        {
+            if (result.IsSuccess)
+            {
+                return Results.Ok(result.ToApiResponse<RecipeDto, RecipeResponseModel>(x => x.ToResponseModel()));
+            }
+            return Results.BadRequest(result.Error.ToApiResponse());
         }
     }
 }
