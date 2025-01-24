@@ -1,16 +1,13 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using Bureau.UI.API.Features.Recipes.Models;
+using System.ComponentModel.DataAnnotations;
 
 namespace Bureau.UI.API.Features.Recipes.V1.Models
 {
-    public class RecipeRequestModel
+    public class RecipeRequestModel : BaseRecipeRequestModel
     {
-        [Required]
-        public required string Name { get; set; }
         [Required]
         public required List<string> Ingredients { get; set; }
         public string? Instructions { get; set; }
-        public string? PreparationTime { get; set; }
-        public int? Servings { get; set; }
 
     }
 }
