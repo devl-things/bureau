@@ -1,6 +1,4 @@
-﻿using Bureau.Calendar.Models;
-using Bureau.Core;
-using Bureau.Core.Configuration;
+﻿using Bureau.Core;
 using Bureau.Core.Factories;
 using Bureau.Core.Models;
 using Bureau.Core.Models.Data;
@@ -8,20 +6,20 @@ using Bureau.Core.Repositories;
 using Bureau.Core.Services;
 using Bureau.Factories;
 using Bureau.Models;
+using Bureau.Providers;
 using Bureau.Recipes.Factories;
 using Bureau.Recipes.Models;
-using Microsoft.Extensions.Options;
 
-namespace Bureau.Recipes.Handlers
+namespace Bureau.Recipes.Services
 {
-    internal class RecipeQueryHandler : IRecipeQueryHandler, IInternalRecipeQueryHandler
+    internal class RecipeProvider : IDtoProvider<RecipeDto>, IInternalRecipeQueryHandler
     {
         private readonly IPaginationValidationService _paginationService;
         private readonly IDtoFactory<RecipeDto> _factory;
         private readonly IRecordQueryRepository<EdgeTypeSearchRequest, QueryAggregateModel> _edgeTypeRepository;
         private readonly IRecordQueryRepository<IdSearchRequest, InsertAggregateModel> _idRepository;
 
-        public RecipeQueryHandler(IPaginationValidationService paginationService,
+        public RecipeProvider(IPaginationValidationService paginationService,
             IDtoFactory<RecipeDto> factory,
         IRecordQueryRepository<EdgeTypeSearchRequest, QueryAggregateModel> edgeTypeRepository,
             IRecordQueryRepository<IdSearchRequest, InsertAggregateModel> idRepository)
@@ -32,23 +30,7 @@ namespace Bureau.Recipes.Handlers
             _idRepository = idRepository;
         }
 
-        public async Task<Result<RecipeDto>> GetRecipeAsync(string id, CancellationToken cancellationToken = default)
-        {
-            if (!BureauReferenceFactory.TryCreateReference(id, out IReference referenceId))
-            {
-                return RecipeResultErrorFactory.RecipeIdBadFormat(id);
-            }
-
-            Result<InsertAggregateModel> result = await InternalGetRecipeAggregateAsync(referenceId, cancellationToken).ConfigureAwait(false);
-
-            if (result.IsError)
-            {
-                return result.Error;
-            }
-            return _factory.Create(result.Value);
-        }
-
-        public async Task<PaginatedResult<List<RecipeDto>>> GetRecipesAsync(int? page, int? limit, CancellationToken cancellationToken)
+        public async Task<PaginatedResult<List<RecipeDto>>> GetAsync(int? page, int? limit, CancellationToken cancellationToken)
         {
             EdgeTypeSearchRequest edgeTypeSearchRequest = new EdgeTypeSearchRequest()
             {
@@ -68,7 +50,23 @@ namespace Bureau.Recipes.Handlers
             return _factory.CreatePaged(result.Value);
         }
 
-        public async Task<Result<InsertAggregateModel>> InternalGetRecipeAggregateAsync(IReference id, CancellationToken cancellationToken)
+        public async Task<Result<RecipeDto>> GetByIdAsync(string id, CancellationToken cancellationToken)
+        {
+            if (!BureauReferenceFactory.TryCreateReference(id, out IReference referenceId))
+            {
+                return RecipeResultErrorFactory.RecipeIdBadFormat(id);
+            }
+
+            Result<InsertAggregateModel> result = await InternalGetAggregateAsync(referenceId, cancellationToken).ConfigureAwait(false);
+
+            if (result.IsError)
+            {
+                return result.Error;
+            }
+            return _factory.Create(result.Value);
+        }
+
+        public async Task<Result<InsertAggregateModel>> InternalGetAggregateAsync(IReference id, CancellationToken cancellationToken)
         {
             IdSearchRequest idSearchRequest = new IdSearchRequest()
             {

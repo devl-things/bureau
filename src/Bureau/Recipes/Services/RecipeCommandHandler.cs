@@ -4,13 +4,14 @@ using Bureau.Core.Factories;
 using Bureau.Core.Models;
 using Bureau.Core.Models.Data;
 using Bureau.Core.Repositories;
+using Bureau.Handlers;
 using Bureau.Models;
 using Bureau.Recipes.Factories;
 using Bureau.Recipes.Models;
 
-namespace Bureau.Recipes.Handlers
+namespace Bureau.Recipes.Services
 {
-    internal class RecipeCommandHandler : IRecipeCommandHandler
+    internal class RecipeCommandHandler : ICommandHandler<RecipeDto>
     {
         private readonly IRecordCommandRepository _repository;
         private readonly ITermRepository _termRepository;
@@ -37,24 +38,14 @@ namespace Bureau.Recipes.Handlers
             _termEntryTitleByLabel = new Dictionary<string, string>();
         }
 
-        public async Task<Result<IReference>> UpdateRecipeAsync(RecipeDto recipeDto, CancellationToken cancellationToken)
-        {
-            return await ExecuteCommandRecipeAsync(recipeDto, cancellationToken, InternalUpdateRecipeAsync);
-        }
-
-        public async Task<Result<IReference>> InsertRecipeAsync(RecipeDto recipeDto, CancellationToken cancellationToken)
-        {
-            return await ExecuteCommandRecipeAsync(recipeDto, cancellationToken, InternalInsertRecipeAsync);
-        }
-
-        public async Task<Result> DeleteRecipeAsync(string id, CancellationToken cancellationToken)
+        public async Task<Result> DeleteAsync(string id, CancellationToken cancellationToken)
         {
             if (BureauReferenceFactory.IsTempId(id))
             {
                 return RecipeResultErrorFactory.RecipeIdBadFormat(id);
             }
 
-            Result<InsertAggregateModel> existingRecipeResult = await _queryHandler.InternalGetRecipeAggregateAsync(BureauReferenceFactory.CreateReference(id), cancellationToken).ConfigureAwait(false);
+            Result<InsertAggregateModel> existingRecipeResult = await _queryHandler.InternalGetAggregateAsync(BureauReferenceFactory.CreateReference(id), cancellationToken).ConfigureAwait(false);
             if (existingRecipeResult.IsError)
             {
                 return existingRecipeResult.Error;
@@ -74,6 +65,16 @@ namespace Bureau.Recipes.Handlers
             }
 
             return await _repository.DeleteAggregateAsync(removeRecipe, cancellationToken);
+        }
+
+        public Task<Result<IReference>> InsertAsync(RecipeDto dto, CancellationToken cancellationToken)
+        {
+            return ExecuteCommandRecipeAsync(dto, cancellationToken, InternalInsertRecipeAsync);
+        }
+
+        public Task<Result<IReference>> UpdateAsync(RecipeDto dto, CancellationToken cancellationToken)
+        {
+            return ExecuteCommandRecipeAsync(dto, cancellationToken, InternalUpdateRecipeAsync);
         }
 
         private async Task<Result<IReference>> ExecuteCommandRecipeAsync(RecipeDto recipeDto, CancellationToken cancellationToken, Func<CancellationToken, Task<Result<IReference>>> operation)
@@ -170,7 +171,7 @@ namespace Bureau.Recipes.Handlers
                 return RecipeResultErrorFactory.RecipeIdBadFormat(_recipeId);
             }
 
-            Result<InsertAggregateModel> existingRecipeResult = await _queryHandler.InternalGetRecipeAggregateAsync(BureauReferenceFactory.CreateReference(_recipeId), cancellationToken).ConfigureAwait(false);
+            Result<InsertAggregateModel> existingRecipeResult = await _queryHandler.InternalGetAggregateAsync(BureauReferenceFactory.CreateReference(_recipeId), cancellationToken).ConfigureAwait(false);
             if (existingRecipeResult.IsError)
             {
                 return existingRecipeResult.Error;
@@ -500,5 +501,6 @@ namespace Bureau.Recipes.Handlers
 
             return await _repository.InsertAggregateAsync(newRecipe, cancellationToken);
         }
+
     }
 }

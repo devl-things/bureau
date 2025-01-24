@@ -1,14 +1,11 @@
-﻿using Bureau.Calendar.Models;
-using Bureau.Core;
-using Bureau.Recipes.Handlers;
-using Bureau.Recipes.Managers;
+﻿using Bureau.Core;
+using Bureau.Managers;
+using Bureau.Providers;
 using Bureau.Recipes.Models;
 using Bureau.UI.API.Models;
-using Bureau.UI.API.V1.Models.Calendar;
 using Bureau.UI.API.V3.Mappers;
 using Bureau.UI.API.V3.Models.Recipes;
 using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
 
@@ -20,10 +17,10 @@ namespace Bureau.UI.API.V3.Methods
             CancellationToken cancellationToken,
             HttpContext httpContext,
             [FromBody] RecipeRequestModel recipe,
-            [FromServices] IRecipeManager manager,
+            [FromServices] IDtoManager<RecipeDto> manager,
             [FromServices] LinkGenerator linkGenerator)
         {
-            Result<RecipeDto> recipeResult = await manager.InsertRecipeAsync(recipe.ToDto(), cancellationToken).ConfigureAwait(false);
+            Result<RecipeDto> recipeResult = await manager.InsertAsync(recipe.ToDto(), cancellationToken).ConfigureAwait(false);
             if (recipeResult.IsError)
             {
                 return Results.BadRequest(recipeResult.Error.ToApiResponse());
@@ -47,15 +44,15 @@ namespace Bureau.UI.API.V3.Methods
             string id,
             CancellationToken cancellationToken,
             [FromBody] RecipeRequestModel recipe,
-            [FromServices] IRecipeManager manager)
+            [FromServices] IDtoManager<RecipeDto> manager)
         {
-            Result<RecipeDto> result = await manager.UpdateRecipeAsync(recipe.ToDto(id), cancellationToken).ConfigureAwait(false);
+            Result<RecipeDto> result = await manager.UpdateAsync(recipe.ToDto(id), cancellationToken).ConfigureAwait(false);
             return PrepareResult(result);
         }
 
-        public static async Task<IResult> GetRecipeById(string id, CancellationToken cancellationToken, [FromServices] IRecipeQueryHandler handler)
+        public static async Task<IResult> GetRecipeById(string id, CancellationToken cancellationToken, [FromServices] IDtoProvider<RecipeDto> provider)
         {
-            Result<RecipeDto> result = await handler.GetRecipeAsync(id, cancellationToken).ConfigureAwait(false);
+            Result<RecipeDto> result = await provider.GetByIdAsync(id, cancellationToken).ConfigureAwait(false);
             return PrepareResult(result);
         }
 
@@ -68,9 +65,9 @@ namespace Bureau.UI.API.V3.Methods
             return Results.BadRequest(result.Error.ToApiResponse());
         }
 
-        public static async Task<IResult> GetRecipes(CancellationToken cancellationToken, [FromServices] IRecipeQueryHandler handler, [FromQuery] int? page, [FromQuery] int? limit)
+        public static async Task<IResult> GetRecipes(CancellationToken cancellationToken, [FromServices] IDtoProvider<RecipeDto> provider, [FromQuery] int? page, [FromQuery] int? limit)
         {
-            PaginatedResult<List<RecipeDto>> values = await handler.GetRecipesAsync(page, limit, cancellationToken).ConfigureAwait(false);
+            PaginatedResult<List<RecipeDto>> values = await provider.GetAsync(page, limit, cancellationToken).ConfigureAwait(false);
             if (values.IsSuccess)
             {
                 return Results.Ok(values.ToPagedApiResponse<RecipeDto, RecipeResponseModel>(x => x.ToResponseModel()));
