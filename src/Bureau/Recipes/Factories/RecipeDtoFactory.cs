@@ -17,7 +17,7 @@ namespace Bureau.Recipes.Factories
             dto.Id = edge.Id;
             if (!aggregate.TermEntries.TryGetValue(new TermEntry(edge.SourceNode.Id), out TermEntry? header))
             {
-                return RecipeResultErrorFactory.RecipeNotFound(edge.SourceNode.Id);
+                return ResultErrorFactory.TermNotFound(edge.SourceNode.Id, $"{nameof(RecipeDto)}.{nameof(RecipeDto.Name)}");
             }
             dto.Name = header.Title;
             dto.CreatedAt = edge.CreatedAt;
@@ -25,7 +25,7 @@ namespace Bureau.Recipes.Factories
 
             if (!aggregate.FlexRecords.TryGetValue(new FlexRecord(edge.Id), out FlexRecord? recipeFlex))
             {
-                return RecipeResultErrorFactory.RecipeNotFound(edge.Id);
+                return ResultErrorFactory.InvalidRecord(edge.Id);
             }
             Result<FlexibleRecord<RecipeDetails>> detailsResult = FlexibleRecordFactory.CreateFlexibleRecord<RecipeDetails>(recipeFlex);
             if (detailsResult.IsError)
@@ -117,13 +117,13 @@ namespace Bureau.Recipes.Factories
                     }
                     if (!aggregate.TermEntries.TryGetValue(new TermEntry(edge.TargetNode.Id), out TermEntry? ingredient))
                     {
-                        return RecipeResultErrorFactory.IngredientNotFound(edge.TargetNode.Id);
+                        return ResultErrorFactory.TermNotFound(edge.TargetNode.Id, nameof(ingredient));
                     }
                     QuantityDetails quantityDetails = GetQuantityDetails(aggregate, edge.Id);
                     group.Ingredients.Add(new RecipeIngredient(ingredient.Title) { Quantity = quantityDetails });
                     return true;
                 default:
-                    return RecipeResultErrorFactory.UnknownRecipeEdgeType(edge.Id, edge.EdgeType);
+                    return ResultErrorFactory.UnknownEdgeType(edge.Id, edge.EdgeType, nameof(Recipes));
             }
         }
 
@@ -165,7 +165,7 @@ namespace Bureau.Recipes.Factories
         {
             if (!aggregate.TermEntries.TryGetValue(new TermEntry(groupTermId), out TermEntry? groupTerm))
             {
-                return RecipeResultErrorFactory.RecipeGroupNotFound(groupTermId);
+                return ResultErrorFactory.TermNotFound(groupTermId, $"{nameof(RecipeDto)}.{nameof(RecipeDto.SubGroups)}");
             }
             RecipeSubGroupDto group = new RecipeSubGroupDto(groupEdgeId)
             {

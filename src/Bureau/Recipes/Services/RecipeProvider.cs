@@ -54,7 +54,7 @@ namespace Bureau.Recipes.Services
         {
             if (!BureauReferenceFactory.TryCreateReference(id, out IReference referenceId))
             {
-                return RecipeResultErrorFactory.RecipeIdBadFormat(id);
+                return ResultErrorFactory.RecordIdBadFormat(nameof(RecipeDto), id);
             }
 
             Result<InsertAggregateModel> result = await InternalGetAggregateAsync(referenceId, cancellationToken).ConfigureAwait(false);

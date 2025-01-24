@@ -42,7 +42,7 @@ namespace Bureau.Recipes.Services
         {
             if (BureauReferenceFactory.IsTempId(id))
             {
-                return RecipeResultErrorFactory.RecipeIdBadFormat(id);
+                return ResultErrorFactory.RecordIdBadFormat(nameof(RecipeDto), id);
             }
 
             Result<InsertAggregateModel> existingRecipeResult = await _queryHandler.InternalGetAggregateAsync(BureauReferenceFactory.CreateReference(id), cancellationToken).ConfigureAwait(false);
@@ -168,7 +168,7 @@ namespace Bureau.Recipes.Services
         {
             if (BureauReferenceFactory.IsTempId(_recipeId))
             {
-                return RecipeResultErrorFactory.RecipeIdBadFormat(_recipeId);
+                return ResultErrorFactory.RecordIdBadFormat(nameof(RecipeDto), _recipeId);
             }
 
             Result<InsertAggregateModel> existingRecipeResult = await _queryHandler.InternalGetAggregateAsync(BureauReferenceFactory.CreateReference(_recipeId), cancellationToken).ConfigureAwait(false);
@@ -192,7 +192,7 @@ namespace Bureau.Recipes.Services
             //recipe edge should remain the same always even if recipe name changes
             if (recipeEdge == default)
             {
-                return RecipeResultErrorFactory.RecipeNotFound(existingRecipeResult.Value.MainReference.Id);
+                return ResultErrorFactory.EdgeNotFound(existingRecipeResult.Value.MainReference.Id, nameof(RecipeDto));
             }
 
             if (!TryGetTermEntry(_recipeDto.Name, out TermEntry headerEntry))
@@ -383,7 +383,7 @@ namespace Bureau.Recipes.Services
         {
             if (!BureauReferenceFactory.IsTempId(_recipeId))
             {
-                return RecipeResultErrorFactory.RecipeIdBadFormat(_recipeId);
+                return ResultErrorFactory.RecordIdBadFormat(nameof(RecipeDto), _recipeId);
             }
 
             if (!TryGetTermEntry(_recipeDto.Name, out TermEntry headerEntry))
