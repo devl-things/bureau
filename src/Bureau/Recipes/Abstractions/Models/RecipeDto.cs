@@ -1,6 +1,8 @@
-﻿namespace Bureau.Recipes.Models
+﻿using Bureau.Core.Models;
+
+namespace Bureau.Recipes.Models
 {
-    public class RecipeDto
+    public class RecipeDto : IReference
     {
         public string Id { get; set; } = string.Empty;
         public required string Name { get; set; }

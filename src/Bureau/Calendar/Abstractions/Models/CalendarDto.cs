@@ -1,6 +1,8 @@
-﻿namespace Bureau.Calendar.Models
+﻿using Bureau.Core.Models;
+
+namespace Bureau.Calendar.Models
 {
-    public class CalendarDto
+    public class CalendarDto : IReference
     {
         public string Id { get; set; } = string.Empty;
         public required string Name { get; set; }
