@@ -1,9 +1,11 @@
 ﻿using Asp.Versioning.ApiExplorer;
 using Asp.Versioning.Builder;
+using Bureau.UI.API.Features.Calendar.Configurations;
+using Bureau.UI.API.Features.Recipes.Configurations;
+using Bureau.UI.API.Features.Recipes.V1.Configurations;
+using Bureau.UI.API.Features.Recipes.V2.Configurations;
+using Bureau.UI.API.Features.Recipes.V3.Configurations;
 using Bureau.UI.API.Models;
-using Bureau.UI.API.V1.Configurations;
-using Bureau.UI.API.V2.Configurations;
-using Bureau.UI.API.V3.Configurations;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Http;
@@ -16,7 +18,11 @@ namespace Bureau.UI.API.Configurations
     {
         public static void MapBureauAPI(this WebApplication app)
         {
-            ApiVersionSet versionSet = app.NewApiVersionSet()
+            ApiVersionSet versionSet1 = app.NewApiVersionSet()
+                .HasApiVersion(BureauAPIVersion.Version1)
+                .ReportApiVersions()
+                .Build();
+            ApiVersionSet versionSet3 = app.NewApiVersionSet()
                 .HasApiVersion(BureauAPIVersion.Version1)
                 .HasApiVersion(BureauAPIVersion.Version2)
                 .HasApiVersion(BureauAPIVersion.Version3)
@@ -27,12 +33,9 @@ namespace Bureau.UI.API.Configurations
 
             RouteGroupBuilder apiBuilder = app.MapGroup("api");
 
-            apiBuilder.MapRecipes(versionSet);
-            apiBuilder.MapRecipesV1(versionSet);
-            apiBuilder.MapRecipesV2(versionSet);
-            apiBuilder.MapRecipesV3(versionSet);
+            apiBuilder.MapRecipes(versionSet3);
 
-            apiBuilder.MapCalendar(versionSet);
+            apiBuilder.MapCalendar(versionSet1);
 
             app.MapBureauOpenApiExplorer();
 

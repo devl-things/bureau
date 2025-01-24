@@ -1,6 +1,4 @@
-﻿using Bureau.Calendar.Models;
-using Bureau.Core;
-using Bureau.UI.API.V1.Models.Calendar;
+﻿using Bureau.Core;
 
 namespace Bureau.UI.API.Models
 {
