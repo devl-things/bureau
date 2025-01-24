@@ -1,5 +1,5 @@
 ﻿using Bureau.Recipes.Models;
-using Bureau.UI.API.Features.Recipes.V3.Models.Recipes;
+using Bureau.UI.API.Features.Recipes.V3.Models;
 
 namespace Bureau.UI.API.Features.Recipes.V3.Mappers
 {

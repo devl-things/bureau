@@ -1,6 +1,6 @@
 ﻿using Bureau.Recipes.Models;
-using Bureau.UI.API.Features.Recipes.V3.Models.Recipes;
-using RecipeIngredient = Bureau.UI.API.Features.Recipes.V3.Models.Recipes.RecipeIngredient;
+using Bureau.UI.API.Features.Recipes.V3.Models;
+using RecipeIngredient = Bureau.UI.API.Features.Recipes.V3.Models.RecipeIngredient;
 
 namespace Bureau.UI.API.Features.Recipes.V3.Mappers
 {

@@ -1,4 +1,4 @@
-﻿namespace Bureau.UI.API.Features.Recipes.V3.Models.Recipes
+﻿namespace Bureau.UI.API.Features.Recipes.V3.Models
 {
     public class RecipeResponseModel : RecipeRequestModel
     {

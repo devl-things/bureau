@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace Bureau.UI.API.Features.Recipes.V3.Models.Recipes
+namespace Bureau.UI.API.Features.Recipes.V3.Models
 {
     public class RecipeRequestModel
     {
