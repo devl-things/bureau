@@ -11,7 +11,7 @@ using Bureau.Recipes.Models;
 
 namespace Bureau.Recipes.Services
 {
-    internal class RecipeCommandHandler : ICommandHandler<RecipeDto>
+    internal class RecipeCommandHandler : ICommandHandler<string, RecipeDto>
     {
         private readonly IRecordCommandRepository _repository;
         private readonly ITermRepository _termRepository;

@@ -14,7 +14,7 @@ using System.Threading;
 
 namespace Bureau.Calendar.Services
 {
-    internal class CalendarCommandHandler : ICommandHandler<CalendarDto>
+    internal class CalendarCommandHandler : ICommandHandler<string, CalendarDto>
     {
         private readonly IRecordCommandRepository _repository;
         private readonly ITermRepository _termRepository;

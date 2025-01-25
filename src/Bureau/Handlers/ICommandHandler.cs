@@ -3,10 +3,10 @@ using Bureau.Core;
 
 namespace Bureau.Handlers
 {
-    internal interface ICommandHandler<T>
+    internal interface ICommandHandler<TId, TDto>
     {
-        Task<Result> DeleteAsync(string id, CancellationToken cancellationToken);
-        Task<Result<IReference>> InsertAsync(T dto, CancellationToken cancellationToken);
-        Task<Result<IReference>> UpdateAsync(T dto, CancellationToken cancellationToken);
+        Task<Result> DeleteAsync(TId id, CancellationToken cancellationToken);
+        Task<Result<IReference>> InsertAsync(TDto dto, CancellationToken cancellationToken);
+        Task<Result<IReference>> UpdateAsync(TDto dto, CancellationToken cancellationToken);
     }
 }
