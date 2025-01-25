@@ -2,9 +2,11 @@
 using Bureau.Core;
 using Bureau.Managers;
 using Bureau.Providers;
+using Bureau.UI.API.Configurations;
 using Bureau.UI.API.Features.Calendar.Mappers;
 using Bureau.UI.API.Features.Calendar.Models;
 using Bureau.UI.API.Models;
+using Bureau.UI.API.Services;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
@@ -15,10 +17,9 @@ namespace Bureau.UI.API.Features.Calendar
     {
         public static async Task<IResult> CreateCalendar(
             CancellationToken cancellationToken,
-            HttpContext httpContext,
             [FromBody] CalendarRequestModel calendar,
             [FromServices] IDtoManager<CalendarDto> manager,
-            [FromServices] LinkGenerator linkGenerator)
+            [FromServices] BureauLinkGenerator linkGenerator)
         {
             Result<CalendarDto> result = await manager.InsertAsync(calendar.ToDto(), cancellationToken).ConfigureAwait(false);
             if (result.IsError)
@@ -26,9 +27,8 @@ namespace Bureau.UI.API.Features.Calendar
                 return Results.BadRequest(result.Error.ToApiResponse());
             }
             // Generate the full URL for the newly created note
-            var url = linkGenerator.GetUriByAddress(
-                httpContext,
-                BureauAPIRouteNames.GetCalendarById, // Name of the route we want to link to
+            var url = linkGenerator.GetLink(
+                $"{BureauAPIRouteNames.GetCalendarById}-{BureauAPIVersion.Version1}", // Name of the route we want to link to
                 new RouteValueDictionary
                 {
                     { "id", result.Value.Id }

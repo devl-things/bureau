@@ -4,6 +4,7 @@ using Bureau.Managers;
 using Bureau.Providers;
 using Bureau.Recipes.Models;
 using Bureau.UI.API.Models;
+using Bureau.UI.API.Services;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
@@ -26,10 +27,9 @@ namespace Bureau.UI.API.Features.Recipes
 
         public static async Task<IResult> CreateRecipeAsync<TRequestModel, TResponseModel, TDto>(
                 CancellationToken cancellationToken,
-                HttpContext httpContext,
                 TRequestModel recipe,
                 IDtoManager<TDto> manager,
-                LinkGenerator linkGenerator,
+                BureauLinkGenerator linkGenerator,
                 string routeName,
                 Func<TRequestModel, TDto> toDto,
                 Func<TDto, TResponseModel> toResponseModel)
@@ -42,8 +42,7 @@ namespace Bureau.UI.API.Features.Recipes
             }
 
             // Generate the URL for the created recipe
-            var url = linkGenerator.GetUriByAddress(
-                httpContext,
+            var url = linkGenerator.GetLink(
                 routeName,
                 new RouteValueDictionary { { "id", recipeResult.Value.Id } }
             );

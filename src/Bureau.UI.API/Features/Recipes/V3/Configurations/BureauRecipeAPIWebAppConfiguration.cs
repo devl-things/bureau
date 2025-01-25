@@ -7,6 +7,7 @@ using Bureau.UI.API.Configurations;
 using Bureau.UI.API.Features.Recipes.V3.Mappers;
 using Bureau.UI.API.Features.Recipes.V3.Models;
 using Bureau.UI.API.Filters;
+using Bureau.UI.API.Services;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -55,14 +56,12 @@ namespace Bureau.UI.API.Features.Recipes.V3.Configurations
 
             recipesGroup.MapPost("", 
                 (CancellationToken cancellationToken,
-                HttpContext httpContext,
                 [FromBody] RecipeRequestModel recipe,
                 [FromServices] IDtoManager < RecipeDto > manager,
-                [FromServices] LinkGenerator linkGenerator) =>
+                [FromServices] BureauLinkGenerator linkGenerator) =>
                 {
                     return RecipesMethods.CreateRecipeAsync(
                     cancellationToken,
-                        httpContext,
                         recipe,
                         manager,
                         linkGenerator,

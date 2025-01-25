@@ -3,6 +3,7 @@ using Bureau.Calendar.Configurations;
 using Bureau.Configurations;
 using Bureau.Recipes.Configurations;
 using Bureau.UI.API.OpenApi;
+using Bureau.UI.API.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using Swashbuckle.AspNetCore.SwaggerGen;
@@ -43,6 +44,9 @@ namespace Bureau.UI.API.Configurations
                 });
 
             //services.AddProblemDetails();
+
+            services.AddHttpContextAccessor();
+            services.AddScoped<BureauLinkGenerator>();
 
             services.AddBureauCommon();
 

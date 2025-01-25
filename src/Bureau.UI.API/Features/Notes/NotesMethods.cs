@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using Bureau.UI.API.Services;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 
 namespace Bureau.UI.API.Features.Notes
@@ -6,11 +7,10 @@ namespace Bureau.UI.API.Features.Notes
     internal static class NotesMethods
     {
 
-        public static IResult CreateTextNote(TextNoteModel note, LinkGenerator linkGenerator, HttpContext httpContext)
+        public static IResult CreateTextNote(TextNoteModel note, BureauLinkGenerator linkGenerator, HttpContext httpContext)
         {
             // Generate the full URL for the newly created note
-            var url = linkGenerator.GetUriByAddress(
-                httpContext,
+            var url = linkGenerator.GetLink(
                 BureauAPIRouteNames.GetTextNoteById, // Name of the route we want to link to
                 new RouteValueDictionary
                 {
