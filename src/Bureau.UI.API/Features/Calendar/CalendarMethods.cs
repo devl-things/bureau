@@ -51,7 +51,7 @@ namespace Bureau.UI.API.Features.Calendar
             }
             return Results.BadRequest(result.Error.ToApiResponse());
         }
-        public static async Task<IResult> GetCalendarById(string id, CancellationToken cancellationToken, [FromServices] IDtoProvider<CalendarDto> provider)
+        public static async Task<IResult> GetCalendarById(string id, CancellationToken cancellationToken, [FromServices] IDtoProvider<string, CalendarDto> provider)
         {
             Result<CalendarDto> result = await provider.GetByIdAsync(id, cancellationToken).ConfigureAwait(false);
             if (result.IsSuccess)
@@ -61,9 +61,9 @@ namespace Bureau.UI.API.Features.Calendar
             return Results.BadRequest(result.Error.ToApiResponse());
         }
 
-        public static async Task<IResult> GetCalendars(CancellationToken cancellationToken, [FromServices] IDtoProvider<CalendarDto> provider, [FromQuery] int? page, [FromQuery] int? limit)
+        public static async Task<IResult> GetCalendars(CancellationToken cancellationToken, [FromServices] IDtoProvider<string, CalendarDto> provider, [FromQuery] int? page, [FromQuery] int? limit)
         {
-            PaginatedResult<List<CalendarDto>> values = await provider.GetAsync(page, limit, cancellationToken).ConfigureAwait(false);
+            PaginatedResult<List<CalendarDto>> values = await provider.GetAsync(string.Empty, page, limit, cancellationToken).ConfigureAwait(false);
             if (values.IsSuccess)
             {
                 return Results.Ok(values.ToPagedApiResponse(x => x.ToResponseModel()));

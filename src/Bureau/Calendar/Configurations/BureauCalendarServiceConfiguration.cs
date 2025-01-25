@@ -16,7 +16,7 @@ namespace Bureau.Calendar.Configurations
         {
             services.AddScoped<IDtoFactory<CalendarDto>, CalendarDtoFactory>();
             services.AddScoped<IInternalCalendarQueryHandler, CalendarProvider>();
-            services.AddScoped<IDtoProvider<CalendarDto>, CalendarProvider>();
+            services.AddScoped<IDtoProvider<string, CalendarDto>, CalendarProvider>();
             services.AddScoped<ICommandHandler<CalendarDto>, CalendarCommandHandler>();
             services.AddScoped<IDtoManager<string, CalendarDto>, CalendarManager>();
 

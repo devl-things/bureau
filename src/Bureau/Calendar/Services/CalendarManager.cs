@@ -7,13 +7,13 @@ using Bureau.Providers;
 
 namespace Bureau.Calendar.Services
 {
-    internal class CalendarManager : IDtoManager<CalendarDto>
+    internal class CalendarManager : IDtoManager<string, CalendarDto>
     {
         private readonly TimeProvider _timeProvider;
-        private readonly IDtoProvider<CalendarDto> _calendarProvider;
+        private readonly IDtoProvider<string, CalendarDto> _calendarProvider;
         private readonly ICommandHandler<CalendarDto> _commandHandler;
         public CalendarManager(TimeProvider timeProvider,
-            IDtoProvider<CalendarDto> calendarProvider,
+            IDtoProvider<string, CalendarDto> calendarProvider,
             ICommandHandler<CalendarDto> commandHandler)
         {
             _timeProvider = timeProvider;

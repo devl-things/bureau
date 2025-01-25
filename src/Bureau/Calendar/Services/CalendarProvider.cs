@@ -12,7 +12,7 @@ using Bureau.Handlers;
 
 namespace Bureau.Calendar.Services
 {
-    internal class CalendarProvider : IDtoProvider<CalendarDto>, IInternalCalendarQueryHandler
+    internal class CalendarProvider : IDtoProvider<string, CalendarDto>, IInternalCalendarQueryHandler
     {
         private readonly IPaginationValidationService _paginationService;
         private readonly IDtoFactory<CalendarDto> _factory;
@@ -58,7 +58,7 @@ namespace Bureau.Calendar.Services
             return _factory.Create(result.Value);
         }
 
-        public async Task<PaginatedResult<List<CalendarDto>>> GetAsync(int? page, int? limit, CancellationToken cancellationToken)
+        public async Task<PaginatedResult<List<CalendarDto>>> GetAsync(string request, int? page, int? limit, CancellationToken cancellationToken)
         {
             EdgeTypeSearchRequest edgeTypeSearchRequest = new EdgeTypeSearchRequest()
             {

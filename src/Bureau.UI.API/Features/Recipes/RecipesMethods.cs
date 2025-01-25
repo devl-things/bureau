@@ -67,7 +67,7 @@ namespace Bureau.UI.API.Features.Recipes
         public static async Task<IResult> GetRecipeByIdAsync<TResponseModel, TDto>(
             string id,
             CancellationToken cancellationToken,
-            IDtoProvider<TDto> provider,
+            IDtoProvider<string, TDto> provider,
             Func<TDto, TResponseModel> toResponseModel)
             where TDto : class
         {
@@ -77,13 +77,13 @@ namespace Bureau.UI.API.Features.Recipes
 
         public static async Task<IResult> GetRecipesAsync<TResponseModel, TDto>(
             CancellationToken cancellationToken,
-            IDtoProvider<TDto> provider,
+            IDtoProvider<string, TDto> provider,
             int? page,
             int? limit,
             Func<TDto, TResponseModel> toResponseModel)
             where TDto : class
         {
-            PaginatedResult<List<TDto>> values = await provider.GetAsync(page, limit, cancellationToken).ConfigureAwait(false);
+            PaginatedResult<List<TDto>> values = await provider.GetAsync(string.Empty, page, limit, cancellationToken).ConfigureAwait(false);
             if (values.IsSuccess)
             {
                 return Results.Ok(values.ToPagedApiResponse(x => toResponseModel(x)));

@@ -21,7 +21,7 @@ namespace Bureau.UI.API.Features.Recipes.V3.Configurations
         {
             recipesGroup.MapGet("", 
                 (CancellationToken cancellationToken,
-                [FromServices] IDtoProvider<RecipeDto> provider,
+                [FromServices] IDtoProvider<string, RecipeDto> provider,
                 [FromQuery] int? page,
                 [FromQuery] int? limit) =>
                 {
@@ -41,7 +41,7 @@ namespace Bureau.UI.API.Features.Recipes.V3.Configurations
             recipesGroup.MapGet("{id}", 
                 (string id,
                 CancellationToken cancellationToken,
-                [FromServices] IDtoProvider<RecipeDto> provider) =>
+                [FromServices] IDtoProvider<string, RecipeDto> provider) =>
                 {
                     return RecipesMethods.GetRecipeByIdAsync(
                         id,

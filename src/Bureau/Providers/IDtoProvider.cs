@@ -3,9 +3,9 @@
 namespace Bureau.Providers
 {
     //TODO [maybe] can go in Core
-    public interface IDtoProvider<T>
+    public interface IDtoProvider<TId, TDto>
     {
-        Task<Result<T>> GetByIdAsync(string id, CancellationToken cancellationToken);
-        Task<PaginatedResult<List<T>>> GetAsync(int? page, int? limit, CancellationToken cancellationToken);
+        Task<Result<TDto>> GetByIdAsync(TId id, CancellationToken cancellationToken);
+        Task<PaginatedResult<List<TDto>>> GetAsync(TId request ,int? page, int? limit, CancellationToken cancellationToken);
     }
 }

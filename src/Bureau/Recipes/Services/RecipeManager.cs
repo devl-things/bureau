@@ -13,8 +13,8 @@ namespace Bureau.Recipes.Services
     {
         private readonly TimeProvider _timeProvider;
         private readonly ICommandHandler<RecipeDto> _recipeCommandHandler;
-        private readonly IDtoProvider<RecipeDto> _recipeProvider;
-        public RecipeManager(TimeProvider timeProvider, ICommandHandler<RecipeDto> recipeCommandHandler, IDtoProvider<RecipeDto> recipeProvider)
+        private readonly IDtoProvider<string, RecipeDto> _recipeProvider;
+        public RecipeManager(TimeProvider timeProvider, ICommandHandler<RecipeDto> recipeCommandHandler, IDtoProvider<string, RecipeDto> recipeProvider)
         {
             _timeProvider = timeProvider;
             _recipeCommandHandler = recipeCommandHandler;

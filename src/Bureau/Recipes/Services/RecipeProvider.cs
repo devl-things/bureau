@@ -12,7 +12,7 @@ using Bureau.Recipes.Models;
 
 namespace Bureau.Recipes.Services
 {
-    internal class RecipeProvider : IDtoProvider<RecipeDto>, IInternalRecipeQueryHandler
+    internal class RecipeProvider : IDtoProvider<string, RecipeDto>, IInternalRecipeQueryHandler
     {
         private readonly IPaginationValidationService _paginationService;
         private readonly IDtoFactory<RecipeDto> _factory;
@@ -30,7 +30,7 @@ namespace Bureau.Recipes.Services
             _idRepository = idRepository;
         }
 
-        public async Task<PaginatedResult<List<RecipeDto>>> GetAsync(int? page, int? limit, CancellationToken cancellationToken)
+        public async Task<PaginatedResult<List<RecipeDto>>> GetAsync(string request, int? page, int? limit, CancellationToken cancellationToken)
         {
             EdgeTypeSearchRequest edgeTypeSearchRequest = new EdgeTypeSearchRequest()
             {
