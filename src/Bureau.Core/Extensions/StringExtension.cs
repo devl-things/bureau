@@ -15,7 +15,7 @@ namespace Bureau.Core.Extensions
                 return string.Empty;
 
             // Step 1: Replace any separators (spaces, underscores, or hyphens) with a space for consistent splitting
-            string[] words = Regex.Split(input, @"[\s_\-]+");
+            string[] words = Regex.Split(input, @"[\s_\-]+", RegexOptions.None, TimeSpan.FromMilliseconds(200));
 
             // Step 2: Capitalize the first letter of each word and concatenate them
             var pascalCase = string.Concat(words.Select(word =>
@@ -30,7 +30,7 @@ namespace Bureau.Core.Extensions
                 return string.Empty;
 
             // Step 1: Replace spaces and underscores with a hyphen
-            string result = Regex.Replace(input, @"[\s_]+", "-");
+            string result = Regex.Replace(input, @"[\s_]+", "-", RegexOptions.None, TimeSpan.FromMilliseconds(200));
 
             // Step 2: Insert hyphens before uppercase letters (for camelCase or PascalCase)
             result = Regex.Replace(result, @"([a-z0-9])([A-Z])", "$1-$2");
