@@ -13,8 +13,6 @@ namespace Bureau.UI.API.Features.Recipes.V3.Mappers
                 SubGroups = recipe.Layers.Select(x => x.ToSubGroupDto()).ToList(),
                 PreparationTime = recipe.PreparationTime,
                 Servings = recipe.Servings,
-                CreatedAt = DateTime.Now.ToUniversalTime(),
-                UpdatedAt = DateTime.Now.ToUniversalTime()
             };
             return result;
         }
