@@ -65,7 +65,7 @@ namespace Bureau.Calendar.Services
                 EdgeType = (int)EdgeTypeEnum.Calendar,
                 Active = true,
                 FilterRequestType = EdgeRequestType.Edge,
-                SelectReferences = EdgeRequestType.Edge,
+                SelectReferences = EdgeRequestType.Edge | EdgeRequestType.TargetNode,
                 SelectRecordTypes = RecordRequestType.Edges | RecordRequestType.TermEntries | RecordRequestType.FlexRecords,
                 Pagination = new PaginationMetadata(_paginationService.GetValidPage(page), _paginationService.GetValidLimit(limit))
             };

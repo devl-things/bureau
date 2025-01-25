@@ -5,8 +5,6 @@ using Bureau.Core;
 using Bureau.Data.Postgres.Mappers;
 using dbModels = Bureau.Data.Postgres.Models;
 using Bureau.Data.Postgres.Models;
-using System;
-using Microsoft.EntityFrameworkCore.Metadata.Internal;
 
 namespace Bureau.Data.Postgres.Handlers
 {

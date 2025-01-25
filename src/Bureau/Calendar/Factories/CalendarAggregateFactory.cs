@@ -79,7 +79,7 @@ namespace Bureau.Calendar.Factories
                 TermEntries = new HashSet<TermEntry>(TermEntriesByLabel.Values, new ReferenceComparer()),
                 Edges = new HashSet<Edge>([mainEdge], new ReferenceComparer()),
             };
-            if (!string.IsNullOrEmpty(_calendar.Description)) 
+            if (!string.IsNullOrEmpty(_calendar.Description))
             {
                 Result<FlexRecord> flexResult = FlexRecordFactory
                     .CreateFlexRecord(new FlexibleRecord<NoteDetails>(mainEdge.Id)
@@ -96,6 +96,10 @@ namespace Bureau.Calendar.Factories
                     return flexResult.Error;
                 }
                 newAggregate.FlexRecords = new HashSet<FlexRecord>([flexResult.Value], new ReferenceComparer());
+            }
+            else 
+            {
+                newAggregate.FlexRecords = new HashSet<FlexRecord>(0);
             }
             return newAggregate;
         }
