@@ -129,6 +129,7 @@ namespace Bureau.Calendar.Factories
             calendarEdge.SourceNode = BureauReferenceFactory.CreateReference(headerEntry.Id);
             calendarEdge.TargetNode = BureauReferenceFactory.CreateReference(headerEntry.Id);
             calendarEdge.UpdatedAt = _calendar.UpdatedAt;
+            _calendar.CreatedAt = calendarEdge.CreatedAt;
 
             _existingCalendar.FlexRecords.TryGetValue(new FlexRecord(calendarEdge.Id), out FlexRecord? existingDetails);
             FlexRecord? details = default;
