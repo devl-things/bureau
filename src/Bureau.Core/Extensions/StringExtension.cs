@@ -9,6 +9,21 @@ namespace Bureau.Core.Extensions
             return string.Format(str, args);
         }
 
+        public static string ToPascalCase(this string input)
+        {
+            if (string.IsNullOrWhiteSpace(input))
+                return string.Empty;
+
+            // Step 1: Replace any separators (spaces, underscores, or hyphens) with a space for consistent splitting
+            string[] words = Regex.Split(input, @"[\s_\-]+");
+
+            // Step 2: Capitalize the first letter of each word and concatenate them
+            var pascalCase = string.Concat(words.Select(word =>
+                char.ToUpperInvariant(word[0]) + word.Substring(1).ToLowerInvariant()));
+
+            return pascalCase;
+        }   
+
         public static string ToKebabCase(this string input)
         {
             if (string.IsNullOrWhiteSpace(input))

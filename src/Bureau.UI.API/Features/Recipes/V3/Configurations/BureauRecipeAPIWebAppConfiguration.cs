@@ -16,11 +16,8 @@ namespace Bureau.UI.API.Features.Recipes.V3.Configurations
 {
     public static partial class BureauRecipeAPIWebAppConfiguration
     {
-        internal static void MapRecipesV3(this RouteGroupBuilder apiGroupBuilder, ApiVersionSet versionSet)
+        internal static void MapRecipesV3(this RouteGroupBuilder recipesGroup, ApiVersionSet versionSet)
         {
-
-            RouteGroupBuilder recipesGroup = apiGroupBuilder.MapGroup(BureauAPIRouteNames.RecipesGroup);
-
             recipesGroup.MapGet("", 
                 (CancellationToken cancellationToken,
                 [FromServices] IDtoProvider<RecipeDto> provider,
