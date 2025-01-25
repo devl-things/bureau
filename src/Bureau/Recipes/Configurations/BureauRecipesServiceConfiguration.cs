@@ -17,7 +17,7 @@ namespace Bureau.Recipes.Configurations
             services.AddScoped<IInternalRecipeQueryHandler, RecipeProvider>();
             services.AddScoped<ICommandHandler<RecipeDto>, RecipeCommandHandler>();
             services.AddScoped<IDtoProvider<RecipeDto>, RecipeProvider>();
-            services.AddScoped<IDtoManager<RecipeDto>, RecipeManager>();
+            services.AddScoped<IDtoManager<string, RecipeDto>, RecipeManager>();
 
             return services;
         }

@@ -18,7 +18,7 @@ namespace Bureau.UI.API.Features.Calendar
         public static async Task<IResult> CreateCalendar(
             CancellationToken cancellationToken,
             [FromBody] CalendarRequestModel calendar,
-            [FromServices] IDtoManager<CalendarDto> manager,
+            [FromServices] IDtoManager<string, CalendarDto> manager,
             [FromServices] BureauLinkGenerator linkGenerator)
         {
             Result<CalendarDto> result = await manager.InsertAsync(calendar.ToDto(), cancellationToken).ConfigureAwait(false);
@@ -42,7 +42,7 @@ namespace Bureau.UI.API.Features.Calendar
             string id,
             CancellationToken cancellationToken,
             [FromBody] CalendarRequestModel calendar,
-            [FromServices] IDtoManager<CalendarDto> manager)
+            [FromServices] IDtoManager<string, CalendarDto> manager)
         {
             Result<CalendarDto> result = await manager.UpdateAsync(calendar.ToDto(id), cancellationToken).ConfigureAwait(false);
             if (result.IsSuccess)
@@ -71,7 +71,7 @@ namespace Bureau.UI.API.Features.Calendar
             return Results.BadRequest(values.Error.ToApiResponse());
         }
 
-        internal static async Task<IResult> DeleteCalendar(string id, CancellationToken cancellationToken, [FromServices] IDtoManager<CalendarDto> manager)
+        internal static async Task<IResult> DeleteCalendar(string id, CancellationToken cancellationToken, [FromServices] IDtoManager<string, CalendarDto> manager)
         {
             Result response = await manager.DeleteAsync(id, cancellationToken).ConfigureAwait(false);
             if (response.IsError)

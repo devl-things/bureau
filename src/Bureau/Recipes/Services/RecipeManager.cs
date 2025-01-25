@@ -9,7 +9,7 @@ using System;
 namespace Bureau.Recipes.Services
 {
     //TODO userId?? as updatedAt
-    internal class RecipeManager : IDtoManager<RecipeDto>
+    internal class RecipeManager : IDtoManager<string, RecipeDto>
     {
         private readonly TimeProvider _timeProvider;
         private readonly ICommandHandler<RecipeDto> _recipeCommandHandler;

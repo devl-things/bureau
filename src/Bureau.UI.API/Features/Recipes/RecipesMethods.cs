@@ -13,7 +13,7 @@ namespace Bureau.UI.API.Features.Recipes
 {
     internal static class RecipesMethods
     {
-        public static async Task<IResult> DeleteRecipe(string id, CancellationToken cancellationToken, [FromServices] IDtoManager<RecipeDto> manager)
+        public static async Task<IResult> DeleteRecipe(string id, CancellationToken cancellationToken, [FromServices] IDtoManager<string, RecipeDto> manager)
         {
             Result response = await manager.DeleteAsync(id, cancellationToken).ConfigureAwait(false);
             if (response.IsError)
@@ -28,7 +28,7 @@ namespace Bureau.UI.API.Features.Recipes
         public static async Task<IResult> CreateRecipeAsync<TRequestModel, TResponseModel, TDto>(
                 CancellationToken cancellationToken,
                 TRequestModel recipe,
-                IDtoManager<TDto> manager,
+                IDtoManager<string, TDto> manager,
                 BureauLinkGenerator linkGenerator,
                 string routeName,
                 Func<TRequestModel, TDto> toDto,
@@ -55,7 +55,7 @@ namespace Bureau.UI.API.Features.Recipes
             string id,
             CancellationToken cancellationToken,
             TRequestModel recipe,
-            IDtoManager<TDto> manager,
+            IDtoManager<string, TDto> manager,
             Func<TRequestModel, string, TDto> toDto,
             Func<TDto, TResponseModel> toResponseModel)
             where TDto : class

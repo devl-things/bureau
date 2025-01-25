@@ -57,7 +57,7 @@ namespace Bureau.UI.API.Features.Recipes.V3.Configurations
             recipesGroup.MapPost("", 
                 (CancellationToken cancellationToken,
                 [FromBody] RecipeRequestModel recipe,
-                [FromServices] IDtoManager < RecipeDto > manager,
+                [FromServices] IDtoManager<string, RecipeDto> manager,
                 [FromServices] BureauLinkGenerator linkGenerator) =>
                 {
                     return RecipesMethods.CreateRecipeAsync(
@@ -78,7 +78,7 @@ namespace Bureau.UI.API.Features.Recipes.V3.Configurations
                 (string id,
                 CancellationToken cancellationToken,
                 [FromBody] RecipeRequestModel recipe,
-                [FromServices] IDtoManager < RecipeDto > manager) =>
+                [FromServices] IDtoManager<string, RecipeDto> manager) =>
                 {
                     return RecipesMethods.UpdateRecipeAsync(
                         id,

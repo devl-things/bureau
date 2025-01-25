@@ -3,10 +3,10 @@
 namespace Bureau.Managers
 {
     //TODO [maybe] can go in Core
-    public interface IDtoManager<T>
+    public interface IDtoManager<TId, TDto>
     {
-        Task<Result> DeleteAsync(string id, CancellationToken cancellationToken);
-        Task<Result<T>> InsertAsync(T dto, CancellationToken cancellationToken);
-        Task<Result<T>> UpdateAsync(T dto, CancellationToken cancellationToken);
+        Task<Result> DeleteAsync(TId id, CancellationToken cancellationToken);
+        Task<Result<TDto>> InsertAsync(TDto dto, CancellationToken cancellationToken);
+        Task<Result<TDto>> UpdateAsync(TDto dto, CancellationToken cancellationToken);
     }
 }
