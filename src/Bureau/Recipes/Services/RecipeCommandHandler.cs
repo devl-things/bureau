@@ -202,6 +202,7 @@ namespace Bureau.Recipes.Services
             recipeEdge.SourceNode = BureauReferenceFactory.CreateReference(headerEntry.Id);
             recipeEdge.TargetNode = BureauReferenceFactory.CreateReference(headerEntry.Id);
             recipeEdge.UpdatedAt = _recipeDto.UpdatedAt;
+            _recipeDto.CreatedAt = recipeEdge.CreatedAt;
 
 
             Result<FlexRecord> flexResult = FlexRecordFactory

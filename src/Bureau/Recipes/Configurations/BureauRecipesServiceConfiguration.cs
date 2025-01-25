@@ -1,6 +1,4 @@
-﻿using Bureau.Calendar.Factories;
-using Bureau.Calendar.Models;
-using Bureau.Factories;
+﻿using Bureau.Factories;
 using Bureau.Handlers;
 using Bureau.Managers;
 using Bureau.Providers;

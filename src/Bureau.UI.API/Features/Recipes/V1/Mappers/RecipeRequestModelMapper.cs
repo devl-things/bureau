@@ -21,8 +21,6 @@ namespace Bureau.UI.API.Features.Recipes.V1.Mappers
                 },
                 PreparationTime = recipe.PreparationTime,
                 Servings = recipe.Servings,
-                CreatedAt = DateTime.Now.ToUniversalTime(),
-                UpdatedAt = DateTime.Now.ToUniversalTime()
             };
         }
 

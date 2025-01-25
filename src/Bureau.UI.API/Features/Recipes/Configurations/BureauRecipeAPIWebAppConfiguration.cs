@@ -3,7 +3,9 @@ using Bureau.UI.API.Configurations;
 using Bureau.UI.API.Features.Recipes.V1.Configurations;
 using Bureau.UI.API.Features.Recipes.V2.Configurations;
 using Bureau.UI.API.Features.Recipes.V3.Configurations;
+using Bureau.Core.Extensions;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 
 namespace Bureau.UI.API.Features.Recipes.Configurations
@@ -12,7 +14,8 @@ namespace Bureau.UI.API.Features.Recipes.Configurations
     {
         internal static void MapRecipes(this RouteGroupBuilder apiGroupBuilder, ApiVersionSet versionSet)
         {
-            RouteGroupBuilder recipesGroup = apiGroupBuilder.MapGroup(BureauAPIRouteNames.RecipesGroup);
+            RouteGroupBuilder recipesGroup = apiGroupBuilder.MapGroup(BureauAPIRouteNames.RecipesGroup)
+                .WithTags(BureauAPIRouteNames.RecipesGroup.ToPascalCase());
 
             recipesGroup.MapDelete("{id}", RecipesMethods.DeleteRecipe)
                 .WithName($"{BureauAPIRouteNames.DeleteRecipes}")
@@ -21,9 +24,9 @@ namespace Bureau.UI.API.Features.Recipes.Configurations
                 .MapToApiVersion(BureauAPIVersion.Version2)
                 .MapToApiVersion(BureauAPIVersion.Version3);
 
-            apiGroupBuilder.MapRecipesV1(versionSet);
-            apiGroupBuilder.MapRecipesV2(versionSet);
-            apiGroupBuilder.MapRecipesV3(versionSet);
+            recipesGroup.MapRecipesV1(versionSet);
+            recipesGroup.MapRecipesV2(versionSet);
+            recipesGroup.MapRecipesV3(versionSet);
         }
     }
 }

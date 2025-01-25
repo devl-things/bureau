@@ -21,9 +21,4 @@
     <ProjectReference Include="..\Bureau.Core\Bureau.Core.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Recipes\Handlers\" />
-    <Folder Include="Recipes\Managers\" />
-  </ItemGroup>
-
 </Project>

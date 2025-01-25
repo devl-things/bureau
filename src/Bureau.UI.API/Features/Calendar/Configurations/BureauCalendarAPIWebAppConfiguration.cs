@@ -1,4 +1,5 @@
 ﻿using Asp.Versioning.Builder;
+using Bureau.Core.Extensions;
 using Bureau.UI.API.Configurations;
 using Bureau.UI.API.Filters;
 using Microsoft.AspNetCore.Builder;
@@ -11,7 +12,8 @@ namespace Bureau.UI.API.Features.Calendar.Configurations
     {
         internal static void MapCalendar(this RouteGroupBuilder apiGroupBuilder, ApiVersionSet versionSet)
         {
-            RouteGroupBuilder group = apiGroupBuilder.MapGroup(BureauAPIRouteNames.CalendarsGroup);
+            RouteGroupBuilder group = apiGroupBuilder.MapGroup(BureauAPIRouteNames.CalendarsGroup)
+                .WithTags(BureauAPIRouteNames.CalendarsGroup.ToPascalCase());
 
             group.MapDelete("{id}", CalendarMethods.DeleteCalendar)
                 .WithName($"{BureauAPIRouteNames.DeleteCalendar}")
