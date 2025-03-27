@@ -1,0 +1,6 @@
+{
+    "sonarlint.connectedMode.project": {
+        "connectionId": "devl-things",
+        "projectKey": "devl-things_bureau"
+    }
+}
