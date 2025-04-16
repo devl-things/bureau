@@ -59,7 +59,7 @@ namespace Sven.Services
             }
             Result<RefreshToken> storedRefreshTokenResult = await _refreshTokenStore.GetAsync(refreshToken, cancellationToken);
 
-            return storedRefreshTokenResult.IsSuccess && storedRefreshTokenResult.Value.ClientId == clientId && storedRefreshTokenResult.Value.ExpiresAt < _timeProvider.GetUtcNow();
+            return storedRefreshTokenResult.IsSuccess && storedRefreshTokenResult.Value.ClientId == clientId && storedRefreshTokenResult.Value.ExpiresAt > _timeProvider.GetUtcNow();
         }
 
         private SvenToken CreateAccessToken(List<Claim> claims, string refreshToken)
@@ -68,7 +68,7 @@ namespace Sven.Services
             JwtSecurityToken token = new JwtSecurityToken(
                 issuer: _jwtOptions.Issuer,
                 audience: _jwtOptions.Audience,
-                claims: claims,
+                claims: claims.Append(new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())),
                 expires: _timeProvider.GetUtcNow().AddHours(1).DateTime,
                 signingCredentials: creds
             );
