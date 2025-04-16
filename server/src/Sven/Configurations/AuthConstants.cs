@@ -2,6 +2,13 @@
 {
     public static class AuthConstants
     {
+        public static class Scopes
+        {
+            public const string OpenId = "openid";
+            public const string Profile = "profile";
+            public const string Email = "email";
+            public const string OfflineAccess = "offline_access";
+        }
         public static class OAuth
         {
             public static class ResponseType
