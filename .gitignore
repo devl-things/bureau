@@ -1,3 +1,6 @@
+#sonarqube
+.sonarqube/
+
 # ignore local settings
 appsettings.Development.json
 
