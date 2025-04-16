@@ -15,6 +15,11 @@ namespace Sven.Controllers
     [Route(Endpoints.Connect.Base)]
     public class ConnectController : ControllerBase
     {
+        public static class ErrorMessages
+        {
+            public const string InvalidRequest = "Invalid request";
+        }
+
         private readonly ILogger<ConnectController> _logger;
 
         private readonly AuthCodeProvider _authCodeManager;
@@ -142,38 +147,84 @@ namespace Sven.Controllers
 
         [HttpPost(Endpoints.Connect.TokenPath)]
         public async Task<IActionResult> TokenAsync(
-            [FromForm] string grant_type,
-            [FromForm] string code,
-            [FromForm] string code_verifier,
-            [FromForm] string client_id,
+            [FromForm(Name = AuthConstants.OAuth.FieldNames.GrantTypeField)] string grantType,
+            [FromForm(Name = AuthConstants.OAuth.FieldNames.ClientId)] string clientId,
             CancellationToken cancellationToken = default
         )
         {
-            if (!AuthConstants.OAuth.GrantType.AuthorizationCode.Equals(grant_type, StringComparison.OrdinalIgnoreCase))
+            if (IsGrantType(grantType, AuthConstants.OAuth.GrantType.AuthorizationCode))
             {
-                return BadRequest("Grant type not supported.");
+                return await HandleAuthorizationCodeFlow(clientId, cancellationToken);
             }
-            Result<AuthCode> authCodeResult = await _authCodeManager.GetAsync(code, cancellationToken);
-            if (authCodeResult.IsError)
+            else if (IsGrantType(grantType, AuthConstants.OAuth.GrantType.RefreshToken))
             {
-                _logger.LogResultError(authCodeResult.Error);
-                return BadRequest("Invalid code.");
+                return await HandleRefreshTokenFlow(clientId, cancellationToken);
             }
 
-            Result<bool> isValidResult = _authCodeManager.IsAuthCodeValid(authCodeResult.Value, client_id, code_verifier);
+            return BadRequest("Grant type not supported.");
+        }
+
+        private async Task<IActionResult> HandleRefreshTokenFlow(string clientId, CancellationToken cancellationToken)
+        {
+            if (!Request.TryGetFormValue(AuthConstants.OAuth.FieldNames.RefreshToken, out string? refreshToken))
+            {
+                return BadRequest(ErrorMessages.InvalidRequest);
+            }
+            Result<bool> isValidResult = await _tokenProvider.IsRefreshTokenValidAsync(refreshToken, clientId, cancellationToken);
 
             if (isValidResult.IsError || !isValidResult.Value)
             {
                 _logger.LogResultError(isValidResult.Error);
-                return BadRequest("Invalid code.");
+                return BadRequest(ErrorMessages.InvalidRequest);
+            }
+            Result<SvenToken> jwtResult = await _tokenProvider.CreateTokenAsync(refreshToken!, cancellationToken);
+
+            return HandleTokenResult(jwtResult);
+        }
+
+        private async Task<IActionResult> HandleAuthorizationCodeFlow(string clientId, CancellationToken cancellationToken)
+        {
+            if (!Request.TryGetFormValue(AuthConstants.OAuth.FieldNames.Code, out string? code) ||
+                    !Request.TryGetFormValue(AuthConstants.OAuth.FieldNames.CodeVerifier, out string? codeVerifier))
+            {
+                return BadRequest(ErrorMessages.InvalidRequest);
             }
 
-            SvenToken jwt = _tokenProvider.CreateToken(authCodeResult.Value.Claims);
+            Result<AuthCode> authCodeResult = await _authCodeManager.GetAsync(code!, cancellationToken);
+            if (authCodeResult.IsError)
+            {
+                _logger.LogResultError(authCodeResult.Error);
+                return BadRequest(ErrorMessages.InvalidRequest);
+            }
 
-            await _authCodeManager.ClearAsync(code, cancellationToken);
+            Result<bool> isValidResult = _authCodeManager.IsAuthCodeValid(authCodeResult.Value, clientId, codeVerifier!);
 
-            return Ok(jwt);
+            if (isValidResult.IsError || !isValidResult.Value)
+            {
+                _logger.LogResultError(isValidResult.Error);
+                return BadRequest(ErrorMessages.InvalidRequest);
+            }
 
+            Result<SvenToken> jwtResult = await _tokenProvider.CreateTokenAsync(authCodeResult.Value, cancellationToken);
+
+            await _authCodeManager.ClearAsync(code!, cancellationToken);
+
+            return HandleTokenResult(jwtResult);
+        }
+
+        private IActionResult HandleTokenResult(Result<SvenToken> result)
+        {
+            if (result.IsError)
+            {
+                _logger.LogResultError(result.Error!);
+                return BadRequest(ErrorMessages.InvalidRequest);
+            }
+            return Ok(result.Value);
+        }
+
+        private static bool IsGrantType(string actual, string expected)
+        {
+            return string.Equals(actual, expected, StringComparison.OrdinalIgnoreCase);
         }
     }
 }

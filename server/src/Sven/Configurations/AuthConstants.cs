@@ -2,7 +2,6 @@
 {
     public static class AuthConstants
     {
-
         public static class OAuth
         {
             public static class ResponseType
@@ -18,6 +17,24 @@
             public static class GrantType
             {
                 public const string AuthorizationCode = "authorization_code";
+                public const string RefreshToken = "refresh_token";
+            }
+
+            public static class FieldNames
+            {
+                public const string GrantTypeField = "grant_type";
+                public const string ClientId = "client_id";
+                public const string Code = "code";
+                public const string CodeVerifier = "code_verifier";
+
+                public const string RefreshToken = "refresh_token";
+                public const string AccessToken = "access_token";
+                public const string TokenType = "token_type";
+                public const string ExpiresIn = "expires_in";
+
+                public const string RedirectUri = "redirect_uri";
+                public const string Scope = "scope";
+                public const string ResponseTypeField = "response_type";
             }
         }
         public static class CookieNames

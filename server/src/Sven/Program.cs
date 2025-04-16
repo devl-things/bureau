@@ -43,6 +43,7 @@ namespace Sven
             builder.Services.AddSingleton(TimeProvider.System);
             builder.Services.AddSingleton<IStore<string, AuthCode>, InMemoryStore<string, AuthCode>>();
             builder.Services.AddSingleton<IStore<string, OAuthRequest>, InMemoryStore<string, OAuthRequest>>();
+            builder.Services.AddSingleton<IStore<string, RefreshToken>, InMemoryStore<string, RefreshToken>>();
             builder.Services.AddSingleton<AuthCodeProvider>();
             builder.Services.AddSingleton<ITokenProvider, SvenTokenProvider>();
             builder.Services.AddSingleton<IUserClaimsProvider, InMemoryUserClaimsProvider>();

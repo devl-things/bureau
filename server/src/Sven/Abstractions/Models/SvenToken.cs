@@ -1,19 +1,23 @@
-﻿using System.Text.Json.Serialization;
+﻿using Sven.Configurations;
+using System.Text.Json.Serialization;
 
 namespace Sven.Models
 {
     public class SvenToken
     {
-        [JsonPropertyName("access_token")]
+        [JsonPropertyName(AuthConstants.OAuth.FieldNames.AccessToken)]
         public string AccessToken { get; set; } = string.Empty;
-        [JsonPropertyName("token_type")]
+        [JsonPropertyName(AuthConstants.OAuth.FieldNames.RefreshToken)]
+        public string RefreshToken { get; set; } = string.Empty;
+        [JsonPropertyName(AuthConstants.OAuth.FieldNames.TokenType)]
         public string TokenType { get; set; } = "Bearer";
-        [JsonPropertyName("expires_in")]
+        [JsonPropertyName(AuthConstants.OAuth.FieldNames.ExpiresIn)]
         public int ExpiresIn { get; set; } = 3600;
 
-        public SvenToken(string accessToken)
+        public SvenToken(string accessToken, string refreshToken)
         {
             AccessToken = accessToken;
+            RefreshToken = refreshToken;
         }
     }
 }
