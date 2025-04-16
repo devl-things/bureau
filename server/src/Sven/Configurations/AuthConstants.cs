@@ -7,6 +7,8 @@
             public const string OpenId = "openid";
             public const string Profile = "profile";
             public const string Email = "email";
+            public const string Address = "address";
+            public const string Phone = "phone";
             public const string OfflineAccess = "offline_access";
         }
         public static class OAuth
@@ -34,6 +36,7 @@
                 public const string Code = "code";
                 public const string CodeVerifier = "code_verifier";
 
+                public const string IdToken = "id_token";
                 public const string RefreshToken = "refresh_token";
                 public const string AccessToken = "access_token";
                 public const string TokenType = "token_type";
