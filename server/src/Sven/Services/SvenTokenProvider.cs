@@ -39,16 +39,20 @@ namespace Sven.Services
 
         public async Task<Result<SvenToken>> CreateTokenAsync(ClientClaims clientClaims, CancellationToken cancellationToken)
         {
-
-            RefreshToken refreshToken = new RefreshToken
+            string? refreshToken = null;
+            if (clientClaims.HasScope(AuthConstants.Scopes.OfflineAccess))
             {
-                Token = Guid.NewGuid().ToString("N"),
-                ClientId = clientClaims.ClientId,
-                Claims = clientClaims.Claims,
-                ExpiresAt = _timeProvider.GetUtcNow().AddDays(30)
-            };
-            await _refreshTokenStore.StoreAsync(refreshToken.Token, refreshToken, cancellationToken);
-            return CreateAccessToken(clientClaims.Claims, refreshToken.Token);
+                RefreshToken refreshTokenObject = new RefreshToken
+                {
+                    Token = Guid.NewGuid().ToString("N"),
+                    ClientId = clientClaims.ClientId,
+                    Claims = clientClaims.Claims,
+                    ExpiresAt = _timeProvider.GetUtcNow().AddDays(30)
+                };
+                await _refreshTokenStore.StoreAsync(refreshTokenObject.Token, refreshTokenObject, cancellationToken);
+                refreshToken = refreshTokenObject.Token;
+            }
+            return CreateAccessToken(clientClaims.Claims, refreshToken);
         }
 
         public async Task<Result<bool>> IsRefreshTokenValidAsync(string? refreshToken, string clientId, CancellationToken cancellationToken)
@@ -62,7 +66,7 @@ namespace Sven.Services
             return storedRefreshTokenResult.IsSuccess && storedRefreshTokenResult.Value.ClientId == clientId && storedRefreshTokenResult.Value.ExpiresAt > _timeProvider.GetUtcNow();
         }
 
-        private SvenToken CreateAccessToken(List<Claim> claims, string refreshToken)
+        private SvenToken CreateAccessToken(List<Claim> claims, string? refreshToken)
         {
             SigningCredentials creds = new SigningCredentials(_rsaKey, SecurityAlgorithms.RsaSha256);
             JwtSecurityToken token = new JwtSecurityToken(

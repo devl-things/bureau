@@ -32,6 +32,7 @@ namespace Sven.Services
                 RedirectUri = request.RedirectUri,
                 CodeChallenge = request.CodeChallenge,
                 CodeChallengeMethod = request.CodeChallengeMethod,
+                Scope = request.Scope,
                 Claims = claims,
                 ExpiresAt = _timeProvider.GetUtcNow().AddMinutes(5)
             };

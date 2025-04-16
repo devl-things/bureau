@@ -26,8 +26,10 @@ namespace Sven.Tests.Controllers
             });
         }
 
-        [Fact]
-        public async Task FullOAuthFlow_HappyPath()
+        [Fact(DisplayName = "oauth with pkce gets access and refresh token")]
+        [Trait("Category", "Integration")]
+        [Trait("Type", "Happy path")]
+        public async Task FullOAuthFlow_ReturnsAllTokens()
         {
             string codeVerifier = GenerateCodeVerifier();
             string codeChallenge = AuthCodeProvider.GenerateCodeChallenge(codeVerifier);
@@ -36,7 +38,7 @@ namespace Sven.Tests.Controllers
 
             // Step 1: /connect/authorize
             string authorizeUrl = $"/{Endpoints.Connect.Base}/{Endpoints.Connect.AuthorizePath}?response_type={AuthConstants.OAuth.ResponseType.Code}&client_id={clientId}&redirect_uri={redirectUriExpected}" +
-                $"&scope=profile user&code_challenge={codeChallenge}&code_challenge_method={AuthConstants.OAuth.CodeChallengeMethods.Sha256}&state=test-state";
+                $"&scope={AuthConstants.Scopes.OfflineAccess}&code_challenge={codeChallenge}&code_challenge_method={AuthConstants.OAuth.CodeChallengeMethods.Sha256}&state=test-state";
 
             HttpResponseMessage authorizeResponse = await _client.GetAsync(authorizeUrl);
 
@@ -111,8 +113,68 @@ namespace Sven.Tests.Controllers
             Assert.Equal(HttpStatusCode.BadRequest, refreshResponse2.StatusCode);
         }
 
+        [Fact(DisplayName = "oauth with pkce gets access but not refresh token")]
+        [Trait("Category", "Integration")]
+        public async Task FullOAuthFlow_WithoutOfflineAccess_DoesNotIssueRefreshToken()
+        {
+            string codeVerifier = GenerateCodeVerifier();
+            string codeChallenge = AuthCodeProvider.GenerateCodeChallenge(codeVerifier);
+            string redirectUriExpected = "https://localhost:3000/callback";
+            string clientId = "test-client";
+
+            // Step 1: /connect/authorize
+            string authorizeUrl = $"/{Endpoints.Connect.Base}/{Endpoints.Connect.AuthorizePath}?response_type={AuthConstants.OAuth.ResponseType.Code}&client_id={clientId}&redirect_uri={redirectUriExpected}" +
+                $"&scope=openid profile&code_challenge={codeChallenge}&code_challenge_method={AuthConstants.OAuth.CodeChallengeMethods.Sha256}&state=test-state";
+
+            HttpResponseMessage authorizeResponse = await _client.GetAsync(authorizeUrl);
+
+            Assert.Equal(HttpStatusCode.OK, authorizeResponse.StatusCode);
+            string? setCookieHeader = authorizeResponse.RequestMessage?.Headers.GetValues("Cookie").FirstOrDefault();
+            Assert.False(string.IsNullOrWhiteSpace(setCookieHeader));
+            string pkceKey = ExtractCookieValue(setCookieHeader!, AuthConstants.CookieNames.PkceKey);
+            Assert.False(string.IsNullOrWhiteSpace(pkceKey));
+
+            // Step 2: Login with user/pass and pkce_key cookie
+            HttpRequestMessage loginRequest = new HttpRequestMessage(HttpMethod.Post, Endpoints.Connect.AuthorizeLogin);
+            loginRequest.Content = new FormUrlEncodedContent(new Dictionary<string, string>
+            {
+                { "username", "admin" },
+                { "password", "admin123" }
+            });
+            loginRequest.Headers.Add("Cookie", $"{AuthConstants.CookieNames.PkceKey}={pkceKey}");
+
+            HttpResponseMessage loginResponse = await _client.SendAsync(loginRequest);
+
+            string? redirectUriActual = loginResponse.RequestMessage?.RequestUri?.ToString();
+            Assert.False(string.IsNullOrWhiteSpace(redirectUriActual));
+            Assert.StartsWith(redirectUriExpected, redirectUriActual);
+            string? code = HttpUtility.ParseQueryString(new Uri(redirectUriActual).Query).Get(AuthConstants.OAuth.ResponseType.Code);
+            Assert.False(string.IsNullOrWhiteSpace(code));
+
+            // Step 3: Exchange code for access + refresh token
+            HttpRequestMessage tokenRequest = new HttpRequestMessage(HttpMethod.Post, Endpoints.Connect.Token);
+            tokenRequest.Content = new FormUrlEncodedContent(new Dictionary<string, string>
+            {
+                { AuthConstants.OAuth.FieldNames.GrantTypeField, AuthConstants.OAuth.GrantType.AuthorizationCode },
+                { AuthConstants.OAuth.FieldNames.Code, code! },
+                { AuthConstants.OAuth.FieldNames.CodeVerifier, codeVerifier },
+                { AuthConstants.OAuth.FieldNames.ClientId, clientId }
+            });
+
+            HttpResponseMessage tokenResponse = await _client.SendAsync(tokenRequest);
+
+            Assert.Equal(HttpStatusCode.OK, tokenResponse.StatusCode);
+            string tokenJson = await tokenResponse.Content.ReadAsStringAsync();
+            SvenToken token = JsonSerializer.Deserialize<SvenToken>(tokenJson)!;
+
+            Assert.False(string.IsNullOrWhiteSpace(token.AccessToken));
+            Assert.True(string.IsNullOrWhiteSpace(token.RefreshToken));
+        }
 
         [Fact]
+        [Trait("Category", "Unit")]
+        [Trait("Type", "Expected error")]
+
         public async Task Token_WithInvalidRefreshToken_ReturnsBadRequest()
         {
             string clientId = "test-client";

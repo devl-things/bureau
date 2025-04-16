@@ -8,13 +8,14 @@ namespace Sven.Models
         [JsonPropertyName(AuthConstants.OAuth.FieldNames.AccessToken)]
         public string AccessToken { get; set; } = string.Empty;
         [JsonPropertyName(AuthConstants.OAuth.FieldNames.RefreshToken)]
-        public string RefreshToken { get; set; } = string.Empty;
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public string? RefreshToken { get; set; }
         [JsonPropertyName(AuthConstants.OAuth.FieldNames.TokenType)]
         public string TokenType { get; set; } = "Bearer";
         [JsonPropertyName(AuthConstants.OAuth.FieldNames.ExpiresIn)]
         public int ExpiresIn { get; set; } = 3600;
 
-        public SvenToken(string accessToken, string refreshToken)
+        public SvenToken(string accessToken, string? refreshToken)
         {
             AccessToken = accessToken;
             RefreshToken = refreshToken;
