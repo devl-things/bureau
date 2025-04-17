@@ -1,6 +1,6 @@
 ﻿using Bureau.Core;
 using Microsoft.AspNetCore.Authentication.Cookies;
-using Sven.Models;
+using Microsoft.IdentityModel.JsonWebTokens;
 using System.Security.Claims;
 
 namespace Sven.Services
@@ -27,9 +27,9 @@ namespace Sven.Services
         {
             List<Claim> claims = new()
             {
-                new Claim("sub", user.SubjectId),
-                new Claim("name", user.DisplayName),
-                new Claim("username", user.Username)
+                new Claim(JwtRegisteredClaimNames.Sub, user.SubjectId),
+                new Claim(JwtRegisteredClaimNames.Name, user.DisplayName),
+                new Claim(JwtRegisteredClaimNames.PreferredUsername, user.Username)
             };
 
             ClaimsIdentity identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);

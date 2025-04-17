@@ -26,7 +26,7 @@ namespace Sven.Tests.Controllers
             });
         }
 
-        [Fact(DisplayName = "oauth with pkce gets access and refresh token")]
+        [Fact(DisplayName = "oauth with pkce gets access, refresh and id token")]
         [Trait("Category", "Integration")]
         [Trait("Type", "Happy path")]
         public async Task FullOAuthFlow_ReturnsAllTokens()
@@ -38,7 +38,7 @@ namespace Sven.Tests.Controllers
 
             // Step 1: /connect/authorize
             string authorizeUrl = $"/{Endpoints.Connect.Base}/{Endpoints.Connect.AuthorizePath}?response_type={AuthConstants.OAuth.ResponseType.Code}&client_id={clientId}&redirect_uri={redirectUriExpected}" +
-                $"&scope={AuthConstants.Scopes.OfflineAccess}&code_challenge={codeChallenge}&code_challenge_method={AuthConstants.OAuth.CodeChallengeMethods.Sha256}&state=test-state";
+                $"&scope={AuthConstants.Scopes.OfflineAccess} {AuthConstants.Scopes.OpenId}&code_challenge={codeChallenge}&code_challenge_method={AuthConstants.OAuth.CodeChallengeMethods.Sha256}&state=test-state";
 
             HttpResponseMessage authorizeResponse = await _client.GetAsync(authorizeUrl);
 
@@ -83,6 +83,7 @@ namespace Sven.Tests.Controllers
 
             Assert.False(string.IsNullOrWhiteSpace(token1.AccessToken));
             Assert.False(string.IsNullOrWhiteSpace(token1.RefreshToken));
+            Assert.False(string.IsNullOrWhiteSpace(token1.IdToken));
 
             // Step 4: Use refresh token once (should succeed)
             HttpRequestMessage refreshRequest1 = new HttpRequestMessage(HttpMethod.Post, Endpoints.Connect.Token);
@@ -113,7 +114,7 @@ namespace Sven.Tests.Controllers
             Assert.Equal(HttpStatusCode.BadRequest, refreshResponse2.StatusCode);
         }
 
-        [Fact(DisplayName = "oauth with pkce gets access but not refresh token")]
+        [Fact(DisplayName = "oauth with pkce gets access but not refresh and id token")]
         [Trait("Category", "Integration")]
         public async Task FullOAuthFlow_WithoutOfflineAccess_DoesNotIssueRefreshToken()
         {
@@ -124,7 +125,7 @@ namespace Sven.Tests.Controllers
 
             // Step 1: /connect/authorize
             string authorizeUrl = $"/{Endpoints.Connect.Base}/{Endpoints.Connect.AuthorizePath}?response_type={AuthConstants.OAuth.ResponseType.Code}&client_id={clientId}&redirect_uri={redirectUriExpected}" +
-                $"&scope=openid profile&code_challenge={codeChallenge}&code_challenge_method={AuthConstants.OAuth.CodeChallengeMethods.Sha256}&state=test-state";
+                $"&scope=email&code_challenge={codeChallenge}&code_challenge_method={AuthConstants.OAuth.CodeChallengeMethods.Sha256}&state=test-state";
 
             HttpResponseMessage authorizeResponse = await _client.GetAsync(authorizeUrl);
 
@@ -169,6 +170,7 @@ namespace Sven.Tests.Controllers
 
             Assert.False(string.IsNullOrWhiteSpace(token.AccessToken));
             Assert.True(string.IsNullOrWhiteSpace(token.RefreshToken));
+            Assert.True(string.IsNullOrWhiteSpace(token.IdToken));
         }
 
         [Fact]

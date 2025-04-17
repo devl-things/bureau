@@ -21,5 +21,11 @@ namespace Sven.Models
 
             return _scopes.Contains(scope);
         }
+
+        public string GetClaimValue(string claimType)
+        {
+            Claim? claim = Claims.FirstOrDefault(c => c.Type.Equals(claimType, StringComparison.OrdinalIgnoreCase));
+            return claim?.Value ?? string.Empty;
+        }
     }
 }
