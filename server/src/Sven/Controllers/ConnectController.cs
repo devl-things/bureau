@@ -75,7 +75,8 @@ namespace Sven.Controllers
                 Scope = scope,
                 CodeChallenge = code_challenge,
                 CodeChallengeMethod = code_challenge_method,
-                State = state
+                State = state,
+                Nonce = Request.GetQueryStringValue(AuthConstants.OAuth.FieldNames.Nonce)
             };
 
             string pkceKey = Guid.NewGuid().ToString("N");

@@ -7,6 +7,7 @@ namespace Sven.Models
         public string ClientId { get; set; } = string.Empty;
         public List<Claim> Claims { get; set; } = new List<Claim>();
         public string Scope { get; set; } = string.Empty;
+        public string? Nonce { get; set; }
 
         private HashSet<string>? _scopes;
 

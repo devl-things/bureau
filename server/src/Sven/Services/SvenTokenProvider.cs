@@ -47,6 +47,7 @@ namespace Sven.Services
                     Token = Guid.NewGuid().ToString("N"),
                     ClientId = clientClaims.ClientId,
                     Claims = clientClaims.Claims,
+                    Nonce = clientClaims.Nonce,
                     ExpiresAt = _timeProvider.GetUtcNow().AddDays(30)
                 };
                 await _refreshTokenStore.StoreAsync(refreshTokenObject.Token, refreshTokenObject, cancellationToken);
@@ -73,9 +74,14 @@ namespace Sven.Services
                     new Claim(JwtRegisteredClaimNames.Iat, _timeProvider.GetUtcNow().ToUnixTimeSeconds().ToString(), ClaimValueTypes.Integer64),
                     new Claim(JwtRegisteredClaimNames.Acr, clientClaims.GetClaimValue(JwtRegisteredClaimNames.Acr)),
                     new Claim(JwtRegisteredClaimNames.AuthTime, clientClaims.GetClaimValue(JwtRegisteredClaimNames.AuthTime)),
-                    new Claim(JwtRegisteredClaimNames.Nonce, clientClaims.GetClaimValue(JwtRegisteredClaimNames.Nonce)),
+
                     new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
                 };
+
+                if (!string.IsNullOrWhiteSpace(clientClaims.Nonce))
+                {
+                    idClaims.Add(new Claim(JwtRegisteredClaimNames.Nonce, clientClaims.Nonce));
+                }
 
                 if (clientClaims.HasScope(AuthConstants.Scopes.Profile))
                 {
