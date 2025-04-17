@@ -41,7 +41,7 @@ namespace Sven.Services
             string accessToken = string.IsNullOrWhiteSpace(scope) ?
                 CreateAccessToken(storedRefreshTokenResult.Value) : CreateAccessToken(newClientClaims);
 
-            return new SvenToken(accessToken, refreshToken, idToken);
+            return new SvenToken(accessToken, newRefreshToken, idToken);
         }
 
         public async Task<Result<SvenToken>> CreateTokenAsync(ClientClaims clientClaims, CancellationToken cancellationToken)
@@ -140,22 +140,23 @@ namespace Sven.Services
         {
             Result<RefreshToken> storedRefreshTokenResult = await _refreshTokenStore.GetAsync(refreshToken, cancellationToken);
 
+            string errorMessage = "IsRefreshTokenValidAsync = false";
             if (storedRefreshTokenResult.IsError)
             {
-                return new ResultError("IsRefreshTokenValidAsync = false", $"{nameof(refreshToken)} does not exist.");
+                return new ResultError(errorMessage, $"{nameof(refreshToken)} does not exist.");
             }
 
             if (!storedRefreshTokenResult.Value.IsSameOrSubset(scope))
             {
-                return new ResultError("IsRefreshTokenValidAsync = false", $"{nameof(scope)} is not same or subset of {nameof(storedRefreshTokenResult.Value)}");
+                return new ResultError(errorMessage, $"{nameof(scope)} is not same or subset of {nameof(storedRefreshTokenResult.Value)}");
             }
             if (storedRefreshTokenResult.Value.ClientId != clientId)
             {
-                return new ResultError("IsRefreshTokenValidAsync = false", $"{nameof(clientId)} does not match {nameof(storedRefreshTokenResult.Value.ClientId)}");
+                return new ResultError(errorMessage, $"{nameof(clientId)} does not match {nameof(storedRefreshTokenResult.Value.ClientId)}");
             }
             if (storedRefreshTokenResult.Value.ExpiresAt <= _timeProvider.GetUtcNow())
             {
-                return new ResultError("IsRefreshTokenValidAsync = false", $"{nameof(storedRefreshTokenResult.Value.ExpiresAt)} is expired.");
+                return new ResultError(errorMessage, $"{nameof(storedRefreshTokenResult.Value.ExpiresAt)} is expired.");
             }
 
             return true;

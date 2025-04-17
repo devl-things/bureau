@@ -111,6 +111,9 @@ namespace Sven.Tests.Controllers
             // validate nonce in refresh token flow
             nonceTokenActual = GetClaimFromIdToken(token2.IdToken!, JwtRegisteredClaimNames.Nonce);
             Assert.Equal(nonceExpected, nonceTokenActual);
+            // validate that new refresh token is rotated
+            Assert.False(string.IsNullOrWhiteSpace(token2.RefreshToken));
+            Assert.NotEqual(token1.RefreshToken, token2.RefreshToken);
 
             // Step 5: Reuse same refresh token again (should fail)
             HttpRequestMessage refreshRequest2 = new HttpRequestMessage(HttpMethod.Post, Endpoints.Connect.Token);
