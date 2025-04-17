@@ -41,6 +41,7 @@
                 public const string AccessToken = "access_token";
                 public const string TokenType = "token_type";
                 public const string ExpiresIn = "expires_in";
+                public const string Nonce = "nonce";
 
                 public const string RedirectUri = "redirect_uri";
                 public const string Scope = "scope";

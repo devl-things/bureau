@@ -75,7 +75,8 @@ namespace Sven.Controllers
                 Scope = scope,
                 CodeChallenge = code_challenge,
                 CodeChallengeMethod = code_challenge_method,
-                State = state
+                State = state,
+                Nonce = Request.GetQueryStringValue(AuthConstants.OAuth.FieldNames.Nonce)
             };
 
             string pkceKey = Guid.NewGuid().ToString("N");
@@ -170,14 +171,16 @@ namespace Sven.Controllers
             {
                 return BadRequest(ErrorMessages.InvalidRequest);
             }
-            Result<bool> isValidResult = await _tokenProvider.IsRefreshTokenValidAsync(refreshToken, clientId, cancellationToken);
+            Request.TryGetFormValue(AuthConstants.OAuth.FieldNames.Scope, out string? scope);
+            Result<bool> isValidResult = await _tokenProvider.IsRefreshTokenValidAsync(refreshToken!, clientId, scope, cancellationToken);
 
             if (isValidResult.IsError || !isValidResult.Value)
             {
                 _logger.LogResultError(isValidResult.Error);
                 return BadRequest(ErrorMessages.InvalidRequest);
             }
-            Result<SvenToken> jwtResult = await _tokenProvider.CreateTokenAsync(refreshToken!, cancellationToken);
+
+            Result<SvenToken> jwtResult = await _tokenProvider.CreateTokenAsync(refreshToken!, scope, cancellationToken);
 
             return HandleTokenResult(jwtResult);
         }

@@ -34,7 +34,8 @@ namespace Sven.Services
                 CodeChallengeMethod = request.CodeChallengeMethod,
                 Scope = request.Scope,
                 Claims = claims,
-                ExpiresAt = _timeProvider.GetUtcNow().AddMinutes(5)
+                ExpiresAt = _timeProvider.GetUtcNow().AddMinutes(5),
+                Nonce = request.Nonce
             };
 
             await _authCodeStore.StoreAsync(code, authCode, cancellationToken);
