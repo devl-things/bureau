@@ -171,14 +171,16 @@ namespace Sven.Controllers
             {
                 return BadRequest(ErrorMessages.InvalidRequest);
             }
-            Result<bool> isValidResult = await _tokenProvider.IsRefreshTokenValidAsync(refreshToken, clientId, cancellationToken);
+            Request.TryGetFormValue(AuthConstants.OAuth.FieldNames.Scope, out string? scope);
+            Result<bool> isValidResult = await _tokenProvider.IsRefreshTokenValidAsync(refreshToken!, clientId, scope, cancellationToken);
 
             if (isValidResult.IsError || !isValidResult.Value)
             {
                 _logger.LogResultError(isValidResult.Error);
                 return BadRequest(ErrorMessages.InvalidRequest);
             }
-            Result<SvenToken> jwtResult = await _tokenProvider.CreateTokenAsync(refreshToken!, cancellationToken);
+
+            Result<SvenToken> jwtResult = await _tokenProvider.CreateTokenAsync(refreshToken!, scope, cancellationToken);
 
             return HandleTokenResult(jwtResult);
         }

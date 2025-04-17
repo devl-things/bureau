@@ -22,7 +22,7 @@ namespace Sven.Services
             _timeProvider = timeProvider;
         }
 
-        public async Task<Result<SvenToken>> CreateTokenAsync(string refreshToken, CancellationToken cancellationToken)
+        public async Task<Result<SvenToken>> CreateTokenAsync(string refreshToken, string? scope, CancellationToken cancellationToken)
         {
             Result<RefreshToken> storedRefreshTokenResult = await _refreshTokenStore.GetAsync(refreshToken, cancellationToken);
 
@@ -30,14 +30,32 @@ namespace Sven.Services
             {
                 return storedRefreshTokenResult.Error;
             }
-            Result<SvenToken> newAccessTokenResult = await CreateTokenAsync(storedRefreshTokenResult.Value, cancellationToken);
-
+            // create a new refresh token
+            string? newRefreshToken = await CreateRefreshTokenAsync(storedRefreshTokenResult.Value, cancellationToken);
             await _refreshTokenStore.RemoveAsync(refreshToken, cancellationToken);
 
-            return newAccessTokenResult;
+            ClientClaims newClientClaims = new ClientClaims(storedRefreshTokenResult.Value, scope);
+            // id token should be explicitly requested in refresh flow
+            string? idToken = CreateIdToken(newClientClaims);
+
+            string accessToken = string.IsNullOrWhiteSpace(scope) ?
+                CreateAccessToken(storedRefreshTokenResult.Value) : CreateAccessToken(newClientClaims);
+
+            return new SvenToken(accessToken, refreshToken, idToken);
         }
 
         public async Task<Result<SvenToken>> CreateTokenAsync(ClientClaims clientClaims, CancellationToken cancellationToken)
+        {
+            string? refreshToken = await CreateRefreshTokenAsync(clientClaims, cancellationToken);
+
+            string? idToken = CreateIdToken(clientClaims);
+
+            string accessToken = CreateAccessToken(clientClaims);
+
+            return new SvenToken(accessToken, refreshToken, idToken);
+        }
+
+        private async Task<string?> CreateRefreshTokenAsync(ClientClaims clientClaims, CancellationToken cancellationToken)
         {
             string? refreshToken = null;
             if (clientClaims.HasScope(AuthConstants.Scopes.OfflineAccess))
@@ -47,17 +65,14 @@ namespace Sven.Services
                     Token = Guid.NewGuid().ToString("N"),
                     ClientId = clientClaims.ClientId,
                     Claims = clientClaims.Claims,
+                    Scope = clientClaims.Scope,
                     Nonce = clientClaims.Nonce,
                     ExpiresAt = _timeProvider.GetUtcNow().AddDays(30)
                 };
                 await _refreshTokenStore.StoreAsync(refreshTokenObject.Token, refreshTokenObject, cancellationToken);
                 refreshToken = refreshTokenObject.Token;
             }
-            string? idToken = CreateIdToken(clientClaims);
-
-            string accessToken = CreateAccessToken(clientClaims.Claims);
-
-            return new SvenToken(accessToken, refreshToken, idToken);
+            return refreshToken;
         }
 
         private string? CreateIdToken(ClientClaims clientClaims)
@@ -121,24 +136,38 @@ namespace Sven.Services
             return null;
         }
 
-        public async Task<Result<bool>> IsRefreshTokenValidAsync(string? refreshToken, string clientId, CancellationToken cancellationToken)
+        public async Task<Result<bool>> IsRefreshTokenValidAsync(string refreshToken, string clientId, string? scope, CancellationToken cancellationToken)
         {
-            if (string.IsNullOrWhiteSpace(refreshToken))
-            {
-                return false;
-            }
             Result<RefreshToken> storedRefreshTokenResult = await _refreshTokenStore.GetAsync(refreshToken, cancellationToken);
 
-            return storedRefreshTokenResult.IsSuccess && storedRefreshTokenResult.Value.ClientId == clientId && storedRefreshTokenResult.Value.ExpiresAt > _timeProvider.GetUtcNow();
+            if (storedRefreshTokenResult.IsError)
+            {
+                return new ResultError("IsRefreshTokenValidAsync = false", $"{nameof(refreshToken)} does not exist.");
+            }
+
+            if (!storedRefreshTokenResult.Value.IsSameOrSubset(scope))
+            {
+                return new ResultError("IsRefreshTokenValidAsync = false", $"{nameof(scope)} is not same or subset of {nameof(storedRefreshTokenResult.Value)}");
+            }
+            if (storedRefreshTokenResult.Value.ClientId != clientId)
+            {
+                return new ResultError("IsRefreshTokenValidAsync = false", $"{nameof(clientId)} does not match {nameof(storedRefreshTokenResult.Value.ClientId)}");
+            }
+            if (storedRefreshTokenResult.Value.ExpiresAt <= _timeProvider.GetUtcNow())
+            {
+                return new ResultError("IsRefreshTokenValidAsync = false", $"{nameof(storedRefreshTokenResult.Value.ExpiresAt)} is expired.");
+            }
+
+            return true;
         }
 
-        private string CreateAccessToken(List<Claim> claims)
+        private string CreateAccessToken(ClientClaims clientClaims)
         {
             SigningCredentials creds = new SigningCredentials(_rsaKey, SecurityAlgorithms.RsaSha256);
             JwtSecurityToken token = new JwtSecurityToken(
                 issuer: _jwtOptions.Issuer,
                 audience: _jwtOptions.Audience,
-                claims: claims.Append(new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())),
+                claims: clientClaims.Claims.Append(new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())),
                 expires: _timeProvider.GetUtcNow().AddHours(1).DateTime,
                 signingCredentials: creds
             );
