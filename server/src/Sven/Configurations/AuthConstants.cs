@@ -31,6 +31,13 @@
 
             public static class FieldNames
             {
+                public const string RedirectUri = "redirect_uri";
+                public const string CodeChallenge = "code_challenge";
+                public const string CodeChallengeMethod = "code_challenge_method";
+                public const string State = "state";
+                public const string Scope = "scope";
+                public const string ResponseTypeField = "response_type";
+
                 public const string GrantTypeField = "grant_type";
                 public const string ClientId = "client_id";
                 public const string Code = "code";
@@ -43,9 +50,6 @@
                 public const string ExpiresIn = "expires_in";
                 public const string Nonce = "nonce";
 
-                public const string RedirectUri = "redirect_uri";
-                public const string Scope = "scope";
-                public const string ResponseTypeField = "response_type";
             }
         }
         public static class CookieNames
