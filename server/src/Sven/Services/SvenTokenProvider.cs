@@ -10,12 +10,15 @@ namespace Sven.Services
 {
     public class SvenTokenProvider : ITokenProvider
     {
+        private readonly Logger<SvenTokenProvider> _logger;
         private readonly JwtOptions _jwtOptions;
         private readonly RsaSecurityKey _rsaKey;
         private readonly IStore<string, RefreshToken> _refreshTokenStore;
         private readonly TimeProvider _timeProvider;
-        public SvenTokenProvider(IOptions<JwtOptions> jwtOptions, RsaSecurityKey rsaKey, IStore<string, RefreshToken> refreshTokenStore, TimeProvider timeProvider)
+        public SvenTokenProvider(Logger<SvenTokenProvider> logger, IOptions<JwtOptions> jwtOptions,
+            RsaSecurityKey rsaKey, IStore<string, RefreshToken> refreshTokenStore, TimeProvider timeProvider)
         {
+            _logger = logger;
             _jwtOptions = jwtOptions.Value;
             _rsaKey = rsaKey;
             _refreshTokenStore = refreshTokenStore;
@@ -28,11 +31,20 @@ namespace Sven.Services
 
             if (storedRefreshTokenResult.IsError)
             {
-                return storedRefreshTokenResult.Error;
+                _logger.LogResultError(storedRefreshTokenResult.Error);
+                return new ResultError(AuthConstants.OAuth.Errors.InvalidGrant, "Refresh token not found.");
             }
             // create a new refresh token
-            string? newRefreshToken = await CreateRefreshTokenAsync(storedRefreshTokenResult.Value, cancellationToken);
-            await _refreshTokenStore.RemoveAsync(refreshToken, cancellationToken);
+            Result<string?> newRefreshTokenResult = await CreateRefreshTokenAsync(storedRefreshTokenResult.Value, cancellationToken);
+            if (newRefreshTokenResult.IsError)
+            {
+                return newRefreshTokenResult.Error;
+            }
+            Result removeResult = await _refreshTokenStore.RemoveAsync(refreshToken, cancellationToken);
+            if (removeResult.IsError)
+            {
+                _logger.LogResultError(storedRefreshTokenResult.Error);
+            }
 
             ClientClaims newClientClaims = new ClientClaims(storedRefreshTokenResult.Value, scope);
             // id token should be explicitly requested in refresh flow
@@ -41,21 +53,25 @@ namespace Sven.Services
             string accessToken = string.IsNullOrWhiteSpace(scope) ?
                 CreateAccessToken(storedRefreshTokenResult.Value) : CreateAccessToken(newClientClaims);
 
-            return new SvenToken(accessToken, newRefreshToken, idToken);
+            return new SvenToken(accessToken, newRefreshTokenResult.Value, idToken);
         }
 
         public async Task<Result<SvenToken>> CreateTokenAsync(ClientClaims clientClaims, CancellationToken cancellationToken)
         {
-            string? refreshToken = await CreateRefreshTokenAsync(clientClaims, cancellationToken);
+            Result<string?> refreshTokenResult = await CreateRefreshTokenAsync(clientClaims, cancellationToken);
+            if (refreshTokenResult.IsError)
+            {
+                return refreshTokenResult.Error;
+            }
 
             string? idToken = CreateIdToken(clientClaims);
 
             string accessToken = CreateAccessToken(clientClaims);
 
-            return new SvenToken(accessToken, refreshToken, idToken);
+            return new SvenToken(accessToken, refreshTokenResult.Value, idToken);
         }
 
-        private async Task<string?> CreateRefreshTokenAsync(ClientClaims clientClaims, CancellationToken cancellationToken)
+        private async Task<Result<string?>> CreateRefreshTokenAsync(ClientClaims clientClaims, CancellationToken cancellationToken)
         {
             string? refreshToken = null;
             if (clientClaims.HasScope(AuthConstants.Scopes.OfflineAccess))
@@ -69,10 +85,15 @@ namespace Sven.Services
                     Nonce = clientClaims.Nonce,
                     ExpiresAt = _timeProvider.GetUtcNow().AddDays(30)
                 };
-                await _refreshTokenStore.StoreAsync(refreshTokenObject.Token, refreshTokenObject, cancellationToken);
+                Result storeResult = await _refreshTokenStore.StoreAsync(refreshTokenObject.Token, refreshTokenObject, cancellationToken);
+                if (storeResult.IsError)
+                {
+                    _logger.LogResultError(storeResult.Error);
+                    return new ResultError(AuthConstants.OAuth.Errors.ServerError, "Failed create token.");
+                }
                 refreshToken = refreshTokenObject.Token;
             }
-            return refreshToken;
+            return new Result<string?>(refreshToken);
         }
 
         private string? CreateIdToken(ClientClaims clientClaims)
@@ -140,23 +161,23 @@ namespace Sven.Services
         {
             Result<RefreshToken> storedRefreshTokenResult = await _refreshTokenStore.GetAsync(refreshToken, cancellationToken);
 
-            string errorMessage = "IsRefreshTokenValidAsync = false";
             if (storedRefreshTokenResult.IsError)
             {
-                return new ResultError(errorMessage, $"{nameof(refreshToken)} does not exist.");
+                _logger.LogResultError(storedRefreshTokenResult.Error);
+                return new ResultError(AuthConstants.OAuth.Errors.InvalidGrant, "Refresh token not found.");
             }
-
-            if (!storedRefreshTokenResult.Value.IsSameOrSubset(scope))
+            RefreshToken storedToken = storedRefreshTokenResult.Value;
+            if (!storedToken.IsSameOrSubset(scope))
             {
-                return new ResultError(errorMessage, $"{nameof(scope)} is not same or subset of {nameof(storedRefreshTokenResult.Value)}");
+                return new ResultError(AuthConstants.OAuth.Errors.InvalidScope, "Requested scope exceeds originally granted scope.");
             }
-            if (storedRefreshTokenResult.Value.ClientId != clientId)
+            if (storedToken.ClientId != clientId)
             {
-                return new ResultError(errorMessage, $"{nameof(clientId)} does not match {nameof(storedRefreshTokenResult.Value.ClientId)}");
+                return new ResultError(AuthConstants.OAuth.Errors.InvalidClient, "Refresh token does not belong to this client.");
             }
-            if (storedRefreshTokenResult.Value.ExpiresAt <= _timeProvider.GetUtcNow())
+            if (storedToken.ExpiresAt <= _timeProvider.GetUtcNow())
             {
-                return new ResultError(errorMessage, $"{nameof(storedRefreshTokenResult.Value.ExpiresAt)} is expired.");
+                return new ResultError(AuthConstants.OAuth.Errors.InvalidGrant, "Refresh token has expired.");
             }
 
             return true;
