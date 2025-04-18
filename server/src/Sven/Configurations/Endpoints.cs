@@ -2,6 +2,21 @@
 {
     public static class Endpoints
     {
+        public static class Oidc
+        {
+            public const string Base = "oidc";
+            public const string UserInfoPath = "userinfo";
+            public const string UserInfo = $"/{Base}/{UserInfoPath}";
+        }
+        public static class WellKnown
+        {
+            public const string Base = ".well-known";
+            public const string OpenConfigurationPath = "openid-configuration";
+            public const string JwksPath = "jwks.json";
+
+            public const string OpenConfiguration = $"/{Base}/{OpenConfigurationPath}";
+            public const string Jwks = $"/{Base}/{JwksPath}";
+        }
         public static class External
         {
             public const string Base = "external";
@@ -25,8 +40,6 @@
             public const string AuthorizeContinue = $"/{Base}/{AuthorizeContinuePath}";
             public const string AuthorizeLogin = $"/{Base}/{AuthorizeLoginPath}";
             public const string Token = $"/{Base}/{TokenPath}";
-
-
         }
     }
 }

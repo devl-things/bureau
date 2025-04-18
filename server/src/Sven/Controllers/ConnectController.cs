@@ -42,7 +42,7 @@ namespace Sven.Controllers
         [HttpGet(Endpoints.Connect.AuthorizePath)]
         public async Task<IActionResult> AuthorizeAsync([FromQuery] AuthorizeRequest request, CancellationToken cancellationToken = default)
         {
-            if (!AuthConstants.OAuth.ResponseType.Code.Equals(request.ResponseType, StringComparison.OrdinalIgnoreCase))
+            if (!AuthConstants.OAuth.ResponseTypes.Code.Equals(request.ResponseType, StringComparison.OrdinalIgnoreCase))
             {
                 return BadRequest("Response type not supported");
             }
@@ -132,7 +132,7 @@ namespace Sven.Controllers
 
             string code = await _authCodeManager.CreateAuthCodeAsync(requestResult.Value, result.Principal.Claims.ToList(), cancellationToken);
 
-            string redirectUrl = $"{requestResult.Value.RedirectUri}?{AuthConstants.OAuth.ResponseType.Code}={code}&state={requestResult.Value.State}";
+            string redirectUrl = $"{requestResult.Value.RedirectUri}?{AuthConstants.OAuth.ResponseTypes.Code}={code}&state={requestResult.Value.State}";
 
             return Redirect(redirectUrl);
         }
@@ -141,11 +141,11 @@ namespace Sven.Controllers
         public async Task<IActionResult> TokenAsync([FromForm] TokenRequest request, CancellationToken cancellationToken = default
         )
         {
-            if (IsGrantType(request.GrantType, AuthConstants.OAuth.GrantType.AuthorizationCode))
+            if (IsGrantType(request.GrantType, AuthConstants.OAuth.GrantTypes.AuthorizationCode))
             {
                 return await HandleAuthorizationCodeFlow(request, cancellationToken);
             }
-            else if (IsGrantType(request.GrantType, AuthConstants.OAuth.GrantType.RefreshToken))
+            else if (IsGrantType(request.GrantType, AuthConstants.OAuth.GrantTypes.RefreshToken))
             {
                 return await HandleRefreshTokenFlow(request, cancellationToken);
             }

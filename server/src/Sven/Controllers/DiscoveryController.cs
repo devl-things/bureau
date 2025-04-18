@@ -1,58 +1,53 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
+using Sven.Configurations;
+using Sven.Models;
 using System.Security.Cryptography;
 
 namespace Sven.Controllers
 {
-
     [ApiController]
+    [Route(Endpoints.WellKnown.Base)]
     public class DiscoveryController : ControllerBase
     {
-        private readonly IConfiguration _configuration;
+        private readonly JwtOptions _jwtOptions;
         private readonly RsaSecurityKey _rsaKey;
 
-        public DiscoveryController(IConfiguration configuration, RsaSecurityKey rsaKey)
+        public DiscoveryController(IOptions<JwtOptions> jwtOptions, RsaSecurityKey rsaKey)
         {
-            _configuration = configuration;
+            _jwtOptions = jwtOptions.Value;
             _rsaKey = rsaKey;
         }
 
-        [HttpGet(".well-known/openid-configuration")]
+        [HttpGet(Endpoints.WellKnown.OpenConfigurationPath)]
         public IActionResult GetConfiguration()
         {
-            string issuer = _configuration["Jwt:Issuer"] ?? "https://localhost:5001";
-
-            return Ok(new
+            DiscoveryDocument document = new DiscoveryDocument()
             {
-                issuer = issuer,
-                authorization_endpoint = issuer + "/connect/authorize",
-                token_endpoint = issuer + "/connect/token",
-                userinfo_endpoint = issuer + "/connect/userinfo",
-                jwks_uri = issuer + "/.well-known/jwks.json",
-                response_types_supported = new[] { "code" },
-                subject_types_supported = new[] { "public" },
-                id_token_signing_alg_values_supported = new[] { "RS256" },
-                token_endpoint_auth_methods_supported = new[] { "none" },
-                code_challenge_methods_supported = new[] { "S256" }
-            });
+                Issuer = _jwtOptions.Issuer,
+                AuthorizationEndpoint = $"{_jwtOptions.Issuer}{Endpoints.Connect.Authorize}",
+                TokenEndpoint = $"{_jwtOptions.Issuer}{Endpoints.Connect.Token}",
+                UserInfoEndpoint = $"{_jwtOptions.Issuer}{Endpoints.Oidc.UserInfo}",
+                JwksUri = $"{_jwtOptions.Issuer}{Endpoints.WellKnown.Jwks}",
+            };
+
+            return Ok(document);
         }
 
-        [HttpGet(".well-known/jwks.json")]
+        [HttpGet(Endpoints.WellKnown.JwksPath)]
         public IActionResult GetJwks()
         {
             RSAParameters parameters = _rsaKey.Rsa.ExportParameters(false);
 
-            string n = Base64UrlEncoder.Encode(parameters.Modulus);
-            string e = Base64UrlEncoder.Encode(parameters.Exponent);
-
             object jwk = new
             {
-                kty = "RSA",
+                kty = AuthConstants.OAuth.SigningAlgorithms.RSA,
                 use = "sig",
                 kid = _rsaKey.KeyId,
-                alg = "RS256",
-                n = n,
-                e = e
+                alg = AuthConstants.OAuth.SigningAlgorithms.Rsa256,
+                n = Base64UrlEncoder.Encode(parameters.Modulus),
+                e = Base64UrlEncoder.Encode(parameters.Exponent)
             };
 
             return Ok(new { keys = new[] { jwk } });

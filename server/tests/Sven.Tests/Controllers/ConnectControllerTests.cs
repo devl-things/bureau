@@ -39,7 +39,7 @@ namespace Sven.Tests.Controllers
             string nonceExpected = "some_random_nonce";
 
             // Step 1: /connect/authorize
-            string authorizeUrl = $"/{Endpoints.Connect.Base}/{Endpoints.Connect.AuthorizePath}?response_type={AuthConstants.OAuth.ResponseType.Code}&client_id={clientId}&redirect_uri={redirectUriExpected}" +
+            string authorizeUrl = $"/{Endpoints.Connect.Base}/{Endpoints.Connect.AuthorizePath}?response_type={AuthConstants.OAuth.ResponseTypes.Code}&client_id={clientId}&redirect_uri={redirectUriExpected}" +
                 $"&scope={AuthConstants.Scopes.OfflineAccess} {AuthConstants.Scopes.OpenId}&code_challenge={codeChallenge}&code_challenge_method={AuthConstants.OAuth.CodeChallengeMethods.Sha256}&state=test-state" +
                 $"&{AuthConstants.OAuth.FieldNames.Nonce}={nonceExpected}";
 
@@ -65,14 +65,14 @@ namespace Sven.Tests.Controllers
             string? redirectUriActual = loginResponse.RequestMessage?.RequestUri?.ToString();
             Assert.False(string.IsNullOrWhiteSpace(redirectUriActual));
             Assert.StartsWith(redirectUriExpected, redirectUriActual);
-            string? code = HttpUtility.ParseQueryString(new Uri(redirectUriActual).Query).Get(AuthConstants.OAuth.ResponseType.Code);
+            string? code = HttpUtility.ParseQueryString(new Uri(redirectUriActual).Query).Get(AuthConstants.OAuth.ResponseTypes.Code);
             Assert.False(string.IsNullOrWhiteSpace(code));
 
             // Step 3: Exchange code for access + refresh token
             HttpRequestMessage tokenRequest = new HttpRequestMessage(HttpMethod.Post, Endpoints.Connect.Token);
             tokenRequest.Content = new FormUrlEncodedContent(new Dictionary<string, string>
             {
-                { AuthConstants.OAuth.FieldNames.GrantTypeField, AuthConstants.OAuth.GrantType.AuthorizationCode },
+                { AuthConstants.OAuth.FieldNames.GrantTypeField, AuthConstants.OAuth.GrantTypes.AuthorizationCode },
                 { AuthConstants.OAuth.FieldNames.Code, code! },
                 { AuthConstants.OAuth.FieldNames.CodeVerifier, codeVerifier },
                 { AuthConstants.OAuth.FieldNames.ClientId, clientId }
@@ -95,7 +95,7 @@ namespace Sven.Tests.Controllers
             HttpRequestMessage refreshRequest1 = new HttpRequestMessage(HttpMethod.Post, Endpoints.Connect.Token);
             refreshRequest1.Content = new FormUrlEncodedContent(new Dictionary<string, string>
             {
-                { AuthConstants.OAuth.FieldNames.GrantTypeField, AuthConstants.OAuth.GrantType.RefreshToken },
+                { AuthConstants.OAuth.FieldNames.GrantTypeField, AuthConstants.OAuth.GrantTypes.RefreshToken },
                 { AuthConstants.OAuth.FieldNames.RefreshToken, token1.RefreshToken },
                 { AuthConstants.OAuth.FieldNames.ClientId, clientId },
                 { AuthConstants.OAuth.FieldNames.Scope, AuthConstants.Scopes.OpenId}
@@ -119,7 +119,7 @@ namespace Sven.Tests.Controllers
             HttpRequestMessage refreshRequest2 = new HttpRequestMessage(HttpMethod.Post, Endpoints.Connect.Token);
             refreshRequest2.Content = new FormUrlEncodedContent(new Dictionary<string, string>
             {
-                { AuthConstants.OAuth.FieldNames.GrantTypeField, AuthConstants.OAuth.GrantType.RefreshToken },
+                { AuthConstants.OAuth.FieldNames.GrantTypeField, AuthConstants.OAuth.GrantTypes.RefreshToken },
                 { AuthConstants.OAuth.FieldNames.RefreshToken, token1.RefreshToken }, // reusing the same token
                 { AuthConstants.OAuth.FieldNames.ClientId, clientId }
             });
@@ -140,7 +140,7 @@ namespace Sven.Tests.Controllers
             string nonceExpected = "some_random_nonce";
 
             // Step 1: /connect/authorize
-            string authorizeUrl = $"/{Endpoints.Connect.Base}/{Endpoints.Connect.AuthorizePath}?response_type={AuthConstants.OAuth.ResponseType.Code}&client_id={clientId}&redirect_uri={redirectUriExpected}" +
+            string authorizeUrl = $"/{Endpoints.Connect.Base}/{Endpoints.Connect.AuthorizePath}?response_type={AuthConstants.OAuth.ResponseTypes.Code}&client_id={clientId}&redirect_uri={redirectUriExpected}" +
                 $"&scope={AuthConstants.Scopes.OfflineAccess}&code_challenge={codeChallenge}&code_challenge_method={AuthConstants.OAuth.CodeChallengeMethods.Sha256}&state=test-state" +
                 $"&{AuthConstants.OAuth.FieldNames.Nonce}={nonceExpected}";
 
@@ -166,14 +166,14 @@ namespace Sven.Tests.Controllers
             string? redirectUriActual = loginResponse.RequestMessage?.RequestUri?.ToString();
             Assert.False(string.IsNullOrWhiteSpace(redirectUriActual));
             Assert.StartsWith(redirectUriExpected, redirectUriActual);
-            string? code = HttpUtility.ParseQueryString(new Uri(redirectUriActual).Query).Get(AuthConstants.OAuth.ResponseType.Code);
+            string? code = HttpUtility.ParseQueryString(new Uri(redirectUriActual).Query).Get(AuthConstants.OAuth.ResponseTypes.Code);
             Assert.False(string.IsNullOrWhiteSpace(code));
 
             // Step 3: Exchange code for access + refresh token
             HttpRequestMessage tokenRequest = new HttpRequestMessage(HttpMethod.Post, Endpoints.Connect.Token);
             tokenRequest.Content = new FormUrlEncodedContent(new Dictionary<string, string>
             {
-                { AuthConstants.OAuth.FieldNames.GrantTypeField, AuthConstants.OAuth.GrantType.AuthorizationCode },
+                { AuthConstants.OAuth.FieldNames.GrantTypeField, AuthConstants.OAuth.GrantTypes.AuthorizationCode },
                 { AuthConstants.OAuth.FieldNames.Code, code! },
                 { AuthConstants.OAuth.FieldNames.CodeVerifier, codeVerifier },
                 { AuthConstants.OAuth.FieldNames.ClientId, clientId }
@@ -193,7 +193,7 @@ namespace Sven.Tests.Controllers
             HttpRequestMessage refreshRequest1 = new HttpRequestMessage(HttpMethod.Post, Endpoints.Connect.Token);
             refreshRequest1.Content = new FormUrlEncodedContent(new Dictionary<string, string>
             {
-                { AuthConstants.OAuth.FieldNames.GrantTypeField, AuthConstants.OAuth.GrantType.RefreshToken },
+                { AuthConstants.OAuth.FieldNames.GrantTypeField, AuthConstants.OAuth.GrantTypes.RefreshToken },
                 { AuthConstants.OAuth.FieldNames.RefreshToken, token1.RefreshToken },
                 { AuthConstants.OAuth.FieldNames.ClientId, clientId },
                 { AuthConstants.OAuth.FieldNames.Scope, AuthConstants.Scopes.OpenId}
@@ -216,7 +216,7 @@ namespace Sven.Tests.Controllers
             string nonceExpected = "some_random_nonce";
 
             // Step 1: /connect/authorize
-            string authorizeUrl = $"/{Endpoints.Connect.Base}/{Endpoints.Connect.AuthorizePath}?response_type={AuthConstants.OAuth.ResponseType.Code}&client_id={clientId}&redirect_uri={redirectUriExpected}" +
+            string authorizeUrl = $"/{Endpoints.Connect.Base}/{Endpoints.Connect.AuthorizePath}?response_type={AuthConstants.OAuth.ResponseTypes.Code}&client_id={clientId}&redirect_uri={redirectUriExpected}" +
                 $"&scope={AuthConstants.Scopes.OfflineAccess} {AuthConstants.Scopes.OpenId}&code_challenge={codeChallenge}&code_challenge_method={AuthConstants.OAuth.CodeChallengeMethods.Sha256}&state=test-state" +
                 $"&{AuthConstants.OAuth.FieldNames.Nonce}={nonceExpected}";
 
@@ -242,14 +242,14 @@ namespace Sven.Tests.Controllers
             string? redirectUriActual = loginResponse.RequestMessage?.RequestUri?.ToString();
             Assert.False(string.IsNullOrWhiteSpace(redirectUriActual));
             Assert.StartsWith(redirectUriExpected, redirectUriActual);
-            string? code = HttpUtility.ParseQueryString(new Uri(redirectUriActual).Query).Get(AuthConstants.OAuth.ResponseType.Code);
+            string? code = HttpUtility.ParseQueryString(new Uri(redirectUriActual).Query).Get(AuthConstants.OAuth.ResponseTypes.Code);
             Assert.False(string.IsNullOrWhiteSpace(code));
 
             // Step 3: Exchange code for access + refresh token
             HttpRequestMessage tokenRequest = new HttpRequestMessage(HttpMethod.Post, Endpoints.Connect.Token);
             tokenRequest.Content = new FormUrlEncodedContent(new Dictionary<string, string>
             {
-                { AuthConstants.OAuth.FieldNames.GrantTypeField, AuthConstants.OAuth.GrantType.AuthorizationCode },
+                { AuthConstants.OAuth.FieldNames.GrantTypeField, AuthConstants.OAuth.GrantTypes.AuthorizationCode },
                 { AuthConstants.OAuth.FieldNames.Code, code! },
                 { AuthConstants.OAuth.FieldNames.CodeVerifier, codeVerifier },
                 { AuthConstants.OAuth.FieldNames.ClientId, clientId }
@@ -272,7 +272,7 @@ namespace Sven.Tests.Controllers
             HttpRequestMessage refreshRequest1 = new HttpRequestMessage(HttpMethod.Post, Endpoints.Connect.Token);
             refreshRequest1.Content = new FormUrlEncodedContent(new Dictionary<string, string>
             {
-                { AuthConstants.OAuth.FieldNames.GrantTypeField, AuthConstants.OAuth.GrantType.RefreshToken },
+                { AuthConstants.OAuth.FieldNames.GrantTypeField, AuthConstants.OAuth.GrantTypes.RefreshToken },
                 { AuthConstants.OAuth.FieldNames.RefreshToken, token1.RefreshToken },
                 { AuthConstants.OAuth.FieldNames.ClientId, clientId }
             });
@@ -296,7 +296,7 @@ namespace Sven.Tests.Controllers
             string clientId = "test-client";
 
             // Step 1: /connect/authorize
-            string authorizeUrl = $"/{Endpoints.Connect.Base}/{Endpoints.Connect.AuthorizePath}?response_type={AuthConstants.OAuth.ResponseType.Code}&client_id={clientId}&redirect_uri={redirectUriExpected}" +
+            string authorizeUrl = $"/{Endpoints.Connect.Base}/{Endpoints.Connect.AuthorizePath}?response_type={AuthConstants.OAuth.ResponseTypes.Code}&client_id={clientId}&redirect_uri={redirectUriExpected}" +
                 $"&scope=email&code_challenge={codeChallenge}&code_challenge_method={AuthConstants.OAuth.CodeChallengeMethods.Sha256}&state=test-state";
 
             HttpResponseMessage authorizeResponse = await _client.GetAsync(authorizeUrl);
@@ -321,14 +321,14 @@ namespace Sven.Tests.Controllers
             string? redirectUriActual = loginResponse.RequestMessage?.RequestUri?.ToString();
             Assert.False(string.IsNullOrWhiteSpace(redirectUriActual));
             Assert.StartsWith(redirectUriExpected, redirectUriActual);
-            string? code = HttpUtility.ParseQueryString(new Uri(redirectUriActual).Query).Get(AuthConstants.OAuth.ResponseType.Code);
+            string? code = HttpUtility.ParseQueryString(new Uri(redirectUriActual).Query).Get(AuthConstants.OAuth.ResponseTypes.Code);
             Assert.False(string.IsNullOrWhiteSpace(code));
 
             // Step 3: Exchange code for access + refresh token
             HttpRequestMessage tokenRequest = new HttpRequestMessage(HttpMethod.Post, Endpoints.Connect.Token);
             tokenRequest.Content = new FormUrlEncodedContent(new Dictionary<string, string>
             {
-                { AuthConstants.OAuth.FieldNames.GrantTypeField, AuthConstants.OAuth.GrantType.AuthorizationCode },
+                { AuthConstants.OAuth.FieldNames.GrantTypeField, AuthConstants.OAuth.GrantTypes.AuthorizationCode },
                 { AuthConstants.OAuth.FieldNames.Code, code! },
                 { AuthConstants.OAuth.FieldNames.CodeVerifier, codeVerifier },
                 { AuthConstants.OAuth.FieldNames.ClientId, clientId }
@@ -355,7 +355,7 @@ namespace Sven.Tests.Controllers
             HttpRequestMessage refreshRequest = new HttpRequestMessage(HttpMethod.Post, Endpoints.Connect.Token);
             refreshRequest.Content = new FormUrlEncodedContent(new Dictionary<string, string>
             {
-                { AuthConstants.OAuth.FieldNames.GrantTypeField, AuthConstants.OAuth.GrantType.RefreshToken },
+                { AuthConstants.OAuth.FieldNames.GrantTypeField, AuthConstants.OAuth.GrantTypes.RefreshToken },
                 { AuthConstants.OAuth.FieldNames.RefreshToken, "invalid_or_expired_token" },
                 { AuthConstants.OAuth.FieldNames.ClientId, clientId }
             });

@@ -13,7 +13,7 @@
         }
         public static class OAuth
         {
-            public static class ResponseType
+            public static class ResponseTypes
             {
                 public const string Code = "code";
             }
@@ -23,7 +23,20 @@
                 public const string Sha256 = "S256";
             }
 
-            public static class GrantType
+            public static class SigningAlgorithms
+            {
+                public const string RSA = "RSA";
+                public const string Rsa256 = "RS256";
+            }
+            public static class SubjectTypes
+            {
+                public const string Public = "public";
+            }
+            public static class TokenAuthMethods
+            {
+                public const string None = "none";
+            }
+            public static class GrantTypes
             {
                 public const string AuthorizationCode = "authorization_code";
                 public const string RefreshToken = "refresh_token";
@@ -49,6 +62,20 @@
                 public const string TokenType = "token_type";
                 public const string ExpiresIn = "expires_in";
                 public const string Nonce = "nonce";
+
+                //Discovery field names
+                public const string Issuer = "issuer";
+                public const string AuthorizationEndpoint = "authorization_endpoint";
+                public const string TokenEndpoint = "token_endpoint";
+                public const string UserInfoEndpoint = "userinfo_endpoint";
+                public const string JwksUri = "jwks_uri";
+
+                public const string ResponseTypesSupported = "response_types_supported";
+                public const string SubjectTypesSupported = "subject_types_supported";
+                public const string IdTokenSigningAlgValuesSupported = "id_token_signing_alg_values_supported";
+                public const string TokenEndpointAuthMethodsSupported = "token_endpoint_auth_methods_supported";
+                public const string CodeChallengeMethodsSupported = "code_challenge_methods_supported";
+                public const string ScopesSupported = "scopes_supported";
 
             }
         }
