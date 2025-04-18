@@ -40,14 +40,12 @@ namespace Sven.Controllers
         {
             if (!Uri.IsWellFormedUriString(request.RedirectUri, UriKind.Absolute))
             {
-                //TODO future return to html error page
                 return OAuthError(AuthConstants.OAuth.Errors.InvalidRequest, "Invalid redirect_uri format.");
             }
             Result<bool> isClientValidResult = await _clientProvider.IsValidAsync(request.ClientId, request.RedirectUri, cancellationToken);
             if (isClientValidResult.IsError || !isClientValidResult.Value)
             {
                 _logger.LogResultError(isClientValidResult.Error);
-                //TODO future return to html error page
                 return OAuthError(AuthConstants.OAuth.Errors.InvalidRequest, "Invalid request.");
             }
 
@@ -262,12 +260,12 @@ namespace Sven.Controllers
             sb = RedirectUrlAppendState(sb, state);
             return Redirect(sb.ToString());
         }
-        private StringBuilder RedirectUrlWithOAuthCode(StringBuilder redirectUrl, string code)
+        private static StringBuilder RedirectUrlWithOAuthCode(StringBuilder redirectUrl, string code)
         {
             return redirectUrl.Append(AuthConstants.OAuth.FieldNames.Code).Append("=").Append(code);
         }
 
-        private StringBuilder RedirectUrlWithOAuthError(StringBuilder redirectUrl, string error, string? errorDescription)
+        private static StringBuilder RedirectUrlWithOAuthError(StringBuilder redirectUrl, string error, string? errorDescription)
         {
             redirectUrl.Append(AuthConstants.OAuth.FieldNames.Error).Append("=").Append(error);
             if (!string.IsNullOrWhiteSpace(errorDescription))
@@ -277,11 +275,11 @@ namespace Sven.Controllers
             }
             return redirectUrl;
         }
-        private StringBuilder RedirectUrlWithOAuthError(StringBuilder redirectUrl, ResultError resultError)
+        private static StringBuilder RedirectUrlWithOAuthError(StringBuilder redirectUrl, ResultError resultError)
         {
             return RedirectUrlWithOAuthError(redirectUrl, resultError.ErrorMessage, resultError.LogMessage);
         }
-        private StringBuilder RedirectUrlAppendState(StringBuilder redirectUrl, string? state)
+        private static StringBuilder RedirectUrlAppendState(StringBuilder redirectUrl, string? state)
         {
             if (!string.IsNullOrWhiteSpace(state))
             {

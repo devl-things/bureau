@@ -10,15 +10,8 @@ namespace Sven.Models
         [JsonPropertyName(AuthConstants.OAuth.FieldNames.ErrorDescription)]
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public string? ErrorDescription { get; set; }
-        // TODO future expansion
-        //[JsonPropertyName(AuthConstants.OAuth.FieldNames.ErrorUri)]
-        //[JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-        //public string? ErrorUri { get; set; }
 
-        public OAuthError()
-        {
-
-        }
+        public OAuthError() { }
         public OAuthError(string error, string? errorDescription)
         {
             Error = error;
