@@ -11,6 +11,7 @@ using Sven.Services;
 using System.Net;
 using System.Security.Claims;
 using System.Text;
+using System.Web;
 
 namespace Sven.Controllers
 {
@@ -43,7 +44,7 @@ namespace Sven.Controllers
         {
             if (!Uri.IsWellFormedUriString(request.RedirectUri, UriKind.Absolute))
             {
-                return OAuthError(AuthConstants.OAuth.Errors.InvalidRequest, "Invalid redirect_uri format.");
+                return OAuthError(AuthConstants.OAuth.Errors.InvalidRequest, AuthConstants.OAuth.ErrorDescriptions.InvalidRedirectUriFormat);
             }
             Result<bool> isClientValidResult = await _clientProvider.IsValidAsync(request.ClientId, request.RedirectUri, cancellationToken);
             if (isClientValidResult.IsError || !isClientValidResult.Value)
@@ -55,7 +56,7 @@ namespace Sven.Controllers
             if (!AuthConstants.OAuth.ResponseTypes.Code.Equals(request.ResponseType, StringComparison.OrdinalIgnoreCase))
             {
                 return RedirectWithOAuthError(request.RedirectUri, AuthConstants.OAuth.Errors.UnsupportedResponseType,
-                    "The response type is not supported", request.State);
+                    AuthConstants.OAuth.ErrorDescriptions.UnsupportedResponseType, request.State);
             }
 
             if (!_authCodeManager.IsCodeChallengeValid(request.CodeChallenge, request.CodeChallengeMethod))
@@ -69,8 +70,7 @@ namespace Sven.Controllers
 
             if (isScopeValidResult.IsError || !isScopeValidResult.Value)
             {
-                return RedirectWithOAuthError(request.RedirectUri, isScopeValidResult.Error.ErrorMessage,
-                    isScopeValidResult.Error.LogMessage, request.State);
+                return RedirectWithOAuthError(request.RedirectUri, isScopeValidResult.Error, request.State);
             }
 
             OAuthRequest oauthRequest = new OAuthRequest
@@ -108,7 +108,7 @@ namespace Sven.Controllers
         {
             if (!Request.TryGetCookieValue(AuthConstants.CookieNames.PkceKey, out string? pkceKey))
             {
-                return OAuthError(AuthConstants.OAuth.Errors.InvalidRequest, $"Missing authorization state ({AuthConstants.CookieNames.PkceKey}).");
+                return OAuthError(AuthConstants.OAuth.Errors.InvalidRequest, $"{AuthConstants.OAuth.ErrorDescriptions.MissingAuthorizationState} ({AuthConstants.CookieNames.PkceKey}).");
             }
 
             if (!_pkceRequestStore.Exists(pkceKey!))
@@ -134,7 +134,7 @@ namespace Sven.Controllers
         {
             if (!Request.TryGetCookieValue(AuthConstants.CookieNames.PkceKey, out string? pkceKey))
             {
-                return OAuthError(AuthConstants.OAuth.Errors.InvalidRequest, "Missing authorization state.");
+                return OAuthError(AuthConstants.OAuth.Errors.InvalidRequest, AuthConstants.OAuth.ErrorDescriptions.MissingAuthorizationState);
             }
             Result<OAuthRequest> requestResult = await _pkceRequestStore.GetAsync(pkceKey!, cancellationToken);
             if (requestResult.IsError)
@@ -157,19 +157,12 @@ namespace Sven.Controllers
 
             Result<string> codeResult = await _authCodeManager.CreateAuthCodeAsync(requestResult.Value, result.Principal.Claims.ToList(), cancellationToken);
 
-            StringBuilder redirectUrl = new StringBuilder($"{requestResult.Value.RedirectUri}?");
-            if (codeResult.IsSuccess)
-            {
-                redirectUrl = RedirectUrlWithOAuthCode(redirectUrl, codeResult.Value);
-            }
-            else
+            if (codeResult.IsError)
             {
                 _logger.LogResultError(codeResult.Error);
-                redirectUrl = RedirectUrlWithOAuthError(redirectUrl, codeResult.Error);
+                return RedirectWithOAuthError(requestResult.Value.RedirectUri, codeResult.Error, requestResult.Value.State);
             }
-            redirectUrl = RedirectUrlAppendState(redirectUrl, requestResult.Value.State);
-
-            return Redirect(redirectUrl.ToString());
+            return RedirectWithOAuthCode(requestResult.Value.RedirectUri, codeResult.Value, requestResult.Value.State);
         }
 
         [HttpPost(Endpoints.Connect.TokenPath)]
@@ -186,7 +179,7 @@ namespace Sven.Controllers
                 return await HandleRefreshTokenFlow(request, cancellationToken);
             }
 
-            return OAuthError(AuthConstants.OAuth.Errors.UnsupportedGrantType, "The grant type is not supported.");
+            return OAuthError(AuthConstants.OAuth.Errors.UnsupportedGrantType, AuthConstants.OAuth.ErrorDescriptions.UnsupportedGrantType);
         }
 
         private async Task<IActionResult> HandleRefreshTokenFlow(TokenRequest request, CancellationToken cancellationToken)
@@ -212,7 +205,7 @@ namespace Sven.Controllers
         {
             if (string.IsNullOrWhiteSpace(request.Code) || string.IsNullOrWhiteSpace(request.CodeVerifier))
             {
-                return OAuthError(AuthConstants.OAuth.Errors.InvalidRequest, "Code or code_verifier is missing.");
+                return OAuthError(AuthConstants.OAuth.Errors.InvalidRequest, AuthConstants.OAuth.ErrorDescriptions.CodeOrCodeVerifierMissing);
             }
 
             Result<AuthCode> authCodeResult = await _authCodeManager.GetAsync(request.Code!, cancellationToken);
@@ -255,18 +248,25 @@ namespace Sven.Controllers
         {
             return BadRequest(new OAuthError(resultError.ErrorMessage, resultError.LogMessage));
         }
-
+        private IActionResult RedirectWithOAuthError(string redirectUri, ResultError resultError, string? state)
+        {
+            return RedirectWithOAuthError(redirectUri, resultError.ErrorMessage, resultError.LogMessage, state);
+        }
         private IActionResult RedirectWithOAuthError(string redirectUri, string error, string? errorDescription, string? state)
         {
             StringBuilder sb = new StringBuilder(redirectUri);
             sb.Append("?");
             sb = RedirectUrlWithOAuthError(sb, error, errorDescription);
             sb = RedirectUrlAppendState(sb, state);
-            return Redirect(sb.ToString());
+            return Redirect(HttpUtility.UrlEncode(sb.ToString()));
         }
-        private static StringBuilder RedirectUrlWithOAuthCode(StringBuilder redirectUrl, string code)
+
+        private IActionResult RedirectWithOAuthCode(string redirectUri, string code, string? state)
         {
-            return redirectUrl.Append(AuthConstants.OAuth.FieldNames.Code).Append("=").Append(code);
+            StringBuilder sb = new StringBuilder(redirectUri);
+            sb.Append("?").Append(AuthConstants.OAuth.FieldNames.Code).Append("=").Append(code);
+            sb = RedirectUrlAppendState(sb, state);
+            return Redirect(sb.ToString());
         }
 
         private static StringBuilder RedirectUrlWithOAuthError(StringBuilder redirectUrl, string error, string? errorDescription)
@@ -278,10 +278,6 @@ namespace Sven.Controllers
                     .Append("=").Append(errorDescription);
             }
             return redirectUrl;
-        }
-        private static StringBuilder RedirectUrlWithOAuthError(StringBuilder redirectUrl, ResultError resultError)
-        {
-            return RedirectUrlWithOAuthError(redirectUrl, resultError.ErrorMessage, resultError.LogMessage);
         }
         private static StringBuilder RedirectUrlAppendState(StringBuilder redirectUrl, string? state)
         {

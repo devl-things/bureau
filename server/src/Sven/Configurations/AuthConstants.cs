@@ -109,6 +109,16 @@
                 public const string RequestUriNotSupported = "request_uri_not_supported";
                 public const string RegistrationNotSupported = "registration_not_supported";
             }
+
+            public static class ErrorDescriptions
+            {
+                public const string InvalidRedirectUriFormat = "Invalid redirect_uri format.";
+                public const string UnsupportedResponseType = "The response type is not supported";
+                public const string UnsupportedGrantType = "The grant type is not supported";
+                public const string MissingAuthorizationState = "Missing authorization state";
+                public const string CodeOrCodeVerifierMissing = "Code or code_verifier is missing";
+                public const string RefreshTokenNotFound = "Refresh token not found.";
+            }
         }
         public static class CookieNames
         {

@@ -164,7 +164,7 @@ namespace Sven.Services
             if (storedRefreshTokenResult.IsError)
             {
                 _logger.LogResultError(storedRefreshTokenResult.Error);
-                return new ResultError(AuthConstants.OAuth.Errors.InvalidGrant, "Refresh token not found.");
+                return new ResultError(AuthConstants.OAuth.Errors.InvalidGrant, AuthConstants.OAuth.ErrorDescriptions.RefreshTokenNotFound);
             }
             RefreshToken storedToken = storedRefreshTokenResult.Value;
             if (!storedToken.IsSameOrSubset(scope))

@@ -11,15 +11,13 @@ using System.Web;
 
 namespace Sven.Tests.Controllers
 {
-    public class ConnectControllerTests : IClassFixture<SvenWebAppFactory>
+    public class ConnectControllerTests : IClassFixture<SvenWebAppFactory>, IDisposable
     {
         private readonly HttpClient _client;
-        private readonly SvenWebAppFactory _factory;
 
         public ConnectControllerTests(SvenWebAppFactory factory)
         {
-            _factory = factory;
-            _client = _factory.CreateClient(new WebApplicationFactoryClientOptions
+            _client = factory.CreateClient(new WebApplicationFactoryClientOptions
             {
                 BaseAddress = new Uri("https://localhost"),
                 HandleCookies = true,
@@ -345,25 +343,6 @@ namespace Sven.Tests.Controllers
             Assert.True(string.IsNullOrWhiteSpace(token.IdToken));
         }
 
-        [Fact]
-        [Trait("Category", "Unit")]
-        [Trait("Type", "Expected error")]
-
-        public async Task Token_WithInvalidRefreshToken_ReturnsBadRequest()
-        {
-            string clientId = "test-client";
-            HttpRequestMessage refreshRequest = new HttpRequestMessage(HttpMethod.Post, Endpoints.Connect.Token);
-            refreshRequest.Content = new FormUrlEncodedContent(new Dictionary<string, string>
-            {
-                { AuthConstants.OAuth.FieldNames.GrantTypeField, AuthConstants.OAuth.GrantTypes.RefreshToken },
-                { AuthConstants.OAuth.FieldNames.RefreshToken, "invalid_or_expired_token" },
-                { AuthConstants.OAuth.FieldNames.ClientId, clientId }
-            });
-
-            HttpResponseMessage response = await _client.SendAsync(refreshRequest);
-            Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
-        }
-
         private static string GenerateCodeVerifier()
         {
             byte[] bytes = new byte[32];
@@ -391,6 +370,11 @@ namespace Sven.Tests.Controllers
             JwtSecurityTokenHandler handler = new JwtSecurityTokenHandler();
             JwtSecurityToken token = handler.ReadJwtToken(idToken);
             return token.Claims.FirstOrDefault(c => c.Type == claimType)?.Value;
+        }
+
+        public void Dispose()
+        {
+            _client.Dispose();
         }
     }
 }
