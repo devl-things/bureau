@@ -23,7 +23,7 @@ namespace Sven.Pages.Connect
                 return BadRequest("Missing authorization state.");
             }
 
-            if (!_pkceRequestStore.Exists(pkceKey))
+            if (!_pkceRequestStore.Exists(pkceKey!))
             {
                 return BadRequest("Invalid or expired request.");
             }
