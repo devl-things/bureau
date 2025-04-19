@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Mvc;
 using Sven.Abstractions.Services;
+using Sven.AutoValidation;
 using Sven.Configurations;
 using Sven.Extensions;
 using Sven.Models;
@@ -36,6 +37,8 @@ namespace Sven.Controllers
         }
 
         [HttpGet(Endpoints.Connect.AuthorizePath)]
+        [DisableAutoValidation]
+        [ServiceFilter(typeof(OAuthValidationFilter))]
         public async Task<IActionResult> AuthorizeAsync([FromQuery] AuthorizeRequest request, CancellationToken cancellationToken = default)
         {
             if (!Uri.IsWellFormedUriString(request.RedirectUri, UriKind.Absolute))
@@ -126,7 +129,6 @@ namespace Sven.Controllers
             return Redirect(Endpoints.Connect.AuthorizeContinue);
         }
 
-
         [HttpGet(Endpoints.Connect.AuthorizeContinuePath)]
         public async Task<IActionResult> CompleteAuthorizeAsync(CancellationToken cancellationToken = default)
         {
@@ -171,6 +173,8 @@ namespace Sven.Controllers
         }
 
         [HttpPost(Endpoints.Connect.TokenPath)]
+        [DisableAutoValidation]
+        [ServiceFilter(typeof(OAuthValidationFilter))]
         public async Task<IActionResult> TokenAsync([FromForm] TokenRequest request, CancellationToken cancellationToken = default)
         {
             if (IsGrantType(request.GrantType, AuthConstants.OAuth.GrantTypes.AuthorizationCode))

@@ -8,10 +8,10 @@ namespace Sven.Services
 {
     public class AuthCodeProvider
     {
-        private readonly Logger<AuthCodeProvider> _logger;
+        private readonly ILogger<AuthCodeProvider> _logger;
         private readonly IStore<string, AuthCode> _authCodeStore;
         private readonly TimeProvider _timeProvider;
-        public AuthCodeProvider(Logger<AuthCodeProvider> logger, IStore<string, AuthCode> authCodeStore, TimeProvider timeProvider)
+        public AuthCodeProvider(ILogger<AuthCodeProvider> logger, IStore<string, AuthCode> authCodeStore, TimeProvider timeProvider)
         {
             _logger = logger;
             _authCodeStore = authCodeStore;

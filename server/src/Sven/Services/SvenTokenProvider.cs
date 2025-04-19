@@ -10,12 +10,12 @@ namespace Sven.Services
 {
     public class SvenTokenProvider : ITokenProvider
     {
-        private readonly Logger<SvenTokenProvider> _logger;
+        private readonly ILogger<SvenTokenProvider> _logger;
         private readonly JwtOptions _jwtOptions;
         private readonly RsaSecurityKey _rsaKey;
         private readonly IStore<string, RefreshToken> _refreshTokenStore;
         private readonly TimeProvider _timeProvider;
-        public SvenTokenProvider(Logger<SvenTokenProvider> logger, IOptions<JwtOptions> jwtOptions,
+        public SvenTokenProvider(ILogger<SvenTokenProvider> logger, IOptions<JwtOptions> jwtOptions,
             RsaSecurityKey rsaKey, IStore<string, RefreshToken> refreshTokenStore, TimeProvider timeProvider)
         {
             _logger = logger;
