@@ -54,10 +54,10 @@ namespace Sven.Services
             return _authCodeStore.GetAsync(code, cancellationToken);
         }
 
-        internal Result<bool> IsAuthCodeValid(AuthCode authCode, string clientId, string codeVerifier)
+        internal Result<bool> IsAuthCodeValid(AuthCode authCode, string clientId, string redirectUri, string codeVerifier)
         {
             string hashed = GenerateCodeChallenge(codeVerifier);
-            return !(authCode.ClientId != clientId || authCode.ExpiresAt < _timeProvider.GetUtcNow() || authCode.CodeChallenge != hashed);
+            return !(authCode.ClientId != clientId || authCode.RedirectUri != redirectUri || authCode.ExpiresAt < _timeProvider.GetUtcNow() || authCode.CodeChallenge != hashed);
         }
 
         internal static string GenerateCodeChallenge(string verifier)

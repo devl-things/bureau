@@ -15,7 +15,7 @@ namespace Sven.Services
             return Task.FromResult(new Result<bool>(isValid));
         }
 
-        public Task<Result<bool>> IsValidAsync(string clientId, CancellationToken cancellationToken = default)
+        public Task<Result<bool>> IsValidAsync(string? clientId, CancellationToken cancellationToken = default)
         {
             return Task.FromResult(new Result<bool>(!string.IsNullOrWhiteSpace(clientId)));
         }

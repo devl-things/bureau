@@ -165,83 +165,6 @@ namespace Sven.Controllers
             return RedirectWithOAuthCode(requestResult.Value.RedirectUri, codeResult.Value, requestResult.Value.State);
         }
 
-
-
-        [HttpPost(Endpoints.Connect.TokenPath)]
-        [DisableAutoValidation]
-        [ServiceFilter(typeof(OAuthValidationFilter))]
-        public async Task<IActionResult> TokenAsync([FromForm] TokenRequest request, CancellationToken cancellationToken = default)
-        {
-            if (IsGrantType(request.GrantType, AuthConstants.OAuth.GrantTypes.AuthorizationCode))
-            {
-                return await HandleAuthorizationCodeFlow(request, cancellationToken);
-            }
-            else if (IsGrantType(request.GrantType, AuthConstants.OAuth.GrantTypes.RefreshToken))
-            {
-                return await HandleRefreshTokenFlow(request, cancellationToken);
-            }
-
-            return OAuthError(AuthConstants.OAuth.Errors.UnsupportedGrantType, AuthConstants.OAuth.ErrorDescriptions.UnsupportedGrantType);
-        }
-
-        private async Task<IActionResult> HandleRefreshTokenFlow(TokenRequest request, CancellationToken cancellationToken)
-        {
-            if (string.IsNullOrWhiteSpace(request.RefreshToken))
-            {
-                return OAuthError(AuthConstants.OAuth.Errors.InvalidRequest, "Refresh token is missing.");
-            }
-            Result<bool> isValidResult = await _tokenProvider.IsRefreshTokenValidAsync(request.RefreshToken!, request.ClientId, request.Scope, cancellationToken);
-
-            if (isValidResult.IsError || !isValidResult.Value)
-            {
-                _logger.LogResultError(isValidResult.Error);
-                return OAuthError(isValidResult.Error);
-            }
-
-            Result<SvenToken> jwtResult = await _tokenProvider.CreateTokenAsync(request.RefreshToken!, request.Scope, cancellationToken);
-
-            return HandleTokenResult(jwtResult);
-        }
-
-        private async Task<IActionResult> HandleAuthorizationCodeFlow(TokenRequest request, CancellationToken cancellationToken)
-        {
-            if (string.IsNullOrWhiteSpace(request.Code) || string.IsNullOrWhiteSpace(request.CodeVerifier))
-            {
-                return OAuthError(AuthConstants.OAuth.Errors.InvalidRequest, AuthConstants.OAuth.ErrorDescriptions.CodeOrCodeVerifierMissing);
-            }
-
-            Result<AuthCode> authCodeResult = await _authCodeManager.GetAsync(request.Code!, cancellationToken);
-            if (authCodeResult.IsError)
-            {
-                _logger.LogResultError(authCodeResult.Error);
-                return OAuthError(AuthConstants.OAuth.Errors.InvalidGrant, "Invalid or expired authorization code.");
-            }
-
-            Result<bool> isValidResult = _authCodeManager.IsAuthCodeValid(authCodeResult.Value, request.ClientId, request.CodeVerifier!);
-
-            if (isValidResult.IsError || !isValidResult.Value)
-            {
-                _logger.LogResultError(isValidResult.Error);
-                return OAuthError(AuthConstants.OAuth.Errors.InvalidGrant, "Code verifier mismatch or invalid client.");
-            }
-
-            Result<SvenToken> jwtResult = await _tokenProvider.CreateTokenAsync(authCodeResult.Value, cancellationToken);
-
-            await _authCodeManager.ClearAsync(request.Code!, cancellationToken);
-
-            return HandleTokenResult(jwtResult);
-        }
-
-        private IActionResult HandleTokenResult(Result<SvenToken> result)
-        {
-            if (result.IsError)
-            {
-                _logger.LogResultError(result.Error);
-                return OAuthError(result.Error);
-            }
-            return Ok(result.Value);
-        }
-
         private IActionResult OAuthError(string error, string? description = null, HttpStatusCode statusCode = HttpStatusCode.BadRequest)
         {
             return StatusCode((int)statusCode, new OAuthError(error, description));
@@ -262,7 +185,6 @@ namespace Sven.Controllers
             sb = RedirectUrlAppendState(sb, state);
             return Redirect(HttpUtility.UrlEncode(sb.ToString()));
         }
-
         private IActionResult RedirectWithOAuthCode(string redirectUri, string code, string? state)
         {
             StringBuilder sb = new StringBuilder(redirectUri);
@@ -270,7 +192,6 @@ namespace Sven.Controllers
             sb = RedirectUrlAppendState(sb, state);
             return Redirect(sb.ToString());
         }
-
         private static StringBuilder RedirectUrlWithOAuthError(StringBuilder redirectUrl, string error, string? errorDescription)
         {
             redirectUrl.Append(AuthConstants.OAuth.FieldNames.Error).Append("=").Append(error);
@@ -290,11 +211,6 @@ namespace Sven.Controllers
             }
 
             return redirectUrl;
-        }
-
-        private static bool IsGrantType(string actual, string expected)
-        {
-            return string.Equals(actual, expected, StringComparison.OrdinalIgnoreCase);
         }
     }
 }

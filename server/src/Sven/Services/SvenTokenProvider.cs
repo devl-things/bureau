@@ -80,6 +80,7 @@ namespace Sven.Services
                 {
                     Token = Guid.NewGuid().ToString("N"),
                     ClientId = clientClaims.ClientId,
+                    RedirectUri = clientClaims.RedirectUri,
                     Claims = clientClaims.Claims,
                     Scope = clientClaims.Scope,
                     Nonce = clientClaims.Nonce,
@@ -157,7 +158,7 @@ namespace Sven.Services
             return null;
         }
 
-        public async Task<Result<bool>> IsRefreshTokenValidAsync(string refreshToken, string clientId, string? scope, CancellationToken cancellationToken)
+        public async Task<Result<bool>> IsRefreshTokenValidAsync(string refreshToken, string clientId, string redirectUri, string? scope, CancellationToken cancellationToken)
         {
             Result<RefreshToken> storedRefreshTokenResult = await _refreshTokenStore.GetAsync(refreshToken, cancellationToken);
 
@@ -171,7 +172,7 @@ namespace Sven.Services
             {
                 return new ResultError(AuthConstants.OAuth.Errors.InvalidScope, "Requested scope exceeds originally granted scope.");
             }
-            if (storedToken.ClientId != clientId)
+            if (storedToken.ClientId != clientId || storedToken.RedirectUri != redirectUri)
             {
                 return new ResultError(AuthConstants.OAuth.Errors.InvalidClient, "Refresh token does not belong to this client.");
             }

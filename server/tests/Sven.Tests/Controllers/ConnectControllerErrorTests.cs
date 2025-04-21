@@ -94,65 +94,6 @@ namespace Sven.Tests.Controllers
             Assert.Contains(AuthConstants.OAuth.ErrorDescriptions.MissingAuthorizationState, content);
         }
 
-
-        [Fact(DisplayName = $"{Endpoints.Connect.Token} {AuthConstants.OAuth.ErrorDescriptions.UnsupportedGrantType}")]
-        [Trait("Category", "Unit")]
-        [Trait("Type", "Expected error")]
-        public async Task TokenAsync_InvalidGrantType_ReturnsBadRequest()
-        {
-            Dictionary<string, string> formData = new Dictionary<string, string>
-            {
-                [AuthConstants.OAuth.FieldNames.GrantTypeField] = "invalid_grant",
-                [AuthConstants.OAuth.FieldNames.ClientId] = _clientId
-            };
-
-            HttpResponseMessage response = await _client.PostAsync(Endpoints.Connect.Token, new FormUrlEncodedContent(formData));
-            string content = await response.Content.ReadAsStringAsync();
-
-            Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
-            Assert.Contains(AuthConstants.OAuth.Errors.UnsupportedGrantType, content);
-            Assert.Contains(AuthConstants.OAuth.ErrorDescriptions.UnsupportedGrantType, content);
-        }
-
-        [Fact(DisplayName = $"{Endpoints.Connect.Token} {AuthConstants.OAuth.ErrorDescriptions.CodeOrCodeVerifierMissing}")]
-        [Trait("Category", "Unit")]
-        [Trait("Type", "Expected error")]
-        public async Task TokenAsync_AuthorizationCodeFlow_MissingCodeVerifier_ReturnsBadRequest()
-        {
-            Dictionary<string, string> formData = new Dictionary<string, string>
-            {
-                [AuthConstants.OAuth.FieldNames.GrantTypeField] = AuthConstants.OAuth.GrantTypes.AuthorizationCode,
-                [AuthConstants.OAuth.FieldNames.Code] = "test-code",
-                [AuthConstants.OAuth.FieldNames.ClientId] = _clientId
-            };
-
-            HttpResponseMessage response = await _client.PostAsync(Endpoints.Connect.Token, new FormUrlEncodedContent(formData));
-            string content = await response.Content.ReadAsStringAsync();
-
-            Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
-            Assert.Contains(AuthConstants.OAuth.Errors.InvalidRequest, content);
-            Assert.Contains(AuthConstants.OAuth.ErrorDescriptions.CodeOrCodeVerifierMissing, content);
-        }
-        [Fact(DisplayName = $"{Endpoints.Connect.Token} {AuthConstants.OAuth.ErrorDescriptions.RefreshTokenNotFound}")]
-        [Trait("Category", "Unit")]
-        [Trait("Type", "Expected error")]
-        public async Task TokenAsync_InvalidRefreshToken_ReturnsInvalidGrant()
-        {
-            Dictionary<string, string> formData = new Dictionary<string, string>
-            {
-                [AuthConstants.OAuth.FieldNames.GrantTypeField] = AuthConstants.OAuth.GrantTypes.RefreshToken,
-                [AuthConstants.OAuth.FieldNames.RefreshToken] = "invalid_token",
-                [AuthConstants.OAuth.FieldNames.ClientId] = _clientId
-            };
-
-            HttpResponseMessage response = await _client.PostAsync(Endpoints.Connect.Token, new FormUrlEncodedContent(formData));
-            string content = await response.Content.ReadAsStringAsync();
-
-            Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
-            Assert.Contains(AuthConstants.OAuth.Errors.InvalidGrant, content);
-            Assert.Contains(AuthConstants.OAuth.ErrorDescriptions.RefreshTokenNotFound, content);
-        }
-
         private string? BuildQuery(Dictionary<string, string> parameters)
         {
             NameValueCollection query = HttpUtility.ParseQueryString(string.Empty);

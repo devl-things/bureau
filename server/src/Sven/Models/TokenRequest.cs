@@ -12,6 +12,9 @@ namespace Sven.Models
         [FromForm(Name = AuthConstants.OAuth.FieldNames.ClientId)]
         [Required]
         public string ClientId { get; set; } = string.Empty;
+        [FromForm(Name = AuthConstants.OAuth.FieldNames.RedirectUri)]
+        [Required]
+        public string RedirectUri { get; set; } = string.Empty;
         [FromForm(Name = AuthConstants.OAuth.FieldNames.Code)]
         public string? Code { get; set; } = string.Empty;
         [FromForm(Name = AuthConstants.OAuth.FieldNames.CodeVerifier)]
