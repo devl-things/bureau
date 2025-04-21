@@ -17,6 +17,8 @@ namespace Sven.Tests.Services
         private readonly TimeProvider _timeProvider;
         private readonly SvenTokenProvider _provider;
 
+        private readonly string _clientId = "client1";
+
         public TokenProviderTests()
         {
             _logger = Substitute.For<ILogger<SvenTokenProvider>>();
@@ -31,111 +33,97 @@ namespace Sven.Tests.Services
             );
         }
 
-        //[Fact]
-        //public async Task IsRefreshTokenValidAsync_ValidToken_ReturnsTrue()
-        //{
-        //    // Arrange
-        //    var validToken = new RefreshToken(
-        //        "client1",
-        //        "openid profile",
-        //        DateTime.UtcNow.AddHours(1)
-        //    );
-
-        //    _refreshTokenStore.GetAsync("valid_token", Arg.Any<CancellationToken>())
-        //        .Returns(Result<RefreshToken>.Success(validToken));
-
-        //    // Act
-        //    var result = await _provider.IsRefreshTokenValidAsync(
-        //        "valid_token", "client1", "openid", CancellationToken.None);
-
-        //    // Assert
-        //    Assert.True(result.Value);
-        //}
-
-        //[Fact]
-        //public async Task IsRefreshTokenValidAsync_TokenNotFound_ReturnsInvalidGrant()
-        //{
-        //    // Arrange
-        //    _refreshTokenStore.GetAsync("missing_token", Arg.Any<CancellationToken>())
-        //        .Returns(Result<RefreshToken>.Fail("not_found", "Token not found"));
-
-        //    // Act
-        //    var result = await _provider.IsRefreshTokenValidAsync(
-        //        "missing_token", "client1", "openid", CancellationToken.None);
-
-        //    // Assert
-        //    Assert.True(result.IsError);
-        //    Assert.Equal(AuthConstants.OAuth.Errors.InvalidGrant, result.Error.ErrorMessage);
-        //    Assert.Equal(AuthConstants.OAuth.ErrorDescriptions.RefreshTokenNotFound, result.Error.LogMessage);
-        //    _logger.Received(1).LogResultError(Arg.Any<ResultError>());
-        //}
-
-        //[Fact]
-        //public async Task IsRefreshTokenValidAsync_ScopeExceeds_ReturnsInvalidScope()
-        //{
-        //    // Arrange
-        //    var token = new RefreshToken("client1", "openid", DateTime.UtcNow.AddHours(1));
-        //    _refreshTokenStore.GetAsync("token", Arg.Any<CancellationToken>())
-        //        .Returns(Result<RefreshToken>.Success(token));
-
-        //    // Act
-        //    var result = await _provider.IsRefreshTokenValidAsync(
-        //        "token", "client1", "openid profile", CancellationToken.None);
-
-        //    // Assert
-        //    Assert.True(result.IsError);
-        //    Assert.Equal(AuthConstants.OAuth.Errors.InvalidScope, result.Error.ErrorMessage);
-        //}
-
-        //[Fact]
-        //public async Task IsRefreshTokenValidAsync_ClientMismatch_ReturnsInvalidClient()
-        //{
-        //    // Arrange
-        //    var token = new RefreshToken("client1", "openid", DateTime.UtcNow.AddHours(1));
-        //    _refreshTokenStore.GetAsync("token", Arg.Any<CancellationToken>())
-        //        .Returns(Result<RefreshToken>.Success(token));
-
-        //    // Act
-        //    var result = await _provider.IsRefreshTokenValidAsync(
-        //        "token", "wrong_client", "openid", CancellationToken.None);
-
-        //    // Assert
-        //    Assert.True(result.IsError);
-        //    Assert.Equal(AuthConstants.OAuth.Errors.InvalidClient, result.Error.ErrorMessage);
-        //}
-
-        //[Fact]
-        //public async Task IsRefreshTokenValidAsync_ExpiredToken_ReturnsInvalidGrant()
-        //{
-        //    // Arrange
-        //    var expiredToken = new RefreshToken(
-        //        "client1",
-        //        "openid",
-        //        DateTime.UtcNow.AddHours(-1) // Already expired
-        //    );
-
-        //    _refreshTokenStore.GetAsync("expired_token", Arg.Any<CancellationToken>())
-        //        .Returns(Result<RefreshToken>.Success(expiredToken));
-
-        //    _timeProvider.GetUtcNow().Returns(DateTime.UtcNow);
-
-        //    // Act
-        //    var result = await _provider.IsRefreshTokenValidAsync(
-        //        "expired_token", "client1", "openid", CancellationToken.None);
-
-        //    // Assert
-        //    Assert.True(result.IsError);
-        //    Assert.Equal(AuthConstants.OAuth.Errors.InvalidGrant, result.Error.ErrorMessage);
-        //}
-    }
-
-    // Test Helper Extension for Logger
-    public static class LoggerExtensions
-    {
-        public static void LogResultError<T>(this ILogger<T> logger, ResultError error)
+        [Fact]
+        public async Task IsRefreshTokenValidAsync_ValidToken_ReturnsTrue()
         {
-            logger.LogError("Error: {Error} - {Description}",
-                error.ErrorMessage, error.LogMessage);
+            RefreshToken validToken = new RefreshToken()
+            {
+                ClientId = _clientId,
+                Scope = $"{AuthConstants.Scopes.OpenId} {AuthConstants.Scopes.Profile}",
+                ExpiresAt = DateTime.UtcNow.AddHours(1)
+            };
+            _refreshTokenStore.GetAsync("valid_token", Arg.Any<CancellationToken>())
+                .Returns(new Result<RefreshToken>(validToken));
+
+            Result<bool> result = await _provider.IsRefreshTokenValidAsync(
+                "valid_token", _clientId, AuthConstants.Scopes.OpenId, CancellationToken.None);
+
+            Assert.True(result.IsSuccess);
+        }
+
+        [Fact]
+        public async Task IsRefreshTokenValidAsync_TokenNotFound_ReturnsInvalidGrant()
+        {
+            ResultError resultErrorExpected = new ResultError(AuthConstants.OAuth.Errors.InvalidGrant, AuthConstants.OAuth.ErrorDescriptions.RefreshTokenNotFound);
+            _refreshTokenStore.GetAsync(Arg.Any<string>(), Arg.Any<CancellationToken>())
+                .Returns(new Result<RefreshToken>(resultErrorExpected));
+
+            Result<bool> result = await _provider.IsRefreshTokenValidAsync(
+                "missing_token", _clientId, AuthConstants.Scopes.OpenId, CancellationToken.None);
+
+            Assert.True(result.IsError);
+            Assert.Equal(AuthConstants.OAuth.Errors.InvalidGrant, result.Error.ErrorMessage);
+            Assert.Equal(AuthConstants.OAuth.ErrorDescriptions.RefreshTokenNotFound, result.Error.LogMessage);
+            _logger.Received(1).LogResultError(resultErrorExpected);
+        }
+
+        [Fact]
+        public async Task IsRefreshTokenValidAsync_ScopeExceeds_ReturnsInvalidScope()
+        {
+            RefreshToken token = new RefreshToken()
+            {
+                ClientId = _clientId,
+                Scope = AuthConstants.Scopes.OpenId,
+                ExpiresAt = DateTime.UtcNow.AddHours(1)
+            };
+
+            _refreshTokenStore.GetAsync("token", Arg.Any<CancellationToken>())
+                .Returns(new Result<RefreshToken>(token));
+
+            Result<bool> result = await _provider.IsRefreshTokenValidAsync(
+                "token", _clientId, $"{AuthConstants.Scopes.OpenId} {AuthConstants.Scopes.Profile}", CancellationToken.None);
+
+            Assert.True(result.IsError);
+            Assert.Equal(AuthConstants.OAuth.Errors.InvalidScope, result.Error.ErrorMessage);
+        }
+
+        [Fact]
+        public async Task IsRefreshTokenValidAsync_ClientMismatch_ReturnsInvalidClient()
+        {
+            RefreshToken token = new RefreshToken()
+            {
+                ClientId = _clientId,
+                Scope = AuthConstants.Scopes.OpenId,
+                ExpiresAt = DateTime.UtcNow.AddHours(1)
+            };
+            _refreshTokenStore.GetAsync("token", Arg.Any<CancellationToken>())
+                .Returns(new Result<RefreshToken>(token));
+
+            Result<bool> result = await _provider.IsRefreshTokenValidAsync(
+                "token", "wrong_client", AuthConstants.Scopes.OpenId, CancellationToken.None);
+
+            Assert.True(result.IsError);
+            Assert.Equal(AuthConstants.OAuth.Errors.InvalidClient, result.Error.ErrorMessage);
+        }
+
+        [Fact]
+        public async Task IsRefreshTokenValidAsync_ExpiredToken_ReturnsInvalidGrant()
+        {
+            RefreshToken token = new RefreshToken()
+            {
+                ClientId = _clientId,
+                Scope = AuthConstants.Scopes.OpenId,
+                ExpiresAt = DateTime.UtcNow.AddHours(-1)
+            };
+            _refreshTokenStore.GetAsync("token", Arg.Any<CancellationToken>())
+                .Returns(new Result<RefreshToken>(token));
+            _timeProvider.GetUtcNow().Returns(DateTime.UtcNow);
+
+            Result<bool> result = await _provider.IsRefreshTokenValidAsync(
+                "token", _clientId, AuthConstants.Scopes.OpenId, CancellationToken.None);
+
+            Assert.True(result.IsError);
+            Assert.Equal(AuthConstants.OAuth.Errors.InvalidGrant, result.Error.ErrorMessage);
         }
     }
 }
