@@ -34,12 +34,14 @@
             public const string AuthorizeContinuePath = "authorize/continue";
             public const string AuthorizeLoginPath = "authorize/login";
             public const string TokenPath = "token";
+            public const string RevocationPath = "revocation";
 
             public const string AuthorizePage = "/connect/authorize/page";
             public const string Authorize = $"/{Base}/{AuthorizePath}";
             public const string AuthorizeContinue = $"/{Base}/{AuthorizeContinuePath}";
             public const string AuthorizeLogin = $"/{Base}/{AuthorizeLoginPath}";
             public const string Token = $"/{Base}/{TokenPath}";
+            public const string Revocation = $"/{Base}/{RevocationPath}";
         }
     }
 }

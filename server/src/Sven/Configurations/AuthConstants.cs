@@ -57,6 +57,8 @@
                 public const string CodeVerifier = "code_verifier";
 
                 public const string IdToken = "id_token";
+                public const string Token = "token";
+                public const string TokenTypeHint = "token_type_hint";
                 public const string RefreshToken = "refresh_token";
                 public const string AccessToken = "access_token";
                 public const string TokenType = "token_type";

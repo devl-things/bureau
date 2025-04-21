@@ -196,5 +196,30 @@ namespace Sven.Services
 
             return new JwtSecurityTokenHandler().WriteToken(token);
         }
+
+        public async Task<Result<bool>> RevokeAsync(string token, string clientId, string? tokenTypeHint, CancellationToken cancellationToken)
+        {
+            Result<RefreshToken> storedRefreshTokenResult = await _refreshTokenStore.GetAsync(token, cancellationToken);
+
+            if (storedRefreshTokenResult.IsError)
+            {
+                _logger.LogResultError(storedRefreshTokenResult.Error);
+                return new Result<bool>(false);
+            }
+            if (storedRefreshTokenResult.Value.ClientId != clientId)
+            {
+                _logger.LogWarning("Token's client not the same as received client");
+                return new Result<bool>(false);
+            }
+
+            Result removeResult = await _refreshTokenStore.RemoveAsync(token, cancellationToken);
+            if (removeResult.IsError)
+            {
+                _logger.LogResultError(storedRefreshTokenResult.Error);
+                return new ResultError(AuthConstants.OAuth.Errors.ServerError, "Token couldn't be revoked.");
+            }
+
+            return true;
+        }
     }
 }

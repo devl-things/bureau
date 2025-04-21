@@ -17,7 +17,7 @@ namespace Sven.Controllers
 {
     [ApiController]
     [Route(Endpoints.Connect.Base)]
-    public class ConnectController : ControllerBase
+    public partial class ConnectController : ControllerBase
     {
         private readonly ILogger<ConnectController> _logger;
         private readonly AuthCodeProvider _authCodeManager;
@@ -164,6 +164,8 @@ namespace Sven.Controllers
             }
             return RedirectWithOAuthCode(requestResult.Value.RedirectUri, codeResult.Value, requestResult.Value.State);
         }
+
+
 
         [HttpPost(Endpoints.Connect.TokenPath)]
         [DisableAutoValidation]

@@ -34,6 +34,7 @@ namespace Sven.Tests.Services
         }
 
         [Fact]
+        [Trait("Category", "Unit")]
         public async Task IsRefreshTokenValidAsync_ValidToken_ReturnsTrue()
         {
             RefreshToken validToken = new RefreshToken()
@@ -52,6 +53,7 @@ namespace Sven.Tests.Services
         }
 
         [Fact]
+        [Trait("Category", "Unit")]
         public async Task IsRefreshTokenValidAsync_TokenNotFound_ReturnsInvalidGrant()
         {
             ResultError resultErrorExpected = new ResultError(AuthConstants.OAuth.Errors.InvalidGrant, AuthConstants.OAuth.ErrorDescriptions.RefreshTokenNotFound);
@@ -68,6 +70,7 @@ namespace Sven.Tests.Services
         }
 
         [Fact]
+        [Trait("Category", "Unit")]
         public async Task IsRefreshTokenValidAsync_ScopeExceeds_ReturnsInvalidScope()
         {
             RefreshToken token = new RefreshToken()
@@ -88,6 +91,7 @@ namespace Sven.Tests.Services
         }
 
         [Fact]
+        [Trait("Category", "Unit")]
         public async Task IsRefreshTokenValidAsync_ClientMismatch_ReturnsInvalidClient()
         {
             RefreshToken token = new RefreshToken()
@@ -107,6 +111,7 @@ namespace Sven.Tests.Services
         }
 
         [Fact]
+        [Trait("Category", "Unit")]
         public async Task IsRefreshTokenValidAsync_ExpiredToken_ReturnsInvalidGrant()
         {
             RefreshToken token = new RefreshToken()
