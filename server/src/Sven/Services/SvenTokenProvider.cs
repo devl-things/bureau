@@ -80,6 +80,7 @@ namespace Sven.Services
                 {
                     Token = Guid.NewGuid().ToString("N"),
                     ClientId = clientClaims.ClientId,
+                    RedirectUri = clientClaims.RedirectUri,
                     Claims = clientClaims.Claims,
                     Scope = clientClaims.Scope,
                     Nonce = clientClaims.Nonce,
@@ -157,7 +158,7 @@ namespace Sven.Services
             return null;
         }
 
-        public async Task<Result<bool>> IsRefreshTokenValidAsync(string refreshToken, string clientId, string? scope, CancellationToken cancellationToken)
+        public async Task<Result<bool>> IsRefreshTokenValidAsync(string refreshToken, string clientId, string redirectUri, string? scope, CancellationToken cancellationToken)
         {
             Result<RefreshToken> storedRefreshTokenResult = await _refreshTokenStore.GetAsync(refreshToken, cancellationToken);
 
@@ -171,7 +172,7 @@ namespace Sven.Services
             {
                 return new ResultError(AuthConstants.OAuth.Errors.InvalidScope, "Requested scope exceeds originally granted scope.");
             }
-            if (storedToken.ClientId != clientId)
+            if (storedToken.ClientId != clientId || storedToken.RedirectUri != redirectUri)
             {
                 return new ResultError(AuthConstants.OAuth.Errors.InvalidClient, "Refresh token does not belong to this client.");
             }
@@ -195,6 +196,31 @@ namespace Sven.Services
             );
 
             return new JwtSecurityTokenHandler().WriteToken(token);
+        }
+
+        public async Task<Result<bool>> RevokeAsync(string token, string clientId, string? tokenTypeHint, CancellationToken cancellationToken)
+        {
+            Result<RefreshToken> storedRefreshTokenResult = await _refreshTokenStore.GetAsync(token, cancellationToken);
+
+            if (storedRefreshTokenResult.IsError)
+            {
+                _logger.LogResultError(storedRefreshTokenResult.Error);
+                return new Result<bool>(false);
+            }
+            if (storedRefreshTokenResult.Value.ClientId != clientId)
+            {
+                _logger.LogWarning("Token's client not the same as received client");
+                return new Result<bool>(false);
+            }
+
+            Result removeResult = await _refreshTokenStore.RemoveAsync(token, cancellationToken);
+            if (removeResult.IsError)
+            {
+                _logger.LogResultError(storedRefreshTokenResult.Error);
+                return new ResultError(AuthConstants.OAuth.Errors.ServerError, "Token couldn't be revoked.");
+            }
+
+            return true;
         }
     }
 }

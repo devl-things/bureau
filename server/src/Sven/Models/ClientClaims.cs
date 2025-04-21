@@ -14,6 +14,7 @@ namespace Sven.Models
         }
 
         public string ClientId { get; set; } = string.Empty;
+        public string RedirectUri { get; set; } = string.Empty;
         public List<Claim> Claims { get; set; } = new List<Claim>();
 
         public string? Nonce { get; set; }

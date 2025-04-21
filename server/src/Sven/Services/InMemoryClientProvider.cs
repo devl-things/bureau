@@ -14,5 +14,10 @@ namespace Sven.Services
             bool isValid = !(string.IsNullOrWhiteSpace(clientId) || string.IsNullOrWhiteSpace(redirectUri));
             return Task.FromResult(new Result<bool>(isValid));
         }
+
+        public Task<Result<bool>> IsValidAsync(string? clientId, CancellationToken cancellationToken = default)
+        {
+            return Task.FromResult(new Result<bool>(!string.IsNullOrWhiteSpace(clientId)));
+        }
     }
 }

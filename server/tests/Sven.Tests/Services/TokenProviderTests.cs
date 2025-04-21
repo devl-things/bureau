@@ -18,6 +18,7 @@ namespace Sven.Tests.Services
         private readonly SvenTokenProvider _provider;
 
         private readonly string _clientId = "client1";
+        private readonly string _redirectUri = "http://localhost";
 
         public TokenProviderTests()
         {
@@ -34,11 +35,13 @@ namespace Sven.Tests.Services
         }
 
         [Fact]
+        [Trait("Category", "Unit")]
         public async Task IsRefreshTokenValidAsync_ValidToken_ReturnsTrue()
         {
             RefreshToken validToken = new RefreshToken()
             {
                 ClientId = _clientId,
+                RedirectUri = _redirectUri,
                 Scope = $"{AuthConstants.Scopes.OpenId} {AuthConstants.Scopes.Profile}",
                 ExpiresAt = DateTime.UtcNow.AddHours(1)
             };
@@ -46,12 +49,13 @@ namespace Sven.Tests.Services
                 .Returns(new Result<RefreshToken>(validToken));
 
             Result<bool> result = await _provider.IsRefreshTokenValidAsync(
-                "valid_token", _clientId, AuthConstants.Scopes.OpenId, CancellationToken.None);
+                "valid_token", _clientId, _redirectUri, AuthConstants.Scopes.OpenId, CancellationToken.None);
 
             Assert.True(result.IsSuccess);
         }
 
         [Fact]
+        [Trait("Category", "Unit")]
         public async Task IsRefreshTokenValidAsync_TokenNotFound_ReturnsInvalidGrant()
         {
             ResultError resultErrorExpected = new ResultError(AuthConstants.OAuth.Errors.InvalidGrant, AuthConstants.OAuth.ErrorDescriptions.RefreshTokenNotFound);
@@ -59,7 +63,7 @@ namespace Sven.Tests.Services
                 .Returns(new Result<RefreshToken>(resultErrorExpected));
 
             Result<bool> result = await _provider.IsRefreshTokenValidAsync(
-                "missing_token", _clientId, AuthConstants.Scopes.OpenId, CancellationToken.None);
+                "missing_token", _clientId, _redirectUri, AuthConstants.Scopes.OpenId, CancellationToken.None);
 
             Assert.True(result.IsError);
             Assert.Equal(AuthConstants.OAuth.Errors.InvalidGrant, result.Error.ErrorMessage);
@@ -68,11 +72,13 @@ namespace Sven.Tests.Services
         }
 
         [Fact]
+        [Trait("Category", "Unit")]
         public async Task IsRefreshTokenValidAsync_ScopeExceeds_ReturnsInvalidScope()
         {
             RefreshToken token = new RefreshToken()
             {
                 ClientId = _clientId,
+                RedirectUri = _redirectUri,
                 Scope = AuthConstants.Scopes.OpenId,
                 ExpiresAt = DateTime.UtcNow.AddHours(1)
             };
@@ -81,18 +87,20 @@ namespace Sven.Tests.Services
                 .Returns(new Result<RefreshToken>(token));
 
             Result<bool> result = await _provider.IsRefreshTokenValidAsync(
-                "token", _clientId, $"{AuthConstants.Scopes.OpenId} {AuthConstants.Scopes.Profile}", CancellationToken.None);
+                "token", _clientId, _redirectUri, $"{AuthConstants.Scopes.OpenId} {AuthConstants.Scopes.Profile}", CancellationToken.None);
 
             Assert.True(result.IsError);
             Assert.Equal(AuthConstants.OAuth.Errors.InvalidScope, result.Error.ErrorMessage);
         }
 
         [Fact]
+        [Trait("Category", "Unit")]
         public async Task IsRefreshTokenValidAsync_ClientMismatch_ReturnsInvalidClient()
         {
             RefreshToken token = new RefreshToken()
             {
                 ClientId = _clientId,
+                RedirectUri = _redirectUri,
                 Scope = AuthConstants.Scopes.OpenId,
                 ExpiresAt = DateTime.UtcNow.AddHours(1)
             };
@@ -100,18 +108,41 @@ namespace Sven.Tests.Services
                 .Returns(new Result<RefreshToken>(token));
 
             Result<bool> result = await _provider.IsRefreshTokenValidAsync(
-                "token", "wrong_client", AuthConstants.Scopes.OpenId, CancellationToken.None);
+                "token", "wrong_client", _redirectUri, AuthConstants.Scopes.OpenId, CancellationToken.None);
 
             Assert.True(result.IsError);
             Assert.Equal(AuthConstants.OAuth.Errors.InvalidClient, result.Error.ErrorMessage);
         }
 
         [Fact]
+        [Trait("Category", "Unit")]
+        public async Task IsRefreshTokenValidAsync_RedirectUriMismatch_ReturnsInvalidClient()
+        {
+            RefreshToken token = new RefreshToken()
+            {
+                ClientId = _clientId,
+                RedirectUri = _redirectUri,
+                Scope = AuthConstants.Scopes.OpenId,
+                ExpiresAt = DateTime.UtcNow.AddHours(1)
+            };
+            _refreshTokenStore.GetAsync("token", Arg.Any<CancellationToken>())
+                .Returns(new Result<RefreshToken>(token));
+
+            Result<bool> result = await _provider.IsRefreshTokenValidAsync(
+                "token", _clientId, "https://wronguri", AuthConstants.Scopes.OpenId, CancellationToken.None);
+
+            Assert.True(result.IsError);
+            Assert.Equal(AuthConstants.OAuth.Errors.InvalidClient, result.Error.ErrorMessage);
+        }
+
+        [Fact]
+        [Trait("Category", "Unit")]
         public async Task IsRefreshTokenValidAsync_ExpiredToken_ReturnsInvalidGrant()
         {
             RefreshToken token = new RefreshToken()
             {
                 ClientId = _clientId,
+                RedirectUri = _redirectUri,
                 Scope = AuthConstants.Scopes.OpenId,
                 ExpiresAt = DateTime.UtcNow.AddHours(-1)
             };
@@ -120,7 +151,7 @@ namespace Sven.Tests.Services
             _timeProvider.GetUtcNow().Returns(DateTime.UtcNow);
 
             Result<bool> result = await _provider.IsRefreshTokenValidAsync(
-                "token", _clientId, AuthConstants.Scopes.OpenId, CancellationToken.None);
+                "token", _clientId, _redirectUri, AuthConstants.Scopes.OpenId, CancellationToken.None);
 
             Assert.True(result.IsError);
             Assert.Equal(AuthConstants.OAuth.Errors.InvalidGrant, result.Error.ErrorMessage);

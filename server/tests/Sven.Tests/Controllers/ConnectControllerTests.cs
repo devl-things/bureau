@@ -73,7 +73,8 @@ namespace Sven.Tests.Controllers
                 { AuthConstants.OAuth.FieldNames.GrantTypeField, AuthConstants.OAuth.GrantTypes.AuthorizationCode },
                 { AuthConstants.OAuth.FieldNames.Code, code! },
                 { AuthConstants.OAuth.FieldNames.CodeVerifier, codeVerifier },
-                { AuthConstants.OAuth.FieldNames.ClientId, clientId }
+                { AuthConstants.OAuth.FieldNames.ClientId, clientId },
+                { AuthConstants.OAuth.FieldNames.RedirectUri, redirectUriExpected }
             });
 
             HttpResponseMessage tokenResponse = await _client.SendAsync(tokenRequest);
@@ -96,6 +97,7 @@ namespace Sven.Tests.Controllers
                 { AuthConstants.OAuth.FieldNames.GrantTypeField, AuthConstants.OAuth.GrantTypes.RefreshToken },
                 { AuthConstants.OAuth.FieldNames.RefreshToken, token1.RefreshToken },
                 { AuthConstants.OAuth.FieldNames.ClientId, clientId },
+                { AuthConstants.OAuth.FieldNames.RedirectUri, redirectUriExpected },
                 { AuthConstants.OAuth.FieldNames.Scope, AuthConstants.Scopes.OpenId}
             });
 
@@ -119,7 +121,8 @@ namespace Sven.Tests.Controllers
             {
                 { AuthConstants.OAuth.FieldNames.GrantTypeField, AuthConstants.OAuth.GrantTypes.RefreshToken },
                 { AuthConstants.OAuth.FieldNames.RefreshToken, token1.RefreshToken }, // reusing the same token
-                { AuthConstants.OAuth.FieldNames.ClientId, clientId }
+                { AuthConstants.OAuth.FieldNames.ClientId, clientId },
+                { AuthConstants.OAuth.FieldNames.RedirectUri, redirectUriExpected }
             });
 
             HttpResponseMessage refreshResponse2 = await _client.SendAsync(refreshRequest2);
@@ -174,7 +177,8 @@ namespace Sven.Tests.Controllers
                 { AuthConstants.OAuth.FieldNames.GrantTypeField, AuthConstants.OAuth.GrantTypes.AuthorizationCode },
                 { AuthConstants.OAuth.FieldNames.Code, code! },
                 { AuthConstants.OAuth.FieldNames.CodeVerifier, codeVerifier },
-                { AuthConstants.OAuth.FieldNames.ClientId, clientId }
+                { AuthConstants.OAuth.FieldNames.ClientId, clientId },
+                { AuthConstants.OAuth.FieldNames.RedirectUri, redirectUriExpected }
             });
 
             HttpResponseMessage tokenResponse = await _client.SendAsync(tokenRequest);
@@ -194,6 +198,7 @@ namespace Sven.Tests.Controllers
                 { AuthConstants.OAuth.FieldNames.GrantTypeField, AuthConstants.OAuth.GrantTypes.RefreshToken },
                 { AuthConstants.OAuth.FieldNames.RefreshToken, token1.RefreshToken },
                 { AuthConstants.OAuth.FieldNames.ClientId, clientId },
+                { AuthConstants.OAuth.FieldNames.RedirectUri, redirectUriExpected },
                 { AuthConstants.OAuth.FieldNames.Scope, AuthConstants.Scopes.OpenId}
             });
 
@@ -250,7 +255,8 @@ namespace Sven.Tests.Controllers
                 { AuthConstants.OAuth.FieldNames.GrantTypeField, AuthConstants.OAuth.GrantTypes.AuthorizationCode },
                 { AuthConstants.OAuth.FieldNames.Code, code! },
                 { AuthConstants.OAuth.FieldNames.CodeVerifier, codeVerifier },
-                { AuthConstants.OAuth.FieldNames.ClientId, clientId }
+                { AuthConstants.OAuth.FieldNames.ClientId, clientId },
+                { AuthConstants.OAuth.FieldNames.RedirectUri, redirectUriExpected }
             });
 
             HttpResponseMessage tokenResponse = await _client.SendAsync(tokenRequest);
@@ -272,7 +278,8 @@ namespace Sven.Tests.Controllers
             {
                 { AuthConstants.OAuth.FieldNames.GrantTypeField, AuthConstants.OAuth.GrantTypes.RefreshToken },
                 { AuthConstants.OAuth.FieldNames.RefreshToken, token1.RefreshToken },
-                { AuthConstants.OAuth.FieldNames.ClientId, clientId }
+                { AuthConstants.OAuth.FieldNames.ClientId, clientId },
+                { AuthConstants.OAuth.FieldNames.RedirectUri, redirectUriExpected }
             });
 
             HttpResponseMessage refreshResponse1 = await _client.SendAsync(refreshRequest1);
@@ -329,7 +336,8 @@ namespace Sven.Tests.Controllers
                 { AuthConstants.OAuth.FieldNames.GrantTypeField, AuthConstants.OAuth.GrantTypes.AuthorizationCode },
                 { AuthConstants.OAuth.FieldNames.Code, code! },
                 { AuthConstants.OAuth.FieldNames.CodeVerifier, codeVerifier },
-                { AuthConstants.OAuth.FieldNames.ClientId, clientId }
+                { AuthConstants.OAuth.FieldNames.ClientId, clientId },
+                { AuthConstants.OAuth.FieldNames.RedirectUri, redirectUriExpected }
             });
 
             HttpResponseMessage tokenResponse = await _client.SendAsync(tokenRequest);
