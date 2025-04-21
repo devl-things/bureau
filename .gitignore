@@ -1,5 +1,8 @@
+
 #sonarqube
 .sonarqube/
+## sonarqube test coverage script
+docs/test-coverage.md
 
 # ignore local settings
 appsettings.Development.json
