@@ -25,8 +25,9 @@
         public bool HasScope(string scope)
         {
             if (string.IsNullOrWhiteSpace(scope)) return false;
+            if (_scopes == null && string.IsNullOrWhiteSpace(Scope)) return false;
 
-            _scopes ??= Scope
+            _scopes ??= Scope!
                 .Split(' ', StringSplitOptions.RemoveEmptyEntries)
                 .Select(s => s.ToLowerInvariant())
                 .ToHashSet();

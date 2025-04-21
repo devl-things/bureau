@@ -8,10 +8,12 @@ namespace Sven.Services
 {
     public class AuthCodeProvider
     {
+        private readonly ILogger<AuthCodeProvider> _logger;
         private readonly IStore<string, AuthCode> _authCodeStore;
         private readonly TimeProvider _timeProvider;
-        public AuthCodeProvider(IStore<string, AuthCode> authCodeStore, TimeProvider timeProvider)
+        public AuthCodeProvider(ILogger<AuthCodeProvider> logger, IStore<string, AuthCode> authCodeStore, TimeProvider timeProvider)
         {
+            _logger = logger;
             _authCodeStore = authCodeStore;
             _timeProvider = timeProvider;
         }
@@ -21,7 +23,7 @@ namespace Sven.Services
             return _authCodeStore.RemoveAsync(code, cancellationToken);
         }
 
-        internal async Task<string> CreateAuthCodeAsync(OAuthRequest request, List<Claim> claims, CancellationToken cancellationToken)
+        internal async Task<Result<string>> CreateAuthCodeAsync(OAuthRequest request, List<Claim> claims, CancellationToken cancellationToken)
         {
             string code = Guid.NewGuid().ToString("N");
 
@@ -38,9 +40,13 @@ namespace Sven.Services
                 Nonce = request.Nonce
             };
 
-            await _authCodeStore.StoreAsync(code, authCode, cancellationToken);
-
-            return code;
+            Result storeResult = await _authCodeStore.StoreAsync(code, authCode, cancellationToken);
+            if (storeResult.IsError)
+            {
+                _logger.LogResultError(storeResult.Error);
+                return new ResultError(AuthConstants.OAuth.Errors.ServerError, "Failed create code.");
+            }
+            return new Result<string>(code);
         }
 
         internal Task<Result<AuthCode>> GetAsync(string code, CancellationToken cancellationToken)

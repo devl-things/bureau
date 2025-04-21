@@ -77,6 +77,47 @@
                 public const string CodeChallengeMethodsSupported = "code_challenge_methods_supported";
                 public const string ScopesSupported = "scopes_supported";
 
+                //Errors
+                public const string Error = "error";
+                public const string ErrorDescription = "error_description";
+                public const string ErrorUri = "error_uri";
+
+
+            }
+            public static class Errors
+            {
+                // Standard OAuth 2.0 errors
+                public const string InvalidRequest = "invalid_request";
+                public const string InvalidClient = "invalid_client";
+                public const string InvalidGrant = "invalid_grant";
+                public const string UnauthorizedClient = "unauthorized_client";
+                public const string UnsupportedGrantType = "unsupported_grant_type";
+                public const string InvalidScope = "invalid_scope";
+                public const string AccessDenied = "access_denied";
+                public const string ServerError = "server_error";
+                public const string TemporarilyUnavailable = "temporarily_unavailable";
+                public const string UnsupportedResponseType = "unsupported_response_type";
+
+                // OpenID Connect-specific errors
+                public const string InteractionRequired = "interaction_required";
+                public const string LoginRequired = "login_required";
+                public const string AccountSelectionRequired = "account_selection_required";
+                public const string ConsentRequired = "consent_required";
+
+                // Errors returned from authorization endpoint with redirect
+                public const string RequestNotSupported = "request_not_supported";
+                public const string RequestUriNotSupported = "request_uri_not_supported";
+                public const string RegistrationNotSupported = "registration_not_supported";
+            }
+
+            public static class ErrorDescriptions
+            {
+                public const string InvalidRedirectUriFormat = "Invalid redirect_uri format.";
+                public const string UnsupportedResponseType = "The response type is not supported";
+                public const string UnsupportedGrantType = "The grant type is not supported";
+                public const string MissingAuthorizationState = "Missing authorization state";
+                public const string CodeOrCodeVerifierMissing = "Code or code_verifier is missing";
+                public const string RefreshTokenNotFound = "Refresh token not found.";
             }
         }
         public static class CookieNames

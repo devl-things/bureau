@@ -20,10 +20,10 @@ namespace Sven.Pages.Connect
         {
             if (!Request.TryGetCookieValue(AuthConstants.CookieNames.PkceKey, out string? pkceKey))
             {
-                return BadRequest("Missing authorization state.");
+                return BadRequest(AuthConstants.OAuth.ErrorDescriptions.MissingAuthorizationState);
             }
 
-            if (!_pkceRequestStore.Exists(pkceKey))
+            if (!_pkceRequestStore.Exists(pkceKey!))
             {
                 return BadRequest("Invalid or expired request.");
             }

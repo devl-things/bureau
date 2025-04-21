@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Authentication.Google;
 using Microsoft.IdentityModel.Tokens;
 using Sven.Abstractions.Services;
 using Sven.Configurations;
+using Sven.AutoValidation;
 using Sven.Models;
 using Sven.Services;
 using System.Security.Cryptography;
@@ -48,7 +49,7 @@ namespace Sven
             builder.Services.AddSingleton<ITokenProvider, SvenTokenProvider>();
             builder.Services.AddSingleton<IUserClaimsProvider, InMemoryUserClaimsProvider>();
             builder.Services.AddSingleton<IClientProvider, InMemoryClientProvider>();
-
+            builder.Services.AddScoped<OAuthValidationFilter>();
 
 
             // Config for CORS (allow React dev server access)

@@ -5,9 +5,13 @@ namespace Sven.Services
 {
     public class InMemoryClientProvider : IClientProvider
     {
-        public Task<Result<bool>> IsValidAsync(string clientId, string redirectUri, string scope, CancellationToken cancellationToken = default)
+        public Task<Result<bool>> IsScopeValidAsync(string clientId, string scope, CancellationToken cancellationToken = default)
         {
-            bool isValid = !(string.IsNullOrWhiteSpace(clientId) || string.IsNullOrWhiteSpace(redirectUri) || string.IsNullOrWhiteSpace(scope));
+            return Task.FromResult(new Result<bool>(!string.IsNullOrWhiteSpace(scope)));
+        }
+        public Task<Result<bool>> IsValidAsync(string clientId, string redirectUri, CancellationToken cancellationToken = default)
+        {
+            bool isValid = !(string.IsNullOrWhiteSpace(clientId) || string.IsNullOrWhiteSpace(redirectUri));
             return Task.FromResult(new Result<bool>(isValid));
         }
     }
