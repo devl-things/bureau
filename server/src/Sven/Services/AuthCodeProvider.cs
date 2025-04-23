@@ -40,7 +40,7 @@ namespace Sven.Services
                 CodeChallengeMethod = request.CodeChallengeMethod,
                 Scope = request.Scope,
                 Claims = claims,
-                ExpiresAt = _timeProvider.GetFutureTime(new TimeSpan(0, 5, 0)),
+                ExpiresAt = _timeProvider.GetFutureTime(_authOptions.AuthorizationCodeLifetime),
                 Nonce = request.Nonce
             };
 
