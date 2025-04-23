@@ -1,4 +1,5 @@
 ﻿using Bureau.Core;
+using Bureau.Core.Extensions;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Sven.Configurations;
@@ -84,7 +85,7 @@ namespace Sven.Services
                     Claims = clientClaims.Claims,
                     Scope = clientClaims.Scope,
                     Nonce = clientClaims.Nonce,
-                    ExpiresAt = _timeProvider.GetUtcNow().AddDays(30)
+                    ExpiresAt = _timeProvider.GetFutureTime(_jwtOptions.RefreshTokenLifetime)
                 };
                 Result storeResult = await _refreshTokenStore.StoreAsync(refreshTokenObject.Token, refreshTokenObject, cancellationToken);
                 if (storeResult.IsError)
@@ -107,7 +108,7 @@ namespace Sven.Services
                     new Claim(JwtRegisteredClaimNames.Sub, clientClaims.GetClaimValue(JwtRegisteredClaimNames.Sub)),
                     new Claim(JwtRegisteredClaimNames.NameId, clientClaims.GetClaimValue(JwtRegisteredClaimNames.Sub)),
                     new Claim(JwtRegisteredClaimNames.Aud, clientClaims.ClientId),
-                    new Claim(JwtRegisteredClaimNames.Exp, _timeProvider.GetUtcNow().AddMinutes(5).ToUnixTimeSeconds().ToString(), ClaimValueTypes.Integer64),
+                    new Claim(JwtRegisteredClaimNames.Exp, _timeProvider.GetFutureUnixTimeSeconds(_jwtOptions.IdTokenLifetime).ToString(), ClaimValueTypes.Integer64),
                     new Claim(JwtRegisteredClaimNames.Iat, _timeProvider.GetUtcNow().ToUnixTimeSeconds().ToString(), ClaimValueTypes.Integer64),
                     new Claim(JwtRegisteredClaimNames.Acr, clientClaims.GetClaimValue(JwtRegisteredClaimNames.Acr)),
                     new Claim(JwtRegisteredClaimNames.AuthTime, clientClaims.GetClaimValue(JwtRegisteredClaimNames.AuthTime)),
@@ -191,7 +192,7 @@ namespace Sven.Services
                 issuer: _jwtOptions.Issuer,
                 audience: _jwtOptions.Audience,
                 claims: clientClaims.Claims.Append(new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())),
-                expires: _timeProvider.GetUtcNow().AddHours(1).DateTime,
+                expires: _timeProvider.GetFutureTime(_jwtOptions.AccessTokenLifetime).DateTime,
                 signingCredentials: creds
             );
 

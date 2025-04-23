@@ -1,4 +1,6 @@
 ﻿using Bureau.Core;
+using Bureau.Core.Extensions;
+using Microsoft.Extensions.Options;
 using Sven.Configurations;
 using Sven.Models;
 using System.Security.Claims;
@@ -11,11 +13,13 @@ namespace Sven.Services
         private readonly ILogger<AuthCodeProvider> _logger;
         private readonly IStore<string, AuthCode> _authCodeStore;
         private readonly TimeProvider _timeProvider;
-        public AuthCodeProvider(ILogger<AuthCodeProvider> logger, IStore<string, AuthCode> authCodeStore, TimeProvider timeProvider)
+        private readonly AuthOptions _authOptions;
+        public AuthCodeProvider(ILogger<AuthCodeProvider> logger, IOptions<AuthOptions> authOptions, IStore<string, AuthCode> authCodeStore, TimeProvider timeProvider)
         {
             _logger = logger;
             _authCodeStore = authCodeStore;
             _timeProvider = timeProvider;
+            _authOptions = authOptions.Value;
         }
 
         internal Task<Result> ClearAsync(string code, CancellationToken cancellationToken)
@@ -36,7 +40,7 @@ namespace Sven.Services
                 CodeChallengeMethod = request.CodeChallengeMethod,
                 Scope = request.Scope,
                 Claims = claims,
-                ExpiresAt = _timeProvider.GetUtcNow().AddMinutes(5),
+                ExpiresAt = _timeProvider.GetFutureTime(new TimeSpan(0, 5, 0)),
                 Nonce = request.Nonce
             };
 

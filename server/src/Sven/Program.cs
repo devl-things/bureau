@@ -1,10 +1,9 @@
-﻿
-using Microsoft.AspNetCore.Authentication.Cookies;
+﻿using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.Google;
 using Microsoft.IdentityModel.Tokens;
 using Sven.Abstractions.Services;
-using Sven.Configurations;
 using Sven.AutoValidation;
+using Sven.Configurations;
 using Sven.Models;
 using Sven.Services;
 using System.Security.Cryptography;
@@ -31,6 +30,10 @@ namespace Sven
                 .ValidateOnStart();
 
             builder.Services.Configure<JwtOptions>(builder.Configuration.GetSection("Jwt"));
+
+            builder.Services.AddOptions<AuthOptions>().Bind(builder.Configuration.GetSection("Auth"))
+                .Validate(options => options.AuthorizationCodeLifetime <= TimeSpan.FromMinutes(10))
+                .ValidateOnStart();
 
             builder.Services.AddSingleton<RsaSecurityKey>(provider =>
             {
