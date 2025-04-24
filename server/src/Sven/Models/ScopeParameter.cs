@@ -41,7 +41,7 @@
         /// </summary>
         /// <param name="scope"></param>
         /// <returns></returns>
-        public bool IsSameOrSubset(string? scope)
+        public bool IsScopeSameOrSubset(string? scope)
         {
             if (string.IsNullOrWhiteSpace(scope)) return true;
             if (string.IsNullOrWhiteSpace(_scope)) return false;

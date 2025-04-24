@@ -21,7 +21,6 @@ namespace Sven.Controllers
     {
         private readonly ILogger<ConnectController> _logger;
         private readonly AuthCodeProvider _authCodeManager;
-        private readonly IStore<string, OAuthRequest> _pkceRequestStore;
         private readonly IUserClaimsProvider _userProvider;
         private readonly IClientProvider _clientProvider;
         private readonly ITokenProvider _tokenProvider;
@@ -31,7 +30,6 @@ namespace Sven.Controllers
         {
             _logger = logger;
             _authCodeManager = authCodeManager;
-            _pkceRequestStore = pkceRequestStore;
             _userProvider = userProvider;
             _clientProvider = clientProvider;
             _tokenProvider = tokenProvider;
@@ -59,7 +57,7 @@ namespace Sven.Controllers
                     AuthConstants.OAuth.ErrorDescriptions.UnsupportedResponseType, request.State);
             }
 
-            if (!_authCodeManager.IsCodeChallengeValid(request.CodeChallenge, request.CodeChallengeMethod))
+            if (string.IsNullOrWhiteSpace(request.CodeChallenge))
             {
                 return RedirectWithOAuthError(request.RedirectUri, AuthConstants.OAuth.Errors.InvalidRequest,
                     "Code challenge not properly defined", request.State);
@@ -79,21 +77,21 @@ namespace Sven.Controllers
                 RedirectUri = request.RedirectUri,
                 Scope = request.Scope,
                 CodeChallenge = request.CodeChallenge,
-                CodeChallengeMethod = request.CodeChallengeMethod,
+                CodeChallengeMethod = _authCodeManager.GetCodeChallengeMethod(request.CodeChallengeMethod),
                 State = request.State,
                 Nonce = request.Nonce,
             };
 
-            string pkceKey = Guid.NewGuid().ToString("N");
-            Result storeResult = await _pkceRequestStore.StoreAsync(pkceKey, oauthRequest, cancellationToken);
-            if (storeResult.IsError)
+            Result<string> pkceKeyResult = await _authCodeManager.CreateOAuthRequestAsync(oauthRequest, cancellationToken);
+
+            if (pkceKeyResult.IsError)
             {
-                _logger.LogResultError(storeResult.Error);
+                _logger.LogResultError(pkceKeyResult.Error);
                 return RedirectWithOAuthError(request.RedirectUri, AuthConstants.OAuth.Errors.ServerError,
-                    "Authorization state couldn't be created", request.State);
+                    AuthConstants.OAuth.ErrorDescriptions.CreationAuthCodeFailed, request.State);
             }
 
-            Response.Cookies.Append(AuthConstants.CookieNames.PkceKey, pkceKey, new CookieOptions
+            Response.Cookies.Append(AuthConstants.CookieNames.PkceKey, pkceKeyResult.Value, new CookieOptions
             {
                 HttpOnly = true,
                 Secure = true,
@@ -111,7 +109,7 @@ namespace Sven.Controllers
                 return OAuthError(AuthConstants.OAuth.Errors.InvalidRequest, $"{AuthConstants.OAuth.ErrorDescriptions.MissingAuthorizationState} ({AuthConstants.CookieNames.PkceKey}).");
             }
 
-            if (!_pkceRequestStore.Exists(pkceKey!))
+            if (!_authCodeManager.ExistsPkceKey(pkceKey!))
             {
                 return OAuthError(AuthConstants.OAuth.Errors.InvalidRequest, "Invalid or expired authorization request.");
             }
@@ -136,13 +134,13 @@ namespace Sven.Controllers
             {
                 return OAuthError(AuthConstants.OAuth.Errors.InvalidRequest, AuthConstants.OAuth.ErrorDescriptions.MissingAuthorizationState);
             }
-            Result<OAuthRequest> requestResult = await _pkceRequestStore.GetAsync(pkceKey!, cancellationToken);
+            Result<OAuthRequest> requestResult = await _authCodeManager.GetOAuthRequestAsync(pkceKey!, cancellationToken);
             if (requestResult.IsError)
             {
                 _logger.LogResultError(requestResult.Error);
                 return OAuthError(AuthConstants.OAuth.Errors.InvalidRequest, "Invalid or expired authorization state.");
             }
-            Result removeResult = await _pkceRequestStore.RemoveAsync(pkceKey!, cancellationToken);
+            Result removeResult = await _authCodeManager.ClearOAuthRequestAsync(pkceKey!, cancellationToken);
             if (removeResult.IsError)
             {
                 _logger.LogResultError(removeResult.Error);
@@ -160,7 +158,7 @@ namespace Sven.Controllers
             if (codeResult.IsError)
             {
                 _logger.LogResultError(codeResult.Error);
-                return RedirectWithOAuthError(requestResult.Value.RedirectUri, codeResult.Error, requestResult.Value.State);
+                return RedirectWithOAuthError(requestResult.Value.RedirectUri, AuthConstants.OAuth.Errors.ServerError, AuthConstants.OAuth.ErrorDescriptions.CreationAuthCodeFailed, requestResult.Value.State);
             }
             return RedirectWithOAuthCode(requestResult.Value.RedirectUri, codeResult.Value, requestResult.Value.State);
         }

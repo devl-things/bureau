@@ -21,6 +21,7 @@
             public static class CodeChallengeMethods
             {
                 public const string Sha256 = "S256";
+                public const string Plain = "plain";
             }
 
             public static class SigningAlgorithms
@@ -120,6 +121,7 @@
                 public const string MissingAuthorizationState = "Missing authorization state";
                 public const string CodeOrCodeVerifierMissing = "Code or code_verifier is missing";
                 public const string RefreshTokenNotFound = "Refresh token not found.";
+                public const string CreationAuthCodeFailed = "Failed to create authorization code.";
             }
         }
         public static class CookieNames

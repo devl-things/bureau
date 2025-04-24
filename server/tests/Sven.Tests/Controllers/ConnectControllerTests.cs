@@ -1,7 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc.Testing;
 using Sven.Configurations;
 using Sven.Models;
-using Sven.Services;
 using Sven.Tests.Fixtures;
 using System.IdentityModel.Tokens.Jwt;
 using System.Net;
@@ -31,7 +30,7 @@ namespace Sven.Tests.Controllers
         public async Task FullOAuthFlow_ReturnsAllTokens()
         {
             string codeVerifier = GenerateCodeVerifier();
-            string codeChallenge = AuthCodeProvider.GenerateCodeChallenge(codeVerifier);
+            string codeChallenge = AuthCode.GenerateSha256CodeChallenge(codeVerifier);
             string redirectUriExpected = "https://localhost:3000/callback";
             string clientId = "test-client";
             string nonceExpected = "some_random_nonce";
@@ -129,13 +128,73 @@ namespace Sven.Tests.Controllers
             Assert.Equal(HttpStatusCode.BadRequest, refreshResponse2.StatusCode);
         }
 
+        [Fact(DisplayName = "oauth with pkce gets access with plain code challenge method")]
+        [Trait("Category", "Integration")]
+        [Trait("Type", "Happy path")]
+        public async Task FullOAuthFlow_WithPlainCodeChallengeMethod_ReturnsAccessToken()
+        {
+            string codeVerifier = GenerateCodeVerifier();
+            string redirectUriExpected = "https://localhost:3000/callback";
+            string clientId = "test-client";
+
+            // Step 1: /connect/authorize
+            string authorizeUrl = $"/{Endpoints.Connect.Base}/{Endpoints.Connect.AuthorizePath}?response_type={AuthConstants.OAuth.ResponseTypes.Code}&client_id={clientId}&redirect_uri={redirectUriExpected}" +
+                $"&scope=email&{AuthConstants.OAuth.FieldNames.CodeChallenge}={codeVerifier}&state=test-state";
+
+            HttpResponseMessage authorizeResponse = await _client.GetAsync(authorizeUrl);
+
+            Assert.Equal(HttpStatusCode.OK, authorizeResponse.StatusCode);
+            string? setCookieHeader = authorizeResponse.RequestMessage?.Headers.GetValues("Cookie").FirstOrDefault();
+            Assert.False(string.IsNullOrWhiteSpace(setCookieHeader));
+            string pkceKey = ExtractCookieValue(setCookieHeader!, AuthConstants.CookieNames.PkceKey);
+            Assert.False(string.IsNullOrWhiteSpace(pkceKey));
+
+            // Step 2: Login with user/pass and pkce_key cookie
+            HttpRequestMessage loginRequest = new HttpRequestMessage(HttpMethod.Post, Endpoints.Connect.AuthorizeLogin);
+            loginRequest.Content = new FormUrlEncodedContent(new Dictionary<string, string>
+            {
+                { "username", "admin" },
+                { "password", "admin123" }
+            });
+            loginRequest.Headers.Add("Cookie", $"{AuthConstants.CookieNames.PkceKey}={pkceKey}");
+
+            HttpResponseMessage loginResponse = await _client.SendAsync(loginRequest);
+
+            string? redirectUriActual = loginResponse.RequestMessage?.RequestUri?.ToString();
+            Assert.False(string.IsNullOrWhiteSpace(redirectUriActual));
+            Assert.StartsWith(redirectUriExpected, redirectUriActual);
+            string? code = HttpUtility.ParseQueryString(new Uri(redirectUriActual).Query).Get(AuthConstants.OAuth.ResponseTypes.Code);
+            Assert.False(string.IsNullOrWhiteSpace(code));
+
+            // Step 3: Exchange code for access
+            HttpRequestMessage tokenRequest = new HttpRequestMessage(HttpMethod.Post, Endpoints.Connect.Token);
+            tokenRequest.Content = new FormUrlEncodedContent(new Dictionary<string, string>
+            {
+                { AuthConstants.OAuth.FieldNames.GrantTypeField, AuthConstants.OAuth.GrantTypes.AuthorizationCode },
+                { AuthConstants.OAuth.FieldNames.Code, code! },
+                { AuthConstants.OAuth.FieldNames.CodeVerifier, codeVerifier },
+                { AuthConstants.OAuth.FieldNames.ClientId, clientId },
+                { AuthConstants.OAuth.FieldNames.RedirectUri, redirectUriExpected }
+            });
+
+            HttpResponseMessage tokenResponse = await _client.SendAsync(tokenRequest);
+
+            Assert.Equal(HttpStatusCode.OK, tokenResponse.StatusCode);
+            string tokenJson = await tokenResponse.Content.ReadAsStringAsync();
+            SvenToken token = JsonSerializer.Deserialize<SvenToken>(tokenJson)!;
+
+            Assert.False(string.IsNullOrWhiteSpace(token.AccessToken));
+            Assert.True(string.IsNullOrWhiteSpace(token.RefreshToken));
+            Assert.True(string.IsNullOrWhiteSpace(token.IdToken));
+        }
+
         [Fact(DisplayName = "bad request if openid scope is no defined the first time but is on refresh")]
         [Trait("Category", "Integration")]
         [Trait("Type", "Expected error")]
         public async Task FullOAuthFlow_WithoutOpenIdScope_DoesNotIssueIdTokenEvenInRefresh()
         {
             string codeVerifier = GenerateCodeVerifier();
-            string codeChallenge = AuthCodeProvider.GenerateCodeChallenge(codeVerifier);
+            string codeChallenge = AuthCode.GenerateSha256CodeChallenge(codeVerifier);
             string redirectUriExpected = "https://localhost:3000/callback";
             string clientId = "test-client";
             string nonceExpected = "some_random_nonce";
@@ -213,7 +272,7 @@ namespace Sven.Tests.Controllers
         public async Task Refresh_WithoutOpenIdScope_DoesNotIssueIdToken()
         {
             string codeVerifier = GenerateCodeVerifier();
-            string codeChallenge = AuthCodeProvider.GenerateCodeChallenge(codeVerifier);
+            string codeChallenge = AuthCode.GenerateSha256CodeChallenge(codeVerifier);
             string redirectUriExpected = "https://localhost:3000/callback";
             string clientId = "test-client";
             string nonceExpected = "some_random_nonce";
@@ -296,7 +355,7 @@ namespace Sven.Tests.Controllers
         public async Task FullOAuthFlow_WithoutOfflineAccess_DoesNotIssueRefreshToken()
         {
             string codeVerifier = GenerateCodeVerifier();
-            string codeChallenge = AuthCodeProvider.GenerateCodeChallenge(codeVerifier);
+            string codeChallenge = AuthCode.GenerateSha256CodeChallenge(codeVerifier);
             string redirectUriExpected = "https://localhost:3000/callback";
             string clientId = "test-client";
 

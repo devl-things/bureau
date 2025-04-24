@@ -20,7 +20,7 @@ namespace Sven.Models
         [FromQuery(Name = AuthConstants.OAuth.FieldNames.CodeChallenge)]
         public string CodeChallenge { get; set; } = string.Empty;
         [FromQuery(Name = AuthConstants.OAuth.FieldNames.CodeChallengeMethod)]
-        public string CodeChallengeMethod { get; set; } = AuthConstants.OAuth.CodeChallengeMethods.Sha256;
+        public string? CodeChallengeMethod { get; set; }
         [FromQuery(Name = AuthConstants.OAuth.FieldNames.State)]
         public string? State { get; set; }
         [FromQuery(Name = AuthConstants.OAuth.FieldNames.Nonce)]

@@ -169,7 +169,7 @@ namespace Sven.Services
                 return new ResultError(AuthConstants.OAuth.Errors.InvalidGrant, AuthConstants.OAuth.ErrorDescriptions.RefreshTokenNotFound);
             }
             RefreshToken storedToken = storedRefreshTokenResult.Value;
-            if (!storedToken.IsSameOrSubset(scope))
+            if (!storedToken.IsScopeSameOrSubset(scope))
             {
                 return new ResultError(AuthConstants.OAuth.Errors.InvalidScope, "Requested scope exceeds originally granted scope.");
             }

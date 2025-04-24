@@ -4,27 +4,45 @@ using Microsoft.Extensions.Options;
 using Sven.Configurations;
 using Sven.Models;
 using System.Security.Claims;
-using System.Text;
 
 namespace Sven.Services
 {
     public class AuthCodeProvider
     {
-        private readonly ILogger<AuthCodeProvider> _logger;
         private readonly IStore<string, AuthCode> _authCodeStore;
+        private readonly IStore<string, OAuthRequest> _pkceRequestStore;
         private readonly TimeProvider _timeProvider;
         private readonly AuthOptions _authOptions;
-        public AuthCodeProvider(ILogger<AuthCodeProvider> logger, IOptions<AuthOptions> authOptions, IStore<string, AuthCode> authCodeStore, TimeProvider timeProvider)
+        public AuthCodeProvider(IOptions<AuthOptions> authOptions, TimeProvider timeProvider, IStore<string, OAuthRequest> pkceRequestStore, IStore<string, AuthCode> authCodeStore)
         {
-            _logger = logger;
-            _authCodeStore = authCodeStore;
-            _timeProvider = timeProvider;
             _authOptions = authOptions.Value;
+            _timeProvider = timeProvider;
+            _pkceRequestStore = pkceRequestStore;
+            _authCodeStore = authCodeStore;
         }
 
-        internal Task<Result> ClearAsync(string code, CancellationToken cancellationToken)
+        internal async Task<Result<string>> CreateOAuthRequestAsync(OAuthRequest request, CancellationToken cancellationToken)
         {
-            return _authCodeStore.RemoveAsync(code, cancellationToken);
+            string pkceKey = Guid.NewGuid().ToString("N");
+            Result storeResult = await _pkceRequestStore.StoreAsync(pkceKey, request, cancellationToken);
+
+            if (storeResult.IsError)
+            {
+                return storeResult.Error;
+            }
+            return new Result<string>(pkceKey);
+        }
+        internal bool ExistsPkceKey(string pkceKey)
+        {
+            return _pkceRequestStore.Exists(pkceKey);
+        }
+        internal Task<Result<OAuthRequest>> GetOAuthRequestAsync(string pkceKey, CancellationToken cancellationToken)
+        {
+            return _pkceRequestStore.GetAsync(pkceKey, cancellationToken);
+        }
+        internal Task<Result> ClearOAuthRequestAsync(string pkceKey, CancellationToken cancellationToken)
+        {
+            return _pkceRequestStore.RemoveAsync(pkceKey, cancellationToken);
         }
 
         internal async Task<Result<string>> CreateAuthCodeAsync(OAuthRequest request, List<Claim> claims, CancellationToken cancellationToken)
@@ -47,40 +65,29 @@ namespace Sven.Services
             Result storeResult = await _authCodeStore.StoreAsync(code, authCode, cancellationToken);
             if (storeResult.IsError)
             {
-                _logger.LogResultError(storeResult.Error);
-                return new ResultError(AuthConstants.OAuth.Errors.ServerError, "Failed create code.");
+                return storeResult.Error;
             }
             return new Result<string>(code);
         }
 
-        internal Task<Result<AuthCode>> GetAsync(string code, CancellationToken cancellationToken)
+        internal Task<Result<AuthCode>> GetAuthCodeAsync(string code, CancellationToken cancellationToken)
         {
             return _authCodeStore.GetAsync(code, cancellationToken);
         }
-
-        internal Result<bool> IsAuthCodeValid(AuthCode authCode, string clientId, string redirectUri, string codeVerifier)
+        internal Task<Result> ClearAuthCodeAsync(string code, CancellationToken cancellationToken)
         {
-            string hashed = GenerateCodeChallenge(codeVerifier);
-            return !(authCode.ClientId != clientId || authCode.RedirectUri != redirectUri || authCode.ExpiresAt < _timeProvider.GetUtcNow() || authCode.CodeChallenge != hashed);
+            return _authCodeStore.RemoveAsync(code, cancellationToken);
         }
 
-        internal static string GenerateCodeChallenge(string verifier)
+        internal string GetCodeChallengeMethod(string? codeChallengeMethod)
         {
-            return Base64CodeEncode(System.Security.Cryptography.SHA256.HashData(Encoding.ASCII.GetBytes(verifier)));
+            return AuthConstants.OAuth.CodeChallengeMethods.Sha256.Equals(codeChallengeMethod, StringComparison.OrdinalIgnoreCase) ?
+                AuthConstants.OAuth.CodeChallengeMethods.Sha256 : AuthConstants.OAuth.CodeChallengeMethods.Plain;
         }
 
-        internal static string Base64CodeEncode(byte[] input)
+        internal bool IsAuthCodeExpired(AuthCode value)
         {
-            return Convert.ToBase64String(input)
-                .TrimEnd('=')
-                .Replace('+', '-')
-                .Replace('/', '_');
-        }
-
-        internal bool IsCodeChallengeValid(string code_challenge, string code_challenge_method)
-        {
-            return AuthConstants.OAuth.CodeChallengeMethods.Sha256.Equals(code_challenge_method, StringComparison.OrdinalIgnoreCase)
-                && !string.IsNullOrWhiteSpace(code_challenge);
+            return value.ExpiresAt > _timeProvider.GetUtcNow();
         }
     }
 }

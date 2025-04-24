@@ -19,12 +19,15 @@ namespace Sven.Models
 
         public string? Nonce { get; set; }
 
-
-
         public string GetClaimValue(string claimType)
         {
             Claim? claim = Claims.FirstOrDefault(c => c.Type.Equals(claimType, StringComparison.OrdinalIgnoreCase));
             return claim?.Value ?? string.Empty;
+        }
+
+        public bool IsClientValid(string clientId, string redirectUri)
+        {
+            return ClientId == clientId && RedirectUri == redirectUri;
         }
     }
 }
