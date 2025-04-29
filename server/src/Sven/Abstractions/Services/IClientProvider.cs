@@ -1,11 +1,10 @@
 ﻿using Bureau.Core;
+using Sven.Models;
 
 namespace Sven.Abstractions.Services
 {
     public interface IClientProvider
     {
-        Task<Result<bool>> IsValidAsync(string? clientId, CancellationToken cancellationToken = default);
-        Task<Result<bool>> IsValidAsync(string clientId, string redirectUri, CancellationToken cancellationToken = default);
-        Task<Result<bool>> IsScopeValidAsync(string clientId, string scope, CancellationToken cancellationToken = default);
+        Task<Result<Client>> GetClientAsync(string clientId, CancellationToken cancellationToken);
     }
 }

@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc.Testing;
 using Sven.Configurations;
+using Sven.Services;
 using Sven.Tests.Fixtures;
 using System.Collections.Specialized;
 using System.Net;
@@ -10,7 +11,8 @@ namespace Sven.Tests.Controllers
     public class ConnectControllerErrorTests : IClassFixture<SvenWebAppFactory>, IDisposable
     {
         private readonly HttpClient _client;
-        private readonly string _clientId = "test-client";
+        private readonly string _clientId = InMemoryClientStore.TestClientId;
+        private readonly string _clientRedirectUri = InMemoryClientStore.TestClientRedirectUri;
         public ConnectControllerErrorTests(SvenWebAppFactory factory)
         {
             _client = factory.CreateClient(new WebApplicationFactoryClientOptions
@@ -48,7 +50,7 @@ namespace Sven.Tests.Controllers
             Dictionary<string, string> query = new Dictionary<string, string>
             {
                 [AuthConstants.OAuth.FieldNames.ClientId] = _clientId,
-                [AuthConstants.OAuth.FieldNames.RedirectUri] = "https://client.com/callback",
+                [AuthConstants.OAuth.FieldNames.RedirectUri] = _clientRedirectUri,
                 [AuthConstants.OAuth.FieldNames.ResponseTypeField] = "invalid",
                 [AuthConstants.OAuth.FieldNames.CodeChallenge] = "valid_challenge",
                 [AuthConstants.OAuth.FieldNames.CodeChallengeMethod] = AuthConstants.OAuth.CodeChallengeMethods.Sha256

@@ -1,11 +1,13 @@
 ﻿using Bureau.Core;
+using Sven.Configurations;
+using Sven.Models;
 using System.Collections.Concurrent;
 
 namespace Sven.Services
 {
     public class InMemoryStore<TKey, TValue> : IStore<TKey, TValue> where TKey : notnull
     {
-        private readonly ConcurrentDictionary<TKey, TValue> _store = new();
+        protected readonly ConcurrentDictionary<TKey, TValue> _store = new();
 
         public bool Exists(TKey key)
         {
@@ -19,6 +21,10 @@ namespace Sven.Services
 
         public Task<Result<TValue>> GetAsync(TKey key, CancellationToken cancellationToken = default)
         {
+            if (key == null)
+            {
+                return Task.FromResult(new Result<TValue>(new ResultError()));
+            }
             bool isFound = _store.TryGetValue(key, out TValue? result);
             return Task.FromResult(new Result<TValue>(result, isFound));
         }
@@ -33,6 +39,23 @@ namespace Sven.Services
         {
             _store[key] = request;
             return Task.FromResult(new Result());
+        }
+    }
+
+    internal class InMemoryClientStore : InMemoryStore<string, Client>
+    {
+        public const string TestClientId = "test-client";
+        public const string TestClientRedirectUri = "https://localhost:3000/callback";
+
+        public InMemoryClientStore()
+        {
+            _store[TestClientId] = new Client()
+            {
+                Active = true,
+                Identifier = TestClientId,
+                RedirectUris = new HashSet<string>() { TestClientRedirectUri },
+                Scope = new ScopeParameter($"{AuthConstants.Scopes.OfflineAccess} {AuthConstants.Scopes.OpenId} {AuthConstants.Scopes.Email}"),
+            };
         }
     }
 }

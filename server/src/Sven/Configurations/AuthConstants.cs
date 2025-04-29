@@ -115,6 +115,7 @@
 
             public static class ErrorDescriptions
             {
+                public const string InvalidRequest = "Invalid request.";
                 public const string InvalidRedirectUriFormat = "Invalid redirect_uri format.";
                 public const string UnsupportedResponseType = "The response type is not supported";
                 public const string UnsupportedGrantType = "The grant type is not supported";
@@ -122,6 +123,8 @@
                 public const string CodeOrCodeVerifierMissing = "Code or code_verifier is missing";
                 public const string RefreshTokenNotFound = "Refresh token not found.";
                 public const string CreationAuthCodeFailed = "Failed to create authorization code.";
+                public const string RequestedScopeExceedsGranted = "Requested scope exceeds originally granted scope.";
+                public const string RequestedScopeNotGranted = "Requested scope is not granted.";
             }
         }
         public static class CookieNames

@@ -1,6 +1,6 @@
 ﻿namespace Sven.Configurations
 {
-    public class JwtOptions
+    public class JwtOptions : ITokenLifetimeOptions
     {
         public string Issuer { get; set; } = string.Empty;
         public string Audience { get; set; } = string.Empty;

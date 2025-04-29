@@ -1,23 +1,29 @@
 ﻿using Bureau.Core;
 using Sven.Abstractions.Services;
+using Sven.Models;
 
 namespace Sven.Services
 {
     public class InMemoryClientProvider : IClientProvider
     {
-        public Task<Result<bool>> IsScopeValidAsync(string clientId, string scope, CancellationToken cancellationToken = default)
-        {
-            return Task.FromResult(new Result<bool>(!string.IsNullOrWhiteSpace(scope)));
-        }
-        public Task<Result<bool>> IsValidAsync(string clientId, string redirectUri, CancellationToken cancellationToken = default)
-        {
-            bool isValid = !(string.IsNullOrWhiteSpace(clientId) || string.IsNullOrWhiteSpace(redirectUri));
-            return Task.FromResult(new Result<bool>(isValid));
-        }
+        private readonly IStore<string, Client> _clientStore;
 
-        public Task<Result<bool>> IsValidAsync(string? clientId, CancellationToken cancellationToken = default)
+        public InMemoryClientProvider(IStore<string, Client> clientStore)
         {
-            return Task.FromResult(new Result<bool>(!string.IsNullOrWhiteSpace(clientId)));
+            _clientStore = clientStore;
+        }
+        public async Task<Result<Client>> GetClientAsync(string clientId, CancellationToken cancellationToken)
+        {
+            Result<Client> result = await _clientStore.GetAsync(clientId, cancellationToken);
+            if (result.IsError)
+            {
+                return result;
+            }
+            if (!result.Value.Active)
+            {
+                return new ResultError("Client not active");
+            }
+            return result;
         }
     }
 }
