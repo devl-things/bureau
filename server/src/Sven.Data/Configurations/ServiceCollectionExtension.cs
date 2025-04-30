@@ -1,5 +1,4 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
-using Sven.Abstractions.Services;
 using Sven.Data.Stores;
 
 namespace Sven.Data.Configurations
