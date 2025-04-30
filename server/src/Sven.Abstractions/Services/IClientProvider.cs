@@ -1,7 +1,7 @@
 ﻿using Bureau.Core;
 using Sven.Models;
 
-namespace Sven.Abstractions.Services
+namespace Sven.Services
 {
     public interface IClientProvider
     {

@@ -1,7 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.Google;
 using Microsoft.IdentityModel.Tokens;
-using Sven.Abstractions.Services;
 using Sven.AutoValidation;
 using Sven.Configurations;
 using Sven.Data.SqlServer.Configurations;

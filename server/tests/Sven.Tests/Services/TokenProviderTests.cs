@@ -3,7 +3,6 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using NSubstitute;
-using Sven.Abstractions.Services;
 using Sven.Configurations;
 using Sven.Models;
 using Sven.Services;
