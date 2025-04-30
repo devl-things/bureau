@@ -20,7 +20,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Bureau.Core\Bureau.Core.csproj" />
+    <ProjectReference Include="..\Sven.Abstractions\Sven.Abstractions.csproj" />
+    <ProjectReference Include="..\Sven.Data.SqlServer\Sven.Data.SqlServer.csproj" />
   </ItemGroup>
 
 </Project>

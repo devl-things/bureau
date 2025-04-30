@@ -8,6 +8,12 @@
             Scope = scope;
         }
 
+        public ScopeParameter(HashSet<string> scopes)
+        {
+            _scopes = scopes;
+            _scope = string.Join(" ", scopes);
+        }
+
         private string _scope = string.Empty;
 
         public string? Scope

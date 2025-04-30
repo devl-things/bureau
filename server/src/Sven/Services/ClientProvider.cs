@@ -4,11 +4,11 @@ using Sven.Models;
 
 namespace Sven.Services
 {
-    public class InMemoryClientProvider : IClientProvider
+    public class ClientProvider : IClientProvider
     {
-        private readonly IStore<string, Client> _clientStore;
+        private readonly IClientStore _clientStore;
 
-        public InMemoryClientProvider(IStore<string, Client> clientStore)
+        public ClientProvider(IClientStore clientStore)
         {
             _clientStore = clientStore;
         }
