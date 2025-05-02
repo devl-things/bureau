@@ -1,8 +1,8 @@
 ﻿using Microsoft.AspNetCore.Mvc.Testing;
 using Sven.Configurations;
 using Sven.Models;
-using Sven.Services;
 using Sven.Tests.Fixtures;
+using Sven.Tests.TestData;
 using System.IdentityModel.Tokens.Jwt;
 using System.Net;
 using System.Security.Cryptography;
@@ -31,14 +31,14 @@ namespace Sven.Tests.Controllers
         public async Task FullOAuthFlow_ReturnsAllTokens()
         {
             string codeVerifier = GenerateCodeVerifier();
-            string codeChallenge = AuthCodeProvider.GenerateCodeChallenge(codeVerifier);
-            string redirectUriExpected = "https://localhost:3000/callback";
-            string clientId = "test-client";
+            string codeChallenge = AuthCode.GenerateSha256CodeChallenge(codeVerifier);
             string nonceExpected = "some_random_nonce";
 
             // Step 1: /connect/authorize
-            string authorizeUrl = $"/{Endpoints.Connect.Base}/{Endpoints.Connect.AuthorizePath}?response_type={AuthConstants.OAuth.ResponseTypes.Code}&client_id={clientId}&redirect_uri={redirectUriExpected}" +
-                $"&scope={AuthConstants.Scopes.OfflineAccess} {AuthConstants.Scopes.OpenId}&code_challenge={codeChallenge}&code_challenge_method={AuthConstants.OAuth.CodeChallengeMethods.Sha256}&state=test-state" +
+            string authorizeUrl = $"/{Endpoints.Connect.Base}/{Endpoints.Connect.AuthorizePath}?{AuthConstants.OAuth.FieldNames.ResponseTypeField}={AuthConstants.OAuth.ResponseTypes.Code}" +
+                $"&{AuthConstants.OAuth.FieldNames.ClientId}={TestDataConstants.TestClientId}&{AuthConstants.OAuth.FieldNames.RedirectUri}={TestDataConstants.TestClientRedirectUri}" +
+                $"&{AuthConstants.OAuth.FieldNames.Scope}={AuthConstants.Scopes.OfflineAccess} {AuthConstants.Scopes.OpenId}&{AuthConstants.OAuth.FieldNames.CodeChallenge}={codeChallenge}" +
+                $"&{AuthConstants.OAuth.FieldNames.CodeChallengeMethod}={AuthConstants.OAuth.CodeChallengeMethods.Sha256}&{AuthConstants.OAuth.FieldNames.State}=test-state" +
                 $"&{AuthConstants.OAuth.FieldNames.Nonce}={nonceExpected}";
 
             HttpResponseMessage authorizeResponse = await _client.GetAsync(authorizeUrl);
@@ -53,8 +53,8 @@ namespace Sven.Tests.Controllers
             HttpRequestMessage loginRequest = new HttpRequestMessage(HttpMethod.Post, Endpoints.Connect.AuthorizeLogin);
             loginRequest.Content = new FormUrlEncodedContent(new Dictionary<string, string>
             {
-                { "username", "admin" },
-                { "password", "admin123" }
+                { AuthConstants.OAuth.FieldNames.Username, TestDataConstants.TestUserUsername },
+                { AuthConstants.OAuth.FieldNames.Password, TestDataConstants.TestUserPassword }
             });
             loginRequest.Headers.Add("Cookie", $"{AuthConstants.CookieNames.PkceKey}={pkceKey}");
 
@@ -62,7 +62,7 @@ namespace Sven.Tests.Controllers
 
             string? redirectUriActual = loginResponse.RequestMessage?.RequestUri?.ToString();
             Assert.False(string.IsNullOrWhiteSpace(redirectUriActual));
-            Assert.StartsWith(redirectUriExpected, redirectUriActual);
+            Assert.StartsWith(TestDataConstants.TestClientRedirectUri, redirectUriActual);
             string? code = HttpUtility.ParseQueryString(new Uri(redirectUriActual).Query).Get(AuthConstants.OAuth.ResponseTypes.Code);
             Assert.False(string.IsNullOrWhiteSpace(code));
 
@@ -73,8 +73,8 @@ namespace Sven.Tests.Controllers
                 { AuthConstants.OAuth.FieldNames.GrantTypeField, AuthConstants.OAuth.GrantTypes.AuthorizationCode },
                 { AuthConstants.OAuth.FieldNames.Code, code! },
                 { AuthConstants.OAuth.FieldNames.CodeVerifier, codeVerifier },
-                { AuthConstants.OAuth.FieldNames.ClientId, clientId },
-                { AuthConstants.OAuth.FieldNames.RedirectUri, redirectUriExpected }
+                { AuthConstants.OAuth.FieldNames.ClientId, TestDataConstants.TestClientId },
+                { AuthConstants.OAuth.FieldNames.RedirectUri, TestDataConstants.TestClientRedirectUri }
             });
 
             HttpResponseMessage tokenResponse = await _client.SendAsync(tokenRequest);
@@ -96,8 +96,8 @@ namespace Sven.Tests.Controllers
             {
                 { AuthConstants.OAuth.FieldNames.GrantTypeField, AuthConstants.OAuth.GrantTypes.RefreshToken },
                 { AuthConstants.OAuth.FieldNames.RefreshToken, token1.RefreshToken },
-                { AuthConstants.OAuth.FieldNames.ClientId, clientId },
-                { AuthConstants.OAuth.FieldNames.RedirectUri, redirectUriExpected },
+                { AuthConstants.OAuth.FieldNames.ClientId, TestDataConstants.TestClientId },
+                { AuthConstants.OAuth.FieldNames.RedirectUri, TestDataConstants.TestClientRedirectUri },
                 { AuthConstants.OAuth.FieldNames.Scope, AuthConstants.Scopes.OpenId}
             });
 
@@ -121,12 +121,71 @@ namespace Sven.Tests.Controllers
             {
                 { AuthConstants.OAuth.FieldNames.GrantTypeField, AuthConstants.OAuth.GrantTypes.RefreshToken },
                 { AuthConstants.OAuth.FieldNames.RefreshToken, token1.RefreshToken }, // reusing the same token
-                { AuthConstants.OAuth.FieldNames.ClientId, clientId },
-                { AuthConstants.OAuth.FieldNames.RedirectUri, redirectUriExpected }
+                { AuthConstants.OAuth.FieldNames.ClientId, TestDataConstants.TestClientId },
+                { AuthConstants.OAuth.FieldNames.RedirectUri, TestDataConstants.TestClientRedirectUri }
             });
 
             HttpResponseMessage refreshResponse2 = await _client.SendAsync(refreshRequest2);
             Assert.Equal(HttpStatusCode.BadRequest, refreshResponse2.StatusCode);
+        }
+
+        [Fact(DisplayName = "oauth with pkce gets access with plain code challenge method")]
+        [Trait("Category", "Integration")]
+        [Trait("Type", "Happy path")]
+        public async Task FullOAuthFlow_WithPlainCodeChallengeMethod_ReturnsAccessToken()
+        {
+            string codeVerifier = GenerateCodeVerifier();
+
+            // Step 1: /connect/authorize
+            string authorizeUrl = $"/{Endpoints.Connect.Base}/{Endpoints.Connect.AuthorizePath}?{AuthConstants.OAuth.FieldNames.ResponseTypeField}={AuthConstants.OAuth.ResponseTypes.Code}" +
+                $"&{AuthConstants.OAuth.FieldNames.ClientId}={TestDataConstants.TestClientId}&{AuthConstants.OAuth.FieldNames.RedirectUri}={TestDataConstants.TestClientRedirectUri}" +
+                $"&{AuthConstants.OAuth.FieldNames.Scope}={AuthConstants.Scopes.Email}&{AuthConstants.OAuth.FieldNames.CodeChallenge}={codeVerifier}&{AuthConstants.OAuth.FieldNames.State}=test-state";
+
+            HttpResponseMessage authorizeResponse = await _client.GetAsync(authorizeUrl);
+
+            Assert.Equal(HttpStatusCode.OK, authorizeResponse.StatusCode);
+            string? setCookieHeader = authorizeResponse.RequestMessage?.Headers.GetValues("Cookie").FirstOrDefault();
+            Assert.False(string.IsNullOrWhiteSpace(setCookieHeader));
+            string pkceKey = ExtractCookieValue(setCookieHeader!, AuthConstants.CookieNames.PkceKey);
+            Assert.False(string.IsNullOrWhiteSpace(pkceKey));
+
+            // Step 2: Login with user/pass and pkce_key cookie
+            HttpRequestMessage loginRequest = new HttpRequestMessage(HttpMethod.Post, Endpoints.Connect.AuthorizeLogin);
+            loginRequest.Content = new FormUrlEncodedContent(new Dictionary<string, string>
+            {
+                { AuthConstants.OAuth.FieldNames.Username, TestDataConstants.TestUserUsername },
+                { AuthConstants.OAuth.FieldNames.Password, TestDataConstants.TestUserPassword }
+            });
+            loginRequest.Headers.Add("Cookie", $"{AuthConstants.CookieNames.PkceKey}={pkceKey}");
+
+            HttpResponseMessage loginResponse = await _client.SendAsync(loginRequest);
+
+            string? redirectUriActual = loginResponse.RequestMessage?.RequestUri?.ToString();
+            Assert.False(string.IsNullOrWhiteSpace(redirectUriActual));
+            Assert.StartsWith(TestDataConstants.TestClientRedirectUri, redirectUriActual);
+            string? code = HttpUtility.ParseQueryString(new Uri(redirectUriActual).Query).Get(AuthConstants.OAuth.ResponseTypes.Code);
+            Assert.False(string.IsNullOrWhiteSpace(code));
+
+            // Step 3: Exchange code for access
+            HttpRequestMessage tokenRequest = new HttpRequestMessage(HttpMethod.Post, Endpoints.Connect.Token);
+            tokenRequest.Content = new FormUrlEncodedContent(new Dictionary<string, string>
+            {
+                { AuthConstants.OAuth.FieldNames.GrantTypeField, AuthConstants.OAuth.GrantTypes.AuthorizationCode },
+                { AuthConstants.OAuth.FieldNames.Code, code! },
+                { AuthConstants.OAuth.FieldNames.CodeVerifier, codeVerifier },
+                { AuthConstants.OAuth.FieldNames.ClientId, TestDataConstants.TestClientId },
+                { AuthConstants.OAuth.FieldNames.RedirectUri, TestDataConstants.TestClientRedirectUri }
+            });
+
+            HttpResponseMessage tokenResponse = await _client.SendAsync(tokenRequest);
+
+            Assert.Equal(HttpStatusCode.OK, tokenResponse.StatusCode);
+            string tokenJson = await tokenResponse.Content.ReadAsStringAsync();
+            SvenToken token = JsonSerializer.Deserialize<SvenToken>(tokenJson)!;
+
+            Assert.False(string.IsNullOrWhiteSpace(token.AccessToken));
+            Assert.True(string.IsNullOrWhiteSpace(token.RefreshToken));
+            Assert.True(string.IsNullOrWhiteSpace(token.IdToken));
         }
 
         [Fact(DisplayName = "bad request if openid scope is no defined the first time but is on refresh")]
@@ -135,14 +194,14 @@ namespace Sven.Tests.Controllers
         public async Task FullOAuthFlow_WithoutOpenIdScope_DoesNotIssueIdTokenEvenInRefresh()
         {
             string codeVerifier = GenerateCodeVerifier();
-            string codeChallenge = AuthCodeProvider.GenerateCodeChallenge(codeVerifier);
-            string redirectUriExpected = "https://localhost:3000/callback";
-            string clientId = "test-client";
+            string codeChallenge = AuthCode.GenerateSha256CodeChallenge(codeVerifier);
             string nonceExpected = "some_random_nonce";
 
             // Step 1: /connect/authorize
-            string authorizeUrl = $"/{Endpoints.Connect.Base}/{Endpoints.Connect.AuthorizePath}?response_type={AuthConstants.OAuth.ResponseTypes.Code}&client_id={clientId}&redirect_uri={redirectUriExpected}" +
-                $"&scope={AuthConstants.Scopes.OfflineAccess}&code_challenge={codeChallenge}&code_challenge_method={AuthConstants.OAuth.CodeChallengeMethods.Sha256}&state=test-state" +
+            string authorizeUrl = $"/{Endpoints.Connect.Base}/{Endpoints.Connect.AuthorizePath}?{AuthConstants.OAuth.FieldNames.ResponseTypeField}={AuthConstants.OAuth.ResponseTypes.Code}" +
+                $"&{AuthConstants.OAuth.FieldNames.ClientId}={TestDataConstants.TestClientId}&{AuthConstants.OAuth.FieldNames.RedirectUri}={TestDataConstants.TestClientRedirectUri}" +
+                $"&{AuthConstants.OAuth.FieldNames.Scope}={AuthConstants.Scopes.OfflineAccess}&{AuthConstants.OAuth.FieldNames.CodeChallenge}={codeChallenge}" +
+                $"&{AuthConstants.OAuth.FieldNames.CodeChallengeMethod}={AuthConstants.OAuth.CodeChallengeMethods.Sha256}&{AuthConstants.OAuth.FieldNames.State}=test-state" +
                 $"&{AuthConstants.OAuth.FieldNames.Nonce}={nonceExpected}";
 
             HttpResponseMessage authorizeResponse = await _client.GetAsync(authorizeUrl);
@@ -157,8 +216,8 @@ namespace Sven.Tests.Controllers
             HttpRequestMessage loginRequest = new HttpRequestMessage(HttpMethod.Post, Endpoints.Connect.AuthorizeLogin);
             loginRequest.Content = new FormUrlEncodedContent(new Dictionary<string, string>
             {
-                { "username", "admin" },
-                { "password", "admin123" }
+                { AuthConstants.OAuth.FieldNames.Username, TestDataConstants.TestUserUsername },
+                { AuthConstants.OAuth.FieldNames.Password, TestDataConstants.TestUserPassword }
             });
             loginRequest.Headers.Add("Cookie", $"{AuthConstants.CookieNames.PkceKey}={pkceKey}");
 
@@ -166,7 +225,7 @@ namespace Sven.Tests.Controllers
 
             string? redirectUriActual = loginResponse.RequestMessage?.RequestUri?.ToString();
             Assert.False(string.IsNullOrWhiteSpace(redirectUriActual));
-            Assert.StartsWith(redirectUriExpected, redirectUriActual);
+            Assert.StartsWith(TestDataConstants.TestClientRedirectUri, redirectUriActual);
             string? code = HttpUtility.ParseQueryString(new Uri(redirectUriActual).Query).Get(AuthConstants.OAuth.ResponseTypes.Code);
             Assert.False(string.IsNullOrWhiteSpace(code));
 
@@ -177,8 +236,8 @@ namespace Sven.Tests.Controllers
                 { AuthConstants.OAuth.FieldNames.GrantTypeField, AuthConstants.OAuth.GrantTypes.AuthorizationCode },
                 { AuthConstants.OAuth.FieldNames.Code, code! },
                 { AuthConstants.OAuth.FieldNames.CodeVerifier, codeVerifier },
-                { AuthConstants.OAuth.FieldNames.ClientId, clientId },
-                { AuthConstants.OAuth.FieldNames.RedirectUri, redirectUriExpected }
+                { AuthConstants.OAuth.FieldNames.ClientId, TestDataConstants.TestClientId },
+                { AuthConstants.OAuth.FieldNames.RedirectUri, TestDataConstants.TestClientRedirectUri }
             });
 
             HttpResponseMessage tokenResponse = await _client.SendAsync(tokenRequest);
@@ -197,8 +256,8 @@ namespace Sven.Tests.Controllers
             {
                 { AuthConstants.OAuth.FieldNames.GrantTypeField, AuthConstants.OAuth.GrantTypes.RefreshToken },
                 { AuthConstants.OAuth.FieldNames.RefreshToken, token1.RefreshToken },
-                { AuthConstants.OAuth.FieldNames.ClientId, clientId },
-                { AuthConstants.OAuth.FieldNames.RedirectUri, redirectUriExpected },
+                { AuthConstants.OAuth.FieldNames.ClientId, TestDataConstants.TestClientId },
+                { AuthConstants.OAuth.FieldNames.RedirectUri, TestDataConstants.TestClientRedirectUri },
                 { AuthConstants.OAuth.FieldNames.Scope, AuthConstants.Scopes.OpenId}
             });
 
@@ -213,14 +272,14 @@ namespace Sven.Tests.Controllers
         public async Task Refresh_WithoutOpenIdScope_DoesNotIssueIdToken()
         {
             string codeVerifier = GenerateCodeVerifier();
-            string codeChallenge = AuthCodeProvider.GenerateCodeChallenge(codeVerifier);
-            string redirectUriExpected = "https://localhost:3000/callback";
-            string clientId = "test-client";
+            string codeChallenge = AuthCode.GenerateSha256CodeChallenge(codeVerifier);
             string nonceExpected = "some_random_nonce";
 
             // Step 1: /connect/authorize
-            string authorizeUrl = $"/{Endpoints.Connect.Base}/{Endpoints.Connect.AuthorizePath}?response_type={AuthConstants.OAuth.ResponseTypes.Code}&client_id={clientId}&redirect_uri={redirectUriExpected}" +
-                $"&scope={AuthConstants.Scopes.OfflineAccess} {AuthConstants.Scopes.OpenId}&code_challenge={codeChallenge}&code_challenge_method={AuthConstants.OAuth.CodeChallengeMethods.Sha256}&state=test-state" +
+            string authorizeUrl = $"/{Endpoints.Connect.Base}/{Endpoints.Connect.AuthorizePath}?{AuthConstants.OAuth.FieldNames.ResponseTypeField}={AuthConstants.OAuth.ResponseTypes.Code}" +
+                $"&{AuthConstants.OAuth.FieldNames.ClientId}={TestDataConstants.TestClientId}&{AuthConstants.OAuth.FieldNames.RedirectUri}={TestDataConstants.TestClientRedirectUri}" +
+                $"&{AuthConstants.OAuth.FieldNames.Scope}={AuthConstants.Scopes.OfflineAccess} {AuthConstants.Scopes.OpenId}&{AuthConstants.OAuth.FieldNames.CodeChallenge}={codeChallenge}" +
+                $"&{AuthConstants.OAuth.FieldNames.CodeChallengeMethod}={AuthConstants.OAuth.CodeChallengeMethods.Sha256}&{AuthConstants.OAuth.FieldNames.State}=test-state" +
                 $"&{AuthConstants.OAuth.FieldNames.Nonce}={nonceExpected}";
 
             HttpResponseMessage authorizeResponse = await _client.GetAsync(authorizeUrl);
@@ -235,8 +294,8 @@ namespace Sven.Tests.Controllers
             HttpRequestMessage loginRequest = new HttpRequestMessage(HttpMethod.Post, Endpoints.Connect.AuthorizeLogin);
             loginRequest.Content = new FormUrlEncodedContent(new Dictionary<string, string>
             {
-                { "username", "admin" },
-                { "password", "admin123" }
+                { AuthConstants.OAuth.FieldNames.Username, TestDataConstants.TestUserUsername },
+                { AuthConstants.OAuth.FieldNames.Password, TestDataConstants.TestUserPassword }
             });
             loginRequest.Headers.Add("Cookie", $"{AuthConstants.CookieNames.PkceKey}={pkceKey}");
 
@@ -244,7 +303,7 @@ namespace Sven.Tests.Controllers
 
             string? redirectUriActual = loginResponse.RequestMessage?.RequestUri?.ToString();
             Assert.False(string.IsNullOrWhiteSpace(redirectUriActual));
-            Assert.StartsWith(redirectUriExpected, redirectUriActual);
+            Assert.StartsWith(TestDataConstants.TestClientRedirectUri, redirectUriActual);
             string? code = HttpUtility.ParseQueryString(new Uri(redirectUriActual).Query).Get(AuthConstants.OAuth.ResponseTypes.Code);
             Assert.False(string.IsNullOrWhiteSpace(code));
 
@@ -255,8 +314,8 @@ namespace Sven.Tests.Controllers
                 { AuthConstants.OAuth.FieldNames.GrantTypeField, AuthConstants.OAuth.GrantTypes.AuthorizationCode },
                 { AuthConstants.OAuth.FieldNames.Code, code! },
                 { AuthConstants.OAuth.FieldNames.CodeVerifier, codeVerifier },
-                { AuthConstants.OAuth.FieldNames.ClientId, clientId },
-                { AuthConstants.OAuth.FieldNames.RedirectUri, redirectUriExpected }
+                { AuthConstants.OAuth.FieldNames.ClientId, TestDataConstants.TestClientId },
+                { AuthConstants.OAuth.FieldNames.RedirectUri, TestDataConstants.TestClientRedirectUri }
             });
 
             HttpResponseMessage tokenResponse = await _client.SendAsync(tokenRequest);
@@ -278,8 +337,8 @@ namespace Sven.Tests.Controllers
             {
                 { AuthConstants.OAuth.FieldNames.GrantTypeField, AuthConstants.OAuth.GrantTypes.RefreshToken },
                 { AuthConstants.OAuth.FieldNames.RefreshToken, token1.RefreshToken },
-                { AuthConstants.OAuth.FieldNames.ClientId, clientId },
-                { AuthConstants.OAuth.FieldNames.RedirectUri, redirectUriExpected }
+                { AuthConstants.OAuth.FieldNames.ClientId, TestDataConstants.TestClientId },
+                { AuthConstants.OAuth.FieldNames.RedirectUri, TestDataConstants.TestClientRedirectUri }
             });
 
             HttpResponseMessage refreshResponse1 = await _client.SendAsync(refreshRequest1);
@@ -296,13 +355,13 @@ namespace Sven.Tests.Controllers
         public async Task FullOAuthFlow_WithoutOfflineAccess_DoesNotIssueRefreshToken()
         {
             string codeVerifier = GenerateCodeVerifier();
-            string codeChallenge = AuthCodeProvider.GenerateCodeChallenge(codeVerifier);
-            string redirectUriExpected = "https://localhost:3000/callback";
-            string clientId = "test-client";
+            string codeChallenge = AuthCode.GenerateSha256CodeChallenge(codeVerifier);
 
             // Step 1: /connect/authorize
-            string authorizeUrl = $"/{Endpoints.Connect.Base}/{Endpoints.Connect.AuthorizePath}?response_type={AuthConstants.OAuth.ResponseTypes.Code}&client_id={clientId}&redirect_uri={redirectUriExpected}" +
-                $"&scope=email&code_challenge={codeChallenge}&code_challenge_method={AuthConstants.OAuth.CodeChallengeMethods.Sha256}&state=test-state";
+            string authorizeUrl = $"/{Endpoints.Connect.Base}/{Endpoints.Connect.AuthorizePath}?{AuthConstants.OAuth.FieldNames.ResponseTypeField}={AuthConstants.OAuth.ResponseTypes.Code}" +
+                $"&{AuthConstants.OAuth.FieldNames.ClientId}={TestDataConstants.TestClientId}&{AuthConstants.OAuth.FieldNames.RedirectUri}={TestDataConstants.TestClientRedirectUri}" +
+                $"&{AuthConstants.OAuth.FieldNames.Scope}={AuthConstants.Scopes.Email}&{AuthConstants.OAuth.FieldNames.CodeChallenge}={codeChallenge}" +
+                $"&{AuthConstants.OAuth.FieldNames.CodeChallengeMethod}={AuthConstants.OAuth.CodeChallengeMethods.Sha256}&{AuthConstants.OAuth.FieldNames.State}=test-state";
 
             HttpResponseMessage authorizeResponse = await _client.GetAsync(authorizeUrl);
 
@@ -316,8 +375,8 @@ namespace Sven.Tests.Controllers
             HttpRequestMessage loginRequest = new HttpRequestMessage(HttpMethod.Post, Endpoints.Connect.AuthorizeLogin);
             loginRequest.Content = new FormUrlEncodedContent(new Dictionary<string, string>
             {
-                { "username", "admin" },
-                { "password", "admin123" }
+                { AuthConstants.OAuth.FieldNames.Username, TestDataConstants.TestUserUsername },
+                { AuthConstants.OAuth.FieldNames.Password, TestDataConstants.TestUserPassword }
             });
             loginRequest.Headers.Add("Cookie", $"{AuthConstants.CookieNames.PkceKey}={pkceKey}");
 
@@ -325,7 +384,7 @@ namespace Sven.Tests.Controllers
 
             string? redirectUriActual = loginResponse.RequestMessage?.RequestUri?.ToString();
             Assert.False(string.IsNullOrWhiteSpace(redirectUriActual));
-            Assert.StartsWith(redirectUriExpected, redirectUriActual);
+            Assert.StartsWith(TestDataConstants.TestClientRedirectUri, redirectUriActual);
             string? code = HttpUtility.ParseQueryString(new Uri(redirectUriActual).Query).Get(AuthConstants.OAuth.ResponseTypes.Code);
             Assert.False(string.IsNullOrWhiteSpace(code));
 
@@ -336,8 +395,8 @@ namespace Sven.Tests.Controllers
                 { AuthConstants.OAuth.FieldNames.GrantTypeField, AuthConstants.OAuth.GrantTypes.AuthorizationCode },
                 { AuthConstants.OAuth.FieldNames.Code, code! },
                 { AuthConstants.OAuth.FieldNames.CodeVerifier, codeVerifier },
-                { AuthConstants.OAuth.FieldNames.ClientId, clientId },
-                { AuthConstants.OAuth.FieldNames.RedirectUri, redirectUriExpected }
+                { AuthConstants.OAuth.FieldNames.ClientId, TestDataConstants.TestClientId },
+                { AuthConstants.OAuth.FieldNames.RedirectUri, TestDataConstants.TestClientRedirectUri }
             });
 
             HttpResponseMessage tokenResponse = await _client.SendAsync(tokenRequest);
@@ -381,6 +440,12 @@ namespace Sven.Tests.Controllers
         }
 
         public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        protected virtual void Dispose(bool disposing)
         {
             _client.Dispose();
         }

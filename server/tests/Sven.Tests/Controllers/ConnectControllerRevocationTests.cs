@@ -1,14 +1,14 @@
 ﻿using Microsoft.AspNetCore.Mvc.Testing;
 using Sven.Configurations;
 using Sven.Tests.Fixtures;
+using Sven.Tests.TestData;
 using System.Net;
 
 namespace Sven.Tests.Controllers
 {
-    public class ConnectControllerRevocationTests : IClassFixture<SvenWebAppFactory>
+    public class ConnectControllerRevocationTests : IClassFixture<SvenWebAppFactory>, IDisposable
     {
         private readonly HttpClient _client;
-        private readonly string _clientId = "test-client";
 
         public ConnectControllerRevocationTests(SvenWebAppFactory factory)
         {
@@ -29,7 +29,7 @@ namespace Sven.Tests.Controllers
             Dictionary<string, string> request = new Dictionary<string, string>
             {
                 { AuthConstants.OAuth.FieldNames.Token, token },
-                { AuthConstants.OAuth.FieldNames.ClientId, _clientId }
+                { AuthConstants.OAuth.FieldNames.ClientId, TestDataConstants.TestClientId }
             };
             HttpRequestMessage message = new HttpRequestMessage(HttpMethod.Post, Endpoints.Connect.Revocation)
             {
@@ -49,7 +49,7 @@ namespace Sven.Tests.Controllers
             Dictionary<string, string> request = new Dictionary<string, string>
             {
                 { AuthConstants.OAuth.FieldNames.Token, "nonexistent_token" },
-                { AuthConstants.OAuth.FieldNames.ClientId, _clientId }
+                { AuthConstants.OAuth.FieldNames.ClientId, TestDataConstants.TestClientId }
             };
 
             HttpRequestMessage message = new HttpRequestMessage(HttpMethod.Post, Endpoints.Connect.Revocation)
@@ -68,7 +68,7 @@ namespace Sven.Tests.Controllers
         {
             Dictionary<string, string> request = new Dictionary<string, string>
             {
-                { AuthConstants.OAuth.FieldNames.ClientId, _clientId }
+                { AuthConstants.OAuth.FieldNames.ClientId, TestDataConstants.TestClientId }
             };
             HttpRequestMessage message = new HttpRequestMessage(HttpMethod.Post, Endpoints.Connect.Revocation)
             {
@@ -102,6 +102,17 @@ namespace Sven.Tests.Controllers
 
             Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
             Assert.Contains(AuthConstants.OAuth.Errors.InvalidClient, content);
+        }
+
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            _client.Dispose();
         }
     }
 }

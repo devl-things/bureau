@@ -11,6 +11,12 @@
             public const string Phone = "phone";
             public const string OfflineAccess = "offline_access";
         }
+
+        public static class ClientTypes
+        {
+            public const string Public = "public";
+            public const string Confidential = "confidential";
+        }
         public static class OAuth
         {
             public static class ResponseTypes
@@ -21,6 +27,7 @@
             public static class CodeChallengeMethods
             {
                 public const string Sha256 = "S256";
+                public const string Plain = "plain";
             }
 
             public static class SigningAlgorithms
@@ -64,6 +71,11 @@
                 public const string TokenType = "token_type";
                 public const string ExpiresIn = "expires_in";
                 public const string Nonce = "nonce";
+
+                //Login field names
+                public const string Username = "username";
+                public const string Password = "password";
+
 
                 //Discovery field names
                 public const string Issuer = "issuer";
@@ -114,12 +126,16 @@
 
             public static class ErrorDescriptions
             {
+                public const string InvalidRequest = "Invalid request.";
                 public const string InvalidRedirectUriFormat = "Invalid redirect_uri format.";
                 public const string UnsupportedResponseType = "The response type is not supported";
                 public const string UnsupportedGrantType = "The grant type is not supported";
                 public const string MissingAuthorizationState = "Missing authorization state";
                 public const string CodeOrCodeVerifierMissing = "Code or code_verifier is missing";
                 public const string RefreshTokenNotFound = "Refresh token not found.";
+                public const string CreationAuthCodeFailed = "Failed to create authorization code.";
+                public const string RequestedScopeExceedsGranted = "Requested scope exceeds originally granted scope.";
+                public const string RequestedScopeNotGranted = "Requested scope is not granted.";
             }
         }
         public static class CookieNames

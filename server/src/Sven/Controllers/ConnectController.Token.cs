@@ -51,24 +51,31 @@ namespace Sven.Controllers
                 return OAuthError(AuthConstants.OAuth.Errors.InvalidRequest, AuthConstants.OAuth.ErrorDescriptions.CodeOrCodeVerifierMissing);
             }
 
-            Result<AuthCode> authCodeResult = await _authCodeManager.GetAsync(request.Code!, cancellationToken);
+            Result<AuthCode> authCodeResult = await _authCodeManager.GetAuthCodeAsync(request.Code!, cancellationToken);
             if (authCodeResult.IsError)
             {
                 _logger.LogResultError(authCodeResult.Error);
                 return OAuthError(AuthConstants.OAuth.Errors.InvalidGrant, "Invalid or expired authorization code.");
             }
 
-            Result<bool> isValidResult = _authCodeManager.IsAuthCodeValid(authCodeResult.Value, request.ClientId, request.RedirectUri, request.CodeVerifier!);
-
-            if (isValidResult.IsError || !isValidResult.Value)
+            if (!authCodeResult.Value.IsClientValid(request.ClientId, request.RedirectUri))
             {
-                _logger.LogResultError(isValidResult.Error);
-                return OAuthError(AuthConstants.OAuth.Errors.InvalidGrant, "Code verifier mismatch or invalid client.");
+                return OAuthError(AuthConstants.OAuth.Errors.InvalidGrant, "Client not recognized.");
+            }
+
+            if (!_authCodeManager.IsAuthCodeExpired(authCodeResult.Value))
+            {
+                return OAuthError(AuthConstants.OAuth.Errors.InvalidGrant, "Code verifier mismatch.");
+            }
+
+            if (!authCodeResult.Value.IsCodeVerifierValid(request.CodeVerifier!))
+            {
+                return OAuthError(AuthConstants.OAuth.Errors.InvalidGrant, "Code verifier mismatch.");
             }
 
             Result<SvenToken> jwtResult = await _tokenProvider.CreateTokenAsync(authCodeResult.Value, cancellationToken);
 
-            await _authCodeManager.ClearAsync(request.Code!, cancellationToken);
+            await _authCodeManager.ClearAuthCodeAsync(request.Code!, cancellationToken);
 
             return HandleTokenResult(jwtResult);
         }

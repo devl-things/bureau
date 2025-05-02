@@ -2,7 +2,6 @@
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Mvc;
-using Sven.Abstractions.Services;
 using Sven.AutoValidation;
 using Sven.Configurations;
 using Sven.Extensions;
@@ -21,7 +20,6 @@ namespace Sven.Controllers
     {
         private readonly ILogger<ConnectController> _logger;
         private readonly AuthCodeProvider _authCodeManager;
-        private readonly IStore<string, OAuthRequest> _pkceRequestStore;
         private readonly IUserClaimsProvider _userProvider;
         private readonly IClientProvider _clientProvider;
         private readonly ITokenProvider _tokenProvider;
@@ -31,7 +29,6 @@ namespace Sven.Controllers
         {
             _logger = logger;
             _authCodeManager = authCodeManager;
-            _pkceRequestStore = pkceRequestStore;
             _userProvider = userProvider;
             _clientProvider = clientProvider;
             _tokenProvider = tokenProvider;
@@ -42,65 +39,70 @@ namespace Sven.Controllers
         [ServiceFilter(typeof(OAuthValidationFilter))]
         public async Task<IActionResult> AuthorizeAsync([FromQuery] AuthorizeRequest request, CancellationToken cancellationToken = default)
         {
-            if (!Uri.IsWellFormedUriString(request.RedirectUri, UriKind.Absolute))
+            Result<Client> clientResult = await _clientProvider.GetClientAsync(request.ClientId, cancellationToken);
+            if (clientResult.IsError)
+            {
+                _logger.LogResultError(clientResult.Error);
+                return OAuthError(AuthConstants.OAuth.Errors.InvalidRequest, AuthConstants.OAuth.ErrorDescriptions.InvalidRequest);
+            }
+            if (!(Uri.TryCreate(request.RedirectUri, UriKind.Absolute, out Uri? redirectUri) && string.IsNullOrWhiteSpace(redirectUri.Fragment)))
             {
                 return OAuthError(AuthConstants.OAuth.Errors.InvalidRequest, AuthConstants.OAuth.ErrorDescriptions.InvalidRedirectUriFormat);
             }
-            Result<bool> isClientValidResult = await _clientProvider.IsValidAsync(request.ClientId, request.RedirectUri, cancellationToken);
-            if (isClientValidResult.IsError || !isClientValidResult.Value)
+
+            if (!clientResult.Value.IsValidRedirectUri(request.RedirectUri))
             {
-                _logger.LogResultError(isClientValidResult.Error);
-                return OAuthError(AuthConstants.OAuth.Errors.InvalidRequest, "Invalid request.");
+                return OAuthError(AuthConstants.OAuth.Errors.InvalidRequest, AuthConstants.OAuth.ErrorDescriptions.InvalidRequest);
             }
 
-            if (!AuthConstants.OAuth.ResponseTypes.Code.Equals(request.ResponseType, StringComparison.OrdinalIgnoreCase))
+            if (IsResponseType(request.ResponseType, AuthConstants.OAuth.ResponseTypes.Code))
             {
-                return RedirectWithOAuthError(request.RedirectUri, AuthConstants.OAuth.Errors.UnsupportedResponseType,
-                    AuthConstants.OAuth.ErrorDescriptions.UnsupportedResponseType, request.State);
+                if (string.IsNullOrWhiteSpace(request.CodeChallenge))
+                {
+                    return RedirectWithOAuthError(request.RedirectUri, AuthConstants.OAuth.Errors.InvalidRequest,
+                        "Code challenge not properly defined", request.State);
+                }
+                if (!clientResult.Value.IsScopeGranted(request.Scope))
+                {
+                    return RedirectWithOAuthError(request.RedirectUri, AuthConstants.OAuth.Errors.InvalidScope,
+                        AuthConstants.OAuth.ErrorDescriptions.RequestedScopeNotGranted, request.State);
+                }
+
+                OAuthRequest oauthRequest = new OAuthRequest
+                {
+                    ClientId = request.ClientId,
+                    RedirectUri = request.RedirectUri,
+                    Scope = request.Scope,
+                    CodeChallenge = request.CodeChallenge,
+                    CodeChallengeMethod = _authCodeManager.GetCodeChallengeMethod(request.CodeChallengeMethod),
+                    State = request.State,
+                    Nonce = request.Nonce,
+                };
+
+                Result<string> pkceKeyResult = await _authCodeManager.CreateOAuthRequestAsync(oauthRequest, cancellationToken);
+
+                if (pkceKeyResult.IsError)
+                {
+                    _logger.LogResultError(pkceKeyResult.Error);
+                    return RedirectWithOAuthError(request.RedirectUri, AuthConstants.OAuth.Errors.ServerError,
+                        AuthConstants.OAuth.ErrorDescriptions.CreationAuthCodeFailed, request.State);
+                }
+
+                Response.Cookies.Append(AuthConstants.CookieNames.PkceKey, pkceKeyResult.Value, new CookieOptions
+                {
+                    HttpOnly = true,
+                    Secure = true,
+                    SameSite = SameSiteMode.Lax
+                });
+
+                return Redirect(Endpoints.Connect.AuthorizePage);
             }
+            return RedirectWithOAuthError(request.RedirectUri, AuthConstants.OAuth.Errors.UnsupportedResponseType, AuthConstants.OAuth.ErrorDescriptions.UnsupportedResponseType, request.State);
+        }
 
-            if (!_authCodeManager.IsCodeChallengeValid(request.CodeChallenge, request.CodeChallengeMethod))
-            {
-                return RedirectWithOAuthError(request.RedirectUri, AuthConstants.OAuth.Errors.InvalidRequest,
-                    "Code challenge not properly defined", request.State);
-            }
-
-
-            Result<bool> isScopeValidResult = await _clientProvider.IsScopeValidAsync(request.ClientId, request.Scope, cancellationToken);
-
-            if (isScopeValidResult.IsError || !isScopeValidResult.Value)
-            {
-                return RedirectWithOAuthError(request.RedirectUri, isScopeValidResult.Error, request.State);
-            }
-
-            OAuthRequest oauthRequest = new OAuthRequest
-            {
-                ClientId = request.ClientId,
-                RedirectUri = request.RedirectUri,
-                Scope = request.Scope,
-                CodeChallenge = request.CodeChallenge,
-                CodeChallengeMethod = request.CodeChallengeMethod,
-                State = request.State,
-                Nonce = request.Nonce,
-            };
-
-            string pkceKey = Guid.NewGuid().ToString("N");
-            Result storeResult = await _pkceRequestStore.StoreAsync(pkceKey, oauthRequest, cancellationToken);
-            if (storeResult.IsError)
-            {
-                _logger.LogResultError(storeResult.Error);
-                return RedirectWithOAuthError(request.RedirectUri, AuthConstants.OAuth.Errors.ServerError,
-                    "Authorization state couldn't be created", request.State);
-            }
-
-            Response.Cookies.Append(AuthConstants.CookieNames.PkceKey, pkceKey, new CookieOptions
-            {
-                HttpOnly = true,
-                Secure = true,
-                SameSite = SameSiteMode.Lax
-            });
-
-            return Redirect(Endpoints.Connect.AuthorizePage);
+        private static bool IsResponseType(string actual, string expected)
+        {
+            return string.Equals(actual, expected, StringComparison.OrdinalIgnoreCase);
         }
 
         [HttpPost(Endpoints.Connect.AuthorizeLoginPath)]
@@ -111,7 +113,7 @@ namespace Sven.Controllers
                 return OAuthError(AuthConstants.OAuth.Errors.InvalidRequest, $"{AuthConstants.OAuth.ErrorDescriptions.MissingAuthorizationState} ({AuthConstants.CookieNames.PkceKey}).");
             }
 
-            if (!_pkceRequestStore.Exists(pkceKey!))
+            if (!_authCodeManager.ExistsPkceKey(pkceKey!))
             {
                 return OAuthError(AuthConstants.OAuth.Errors.InvalidRequest, "Invalid or expired authorization request.");
             }
@@ -136,13 +138,13 @@ namespace Sven.Controllers
             {
                 return OAuthError(AuthConstants.OAuth.Errors.InvalidRequest, AuthConstants.OAuth.ErrorDescriptions.MissingAuthorizationState);
             }
-            Result<OAuthRequest> requestResult = await _pkceRequestStore.GetAsync(pkceKey!, cancellationToken);
+            Result<OAuthRequest> requestResult = await _authCodeManager.GetOAuthRequestAsync(pkceKey!, cancellationToken);
             if (requestResult.IsError)
             {
                 _logger.LogResultError(requestResult.Error);
                 return OAuthError(AuthConstants.OAuth.Errors.InvalidRequest, "Invalid or expired authorization state.");
             }
-            Result removeResult = await _pkceRequestStore.RemoveAsync(pkceKey!, cancellationToken);
+            Result removeResult = await _authCodeManager.ClearOAuthRequestAsync(pkceKey!, cancellationToken);
             if (removeResult.IsError)
             {
                 _logger.LogResultError(removeResult.Error);
@@ -160,7 +162,7 @@ namespace Sven.Controllers
             if (codeResult.IsError)
             {
                 _logger.LogResultError(codeResult.Error);
-                return RedirectWithOAuthError(requestResult.Value.RedirectUri, codeResult.Error, requestResult.Value.State);
+                return RedirectWithOAuthError(requestResult.Value.RedirectUri, AuthConstants.OAuth.Errors.ServerError, AuthConstants.OAuth.ErrorDescriptions.CreationAuthCodeFailed, requestResult.Value.State);
             }
             return RedirectWithOAuthCode(requestResult.Value.RedirectUri, codeResult.Value, requestResult.Value.State);
         }
@@ -172,10 +174,6 @@ namespace Sven.Controllers
         private IActionResult OAuthError(ResultError resultError)
         {
             return BadRequest(new OAuthError(resultError.ErrorMessage, resultError.LogMessage));
-        }
-        private IActionResult RedirectWithOAuthError(string redirectUri, ResultError resultError, string? state)
-        {
-            return RedirectWithOAuthError(redirectUri, resultError.ErrorMessage, resultError.LogMessage, state);
         }
         private IActionResult RedirectWithOAuthError(string redirectUri, string error, string? errorDescription, string? state)
         {

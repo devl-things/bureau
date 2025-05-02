@@ -13,14 +13,14 @@ namespace Sven.Controllers
         [ServiceFilter(typeof(OAuthValidationFilter))]
         public async Task<IActionResult> RevokeTokenAsync([FromForm] TokenRevocationRequest request, CancellationToken cancellationToken = default)
         {
-            Result<bool> isClientValidResult = await _clientProvider.IsValidAsync(request.ClientId, cancellationToken);
-            if (isClientValidResult.IsError || !isClientValidResult.Value)
+            Result<Client> clientResult = await _clientProvider.GetClientAsync(request.ClientId!, cancellationToken);
+            if (clientResult.IsError)
             {
-                _logger.LogResultError(isClientValidResult.Error);
+                _logger.LogResultError(clientResult.Error);
                 return OAuthError(AuthConstants.OAuth.Errors.InvalidClient, "Client authentication failed");
             }
 
-            Result<bool> removeResult = await _tokenProvider.RevokeAsync(request.Token, request.ClientId, request.TokenTypeHint, cancellationToken);
+            Result<bool> removeResult = await _tokenProvider.RevokeAsync(request.Token, request.ClientId!, request.TokenTypeHint, cancellationToken);
 
             if (removeResult.IsError)
             {

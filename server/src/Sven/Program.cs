@@ -1,9 +1,9 @@
 ﻿using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.Google;
 using Microsoft.IdentityModel.Tokens;
-using Sven.Abstractions.Services;
 using Sven.AutoValidation;
 using Sven.Configurations;
+using Sven.Data.SqlServer.Configurations;
 using Sven.Models;
 using Sven.Services;
 using System.Security.Cryptography;
@@ -49,10 +49,14 @@ namespace Sven
             builder.Services.AddSingleton<IStore<string, OAuthRequest>, InMemoryStore<string, OAuthRequest>>();
             builder.Services.AddSingleton<IStore<string, RefreshToken>, InMemoryStore<string, RefreshToken>>();
             builder.Services.AddSingleton<AuthCodeProvider>();
-            builder.Services.AddSingleton<ITokenProvider, SvenTokenProvider>();
-            builder.Services.AddSingleton<IUserClaimsProvider, InMemoryUserClaimsProvider>();
-            builder.Services.AddSingleton<IClientProvider, InMemoryClientProvider>();
+            builder.Services.AddScoped<IUserClaimsProvider, UserClaimsProvider>();
+            builder.Services.AddScoped<IClientProvider, ClientProvider>();
+            builder.Services.AddScoped<ITokenProvider, SvenTokenProvider>();
             builder.Services.AddScoped<OAuthValidationFilter>();
+            builder.Services.AddSvenSqlServer(options =>
+            {
+                options.ConnectionString = builder.Configuration.GetConnectionString("SqlServer");
+            });
 
 
             // Config for CORS (allow React dev server access)

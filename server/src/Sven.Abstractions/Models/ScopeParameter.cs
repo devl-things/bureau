@@ -6,6 +6,13 @@
         public ScopeParameter(string scope)
         {
             Scope = scope;
+            SetScopes();
+        }
+
+        public ScopeParameter(HashSet<string> scopes)
+        {
+            _scopes = scopes;
+            _scope = string.Join(" ", scopes);
         }
 
         private string _scope = string.Empty;
@@ -21,18 +28,28 @@
         }
 
         private HashSet<string>? _scopes;
+        public HashSet<string> Scopes
+        {
+            get
+            {
+                return _scopes ?? new HashSet<string>(0);
+            }
+        }
 
         public bool HasScope(string scope)
         {
             if (string.IsNullOrWhiteSpace(scope)) return false;
             if (_scopes == null && string.IsNullOrWhiteSpace(Scope)) return false;
+            SetScopes();
+            return _scopes!.Contains(scope);
+        }
 
+        private void SetScopes()
+        {
             _scopes ??= Scope!
                 .Split(' ', StringSplitOptions.RemoveEmptyEntries)
                 .Select(s => s.ToLowerInvariant())
                 .ToHashSet();
-
-            return _scopes.Contains(scope);
         }
 
         /// <summary>
@@ -41,7 +58,7 @@
         /// </summary>
         /// <param name="scope"></param>
         /// <returns></returns>
-        public bool IsSameOrSubset(string? scope)
+        public bool IsScopeSameOrSubset(string? scope)
         {
             if (string.IsNullOrWhiteSpace(scope)) return true;
             if (string.IsNullOrWhiteSpace(_scope)) return false;

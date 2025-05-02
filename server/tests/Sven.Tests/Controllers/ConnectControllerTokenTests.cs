@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc.Testing;
 using Sven.Configurations;
 using Sven.Tests.Fixtures;
+using Sven.Tests.TestData;
 using System.Net;
 
 namespace Sven.Tests.Controllers
@@ -8,8 +9,6 @@ namespace Sven.Tests.Controllers
     public class ConnectControllerTokenTests : IClassFixture<SvenWebAppFactory>, IDisposable
     {
         private readonly HttpClient _client;
-        private readonly string _clientId = "test-client";
-        private readonly string _redirectUri = "https://localhost";
         public ConnectControllerTokenTests(SvenWebAppFactory factory)
         {
             _client = factory.CreateClient(new WebApplicationFactoryClientOptions
@@ -25,8 +24,8 @@ namespace Sven.Tests.Controllers
             Dictionary<string, string> formData = new Dictionary<string, string>
             {
                 [AuthConstants.OAuth.FieldNames.GrantTypeField] = "invalid_grant",
-                [AuthConstants.OAuth.FieldNames.ClientId] = _clientId,
-                [AuthConstants.OAuth.FieldNames.RedirectUri] = _redirectUri
+                [AuthConstants.OAuth.FieldNames.ClientId] = TestDataConstants.TestClientId,
+                [AuthConstants.OAuth.FieldNames.RedirectUri] = TestDataConstants.TestClientRedirectUri
             };
 
             HttpResponseMessage response = await _client.PostAsync(Endpoints.Connect.Token, new FormUrlEncodedContent(formData));
@@ -46,8 +45,8 @@ namespace Sven.Tests.Controllers
             {
                 [AuthConstants.OAuth.FieldNames.GrantTypeField] = AuthConstants.OAuth.GrantTypes.AuthorizationCode,
                 [AuthConstants.OAuth.FieldNames.Code] = "test-code",
-                [AuthConstants.OAuth.FieldNames.ClientId] = _clientId,
-                [AuthConstants.OAuth.FieldNames.RedirectUri] = _redirectUri
+                [AuthConstants.OAuth.FieldNames.ClientId] = TestDataConstants.TestClientId,
+                [AuthConstants.OAuth.FieldNames.RedirectUri] = TestDataConstants.TestClientRedirectUri
             };
 
             HttpResponseMessage response = await _client.PostAsync(Endpoints.Connect.Token, new FormUrlEncodedContent(formData));
@@ -66,8 +65,8 @@ namespace Sven.Tests.Controllers
             {
                 [AuthConstants.OAuth.FieldNames.GrantTypeField] = AuthConstants.OAuth.GrantTypes.RefreshToken,
                 [AuthConstants.OAuth.FieldNames.RefreshToken] = "invalid_token",
-                [AuthConstants.OAuth.FieldNames.ClientId] = _clientId,
-                [AuthConstants.OAuth.FieldNames.RedirectUri] = _redirectUri,
+                [AuthConstants.OAuth.FieldNames.ClientId] = TestDataConstants.TestClientId,
+                [AuthConstants.OAuth.FieldNames.RedirectUri] = TestDataConstants.TestClientRedirectUri,
             };
 
             HttpResponseMessage response = await _client.PostAsync(Endpoints.Connect.Token, new FormUrlEncodedContent(formData));
@@ -85,7 +84,7 @@ namespace Sven.Tests.Controllers
             Dictionary<string, string> formData = new Dictionary<string, string>
             {
                 [AuthConstants.OAuth.FieldNames.GrantTypeField] = "invalid_grant",
-                [AuthConstants.OAuth.FieldNames.ClientId] = _clientId
+                [AuthConstants.OAuth.FieldNames.ClientId] = TestDataConstants.TestClientId
             };
 
             HttpResponseMessage response = await _client.PostAsync(Endpoints.Connect.Token, new FormUrlEncodedContent(formData));
@@ -95,6 +94,12 @@ namespace Sven.Tests.Controllers
             Assert.Contains(AuthConstants.OAuth.Errors.InvalidRequest, content);
         }
         public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        protected virtual void Dispose(bool disposing)
         {
             _client.Dispose();
         }

@@ -13,20 +13,27 @@ namespace Sven.Services
     {
         private readonly ILogger<SvenTokenProvider> _logger;
         private readonly JwtOptions _jwtOptions;
+        private readonly IClientProvider _clientProvider;
         private readonly RsaSecurityKey _rsaKey;
         private readonly IStore<string, RefreshToken> _refreshTokenStore;
         private readonly TimeProvider _timeProvider;
+
+        private Client? _currentClient;
+        private readonly TokenLifetimeOptions _tokenLifetimeOptions;
         public SvenTokenProvider(ILogger<SvenTokenProvider> logger, IOptions<JwtOptions> jwtOptions,
-            RsaSecurityKey rsaKey, IStore<string, RefreshToken> refreshTokenStore, TimeProvider timeProvider)
+            RsaSecurityKey rsaKey, IStore<string, RefreshToken> refreshTokenStore, TimeProvider timeProvider, IClientProvider clientProvider)
         {
             _logger = logger;
             _jwtOptions = jwtOptions.Value;
+            _tokenLifetimeOptions = new TokenLifetimeOptions(_jwtOptions);
             _rsaKey = rsaKey;
             _refreshTokenStore = refreshTokenStore;
             _timeProvider = timeProvider;
+            _clientProvider = clientProvider;
+            _currentClient = null;
         }
 
-        public async Task<Result<SvenToken>> CreateTokenAsync(string refreshToken, string? scope, CancellationToken cancellationToken)
+        public async Task<Result<SvenToken>> CreateTokenAsync(string refreshToken, string? scope, CancellationToken cancellationToken = default)
         {
             Result<RefreshToken> storedRefreshTokenResult = await _refreshTokenStore.GetAsync(refreshToken, cancellationToken);
 
@@ -35,6 +42,7 @@ namespace Sven.Services
                 _logger.LogResultError(storedRefreshTokenResult.Error);
                 return new ResultError(AuthConstants.OAuth.Errors.InvalidGrant, "Refresh token not found.");
             }
+            await SetTokenLifetimeOptions(storedRefreshTokenResult.Value, cancellationToken);
             // create a new refresh token
             Result<string?> newRefreshTokenResult = await CreateRefreshTokenAsync(storedRefreshTokenResult.Value, cancellationToken);
             if (newRefreshTokenResult.IsError)
@@ -57,8 +65,9 @@ namespace Sven.Services
             return new SvenToken(accessToken, newRefreshTokenResult.Value, idToken);
         }
 
-        public async Task<Result<SvenToken>> CreateTokenAsync(ClientClaims clientClaims, CancellationToken cancellationToken)
+        public async Task<Result<SvenToken>> CreateTokenAsync(ClientClaims clientClaims, CancellationToken cancellationToken = default)
         {
+            await SetTokenLifetimeOptions(clientClaims, cancellationToken);
             Result<string?> refreshTokenResult = await CreateRefreshTokenAsync(clientClaims, cancellationToken);
             if (refreshTokenResult.IsError)
             {
@@ -70,6 +79,32 @@ namespace Sven.Services
             string accessToken = CreateAccessToken(clientClaims);
 
             return new SvenToken(accessToken, refreshTokenResult.Value, idToken);
+        }
+
+        private async Task SetTokenLifetimeOptions(ClientClaims clientClaims, CancellationToken cancellationToken)
+        {
+            if (_currentClient == null || _currentClient.Identifier != clientClaims.ClientId)
+            {
+                Result<Client> clientResult = await _clientProvider.GetClientAsync(clientClaims.ClientId, cancellationToken);
+                if (clientResult.IsError)
+                {
+                    _logger.LogResultError(clientResult.Error);
+                    return;
+                }
+                _currentClient = clientResult.Value;
+            }
+            if (_currentClient.RefreshTokenLifetime.HasValue)
+            {
+                _tokenLifetimeOptions.RefreshTokenLifetime = _currentClient.RefreshTokenLifetime.Value;
+            }
+            if (_currentClient.IdTokenLifetime.HasValue)
+            {
+                _tokenLifetimeOptions.IdTokenLifetime = _currentClient.IdTokenLifetime.Value;
+            }
+            if (_currentClient.AccessTokenLifetime.HasValue)
+            {
+                _tokenLifetimeOptions.AccessTokenLifetime = _currentClient.AccessTokenLifetime.Value;
+            }
         }
 
         private async Task<Result<string?>> CreateRefreshTokenAsync(ClientClaims clientClaims, CancellationToken cancellationToken)
@@ -85,7 +120,7 @@ namespace Sven.Services
                     Claims = clientClaims.Claims,
                     Scope = clientClaims.Scope,
                     Nonce = clientClaims.Nonce,
-                    ExpiresAt = _timeProvider.GetFutureTime(_jwtOptions.RefreshTokenLifetime)
+                    ExpiresAt = _timeProvider.GetFutureTime(_tokenLifetimeOptions.RefreshTokenLifetime)
                 };
                 Result storeResult = await _refreshTokenStore.StoreAsync(refreshTokenObject.Token, refreshTokenObject, cancellationToken);
                 if (storeResult.IsError)
@@ -108,7 +143,7 @@ namespace Sven.Services
                     new Claim(JwtRegisteredClaimNames.Sub, clientClaims.GetClaimValue(JwtRegisteredClaimNames.Sub)),
                     new Claim(JwtRegisteredClaimNames.NameId, clientClaims.GetClaimValue(JwtRegisteredClaimNames.Sub)),
                     new Claim(JwtRegisteredClaimNames.Aud, clientClaims.ClientId),
-                    new Claim(JwtRegisteredClaimNames.Exp, _timeProvider.GetFutureUnixTimeSeconds(_jwtOptions.IdTokenLifetime).ToString(), ClaimValueTypes.Integer64),
+                    new Claim(JwtRegisteredClaimNames.Exp, _timeProvider.GetFutureUnixTimeSeconds(_tokenLifetimeOptions.IdTokenLifetime).ToString(), ClaimValueTypes.Integer64),
                     new Claim(JwtRegisteredClaimNames.Iat, _timeProvider.GetUtcNow().ToUnixTimeSeconds().ToString(), ClaimValueTypes.Integer64),
                     new Claim(JwtRegisteredClaimNames.Acr, clientClaims.GetClaimValue(JwtRegisteredClaimNames.Acr)),
                     new Claim(JwtRegisteredClaimNames.AuthTime, clientClaims.GetClaimValue(JwtRegisteredClaimNames.AuthTime)),
@@ -159,7 +194,7 @@ namespace Sven.Services
             return null;
         }
 
-        public async Task<Result<bool>> IsRefreshTokenValidAsync(string refreshToken, string clientId, string redirectUri, string? scope, CancellationToken cancellationToken)
+        public async Task<Result<bool>> IsRefreshTokenValidAsync(string refreshToken, string clientId, string redirectUri, string? scope, CancellationToken cancellationToken = default)
         {
             Result<RefreshToken> storedRefreshTokenResult = await _refreshTokenStore.GetAsync(refreshToken, cancellationToken);
 
@@ -169,9 +204,9 @@ namespace Sven.Services
                 return new ResultError(AuthConstants.OAuth.Errors.InvalidGrant, AuthConstants.OAuth.ErrorDescriptions.RefreshTokenNotFound);
             }
             RefreshToken storedToken = storedRefreshTokenResult.Value;
-            if (!storedToken.IsSameOrSubset(scope))
+            if (!storedToken.IsScopeSameOrSubset(scope))
             {
-                return new ResultError(AuthConstants.OAuth.Errors.InvalidScope, "Requested scope exceeds originally granted scope.");
+                return new ResultError(AuthConstants.OAuth.Errors.InvalidScope, AuthConstants.OAuth.ErrorDescriptions.RequestedScopeExceedsGranted);
             }
             if (storedToken.ClientId != clientId || storedToken.RedirectUri != redirectUri)
             {
@@ -192,14 +227,14 @@ namespace Sven.Services
                 issuer: _jwtOptions.Issuer,
                 audience: _jwtOptions.Audience,
                 claims: clientClaims.Claims.Append(new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())),
-                expires: _timeProvider.GetFutureTime(_jwtOptions.AccessTokenLifetime).DateTime,
+                expires: _timeProvider.GetFutureTime(_tokenLifetimeOptions.AccessTokenLifetime).DateTime,
                 signingCredentials: creds
             );
 
             return new JwtSecurityTokenHandler().WriteToken(token);
         }
 
-        public async Task<Result<bool>> RevokeAsync(string token, string clientId, string? tokenTypeHint, CancellationToken cancellationToken)
+        public async Task<Result<bool>> RevokeAsync(string token, string clientId, string? tokenTypeHint, CancellationToken cancellationToken = default)
         {
             Result<RefreshToken> storedRefreshTokenResult = await _refreshTokenStore.GetAsync(token, cancellationToken);
 

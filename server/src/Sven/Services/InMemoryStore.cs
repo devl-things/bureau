@@ -5,7 +5,7 @@ namespace Sven.Services
 {
     public class InMemoryStore<TKey, TValue> : IStore<TKey, TValue> where TKey : notnull
     {
-        private readonly ConcurrentDictionary<TKey, TValue> _store = new();
+        protected readonly ConcurrentDictionary<TKey, TValue> _store = new();
 
         public bool Exists(TKey key)
         {
@@ -19,6 +19,10 @@ namespace Sven.Services
 
         public Task<Result<TValue>> GetAsync(TKey key, CancellationToken cancellationToken = default)
         {
+            if (key is null)
+            {
+                return Task.FromResult(new Result<TValue>(new ResultError()));
+            }
             bool isFound = _store.TryGetValue(key, out TValue? result);
             return Task.FromResult(new Result<TValue>(result, isFound));
         }
