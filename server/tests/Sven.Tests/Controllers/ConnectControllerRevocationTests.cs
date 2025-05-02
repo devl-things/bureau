@@ -6,7 +6,7 @@ using System.Net;
 
 namespace Sven.Tests.Controllers
 {
-    public class ConnectControllerRevocationTests : IClassFixture<SvenWebAppFactory>
+    public class ConnectControllerRevocationTests : IClassFixture<SvenWebAppFactory>, IDisposable
     {
         private readonly HttpClient _client;
 
@@ -102,6 +102,17 @@ namespace Sven.Tests.Controllers
 
             Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
             Assert.Contains(AuthConstants.OAuth.Errors.InvalidClient, content);
+        }
+
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            _client.Dispose();
         }
     }
 }

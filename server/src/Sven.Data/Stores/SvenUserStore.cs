@@ -41,7 +41,7 @@ namespace Sven.Data.Stores
             return _context.Users.FirstOrDefaultAsync(x => x.Identifier.Equals(identifier), cancellationToken);
         }
 
-        public async Task<Result> StoreAsync(SvenUser user, CancellationToken cancellationToken)
+        public async Task<Result> StoreAsync(SvenUser user, CancellationToken cancellationToken = default)
         {
             UserDb? dbEntity = await GetUserDbAsync(user.SubjectId, cancellationToken);
             if (dbEntity == null)

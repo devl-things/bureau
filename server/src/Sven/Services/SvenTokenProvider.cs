@@ -19,13 +19,13 @@ namespace Sven.Services
         private readonly TimeProvider _timeProvider;
 
         private Client? _currentClient;
-        private ITokenLifetimeOptions _tokenLifetimeOptions;
+        private readonly TokenLifetimeOptions _tokenLifetimeOptions;
         public SvenTokenProvider(ILogger<SvenTokenProvider> logger, IOptions<JwtOptions> jwtOptions,
             RsaSecurityKey rsaKey, IStore<string, RefreshToken> refreshTokenStore, TimeProvider timeProvider, IClientProvider clientProvider)
         {
             _logger = logger;
             _jwtOptions = jwtOptions.Value;
-            _tokenLifetimeOptions = _jwtOptions;
+            _tokenLifetimeOptions = new TokenLifetimeOptions(_jwtOptions);
             _rsaKey = rsaKey;
             _refreshTokenStore = refreshTokenStore;
             _timeProvider = timeProvider;
@@ -194,7 +194,7 @@ namespace Sven.Services
             return null;
         }
 
-        public async Task<Result<bool>> IsRefreshTokenValidAsync(string refreshToken, string clientId, string redirectUri, string? scope, CancellationToken cancellationToken)
+        public async Task<Result<bool>> IsRefreshTokenValidAsync(string refreshToken, string clientId, string redirectUri, string? scope, CancellationToken cancellationToken = default)
         {
             Result<RefreshToken> storedRefreshTokenResult = await _refreshTokenStore.GetAsync(refreshToken, cancellationToken);
 
@@ -234,7 +234,7 @@ namespace Sven.Services
             return new JwtSecurityTokenHandler().WriteToken(token);
         }
 
-        public async Task<Result<bool>> RevokeAsync(string token, string clientId, string? tokenTypeHint, CancellationToken cancellationToken)
+        public async Task<Result<bool>> RevokeAsync(string token, string clientId, string? tokenTypeHint, CancellationToken cancellationToken = default)
         {
             Result<RefreshToken> storedRefreshTokenResult = await _refreshTokenStore.GetAsync(token, cancellationToken);
 

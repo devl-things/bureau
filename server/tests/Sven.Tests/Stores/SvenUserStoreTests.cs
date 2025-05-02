@@ -42,6 +42,12 @@ namespace Sven.Data.Tests.Stores
 
         public void Dispose()
         {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
             _factory.Dispose();
         }
     }

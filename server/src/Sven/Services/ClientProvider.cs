@@ -12,7 +12,7 @@ namespace Sven.Services
         {
             _clientStore = clientStore;
         }
-        public async Task<Result<Client>> GetClientAsync(string clientId, CancellationToken cancellationToken)
+        public async Task<Result<Client>> GetClientAsync(string clientId, CancellationToken cancellationToken = default)
         {
             Result<Client> result = await _clientStore.GetAsync(clientId, cancellationToken);
             if (result.IsError)

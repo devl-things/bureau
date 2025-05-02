@@ -12,14 +12,5 @@ namespace Sven.Data.Contexts
         public DbSet<ClientDb> Clients { get; set; } = null!;
         public DbSet<UserDb> Users { get; set; } = null!;
 
-        protected override void OnModelCreating(ModelBuilder modelBuilder)
-        {
-            base.OnModelCreating(modelBuilder);
-
-            // Provider-agnostic configurations
-            //modelBuilder.ApplyConfigurationsFromAssembly(typeof(SvenContext).Assembly);
-            //TIP what is the difference
-            //modelBuilder.ApplyConfigurationsFromAssembly(Assembly.GetExecutingAssembly());
-        }
     }
 }
