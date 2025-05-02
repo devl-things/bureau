@@ -1,6 +1,4 @@
 ﻿using Bureau.Core;
-using Sven.Configurations;
-using Sven.Models;
 using System.Collections.Concurrent;
 
 namespace Sven.Services
@@ -39,23 +37,6 @@ namespace Sven.Services
         {
             _store[key] = request;
             return Task.FromResult(new Result());
-        }
-    }
-
-    internal class InMemoryClientStore : InMemoryStore<string, Client>
-    {
-        public const string TestClientId = "test-client";
-        public const string TestClientRedirectUri = "https://localhost:3000/callback";
-
-        public InMemoryClientStore()
-        {
-            _store[TestClientId] = new Client()
-            {
-                Active = true,
-                Identifier = TestClientId,
-                RedirectUris = new HashSet<string>() { TestClientRedirectUri },
-                Scope = new ScopeParameter($"{AuthConstants.Scopes.OfflineAccess} {AuthConstants.Scopes.OpenId} {AuthConstants.Scopes.Email}"),
-            };
         }
     }
 }

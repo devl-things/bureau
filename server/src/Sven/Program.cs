@@ -49,7 +49,7 @@ namespace Sven
             builder.Services.AddSingleton<IStore<string, OAuthRequest>, InMemoryStore<string, OAuthRequest>>();
             builder.Services.AddSingleton<IStore<string, RefreshToken>, InMemoryStore<string, RefreshToken>>();
             builder.Services.AddSingleton<AuthCodeProvider>();
-            builder.Services.AddSingleton<IUserClaimsProvider, InMemoryUserClaimsProvider>();
+            builder.Services.AddScoped<IUserClaimsProvider, UserClaimsProvider>();
             builder.Services.AddScoped<IClientProvider, ClientProvider>();
             builder.Services.AddScoped<ITokenProvider, SvenTokenProvider>();
             builder.Services.AddScoped<OAuthValidationFilter>();

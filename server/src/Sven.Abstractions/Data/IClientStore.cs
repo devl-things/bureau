@@ -6,5 +6,6 @@ namespace Sven.Data
     public interface IClientStore
     {
         Task<Result<Client>> GetAsync(string clientId, CancellationToken cancellationToken);
+        Task<Result> StoreAsync(Client client, CancellationToken cancellationToken);
     }
 }

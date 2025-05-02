@@ -11,6 +11,12 @@
             public const string Phone = "phone";
             public const string OfflineAccess = "offline_access";
         }
+
+        public static class ClientTypes
+        {
+            public const string Public = "public";
+            public const string Confidential = "confidential";
+        }
         public static class OAuth
         {
             public static class ResponseTypes
@@ -65,6 +71,11 @@
                 public const string TokenType = "token_type";
                 public const string ExpiresIn = "expires_in";
                 public const string Nonce = "nonce";
+
+                //Login field names
+                public const string Username = "username";
+                public const string Password = "password";
+
 
                 //Discovery field names
                 public const string Issuer = "issuer";

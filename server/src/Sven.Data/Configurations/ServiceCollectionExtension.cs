@@ -8,6 +8,7 @@ namespace Sven.Data.Configurations
 
         public static IServiceCollection AddSvenData(this IServiceCollection services)
         {
+            services.AddTransient<IUserStore, SvenUserStore>();
             services.AddTransient<IClientStore, ClientStore>();
             return services;
         }

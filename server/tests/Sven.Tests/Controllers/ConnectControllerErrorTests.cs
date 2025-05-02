@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc.Testing;
 using Sven.Configurations;
-using Sven.Services;
 using Sven.Tests.Fixtures;
+using Sven.Tests.TestData;
 using System.Collections.Specialized;
 using System.Net;
 using System.Web;
@@ -11,8 +11,6 @@ namespace Sven.Tests.Controllers
     public class ConnectControllerErrorTests : IClassFixture<SvenWebAppFactory>, IDisposable
     {
         private readonly HttpClient _client;
-        private readonly string _clientId = InMemoryClientStore.TestClientId;
-        private readonly string _clientRedirectUri = InMemoryClientStore.TestClientRedirectUri;
         public ConnectControllerErrorTests(SvenWebAppFactory factory)
         {
             _client = factory.CreateClient(new WebApplicationFactoryClientOptions
@@ -27,7 +25,7 @@ namespace Sven.Tests.Controllers
         {
             Dictionary<string, string> query = new Dictionary<string, string>
             {
-                [AuthConstants.OAuth.FieldNames.ClientId] = _clientId,
+                [AuthConstants.OAuth.FieldNames.ClientId] = TestDataConstants.TestClientId,
                 [AuthConstants.OAuth.FieldNames.RedirectUri] = "invalid-uri",
                 [AuthConstants.OAuth.FieldNames.ResponseTypeField] = AuthConstants.OAuth.ResponseTypes.Code,
                 [AuthConstants.OAuth.FieldNames.CodeChallenge] = "valid_challenge",
@@ -49,8 +47,8 @@ namespace Sven.Tests.Controllers
         {
             Dictionary<string, string> query = new Dictionary<string, string>
             {
-                [AuthConstants.OAuth.FieldNames.ClientId] = _clientId,
-                [AuthConstants.OAuth.FieldNames.RedirectUri] = _clientRedirectUri,
+                [AuthConstants.OAuth.FieldNames.ClientId] = TestDataConstants.TestClientId,
+                [AuthConstants.OAuth.FieldNames.RedirectUri] = TestDataConstants.TestClientRedirectUri,
                 [AuthConstants.OAuth.FieldNames.ResponseTypeField] = "invalid",
                 [AuthConstants.OAuth.FieldNames.CodeChallenge] = "valid_challenge",
                 [AuthConstants.OAuth.FieldNames.CodeChallengeMethod] = AuthConstants.OAuth.CodeChallengeMethods.Sha256
