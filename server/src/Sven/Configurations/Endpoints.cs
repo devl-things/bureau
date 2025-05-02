@@ -6,7 +6,10 @@
         {
             public const string Base = "oidc";
             public const string UserInfoPath = "userinfo";
+            public const string RegisterPath = "register";
+
             public const string UserInfo = $"/{Base}/{UserInfoPath}";
+            public const string Register = $"/{Base}/{RegisterPath}";
         }
         public static class WellKnown
         {
