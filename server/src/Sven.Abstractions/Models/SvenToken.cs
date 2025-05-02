@@ -6,7 +6,7 @@ namespace Sven.Models
     public class SvenToken
     {
         [JsonPropertyName(AuthConstants.OAuth.FieldNames.AccessToken)]
-        public string AccessToken { get; set; } = string.Empty;
+        public string AccessToken { get; set; }
         [JsonPropertyName(AuthConstants.OAuth.FieldNames.RefreshToken)]
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public string? RefreshToken { get; set; }

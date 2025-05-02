@@ -33,7 +33,7 @@ namespace Sven.Services
             _currentClient = null;
         }
 
-        public async Task<Result<SvenToken>> CreateTokenAsync(string refreshToken, string? scope, CancellationToken cancellationToken)
+        public async Task<Result<SvenToken>> CreateTokenAsync(string refreshToken, string? scope, CancellationToken cancellationToken = default)
         {
             Result<RefreshToken> storedRefreshTokenResult = await _refreshTokenStore.GetAsync(refreshToken, cancellationToken);
 
@@ -65,6 +65,22 @@ namespace Sven.Services
             return new SvenToken(accessToken, newRefreshTokenResult.Value, idToken);
         }
 
+        public async Task<Result<SvenToken>> CreateTokenAsync(ClientClaims clientClaims, CancellationToken cancellationToken = default)
+        {
+            await SetTokenLifetimeOptions(clientClaims, cancellationToken);
+            Result<string?> refreshTokenResult = await CreateRefreshTokenAsync(clientClaims, cancellationToken);
+            if (refreshTokenResult.IsError)
+            {
+                return refreshTokenResult.Error;
+            }
+
+            string? idToken = CreateIdToken(clientClaims);
+
+            string accessToken = CreateAccessToken(clientClaims);
+
+            return new SvenToken(accessToken, refreshTokenResult.Value, idToken);
+        }
+
         private async Task SetTokenLifetimeOptions(ClientClaims clientClaims, CancellationToken cancellationToken)
         {
             if (_currentClient == null || _currentClient.Identifier != clientClaims.ClientId)
@@ -89,22 +105,6 @@ namespace Sven.Services
             {
                 _tokenLifetimeOptions.AccessTokenLifetime = _currentClient.AccessTokenLifetime.Value;
             }
-        }
-
-        public async Task<Result<SvenToken>> CreateTokenAsync(ClientClaims clientClaims, CancellationToken cancellationToken)
-        {
-            await SetTokenLifetimeOptions(clientClaims, cancellationToken);
-            Result<string?> refreshTokenResult = await CreateRefreshTokenAsync(clientClaims, cancellationToken);
-            if (refreshTokenResult.IsError)
-            {
-                return refreshTokenResult.Error;
-            }
-
-            string? idToken = CreateIdToken(clientClaims);
-
-            string accessToken = CreateAccessToken(clientClaims);
-
-            return new SvenToken(accessToken, refreshTokenResult.Value, idToken);
         }
 
         private async Task<Result<string?>> CreateRefreshTokenAsync(ClientClaims clientClaims, CancellationToken cancellationToken)

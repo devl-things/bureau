@@ -19,7 +19,7 @@ namespace Sven.Services
 
         public Task<Result<TValue>> GetAsync(TKey key, CancellationToken cancellationToken = default)
         {
-            if (key == null)
+            if (key is null)
             {
                 return Task.FromResult(new Result<TValue>(new ResultError()));
             }

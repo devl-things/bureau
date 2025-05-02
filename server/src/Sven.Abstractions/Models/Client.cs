@@ -6,13 +6,13 @@
         /// https://datatracker.ietf.org/doc/html/rfc6749#section-2.2
         /// Client identifier
         /// </summary>
-        public string Identifier { get; set; }
-        public string Name { get; set; }
+        public string Identifier { get; set; } = string.Empty;
+        public string Name { get; set; } = string.Empty;
         /// <summary>
         /// https://datatracker.ietf.org/doc/html/rfc6749#section-2.1
         /// confidential/public
         /// </summary>
-        public string Type { get; set; }
+        public string Type { get; set; } = string.Empty;
 
         public ScopeParameter Scope { get; set; }
 

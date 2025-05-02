@@ -17,7 +17,7 @@ namespace Sven.Data.Contexts
             base.OnModelCreating(modelBuilder);
 
             // Provider-agnostic configurations
-            modelBuilder.ApplyConfigurationsFromAssembly(typeof(SvenContext).Assembly);
+            //modelBuilder.ApplyConfigurationsFromAssembly(typeof(SvenContext).Assembly);
             //TIP what is the difference
             //modelBuilder.ApplyConfigurationsFromAssembly(Assembly.GetExecutingAssembly());
         }

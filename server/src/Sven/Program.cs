@@ -53,7 +53,10 @@ namespace Sven
             builder.Services.AddScoped<IClientProvider, ClientProvider>();
             builder.Services.AddScoped<ITokenProvider, SvenTokenProvider>();
             builder.Services.AddScoped<OAuthValidationFilter>();
-            builder.Services.AddSvenSqlServer(builder.Configuration);
+            builder.Services.AddSvenSqlServer(options =>
+            {
+                options.ConnectionString = builder.Configuration.GetConnectionString("SqlServer");
+            });
 
 
             // Config for CORS (allow React dev server access)

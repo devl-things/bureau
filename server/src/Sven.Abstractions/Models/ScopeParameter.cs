@@ -41,7 +41,7 @@
             if (string.IsNullOrWhiteSpace(scope)) return false;
             if (_scopes == null && string.IsNullOrWhiteSpace(Scope)) return false;
             SetScopes();
-            return _scopes.Contains(scope);
+            return _scopes!.Contains(scope);
         }
 
         private void SetScopes()

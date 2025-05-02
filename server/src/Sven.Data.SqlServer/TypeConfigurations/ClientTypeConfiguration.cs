@@ -10,13 +10,24 @@ namespace Sven.Data.SqlServer.TypeConfigurations
         public override void Configure(EntityTypeBuilder<TEntity> builder)
         {
             base.Configure(builder);
-
             builder.Property(e => e.RefreshTokenLifetime)
-                .HasColumnType("time");
+                .HasColumnType("bigint")
+                .HasConversion(
+                    v => v.HasValue ? v.Value.Ticks : (long?)null,
+                    v => v.HasValue ? TimeSpan.FromTicks(v.Value) : null
+                );
             builder.Property(e => e.IdTokenLifetime)
-                .HasColumnType("time");
+                .HasColumnType("bigint")
+                .HasConversion(
+                    v => v.HasValue ? v.Value.Ticks : (long?)null,
+                    v => v.HasValue ? TimeSpan.FromTicks(v.Value) : null
+                );
             builder.Property(e => e.AccessTokenLifetime)
-                .HasColumnType("time");
+                .HasColumnType("bigint")
+                .HasConversion(
+                    v => v.HasValue ? v.Value.Ticks : (long?)null,
+                    v => v.HasValue ? TimeSpan.FromTicks(v.Value) : null
+                );
 
             builder.ConfigureAuditFields();
         }

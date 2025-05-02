@@ -15,10 +15,10 @@ namespace Bureau.Core
                 StackFrame? frame = new StackTrace(1, true).GetFrame(0); // skip current frame
                 if (frame != null)
                 {
-                    MethodBase? method = frame?.GetMethod();
-                    location = $"{method?.DeclaringType?.FullName}.{method?.Name} in {System.IO.Path.GetFileName(frame?.GetFileName())}:{frame?.GetFileLineNumber()}";
+                    MethodBase? method = frame.GetMethod();
+                    location = $"{method?.DeclaringType?.FullName}.{method?.Name} in {System.IO.Path.GetFileName(frame.GetFileName())}:{frame.GetFileLineNumber()}";
                 }
-                logger.LogWarning($"[{location}] {error}");
+                logger.LogWarning("[{Location}] {Error}", location, error);
             }
         }
     }

@@ -12,7 +12,7 @@ using Sven.Data.SqlServer;
 namespace Sven.Data.SqlServer.Migrations
 {
     [DbContext(typeof(SvenContextSqlServer))]
-    [Migration("20250502142240_Initial")]
+    [Migration("20250502182705_Initial")]
     partial class Initial
     {
         /// <inheritdoc />
@@ -33,8 +33,8 @@ namespace Sven.Data.SqlServer.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<TimeSpan?>("AccessTokenLifetime")
-                        .HasColumnType("time");
+                    b.Property<long?>("AccessTokenLifetime")
+                        .HasColumnType("bigint");
 
                     b.Property<bool>("Active")
                         .HasColumnType("bit");
@@ -46,31 +46,33 @@ namespace Sven.Data.SqlServer.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<TimeSpan?>("IdTokenLifetime")
-                        .HasColumnType("time");
+                    b.Property<long?>("IdTokenLifetime")
+                        .HasColumnType("bigint");
 
                     b.Property<string>("Identifier")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
 
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.PrimitiveCollection<string>("RedirectUris")
+                    b.Property<string>("RedirectUris")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<TimeSpan?>("RefreshTokenLifetime")
-                        .HasColumnType("time");
+                    b.Property<long?>("RefreshTokenLifetime")
+                        .HasColumnType("bigint");
 
-                    b.PrimitiveCollection<string>("Scope")
+                    b.Property<string>("Scope")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Type")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(15)
+                        .HasColumnType("nvarchar(15)");
 
                     b.Property<DateTimeOffset>("UpdatedAt")
                         .HasColumnType("datetimeoffset");
@@ -101,11 +103,13 @@ namespace Sven.Data.SqlServer.Migrations
 
                     b.Property<string>("DisplayName")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
 
                     b.Property<string>("Identifier")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
 
                     b.Property<string>("PasswordHash")
                         .IsRequired()
@@ -120,9 +124,16 @@ namespace Sven.Data.SqlServer.Migrations
 
                     b.Property<string>("Username")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("Identifier")
+                        .IsUnique();
+
+                    b.HasIndex("Username")
+                        .IsUnique();
 
                     b.ToTable("Users");
                 });

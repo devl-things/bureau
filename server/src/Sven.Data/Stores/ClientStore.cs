@@ -13,13 +13,13 @@ namespace Sven.Data.Stores
         {
             _context = context;
         }
-        public async Task<Result<Client>> GetAsync(string key, CancellationToken cancellationToken = default)
+        public async Task<Result<Client>> GetAsync(string clientId, CancellationToken cancellationToken = default)
         {
-            if (string.IsNullOrWhiteSpace(key))
+            if (string.IsNullOrWhiteSpace(clientId))
             {
                 return new ResultError("Key cannot be empty");
             }
-            ClientDb? client = await _context.Clients.Where(x => x.Identifier == key).FirstOrDefaultAsync(cancellationToken);
+            ClientDb? client = await _context.Clients.Where(x => x.Identifier == clientId).FirstOrDefaultAsync(cancellationToken);
             if (client == null)
             {
                 return new ResultError("Client doesn't exist.");
@@ -44,7 +44,7 @@ namespace Sven.Data.Stores
             return _context.Clients.FirstOrDefaultAsync(x => x.Identifier.Equals(identifier), cancellationToken);
         }
 
-        public async Task<Result> StoreAsync(Client client, CancellationToken cancellationToken)
+        public async Task<Result> StoreAsync(Client client, CancellationToken cancellationToken = default)
         {
             ClientDb? dbEntity = await GetClientDbAsync(client.Identifier, cancellationToken);
             if (dbEntity == null)

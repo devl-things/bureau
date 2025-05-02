@@ -31,7 +31,10 @@ namespace Sven.Data.Tests.Stores
                 Active = true,
                 RedirectUris = new HashSet<string> { "https://localhost:3000/callback" },
                 Scope = new ScopeParameter($"{AuthConstants.Scopes.OpenId} {AuthConstants.Scopes.Email} {AuthConstants.Scopes.OfflineAccess}"),
-                Type = AuthConstants.ClientTypes.Public
+                Type = AuthConstants.ClientTypes.Public,
+                AccessTokenLifetime = new TimeSpan(0, 59, 50),
+                IdTokenLifetime = new TimeSpan(29, 23, 59, 50),
+                RefreshTokenLifetime = TimeSpan.FromSeconds(1),
             };
 
             using (IServiceScope scope = _factory.Services.CreateScope())

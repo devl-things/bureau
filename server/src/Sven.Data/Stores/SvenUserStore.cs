@@ -15,7 +15,7 @@ namespace Sven.Data.Stores
             _context = context;
             _timeProvider = timeProvider;
         }
-        public async Task<Result<SvenUser>> GetByUsernameAsync(string username, CancellationToken cancellationToken)
+        public async Task<Result<SvenUser>> GetByUsernameAsync(string username, CancellationToken cancellationToken = default)
         {
             if (string.IsNullOrWhiteSpace(username))
             {

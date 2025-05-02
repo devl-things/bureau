@@ -5,6 +5,6 @@ namespace Sven.Services
 {
     public interface IClientProvider
     {
-        Task<Result<Client>> GetClientAsync(string clientId, CancellationToken cancellationToken);
+        Task<Result<Client>> GetClientAsync(string clientId, CancellationToken cancellationToken = default);
     }
 }

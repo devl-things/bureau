@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Sven.Data.Contexts;
 using Sven.Data.Models;
+using Sven.Data.Postgres.TypeConfigurations;
 
 namespace Sven.Data.Postgres
 {
@@ -14,22 +15,9 @@ namespace Sven.Data.Postgres
         {
             base.OnModelCreating(modelBuilder);
 
-            //modelBuilder.Entity<ClientDb>()
-            //    .Property(e => e.RedirectUris)
-            //    .HasColumnType("json");
-            //modelBuilder.Entity<ClientDb>()
-            //    .Property(e => e.Scope)
-            //    .HasColumnType("json");
+            modelBuilder.ApplyConfiguration(new ClientTypeConfiguration<ClientDb>());
 
-            modelBuilder.Entity<ClientDb>()
-                .Property(e => e.RefreshTokenLifetime)
-                .HasColumnType("interval");
-            modelBuilder.Entity<ClientDb>()
-                .Property(e => e.IdTokenLifetime)
-                .HasColumnType("interval");
-            modelBuilder.Entity<ClientDb>()
-                .Property(e => e.AccessTokenLifetime)
-                .HasColumnType("interval");
+            modelBuilder.ApplyConfigurationsFromAssembly(typeof(SvenContextPostgres).Assembly);
         }
     }
 }

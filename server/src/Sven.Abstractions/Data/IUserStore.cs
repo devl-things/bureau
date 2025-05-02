@@ -5,7 +5,7 @@ namespace Sven.Data
 {
     public interface IUserStore
     {
-        Task<Result<SvenUser>> GetByUsernameAsync(string username, CancellationToken cancellationToken);
-        Task<Result> StoreAsync(SvenUser user, CancellationToken cancellationToken);
+        Task<Result<SvenUser>> GetByUsernameAsync(string username, CancellationToken cancellationToken = default);
+        Task<Result> StoreAsync(SvenUser user, CancellationToken cancellationToken = default);
     }
 }
