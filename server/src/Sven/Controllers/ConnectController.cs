@@ -45,7 +45,7 @@ namespace Sven.Controllers
                 _logger.LogResultError(clientResult.Error);
                 return OAuthError(AuthConstants.OAuth.Errors.InvalidRequest, AuthConstants.OAuth.ErrorDescriptions.InvalidRequest);
             }
-            if (!(Uri.TryCreate(request.RedirectUri, UriKind.Absolute, out Uri? redirectUri) && string.IsNullOrWhiteSpace(redirectUri.Fragment)))
+            if (!UriValidator.IsRedirectUriValid(request.RedirectUri))
             {
                 return OAuthError(AuthConstants.OAuth.Errors.InvalidRequest, AuthConstants.OAuth.ErrorDescriptions.InvalidRedirectUriFormat);
             }

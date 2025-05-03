@@ -1,4 +1,6 @@
-﻿namespace Sven.Models
+﻿using System.Text;
+
+namespace Sven.Models
 {
     public class ScopeParameter
     {
@@ -46,10 +48,7 @@
 
         private void SetScopes()
         {
-            _scopes ??= Scope!
-                .Split(' ', StringSplitOptions.RemoveEmptyEntries)
-                .Select(s => s.ToLowerInvariant())
-                .ToHashSet();
+            _scopes ??= Scope!.SplitScope().ToHashSet();
         }
 
         /// <summary>
@@ -63,11 +62,33 @@
             if (string.IsNullOrWhiteSpace(scope)) return true;
             if (string.IsNullOrWhiteSpace(_scope)) return false;
 
-            foreach (var s in scope.Split(' ', StringSplitOptions.RemoveEmptyEntries).Select(s => s.ToLowerInvariant()))
+            foreach (string s in scope.SplitScope())
             {
                 if (!HasScope(s)) return false;
             }
             return true;
+        }
+
+        public string Intercept(string askedScope)
+        {
+            StringBuilder sb = new StringBuilder();
+            foreach (string s in askedScope.SplitScope())
+            {
+                if (HasScope(s))
+                {
+                    sb.Append(s).Append(" ");
+                }
+            }
+            return sb.ToString().TrimEnd();
+        }
+
+
+    }
+    internal static class ScopeStringExtension
+    {
+        public static IEnumerable<string> SplitScope(this string scope)
+        {
+            return scope.Split(' ', StringSplitOptions.RemoveEmptyEntries).Select(s => s.ToLowerInvariant());
         }
     }
 }

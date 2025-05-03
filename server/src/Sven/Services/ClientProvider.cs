@@ -12,6 +12,19 @@ namespace Sven.Services
         {
             _clientStore = clientStore;
         }
+
+        public async Task<Result<Client>> CreateClientAsync(ClientRequest clientRequest, CancellationToken cancellationToken)
+        {
+            Client client = new Client();
+            // TODO set client
+            Result result = await _clientStore.StoreAsync(client, cancellationToken);
+            if (result.IsError)
+            {
+                return result.Error;
+            }
+            return client;
+        }
+
         public async Task<Result<Client>> GetClientAsync(string clientId, CancellationToken cancellationToken = default)
         {
             Result<Client> result = await _clientStore.GetAsync(clientId, cancellationToken);

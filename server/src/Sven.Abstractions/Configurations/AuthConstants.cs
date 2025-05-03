@@ -138,6 +138,10 @@
                 public const string TemporarilyUnavailable = "temporarily_unavailable";
                 public const string UnsupportedResponseType = "unsupported_response_type";
 
+                //oidc register
+                public const string InvalidRedirectUri = "invalid_redirect_uri";
+                public const string InvalidClientMetadata = "invalid_client_metadata";
+
                 // OpenID Connect-specific errors
                 public const string InteractionRequired = "interaction_required";
                 public const string LoginRequired = "login_required";
