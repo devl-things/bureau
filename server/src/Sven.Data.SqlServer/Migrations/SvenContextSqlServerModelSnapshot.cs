@@ -36,13 +36,9 @@ namespace Sven.Data.SqlServer.Migrations
                     b.Property<bool>("Active")
                         .HasColumnType("bit");
 
-                    b.Property<string>("AuthMethod")
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.Property<string>("ClientUri")
-                        .HasMaxLength(2000)
-                        .HasColumnType("nvarchar(2000)");
+                    b.Property<string>("ClientAddendum")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Contacts")
                         .HasColumnType("nvarchar(max)");
@@ -55,9 +51,6 @@ namespace Sven.Data.SqlServer.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
-                    b.Property<string>("GrantTypes")
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<long?>("IdTokenLifetime")
                         .HasColumnType("bigint");
 
@@ -66,25 +59,10 @@ namespace Sven.Data.SqlServer.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
-                    b.Property<string>("Jwks")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("JwksUri")
-                        .HasMaxLength(2000)
-                        .HasColumnType("nvarchar(2000)");
-
-                    b.Property<string>("LogoUri")
-                        .HasMaxLength(2000)
-                        .HasColumnType("nvarchar(2000)");
-
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(200)
                         .HasColumnType("nvarchar(200)");
-
-                    b.Property<string>("PolicyUri")
-                        .HasMaxLength(2000)
-                        .HasColumnType("nvarchar(2000)");
 
                     b.Property<string>("RedirectUris")
                         .IsRequired()
@@ -93,22 +71,9 @@ namespace Sven.Data.SqlServer.Migrations
                     b.Property<long?>("RefreshTokenLifetime")
                         .HasColumnType("bigint");
 
-                    b.Property<string>("ResponseTypes")
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<string>("Scope")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("SoftwareId")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("SoftwareVersion")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("TosUri")
-                        .HasMaxLength(2000)
-                        .HasColumnType("nvarchar(2000)");
 
                     b.Property<string>("Type")
                         .IsRequired()

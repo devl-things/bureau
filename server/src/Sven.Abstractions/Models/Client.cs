@@ -2,7 +2,7 @@
 
 namespace Sven.Models
 {
-    public class Client
+    public class Client : IClientAddendum
     {
         /// <summary>
         /// https://datatracker.ietf.org/doc/html/rfc6749#section-2.2

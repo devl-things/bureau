@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Sven.Data.Contexts;
 using Sven.Data.Models;
 using Sven.Models;
+using System.Text.Json;
 
 namespace Sven.Data.Stores
 {
@@ -24,32 +25,34 @@ namespace Sven.Data.Stores
             {
                 return new ResultError("Client doesn't exist.");
             }
-            return ToClient(client);
+            IClientAddendum? addendum = JsonSerializer.Deserialize<ClientAddendum>(client.ClientAddendum.Data);
+            return ToClient(client, addendum);
         }
 
-        private static Client ToClient(ClientDb client)
+        private static Client ToClient(ClientDb client, IClientAddendum? addendum)
         {
+
             return new Client()
             {
                 Active = client.Active,
-                AuthMethod = client.AuthMethod,
+                AuthMethod = addendum?.AuthMethod,
                 // #38 ClientSecret, ClientSecretExpiresAt
-                ClientUri = client.ClientUri,
+                ClientUri = addendum?.ClientUri,
                 Contacts = client.Contacts,
                 CreatedAt = client.CreatedAt,
                 Identifier = client.Identifier,
-                GrantTypes = client.GrantTypes,
-                Jwks = client.Jwks,
-                JwksUri = client.JwksUri,
-                LogoUri = client.LogoUri,
+                GrantTypes = addendum?.GrantTypes,
+                Jwks = addendum?.Jwks,
+                JwksUri = addendum?.JwksUri,
+                LogoUri = addendum?.LogoUri,
                 Name = client.Name,
-                PolicyUri = client.PolicyUri,
+                PolicyUri = addendum?.PolicyUri,
                 RedirectUris = [.. client.RedirectUris],
-                ResponseTypes = client.ResponseTypes,
+                ResponseTypes = addendum?.ResponseTypes,
                 Scope = new ScopeParameter([.. client.Scope]),
-                SoftwareId = client.SoftwareId,
-                SoftwareVersion = client.SoftwareVersion,
-                TosUri = client.TosUri,
+                SoftwareId = addendum?.SoftwareId,
+                SoftwareVersion = addendum?.SoftwareVersion,
+                TosUri = addendum?.TosUri,
                 Type = client.Type,
                 UpdatedAt = client.UpdatedAt,
                 AccessTokenLifetime = client.AccessTokenLifetime,
@@ -78,26 +81,21 @@ namespace Sven.Data.Stores
 
                 _context.Attach(dbEntity);
             }
+            SerializedData addendum = new SerializedData()
+            {
+                Type = typeof(IClientAddendum).AssemblyQualifiedName!,
+                Data = JsonSerializer.Serialize<IClientAddendum>(client)
+            };
 
             dbEntity.AccessTokenLifetime = client.AccessTokenLifetime;
-            dbEntity.AuthMethod = client.AuthMethod;
+            dbEntity.ClientAddendum = addendum;
             // #38 ClientSecret, ClientSecretExpiresAt
-            dbEntity.ClientUri = client.ClientUri;
             dbEntity.Contacts = client.Contacts;
-            dbEntity.GrantTypes = client.GrantTypes;
             dbEntity.IdTokenLifetime = client.IdTokenLifetime;
-            dbEntity.Jwks = client.Jwks;
-            dbEntity.JwksUri = client.JwksUri;
-            dbEntity.LogoUri = client.LogoUri;
             dbEntity.Name = client.Name;
-            dbEntity.PolicyUri = client.PolicyUri;
             dbEntity.RedirectUris = [.. client.RedirectUris];
             dbEntity.RefreshTokenLifetime = client.RefreshTokenLifetime;
-            dbEntity.ResponseTypes = client.ResponseTypes;
             dbEntity.Scope = client.Scope.ScopeList;
-            dbEntity.SoftwareId = client.SoftwareId;
-            dbEntity.SoftwareVersion = client.SoftwareVersion;
-            dbEntity.TosUri = client.TosUri;
             dbEntity.Type = client.Type;
 
             dbEntity.UpdatedAt = client.UpdatedAt;

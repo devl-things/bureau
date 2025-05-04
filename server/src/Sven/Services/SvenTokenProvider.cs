@@ -87,7 +87,7 @@ namespace Sven.Services
             {
                 return;
             }
-            if (_currentClient.RefreshTokenLifetime.HasValue)
+            if (_currentClient!.RefreshTokenLifetime.HasValue)
             {
                 _tokenLifetimeOptions.RefreshTokenLifetime = _currentClient.RefreshTokenLifetime.Value;
             }
