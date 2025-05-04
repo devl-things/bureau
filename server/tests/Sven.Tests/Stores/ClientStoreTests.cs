@@ -30,6 +30,7 @@ namespace Sven.Data.Tests.Stores
                 UpdatedAt = DateTimeOffset.UtcNow,
                 Active = true,
                 RedirectUris = new HashSet<string> { "https://localhost:3000/callback" },
+                ResponseTypes = new List<string> { AuthConstants.OAuth.ResponseTypes.Code },
                 Scope = new ScopeParameter($"{AuthConstants.Scopes.OpenId} {AuthConstants.Scopes.Email} {AuthConstants.Scopes.OfflineAccess}"),
                 Type = AuthConstants.ClientTypes.Public,
                 AccessTokenLifetime = new TimeSpan(0, 59, 50),

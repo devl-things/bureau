@@ -42,6 +42,14 @@
             public static class TokenAuthMethods
             {
                 public const string None = "none";
+                /// <summary>
+                /// not implemented and shouldn't be
+                /// </summary>
+                public const string ClientSecretPost = "client_secret_post";
+                /// <summary>
+                /// not implemented
+                /// </summary>
+                public const string ClientSecretBasic = "client_secret_basic";
             }
             public static class GrantTypes
             {
@@ -76,6 +84,24 @@
                 public const string Username = "username";
                 public const string Password = "password";
 
+                //Dynamic registration
+                public const string RedirectUris = "redirect_uris";
+                public const string TokenEndpointAuthMethod = "token_endpoint_auth_method";
+                public const string GrantTypesField = "grant_types";
+                public const string ResponseTypesField = "response_types";
+                public const string ClientName = "client_name";
+                public const string ClientUri = "client_uri";
+                public const string LogoUri = "logo_uri";
+                public const string Contacts = "contacts";
+                public const string TosUri = "tos_uri";
+                public const string PolicyUri = "policy_uri";
+                public const string Jwks = "jwks";
+                public const string SoftwareId = "software_id";
+                public const string SoftwareVersion = "software_version";
+
+                public const string ClientSecret = "client_secret";
+                public const string ClientIdIssuedAt = "client_id_issued_at";
+                public const string ClientSecretExpiresAt = "client_secret_expires_at";
 
                 //Discovery field names
                 public const string Issuer = "issuer";
@@ -111,6 +137,10 @@
                 public const string ServerError = "server_error";
                 public const string TemporarilyUnavailable = "temporarily_unavailable";
                 public const string UnsupportedResponseType = "unsupported_response_type";
+
+                //oidc register
+                public const string InvalidRedirectUri = "invalid_redirect_uri";
+                public const string InvalidClientMetadata = "invalid_client_metadata";
 
                 // OpenID Connect-specific errors
                 public const string InteractionRequired = "interaction_required";

@@ -18,18 +18,20 @@ namespace Sven.Data.SqlServer.Migrations
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     Identifier = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
-                    Name = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Name = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: false),
                     Type = table.Column<string>(type: "nvarchar(15)", maxLength: 15, nullable: false),
                     Scope = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     RedirectUris = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Active = table.Column<bool>(type: "bit", nullable: false),
+                    Contacts = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    ClientAddendum = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     IdTokenLifetime = table.Column<long>(type: "bigint", nullable: true),
                     RefreshTokenLifetime = table.Column<long>(type: "bigint", nullable: true),
                     AccessTokenLifetime = table.Column<long>(type: "bigint", nullable: true),
                     CreatedAt = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: false),
-                    CreatedBy = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    CreatedBy = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
                     UpdatedAt = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: false),
-                    UpdatedBy = table.Column<string>(type: "nvarchar(max)", nullable: false)
+                    UpdatedBy = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false)
                 },
                 constraints: table =>
                 {
@@ -45,16 +47,22 @@ namespace Sven.Data.SqlServer.Migrations
                     Identifier = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
                     DisplayName = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: false),
                     Username = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
-                    PasswordHash = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    PasswordHash = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
                     CreatedAt = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: false),
-                    CreatedBy = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    CreatedBy = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
                     UpdatedAt = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: false),
-                    UpdatedBy = table.Column<string>(type: "nvarchar(max)", nullable: false)
+                    UpdatedBy = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Users", x => x.Id);
                 });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Clients_Identifier",
+                table: "Clients",
+                column: "Identifier",
+                unique: true);
 
             migrationBuilder.CreateIndex(
                 name: "IX_Users_Identifier",

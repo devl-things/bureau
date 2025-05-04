@@ -7,14 +7,17 @@
         public string Name { get; set; } = string.Empty;
         public string Type { get; set; } = string.Empty;
         /// <summary>
-        /// as json
+        /// as json 
         /// </summary>
-        public IList<string> Scope { get; set; }
+        public List<string> Scope { get; set; } = null!;
         /// <summary>
         /// as json
         /// </summary>
-        public IList<string> RedirectUris { get; set; }
+        public List<string> RedirectUris { get; set; } = null!;
         public bool Active { get; set; }
+        public List<string>? Contacts { get; set; }
+
+        public SerializedData ClientAddendum { get; set; } = null!;
 
         public TimeSpan? IdTokenLifetime { get; set; }
         public TimeSpan? RefreshTokenLifetime { get; set; }

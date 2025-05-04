@@ -17,12 +17,19 @@ namespace Sven.Data.TypeConfigurations
             builder.Property(x => x.Identifier)
                 .HasMaxLength(100)
                 .IsRequired();
+            builder.Property(x => x.Name)
+                .HasMaxLength(200)
+                .IsRequired();
             builder.Property(x => x.Type)
                 .HasMaxLength(15)
                 .IsRequired();
 
+            ConfigureJsonConversion(builder.Property(e => e.ClientAddendum));
+            ConfigureJsonConversion(builder.Property(e => e.Contacts));
             ConfigureJsonConversion(builder.Property(e => e.RedirectUris));
             ConfigureJsonConversion(builder.Property(e => e.Scope));
+
+            builder.HasIndex(x => x.Identifier).IsUnique();
         }
 
         public static void ConfigureJsonConversion<T>(PropertyBuilder<T> propertyBuilder)
