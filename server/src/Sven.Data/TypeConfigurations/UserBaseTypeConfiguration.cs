@@ -18,6 +18,8 @@ namespace Sven.Data.TypeConfigurations
             builder.Property(x => x.Username)
                 .HasMaxLength(100)
                 .IsRequired();
+            builder.Property(x => x.PasswordHash)
+                .HasMaxLength(100);
             builder.Property(x => x.DisplayName)
                 .HasMaxLength(200);
 

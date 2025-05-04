@@ -83,6 +83,7 @@ namespace Sven.Services
 
         private async Task SetTokenLifetimeOptions(ClientClaims clientClaims, CancellationToken cancellationToken)
         {
+            //TODO this is not good
             if (_currentClient == null || _currentClient.Identifier != clientClaims.ClientId)
             {
                 Result<Client> clientResult = await _clientProvider.GetClientAsync(clientClaims.ClientId, cancellationToken);

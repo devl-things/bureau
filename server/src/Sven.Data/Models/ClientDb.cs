@@ -9,12 +9,25 @@
         /// <summary>
         /// as json
         /// </summary>
-        public IList<string> Scope { get; set; }
+        public List<string> Scope { get; set; } = null!;
         /// <summary>
         /// as json
         /// </summary>
-        public IList<string> RedirectUris { get; set; }
+        public List<string> RedirectUris { get; set; } = null!;
         public bool Active { get; set; }
+
+        public string? ClientUri { get; set; }
+        public List<string>? Contacts { get; set; }
+        public List<string>? GrantTypes { get; set; }
+        public string? Jwks { get; set; }
+        public string? JwksUri { get; set; }
+        public string? LogoUri { get; set; }
+        public string? PolicyUri { get; set; }
+        public List<string>? ResponseTypes { get; set; }
+        public string? SoftwareId { get; set; }
+        public string? SoftwareVersion { get; set; }
+        public string? AuthMethod { get; set; }
+        public string? TosUri { get; set; }
 
         public TimeSpan? IdTokenLifetime { get; set; }
         public TimeSpan? RefreshTokenLifetime { get; set; }

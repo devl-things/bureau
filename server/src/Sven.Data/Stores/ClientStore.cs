@@ -19,24 +19,43 @@ namespace Sven.Data.Stores
             {
                 return new ResultError("Key cannot be empty");
             }
-            ClientDb? client = await _context.Clients.Where(x => x.Identifier == clientId).FirstOrDefaultAsync(cancellationToken);
+            ClientDb? client = await GetClientDbAsync(clientId, cancellationToken);
             if (client == null)
             {
                 return new ResultError("Client doesn't exist.");
             }
-            Client result = new Client();
-            result.Identifier = client.Identifier;
-            result.Active = client.Active;
-            result.CreatedAt = client.CreatedAt;
-            result.UpdatedAt = client.UpdatedAt;
-            result.Name = client.Name;
-            result.AccessTokenLifetime = client.AccessTokenLifetime;
-            result.RefreshTokenLifetime = client.RefreshTokenLifetime;
-            result.IdTokenLifetime = client.IdTokenLifetime;
-            result.RedirectUris = new HashSet<string>(client.RedirectUris);
-            result.Scope = new ScopeParameter(new HashSet<string>(client.Scope));
-            result.Type = client.Type;
-            return result;
+            return ToClient(client);
+        }
+
+        private static Client ToClient(ClientDb client)
+        {
+            return new Client()
+            {
+                Active = client.Active,
+                AuthMethod = client.AuthMethod,
+                // #38 ClientSecret, ClientSecretExpiresAt
+                ClientUri = client.ClientUri,
+                Contacts = client.Contacts,
+                CreatedAt = client.CreatedAt,
+                Identifier = client.Identifier,
+                GrantTypes = client.GrantTypes,
+                Jwks = client.Jwks,
+                JwksUri = client.JwksUri,
+                LogoUri = client.LogoUri,
+                Name = client.Name,
+                PolicyUri = client.PolicyUri,
+                RedirectUris = [.. client.RedirectUris],
+                ResponseTypes = client.ResponseTypes,
+                Scope = new ScopeParameter([.. client.Scope]),
+                SoftwareId = client.SoftwareId,
+                SoftwareVersion = client.SoftwareVersion,
+                TosUri = client.TosUri,
+                Type = client.Type,
+                UpdatedAt = client.UpdatedAt,
+                AccessTokenLifetime = client.AccessTokenLifetime,
+                RefreshTokenLifetime = client.RefreshTokenLifetime,
+                IdTokenLifetime = client.IdTokenLifetime
+            };
         }
 
         private Task<ClientDb?> GetClientDbAsync(string identifier, CancellationToken cancellationToken = default)
@@ -49,28 +68,42 @@ namespace Sven.Data.Stores
             ClientDb? dbEntity = await GetClientDbAsync(client.Identifier, cancellationToken);
             if (dbEntity == null)
             {
-                dbEntity = new ClientDb();
-                dbEntity.Identifier = client.Identifier;
-                dbEntity.Active = client.Active;
-                dbEntity.CreatedAt = client.CreatedAt;
-                dbEntity.CreatedBy = "admin";
+                dbEntity = new ClientDb
+                {
+                    Identifier = client.Identifier,
+                    Active = client.Active,
+                    CreatedAt = client.CreatedAt,
+                    CreatedBy = "admin"
+                };
 
                 _context.Attach(dbEntity);
             }
 
+            dbEntity.AccessTokenLifetime = client.AccessTokenLifetime;
+            dbEntity.AuthMethod = client.AuthMethod;
+            // #38 ClientSecret, ClientSecretExpiresAt
+            dbEntity.ClientUri = client.ClientUri;
+            dbEntity.Contacts = client.Contacts;
+            dbEntity.GrantTypes = client.GrantTypes;
+            dbEntity.IdTokenLifetime = client.IdTokenLifetime;
+            dbEntity.Jwks = client.Jwks;
+            dbEntity.JwksUri = client.JwksUri;
+            dbEntity.LogoUri = client.LogoUri;
             dbEntity.Name = client.Name;
+            dbEntity.PolicyUri = client.PolicyUri;
+            dbEntity.RedirectUris = [.. client.RedirectUris];
+            dbEntity.RefreshTokenLifetime = client.RefreshTokenLifetime;
+            dbEntity.ResponseTypes = client.ResponseTypes;
+            dbEntity.Scope = client.Scope.ScopeList;
+            dbEntity.SoftwareId = client.SoftwareId;
+            dbEntity.SoftwareVersion = client.SoftwareVersion;
+            dbEntity.TosUri = client.TosUri;
+            dbEntity.Type = client.Type;
 
             dbEntity.UpdatedAt = client.UpdatedAt;
             dbEntity.UpdatedBy = "admin";
 
-            dbEntity.AccessTokenLifetime = client.AccessTokenLifetime;
-            dbEntity.RefreshTokenLifetime = client.RefreshTokenLifetime;
-            dbEntity.IdTokenLifetime = client.IdTokenLifetime;
-            dbEntity.RedirectUris = client.RedirectUris.ToList();
-            dbEntity.Scope = client.Scope.Scopes.ToList();
-            dbEntity.Type = client.Type;
-            await _context.SaveChangesAsync(cancellationToken);
-            return true;
+            return await _context.SaveChangesAsync(cancellationToken) > 0;
         }
     }
 }

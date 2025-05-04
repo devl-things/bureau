@@ -1,20 +1,20 @@
-﻿using System.Text;
-
-namespace Sven.Models
+﻿namespace Sven.Models
 {
     public class ScopeParameter
     {
         public ScopeParameter() { }
-        public ScopeParameter(string scope)
+        public ScopeParameter(string? scope)
         {
-            Scope = scope;
-            SetScopes();
+            if (!string.IsNullOrWhiteSpace(scope))
+            {
+                Scope = scope;
+            }
         }
 
         public ScopeParameter(HashSet<string> scopes)
         {
             _scopes = scopes;
-            _scope = string.Join(" ", scopes);
+            _scope = string.Join(' ', scopes);
         }
 
         private string _scope = string.Empty;
@@ -25,30 +25,27 @@ namespace Sven.Models
             set
             {
                 _scope = string.IsNullOrWhiteSpace(value) ? string.Empty : value;
-                _scopes = null;
+                _scopes = [.. Scope!.SplitScope()];
             }
         }
 
         private HashSet<string>? _scopes;
-        public HashSet<string> Scopes
+
+        /// <summary>
+        /// Scope represented as list of strings
+        /// </summary>
+        public List<string> ScopeList
         {
             get
             {
-                return _scopes ?? new HashSet<string>(0);
+                return _scopes == null ? [] : [.. _scopes];
             }
         }
 
         public bool HasScope(string scope)
         {
-            if (string.IsNullOrWhiteSpace(scope)) return false;
-            if (_scopes == null && string.IsNullOrWhiteSpace(Scope)) return false;
-            SetScopes();
+            if (string.IsNullOrWhiteSpace(scope) || string.IsNullOrWhiteSpace(Scope)) return false;
             return _scopes!.Contains(scope);
-        }
-
-        private void SetScopes()
-        {
-            _scopes ??= Scope!.SplitScope().ToHashSet();
         }
 
         /// <summary>
@@ -61,25 +58,12 @@ namespace Sven.Models
         {
             if (string.IsNullOrWhiteSpace(scope)) return true;
             if (string.IsNullOrWhiteSpace(_scope)) return false;
-
-            foreach (string s in scope.SplitScope())
-            {
-                if (!HasScope(s)) return false;
-            }
-            return true;
+            return !scope.SplitScope().Any(x => !HasScope(x));
         }
 
-        public string Intercept(string askedScope)
+        public string Intersect(string askedScope)
         {
-            StringBuilder sb = new StringBuilder();
-            foreach (string s in askedScope.SplitScope())
-            {
-                if (HasScope(s))
-                {
-                    sb.Append(s).Append(" ");
-                }
-            }
-            return sb.ToString().TrimEnd();
+            return string.Join(' ', _scopes!.Intersect(askedScope.SplitScope()));
         }
 
 

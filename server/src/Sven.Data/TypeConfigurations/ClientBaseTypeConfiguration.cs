@@ -17,12 +17,33 @@ namespace Sven.Data.TypeConfigurations
             builder.Property(x => x.Identifier)
                 .HasMaxLength(100)
                 .IsRequired();
+            builder.Property(x => x.AuthMethod)
+                .HasMaxLength(100);
+            builder.Property(x => x.Name)
+                .HasMaxLength(200)
+                .IsRequired();
             builder.Property(x => x.Type)
                 .HasMaxLength(15)
                 .IsRequired();
 
+            builder.Property(x => x.ClientUri)
+                .HasMaxLength(2000);
+            builder.Property(x => x.JwksUri)
+                .HasMaxLength(2000);
+            builder.Property(x => x.LogoUri)
+                .HasMaxLength(2000);
+            builder.Property(x => x.PolicyUri)
+                .HasMaxLength(2000);
+            builder.Property(x => x.TosUri)
+                .HasMaxLength(2000);
+
+            ConfigureJsonConversion(builder.Property(e => e.Contacts));
+            ConfigureJsonConversion(builder.Property(e => e.GrantTypes));
             ConfigureJsonConversion(builder.Property(e => e.RedirectUris));
+            ConfigureJsonConversion(builder.Property(e => e.ResponseTypes));
             ConfigureJsonConversion(builder.Property(e => e.Scope));
+
+            builder.HasIndex(x => x.Identifier).IsUnique();
         }
 
         public static void ConfigureJsonConversion<T>(PropertyBuilder<T> propertyBuilder)

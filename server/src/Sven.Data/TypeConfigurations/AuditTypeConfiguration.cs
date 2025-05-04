@@ -11,10 +11,12 @@ namespace Sven.Data.TypeConfigurations
             builder.Property(x => x.CreatedAt)
                 .IsRequired();
             builder.Property(x => x.CreatedBy)
+                .HasMaxLength(100)
                 .IsRequired();
             builder.Property(x => x.UpdatedAt)
                 .IsRequired();
             builder.Property(x => x.UpdatedBy)
+                .HasMaxLength(100)
                 .IsRequired();
         }
     }

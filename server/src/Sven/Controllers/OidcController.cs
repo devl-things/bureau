@@ -12,13 +12,11 @@ namespace Sven.Controllers
     public class OidcController : ControllerBase
     {
         private readonly ILogger<OidcController> _logger;
-        private readonly DiscoveryService _discoveryService;
         private readonly IClientProvider _clientProvider;
 
-        public OidcController(ILogger<OidcController> logger, DiscoveryService discoveryService, IClientProvider clientProvider)
+        public OidcController(ILogger<OidcController> logger, IClientProvider clientProvider)
         {
             _logger = logger;
-            _discoveryService = discoveryService;
             _clientProvider = clientProvider;
         }
         [HttpPost(Endpoints.Oidc.RegisterPath)]
@@ -29,19 +27,19 @@ namespace Sven.Controllers
             {
                 return BadRequest(redirectUrisError);
             }
-            if (!_discoveryService.TryGetSupportedAuthMethod(request.TokenEndpointAuthMethod, out string? authMethod))
+            if (!DiscoveryService.TryGetSupportedAuthMethod(request.TokenEndpointAuthMethod, out string? authMethod))
             {
                 return BadRequest(new OAuthError(AuthConstants.OAuth.Errors.InvalidClientMetadata, $"Token endpoint auth method {request.TokenEndpointAuthMethod} not supported"));
             }
-            if (!_discoveryService.TryGetSupportedGrantTypes(request.GrantTypes, out List<string>? grantTypes))
+            if (!DiscoveryService.TryGetSupportedGrantTypes(request.GrantTypes, out List<string>? grantTypes))
             {
                 return BadRequest(new OAuthError(AuthConstants.OAuth.Errors.InvalidClientMetadata, $"Grant types {string.Join(", ", request.GrantTypes!)} not supported"));
             }
-            if (!_discoveryService.TryGetSupportedResponseTypes(request.ResponseTypes, out List<string>? responseTypes))
+            if (!DiscoveryService.TryGetSupportedResponseTypes(request.ResponseTypes, out List<string>? responseTypes))
             {
                 return BadRequest(new OAuthError(AuthConstants.OAuth.Errors.InvalidClientMetadata, $"Response types {string.Join(", ", request.ResponseTypes!)} not supported"));
             }
-            if (!_discoveryService.TryGetSupportedScope(request.Scope, out string? scope))
+            if (!DiscoveryService.TryGetSupportedScope(request.Scope, out string? scope))
             {
                 return BadRequest(new OAuthError(AuthConstants.OAuth.Errors.InvalidClientMetadata, $"Scope {request.Scope} not supported"));
             }
@@ -49,7 +47,7 @@ namespace Sven.Controllers
             {
                 return BadRequest(otherUrisError);
             }
-            ClientRequest clientRequest = new ClientRequest()
+            ClientRequest clientRequest = new()
             {
                 ClientName = request.ClientName,
                 ClientUri = request.ClientUri,
@@ -73,15 +71,33 @@ namespace Sven.Controllers
                 _logger.LogResultError(newClientResult.Error);
                 return BadRequest(new OAuthError(AuthConstants.OAuth.Errors.ServerError, "Client couldn't be registered."));
             }
-            Client client = newClientResult.Value;
-            ClientRegistrationResponse response = new ClientRegistrationResponse()
+            return Created(uri: $"{Endpoints.Oidc.Register}", ToClientRegistrationResponse(newClientResult.Value));
+        }
+
+        private static ClientRegistrationResponse ToClientRegistrationResponse(Client client)
+        {
+            return new()
             {
                 ClientId = client.Identifier,
                 ClientIdIssuedAt = client.CreatedAt,
                 ClientName = client.Name,
-                //TODO
+                ClientSecret = client.ClientSecret,
+                ClientSecretExpiresAt = client.ClientSecretExpiresAt,
+                ClientUri = client.ClientUri,
+                Contacts = client.Contacts,
+                GrantTypes = client.GrantTypes,
+                Jwks = client.Jwks,
+                JwksUri = client.JwksUri,
+                LogoUri = client.LogoUri,
+                PolicyUri = client.PolicyUri,
+                RedirectUris = [.. client.RedirectUris],
+                ResponseTypes = client.ResponseTypes,
+                Scope = client.Scope.Scope,
+                SoftwareId = client.SoftwareId,
+                SoftwareVersion = client.SoftwareVersion,
+                TokenEndpointAuthMethod = client.AuthMethod,
+                TosUri = client.TosUri
             };
-            return Created(uri: $"{Endpoints.Oidc.Register}", response);
         }
 
         private static bool AreRedirectUrisInvalid(List<string>? redirectUris, out OAuthError? validationError)
@@ -89,7 +105,7 @@ namespace Sven.Controllers
             validationError = null;
             if (redirectUris == null || redirectUris.Count == 0)
             {
-                validationError = new OAuthError(AuthConstants.OAuth.Errors.InvalidRedirectUri, $"Redirect uris are missing.");
+                validationError = new OAuthError(AuthConstants.OAuth.Errors.InvalidRedirectUri, $"Redirect Uris are missing.");
                 return true;
             }
             foreach (string redirectUri in redirectUris)
@@ -113,6 +129,7 @@ namespace Sven.Controllers
             validationError = null;
             return false;
         }
+
         private static bool IsInvalidUri(string? uri, string field, out OAuthError? validationError)
         {
             if (!string.IsNullOrWhiteSpace(uri) && !UriValidator.IsUriValid(uri))

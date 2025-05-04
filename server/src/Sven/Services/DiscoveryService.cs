@@ -8,17 +8,20 @@ namespace Sven.Services
     {
         private readonly DiscoveryDocument _document;
 
-        private static HashSet<string> _responseTypesSupported = new HashSet<string> { AuthConstants.OAuth.ResponseTypes.Code };
-        private static HashSet<string> _grantTypesSupported = new HashSet<string> { AuthConstants.OAuth.GrantTypes.AuthorizationCode, AuthConstants.OAuth.GrantTypes.RefreshToken };
-        private static HashSet<string> _subjectTypesSupported = new HashSet<string> { AuthConstants.OAuth.SubjectTypes.Public };
-        private static HashSet<string> _idTokenSigningAlgValuesSupported = new HashSet<string> { AuthConstants.OAuth.SigningAlgorithms.Rsa256 };
-        private static HashSet<string> _tokenEndpointAuthMethodsSupported = new HashSet<string> { AuthConstants.OAuth.TokenAuthMethods.None };
-        private static HashSet<string> _codeChallengeMethodsSupported = new HashSet<string> { AuthConstants.OAuth.CodeChallengeMethods.Sha256 };
-        private static HashSet<string> _scopesSupported = new HashSet<string> {
+        private static readonly HashSet<string> _responseTypesSupported = [AuthConstants.OAuth.ResponseTypes.Code];
+        private static readonly HashSet<string> _grantTypesSupported = [AuthConstants.OAuth.GrantTypes.AuthorizationCode, AuthConstants.OAuth.GrantTypes.RefreshToken];
+        private static readonly HashSet<string> _subjectTypesSupported = [AuthConstants.OAuth.SubjectTypes.Public];
+        private static readonly HashSet<string> _idTokenSigningAlgValuesSupported = [AuthConstants.OAuth.SigningAlgorithms.Rsa256];
+        private static readonly HashSet<string> _tokenEndpointAuthMethodsSupported = [AuthConstants.OAuth.TokenAuthMethods.None];
+        private static readonly HashSet<string> _codeChallengeMethodsSupported = [AuthConstants.OAuth.CodeChallengeMethods.Sha256];
+        private static readonly HashSet<string> _scopesSupported =
+        [
             AuthConstants.Scopes.OpenId, AuthConstants.Scopes.Profile, AuthConstants.Scopes.Email,
             AuthConstants.Scopes.Phone, AuthConstants.Scopes.Address, AuthConstants.Scopes.OfflineAccess
-        };
-        private static ScopeParameter _scopeSupported = new ScopeParameter(_scopesSupported);
+        ];
+        public readonly static ScopeParameter ScopeSupported = new(_scopesSupported);
+        private readonly static ScopeParameter _scopeDefault = new([AuthConstants.Scopes.Profile]);
+
         public DiscoveryService(IOptions<JwtOptions> jwtOptions)
         {
             JwtOptions _jwtOptions = jwtOptions.Value;
@@ -30,19 +33,19 @@ namespace Sven.Services
                 UserInfoEndpoint = $"{_jwtOptions.Issuer}{Endpoints.Oidc.UserInfo}",
                 JwksUri = $"{_jwtOptions.Issuer}{Endpoints.WellKnown.Jwks}",
 
-                ResponseTypesSupported = _responseTypesSupported.ToList(),
-                SubjectTypesSupported = _subjectTypesSupported.ToList(),
-                IdTokenSigningAlgValuesSupported = _idTokenSigningAlgValuesSupported.ToList(),
-                TokenEndpointAuthMethodsSupported = _tokenEndpointAuthMethodsSupported.ToList(),
-                CodeChallengeMethodsSupported = _codeChallengeMethodsSupported.ToList(),
-                ScopesSupported = _scopesSupported.ToList(),
+                ResponseTypesSupported = [.. _responseTypesSupported],
+                SubjectTypesSupported = [.. _subjectTypesSupported],
+                IdTokenSigningAlgValuesSupported = [.. _idTokenSigningAlgValuesSupported],
+                TokenEndpointAuthMethodsSupported = [.. _tokenEndpointAuthMethodsSupported],
+                CodeChallengeMethodsSupported = [.. _codeChallengeMethodsSupported],
+                ScopesSupported = [.. _scopesSupported],
             };
         }
         public DiscoveryDocument GetDiscoveryDocument()
         {
             return _document;
         }
-        internal bool TryGetSupportedAuthMethod(string? tokenEndpointAuthMethod, out string? authMethod)
+        internal static bool TryGetSupportedAuthMethod(string? tokenEndpointAuthMethod, out string? authMethod)
         {
             authMethod = AuthConstants.OAuth.TokenAuthMethods.None;
             if (string.IsNullOrWhiteSpace(tokenEndpointAuthMethod) || AuthConstants.OAuth.TokenAuthMethods.None.Equals(tokenEndpointAuthMethod))
@@ -51,42 +54,35 @@ namespace Sven.Services
             }
             return false;
         }
-        internal bool TryGetSupportedScope(string? askedScope, out string? supportedScope)
+        internal static bool TryGetSupportedScope(string? askedScope, out string? supportedScope)
         {
-            supportedScope = AuthConstants.Scopes.OpenId;
+            supportedScope = _scopeDefault.Scope;
             if (string.IsNullOrWhiteSpace(askedScope))
             {
                 return true;
             }
-            supportedScope = _scopeSupported.Intercept(askedScope);
+            supportedScope = ScopeSupported.Intersect(askedScope);
             return !string.IsNullOrWhiteSpace(supportedScope);
         }
 
-        internal bool TryGetSupportedGrantTypes(List<string>? askedGrantTypes, out List<string>? supportedGrantTypes)
+        internal static bool TryGetSupportedGrantTypes(List<string>? askedGrantTypes, out List<string>? supportedGrantTypes)
         {
-            return CopyOrIntercept(_grantTypesSupported, askedGrantTypes, out supportedGrantTypes);
+            return CopyOrIntersect(_grantTypesSupported, askedGrantTypes, out supportedGrantTypes);
         }
 
-        internal bool TryGetSupportedResponseTypes(List<string>? askedResponseTypes, out List<string>? supportedResponseTypes)
+        internal static bool TryGetSupportedResponseTypes(List<string>? askedResponseTypes, out List<string>? supportedResponseTypes)
         {
-            return CopyOrIntercept(_responseTypesSupported, askedResponseTypes, out supportedResponseTypes);
+            return CopyOrIntersect(_responseTypesSupported, askedResponseTypes, out supportedResponseTypes);
         }
 
-        private bool CopyOrIntercept(HashSet<string> registry, List<string>? asked, out List<string>? supported)
+        private static bool CopyOrIntersect(HashSet<string> registry, List<string>? asked, out List<string>? supported)
         {
             if (asked == null || asked.Count == 0)
             {
-                supported = registry.ToList();
+                supported = [.. registry];
                 return true;
             }
-            supported = new List<string>();
-            foreach (string item in asked)
-            {
-                if (registry.Contains(item))
-                {
-                    supported.Add(item);
-                }
-            }
+            supported = [.. registry.Intersect(asked)];
             return supported.Count > 0;
         }
     }
