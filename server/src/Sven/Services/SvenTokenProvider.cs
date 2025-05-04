@@ -83,16 +83,9 @@ namespace Sven.Services
 
         private async Task SetTokenLifetimeOptions(ClientClaims clientClaims, CancellationToken cancellationToken)
         {
-            //TODO this is not good
-            if (_currentClient == null || _currentClient.Identifier != clientClaims.ClientId)
+            if (!(await TrySetCurrentClientAsync(clientClaims, cancellationToken)))
             {
-                Result<Client> clientResult = await _clientProvider.GetClientAsync(clientClaims.ClientId, cancellationToken);
-                if (clientResult.IsError)
-                {
-                    _logger.LogResultError(clientResult.Error);
-                    return;
-                }
-                _currentClient = clientResult.Value;
+                return;
             }
             if (_currentClient.RefreshTokenLifetime.HasValue)
             {
@@ -106,6 +99,21 @@ namespace Sven.Services
             {
                 _tokenLifetimeOptions.AccessTokenLifetime = _currentClient.AccessTokenLifetime.Value;
             }
+        }
+
+        private async Task<bool> TrySetCurrentClientAsync(ClientClaims clientClaims, CancellationToken cancellationToken)
+        {
+            if (_currentClient == null || _currentClient.Identifier != clientClaims.ClientId)
+            {
+                Result<Client> clientResult = await _clientProvider.GetClientAsync(clientClaims.ClientId, cancellationToken);
+                if (clientResult.IsError)
+                {
+                    _logger.LogResultError(clientResult.Error);
+                    return false;
+                }
+                _currentClient = clientResult.Value;
+            }
+            return true;
         }
 
         private async Task<Result<string?>> CreateRefreshTokenAsync(ClientClaims clientClaims, CancellationToken cancellationToken)
