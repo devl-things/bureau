@@ -1,7 +1,14 @@
-﻿namespace Sven.Configurations
+﻿using Sven.PageModels;
+
+namespace Sven.Configurations
 {
     public static class Endpoints
     {
+        public static class Account
+        {
+            public const string Base = "account";
+            public const string AccountInfo = $"/{Base}";
+        }
         public static class Oidc
         {
             public const string Base = "oidc";
@@ -34,17 +41,23 @@
         {
             public const string Base = "connect";
             public const string AuthorizePath = "authorize";
-            public const string AuthorizeContinuePath = "authorize/continue";
-            public const string AuthorizeLoginPath = "authorize/login";
+            public const string ContinuePath = "continue";
             public const string TokenPath = "token";
             public const string RevocationPath = "revocation";
+            public const string SignInPath = "signin";
+            public const string SignUpPath = "signup";
+            public const string ForgotPasswordPath = "forgot";
+            public const string LoginPath = "login";
 
-            public const string AuthorizePage = "/connect/authorize/page";
             public const string Authorize = $"/{Base}/{AuthorizePath}";
-            public const string AuthorizeContinue = $"/{Base}/{AuthorizeContinuePath}";
-            public const string AuthorizeLogin = $"/{Base}/{AuthorizeLoginPath}";
+            public const string AuthorizeContinue = $"{Authorize}/{ContinuePath}";
             public const string Token = $"/{Base}/{TokenPath}";
             public const string Revocation = $"/{Base}/{RevocationPath}";
+            public const string SignIn = $"/{Base}/{SignInPath}";
+            public const string SignInPkce = $"{SignIn}?{AuthConstants.OAuth.FieldNames.Mode}={PageModelTypes.SignIn.Pkce}";
+            public const string SignUp = $"/{Base}/{SignUpPath}";
+            public const string ForgotPassword = $"/{Base}/{ForgotPasswordPath}";
+            public const string Login = $"/{Base}/{LoginPath}";
         }
     }
 }

@@ -84,6 +84,8 @@
                 public const string Username = "username";
                 public const string Password = "password";
 
+                public const string Mode = "mode";
+
                 //Dynamic registration
                 public const string RedirectUris = "redirect_uris";
                 public const string TokenEndpointAuthMethod = "token_endpoint_auth_method";
@@ -158,9 +160,11 @@
             {
                 public const string InvalidRequest = "Invalid request.";
                 public const string InvalidRedirectUriFormat = "Invalid redirect_uri format.";
+                public const string InvalidUsernamePassword = "Invalid username or password.";
+                public const string InvalidAuthorizationState = "Invalid or expired authorization request.";
+                public const string MissingAuthorizationState = "Missing authorization state";
                 public const string UnsupportedResponseType = "The response type is not supported";
                 public const string UnsupportedGrantType = "The grant type is not supported";
-                public const string MissingAuthorizationState = "Missing authorization state";
                 public const string CodeOrCodeVerifierMissing = "Code or code_verifier is missing";
                 public const string RefreshTokenNotFound = "Refresh token not found.";
                 public const string CreationAuthCodeFailed = "Failed to create authorization code.";

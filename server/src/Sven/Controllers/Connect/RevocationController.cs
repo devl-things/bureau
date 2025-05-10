@@ -3,12 +3,23 @@ using Microsoft.AspNetCore.Mvc;
 using Sven.AutoValidation;
 using Sven.Configurations;
 using Sven.Models;
+using Sven.Services;
 
-namespace Sven.Controllers
+namespace Sven.Controllers.Connect
 {
-    public partial class ConnectController
+    [ApiController]
+    [Route(Endpoints.Connect.Revocation)]
+    public class RevocationController : ConnectController
     {
-        [HttpPost(Endpoints.Connect.RevocationPath)]
+        private readonly IClientProvider _clientProvider;
+        private readonly ITokenProvider _tokenProvider;
+
+        public RevocationController(ILogger<RevocationController> logger, IClientProvider clientProvider, ITokenProvider tokenProvider) : base(logger)
+        {
+            _clientProvider = clientProvider;
+            _tokenProvider = tokenProvider;
+        }
+        [HttpPost]
         [DisableAutoValidation]
         [ServiceFilter(typeof(OAuthValidationFilter))]
         public async Task<IActionResult> RevokeTokenAsync([FromForm] TokenRevocationRequest request, CancellationToken cancellationToken = default)

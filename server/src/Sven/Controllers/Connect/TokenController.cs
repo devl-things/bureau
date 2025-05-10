@@ -3,12 +3,23 @@ using Microsoft.AspNetCore.Mvc;
 using Sven.AutoValidation;
 using Sven.Configurations;
 using Sven.Models;
+using Sven.Services;
 
-namespace Sven.Controllers
+namespace Sven.Controllers.Connect
 {
-    public partial class ConnectController
+    [ApiController]
+    [Route(Endpoints.Connect.Token)]
+    public class TokenController : ConnectController
     {
-        [HttpPost(Endpoints.Connect.TokenPath)]
+        private readonly AuthCodeProvider _authCodeManager;
+        private readonly ITokenProvider _tokenProvider;
+
+        public TokenController(ILogger<TokenController> logger, ITokenProvider tokenProvider, AuthCodeProvider authCodeManager) : base(logger)
+        {
+            _authCodeManager = authCodeManager;
+            _tokenProvider = tokenProvider;
+        }
+        [HttpPost]
         [DisableAutoValidation]
         [ServiceFilter(typeof(OAuthValidationFilter))]
         public async Task<IActionResult> TokenAsync([FromForm] TokenRequest request, CancellationToken cancellationToken = default)

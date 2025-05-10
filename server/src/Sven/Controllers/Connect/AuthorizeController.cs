@@ -7,34 +7,22 @@ using Sven.Configurations;
 using Sven.Extensions;
 using Sven.Models;
 using Sven.Services;
-using System.Net;
-using System.Security.Claims;
-using System.Text;
-using System.Web;
 
-namespace Sven.Controllers
+namespace Sven.Controllers.Connect
 {
     [ApiController]
-    [Route(Endpoints.Connect.Base)]
-    public partial class ConnectController : ControllerBase
+    [Route(Endpoints.Connect.Authorize)]
+    public class AuthorizeController : ConnectController
     {
-        private readonly ILogger<ConnectController> _logger;
-        private readonly AuthCodeProvider _authCodeManager;
-        private readonly IUserClaimsProvider _userProvider;
         private readonly IClientProvider _clientProvider;
-        private readonly ITokenProvider _tokenProvider;
+        private readonly AuthCodeProvider _authCodeManager;
 
-        public ConnectController(ILogger<ConnectController> logger, AuthCodeProvider authCodeManager, IStore<string, OAuthRequest> pkceRequestStore,
-        IUserClaimsProvider userProvider, IClientProvider clientProvider, ITokenProvider tokenProvider)
+        public AuthorizeController(ILogger<AuthorizeController> logger, IClientProvider clientProvider, AuthCodeProvider authCodeManager) : base(logger)
         {
-            _logger = logger;
-            _authCodeManager = authCodeManager;
-            _userProvider = userProvider;
             _clientProvider = clientProvider;
-            _tokenProvider = tokenProvider;
+            _authCodeManager = authCodeManager;
         }
-
-        [HttpGet(Endpoints.Connect.AuthorizePath)]
+        [HttpGet]
         [DisableAutoValidation]
         [ServiceFilter(typeof(OAuthValidationFilter))]
         public async Task<IActionResult> AuthorizeAsync([FromQuery] AuthorizeRequest request, CancellationToken cancellationToken = default)
@@ -68,7 +56,7 @@ namespace Sven.Controllers
                         AuthConstants.OAuth.ErrorDescriptions.RequestedScopeNotGranted, request.State);
                 }
 
-                OAuthRequest oauthRequest = new OAuthRequest
+                OAuthRequest oauthRequest = new()
                 {
                     ClientId = request.ClientId,
                     RedirectUri = request.RedirectUri,
@@ -94,44 +82,12 @@ namespace Sven.Controllers
                     Secure = true,
                     SameSite = SameSiteMode.Lax
                 });
-
-                return Redirect(Endpoints.Connect.AuthorizePage);
+                return Redirect(Endpoints.Connect.SignInPkce);
             }
             return RedirectWithOAuthError(request.RedirectUri, AuthConstants.OAuth.Errors.UnsupportedResponseType, AuthConstants.OAuth.ErrorDescriptions.UnsupportedResponseType, request.State);
         }
 
-        private static bool IsResponseType(string actual, string expected)
-        {
-            return string.Equals(actual, expected, StringComparison.OrdinalIgnoreCase);
-        }
-
-        [HttpPost(Endpoints.Connect.AuthorizeLoginPath)]
-        public async Task<IActionResult> LoginAsync([FromForm] string username, [FromForm] string password, CancellationToken cancellationToken = default)
-        {
-            if (!Request.TryGetCookieValue(AuthConstants.CookieNames.PkceKey, out string? pkceKey))
-            {
-                return OAuthError(AuthConstants.OAuth.Errors.InvalidRequest, $"{AuthConstants.OAuth.ErrorDescriptions.MissingAuthorizationState} ({AuthConstants.CookieNames.PkceKey}).");
-            }
-
-            if (!_authCodeManager.ExistsPkceKey(pkceKey!))
-            {
-                return OAuthError(AuthConstants.OAuth.Errors.InvalidRequest, "Invalid or expired authorization request.");
-            }
-
-            Result<ClaimsPrincipal> claimsPrincipalResult = await _userProvider.GetClaimsPrincipalAsync(username, password, cancellationToken);
-
-            if (claimsPrincipalResult.IsError)
-            {
-                _logger.LogResultError(claimsPrincipalResult.Error);
-                return OAuthError(AuthConstants.OAuth.Errors.AccessDenied, "Invalid username or password.", HttpStatusCode.Unauthorized);
-            }
-
-            await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, claimsPrincipalResult.Value);
-
-            return Redirect(Endpoints.Connect.AuthorizeContinue);
-        }
-
-        [HttpGet(Endpoints.Connect.AuthorizeContinuePath)]
+        [HttpGet(Endpoints.Connect.ContinuePath)]
         public async Task<IActionResult> CompleteAuthorizeAsync(CancellationToken cancellationToken = default)
         {
             if (!Request.TryGetCookieValue(AuthConstants.CookieNames.PkceKey, out string? pkceKey))
@@ -157,7 +113,7 @@ namespace Sven.Controllers
                     "User authentication failed.", requestResult.Value.State);
             }
 
-            Result<string> codeResult = await _authCodeManager.CreateAuthCodeAsync(requestResult.Value, result.Principal.Claims.ToList(), cancellationToken);
+            Result<string> codeResult = await _authCodeManager.CreateAuthCodeAsync(requestResult.Value, [.. result.Principal.Claims], cancellationToken);
 
             if (codeResult.IsError)
             {
@@ -167,48 +123,5 @@ namespace Sven.Controllers
             return RedirectWithOAuthCode(requestResult.Value.RedirectUri, codeResult.Value, requestResult.Value.State);
         }
 
-        private IActionResult OAuthError(string error, string? description = null, HttpStatusCode statusCode = HttpStatusCode.BadRequest)
-        {
-            return StatusCode((int)statusCode, new OAuthError(error, description));
-        }
-        private IActionResult OAuthError(ResultError resultError)
-        {
-            return BadRequest(new OAuthError(resultError.ErrorMessage, resultError.LogMessage));
-        }
-        private IActionResult RedirectWithOAuthError(string redirectUri, string error, string? errorDescription, string? state)
-        {
-            StringBuilder sb = new StringBuilder(redirectUri);
-            sb.Append("?");
-            sb = RedirectUrlWithOAuthError(sb, error, errorDescription);
-            sb = RedirectUrlAppendState(sb, state);
-            return Redirect(HttpUtility.UrlEncode(sb.ToString()));
-        }
-        private IActionResult RedirectWithOAuthCode(string redirectUri, string code, string? state)
-        {
-            StringBuilder sb = new StringBuilder(redirectUri);
-            sb.Append("?").Append(AuthConstants.OAuth.FieldNames.Code).Append("=").Append(code);
-            sb = RedirectUrlAppendState(sb, state);
-            return Redirect(sb.ToString());
-        }
-        private static StringBuilder RedirectUrlWithOAuthError(StringBuilder redirectUrl, string error, string? errorDescription)
-        {
-            redirectUrl.Append(AuthConstants.OAuth.FieldNames.Error).Append("=").Append(error);
-            if (!string.IsNullOrWhiteSpace(errorDescription))
-            {
-                redirectUrl.Append("&").Append(AuthConstants.OAuth.FieldNames.ErrorDescription)
-                    .Append("=").Append(errorDescription);
-            }
-            return redirectUrl;
-        }
-        private static StringBuilder RedirectUrlAppendState(StringBuilder redirectUrl, string? state)
-        {
-            if (!string.IsNullOrWhiteSpace(state))
-            {
-                redirectUrl.Append("&").Append(AuthConstants.OAuth.FieldNames.State)
-                    .Append("=").Append(state);
-            }
-
-            return redirectUrl;
-        }
     }
 }

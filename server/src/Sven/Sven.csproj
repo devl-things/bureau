@@ -24,4 +24,8 @@
     <ProjectReference Include="..\Sven.Data.SqlServer\Sven.Data.SqlServer.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="wwwroot\css\" />
+  </ItemGroup>
+
 </Project>

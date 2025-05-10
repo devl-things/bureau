@@ -1,0 +1,38 @@
+﻿@page
+@using Sven.Configurations;
+@using Sven.PageModels;
+@model Sven.Pages.Connect.SignInModel
+@{
+    Layout = "_ConnectLayout";
+}
+
+<h2>Login</h2>
+
+@if (Model.CurrentModel.ErrorMessage != null)
+{
+    <div class="error">@Model.CurrentModel.ErrorMessage</div>
+}
+
+<form method="post">
+    <input type="text" name="@AuthConstants.OAuth.FieldNames.Username" placeholder="Username" required />
+    <br />
+    <input type="password" name="@AuthConstants.OAuth.FieldNames.Password" placeholder="Password" required />
+    <br />
+    <input type="hidden" name="@AuthConstants.OAuth.FieldNames.Mode" value="@Model.CurrentModel.Mode" />
+    <button type="submit" asp-page-handler="Login">Login</button>
+</form>
+
+<p>Or login using:</p>
+@foreach (ExternalLoginSignInPageModel login in Model.CurrentModel.ExternalLogins)
+{
+    @if (login.IsSignInEnabled)
+    {
+        <a href="@login.SignInLink">Continue with @login.ProviderName</a>
+        <br />
+    }
+}
+
+<p>
+    <a href="@Endpoints.Connect.SignUp">Don't have an account?</a><br />
+    <a href="@Endpoints.Connect.ForgotPassword">Forgot your password?</a>
+</p>

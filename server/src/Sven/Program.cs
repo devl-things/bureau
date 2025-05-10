@@ -5,6 +5,8 @@ using Sven.AutoValidation;
 using Sven.Configurations;
 using Sven.Data.SqlServer.Configurations;
 using Sven.Models;
+using Sven.PageModels;
+using Sven.PageModels.SignIn;
 using Sven.Services;
 using System.Security.Cryptography;
 
@@ -54,6 +56,10 @@ namespace Sven
             builder.Services.AddScoped<IClientProvider, ClientProvider>();
             builder.Services.AddScoped<ITokenProvider, SvenTokenProvider>();
             builder.Services.AddScoped<OAuthValidationFilter>();
+
+            builder.Services.AddScoped<IPageModelFactory<SignInPageModel>, SignInPageModelFactory>();
+            builder.Services.AddScoped<PkceSignInPageModel>();
+            builder.Services.AddScoped<PlainSignInPageModel>();
             builder.Services.AddSvenSqlServer(options =>
             {
                 options.ConnectionString = builder.Configuration.GetConnectionString("SqlServer");
@@ -72,8 +78,11 @@ namespace Sven
             });
 
             // Cookie + external providers
-            builder.Services.AddAuthentication()
-            .AddCookie(CookieAuthenticationDefaults.AuthenticationScheme)
+            builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+            .AddCookie(CookieAuthenticationDefaults.AuthenticationScheme, options =>
+            {
+                options.LoginPath = Endpoints.Connect.SignIn;
+            })
             .AddGoogle(AuthConstants.ExternalSchemes.Google, options =>
             {
                 builder.Configuration.Bind("Google", options);
