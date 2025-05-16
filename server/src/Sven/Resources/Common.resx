@@ -117,19 +117,19 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <data name="SignInWith" xml:space="preserve">
-    <value>Uđi s </value>
+  <data name="ConfirmPassword" xml:space="preserve">
+    <value>Confirm password</value>
   </data>
-  <data name="ForgotPassword" xml:space="preserve">
-    <value>Zaboravili ste lozinku?</value>
+  <data name="Email" xml:space="preserve">
+    <value>Email</value>
   </data>
-  <data name="Login" xml:space="preserve">
-    <value>Ulaz</value>
+  <data name="Or" xml:space="preserve">
+    <value>or</value>
   </data>
-  <data name="SignUp" xml:space="preserve">
-    <value>Prijavi se</value>
+  <data name="Password" xml:space="preserve">
+    <value>Password</value>
   </data>
-  <data name="Welcome" xml:space="preserve">
-    <value>Dobrodošli</value>
+  <data name="Username" xml:space="preserve">
+    <value>Username</value>
   </data>
 </root>

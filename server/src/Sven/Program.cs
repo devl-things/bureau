@@ -109,7 +109,8 @@ namespace Sven
     .AddV8();
             builder.Services.AddWebOptimizer(pipeline =>
             {
-                pipeline.AddScssBundle("/css/connect.signin.min.css", "scss/connect.base.scss", "scss/connect.signin.scss");
+                pipeline.AddScssBundle(StylesScriptNames.ConnectMin, "scss/connect.base.scss");
+                pipeline.AddScssBundle(StylesScriptNames.ConnectSignMin, "scss/connect.sign.scss");
             });
 
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
@@ -129,12 +130,12 @@ namespace Sven
                 options.SupportedCultures = supportedCultures;
                 options.SupportedUICultures = supportedCultures;
 
-                options.RequestCultureProviders = new List<IRequestCultureProvider>
-                {
+                options.RequestCultureProviders =
+                [
                     new CookieRequestCultureProvider(),
                     new QueryStringRequestCultureProvider(),
                     new AcceptLanguageHeaderRequestCultureProvider(),
-                };
+                ];
             });
             app.MapRazorPages();
             // Configure the HTTP request pipeline.

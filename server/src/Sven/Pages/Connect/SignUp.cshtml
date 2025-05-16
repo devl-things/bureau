@@ -1,13 +1,46 @@
 ﻿@page
+@using Sven.Configurations;
+@using Sven.PageModels;
 @model Sven.Pages.Connect.SignUpModel
 @{
+    Layout = "_ConnectLayout";
+}
+@section Styles {
+    <link rel="stylesheet" href="@StylesScriptNames.ConnectSignMin" />
 }
 
-<form method="post">
-    <input type="text" name="username" placeholder="Username" required />
-    <br />
-    <input type="password" name="password" placeholder="Password" required />
-    <br />
-    <input type="hidden" name="mode" value="plain" />
-    <button type="submit">Login</button>
-</form>
+<div class="connect-wrapper">
+    <div class="connect-card">
+        <div class="logo-container">
+            <img src="/images/logo.png" alt="Sven logo" class="logo" />
+        </div>
+        <h2>@Model.Text.CreateAccountTitle</h2>
+
+        @* @if (Model.ErrorMessage != null)
+        {
+            <div class="error">@Model.ErrorMessage</div>
+        } *@
+
+        <form method="post">
+            <input type="text" name="username" placeholder="@Model.Text.Username" required />
+            <input type="email" name="email" placeholder="@Model.Text.Email" required />
+            <input type="password" name="password" placeholder="@Model.Text.Password" required />
+            <input type="password" name="confirmPassword" placeholder="@Model.Text.ConfirmPassword" required />
+            <button type="submit" asp-page-handler="SignUp">@Model.Text.Create</button>
+        </form>
+
+        <div class="divider">@Model.Text.Or</div>
+
+        @foreach (ExternalLoginPageModel login in Model.ExternalLogins)
+        {
+            @if (login.IsSignInEnabled)
+            {
+                <a class="social-button @login.CssClass" href="@login.SignInLink">@Model.Text.SignUpWith @login.ProviderName</a>
+            }
+        }
+
+        <div class="links">
+            @Model.Text.AlreadyAccount<a href="@Endpoints.Connect.SignIn">@Model.Text.SignIn</a>
+        </div>
+    </div>
+</div>

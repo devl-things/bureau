@@ -1,4 +1,5 @@
 ﻿@using System.Globalization
+@using Sven.Configurations
 @{
     var currentCulture = CultureInfo.CurrentUICulture.TwoLetterISOLanguageName;
 }
@@ -8,15 +9,15 @@
     <meta charset="utf-8" />
     <title>@ViewData["Title"] - Sven</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    @* <link rel="stylesheet" href="~/css/connect.css" asp-append-version="true" /> *@
+    <link rel="stylesheet" href="~@StylesScriptNames.ConnectMin" asp-append-version="true" />
     @await RenderSectionAsync("Styles", required: false)
 </head>
 <body class="connect-layout">
-    <main class="identity-container">
+    <main class="connect-container">
         @RenderBody()      
     </main>
     <div class="language-switcher">
-        <select onchange="onLanguageChange(this)">
+        <select id="languageSwitcher" onchange="onLanguageChange(this)">
             <option value="en" selected="@(currentCulture == "en")">English</option>
             <option value="hr" selected="@(currentCulture == "hr")">Hrvatski</option>
         </select>
@@ -24,7 +25,7 @@
     <script>
         function onLanguageChange(select) {
             const selectedLang = select.value;
-            document.cookie = `.AspNetCore.Culture=c=${selectedLang}|uic=${selectedLang}; path=/; max-age=31536000`; // 1 year
+            document.cookie = `.AspNetCore.Culture=c=${selectedLang}|uic=${selectedLang}; path=/; max-age=31536000; SameSite=Lax; Secure`; // 1 year
             window.location.reload();
         }
     </script>
