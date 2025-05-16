@@ -5,34 +5,44 @@
 @{
     Layout = "_ConnectLayout";
 }
-
-<h2>Login</h2>
-
-@if (Model.CurrentModel.ErrorMessage != null)
-{
-    <div class="error">@Model.CurrentModel.ErrorMessage</div>
+@section Styles {
+    <link rel="stylesheet" href="~/css/connect.signin.min.css" />
 }
+<div class="signin-wrapper">
+    <div class="signin-card">
+        <div class="logo-container">
+            <img src="/images/logo.png" alt="Sven logo" class="logo" />
+        </div>
+        <h2>@Model.Text.Welcome</h2>
 
-<form method="post">
-    <input type="text" name="@AuthConstants.OAuth.FieldNames.Username" placeholder="Username" required />
-    <br />
-    <input type="password" name="@AuthConstants.OAuth.FieldNames.Password" placeholder="Password" required />
-    <br />
-    <input type="hidden" name="@AuthConstants.OAuth.FieldNames.Mode" value="@Model.CurrentModel.Mode" />
-    <button type="submit" asp-page-handler="Login">Login</button>
-</form>
+        @if (Model.CurrentModel.ErrorMessage != null)
+        {
+            <div class="error">@Model.CurrentModel.ErrorMessage</div>
+        }
 
-<p>Or login using:</p>
-@foreach (ExternalLoginSignInPageModel login in Model.CurrentModel.ExternalLogins)
-{
-    @if (login.IsSignInEnabled)
-    {
-        <a href="@login.SignInLink">Continue with @login.ProviderName</a>
-        <br />
-    }
-}
+        <form method="post">
+            <input type="text" name="@AuthConstants.OAuth.FieldNames.Username" placeholder="@Model.Text.Username" required />
+            <br />
+            <input type="password" name="@AuthConstants.OAuth.FieldNames.Password" placeholder="@Model.Text.Password" required />
+            <br />
+            <input type="hidden" name="@AuthConstants.OAuth.FieldNames.Mode" value="@Model.CurrentModel.Mode" />
+            <button type="submit" asp-page-handler="Login">@Model.Text.Login</button>
+        </form>
 
-<p>
-    <a href="@Endpoints.Connect.SignUp">Don't have an account?</a><br />
-    <a href="@Endpoints.Connect.ForgotPassword">Forgot your password?</a>
-</p>
+        <div class="divider">@Model.Text.Or</div>
+
+        @foreach (ExternalLoginSignInPageModel login in Model.CurrentModel.ExternalLogins)
+        {
+            @if (login.IsSignInEnabled)
+            {
+                <a class="social-button @login.CssClass" href="@login.SignInLink">@Model.Text.ContinueWith @login.ProviderName</a>
+            }
+        }
+
+        <div class="links">
+            <a href="@Endpoints.Connect.ForgotPassword">@Model.Text.ForgotPassword</a>
+            <span>|</span>
+            <a href="@Endpoints.Connect.SignUp">@Model.Text.SignUp</a>
+        </div>
+    </div>
+</div>

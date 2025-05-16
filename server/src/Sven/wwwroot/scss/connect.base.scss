@@ -1,0 +1,57 @@
+﻿html, body {
+    height: 100%;
+    overflow: hidden; // optional, but use carefully if you need scroll in other cases
+}
+
+body {
+    font-family: "Segoe UI", sans-serif;
+    background: #f4f7fa;
+    margin: 0;
+    min-height: 100vh;
+    overflow-x: hidden;
+}
+
+.logo-container {
+    text-align: center;
+    margin-bottom: 1rem;
+}
+
+.logo {
+    height: 48px;
+    width: auto;
+}
+
+.connect-layout {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    margin: 0;
+    padding: 0;
+}
+
+.identity-container {
+    flex: 1 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem 1rem;
+    box-sizing: border-box;
+    width: 100%; // ✅ add this
+}
+
+.language-switcher {
+    position: fixed;
+    bottom: 1rem;
+    right: 1rem;
+    z-index: 1000;
+    background: transparent;
+
+    select {
+        padding: 0.4rem 0.6rem;
+        font-size: 0.9rem;
+        border-radius: 6px;
+        border: 1px solid #ccc;
+        background-color: white;
+    }
+}
+

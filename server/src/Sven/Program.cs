@@ -1,5 +1,8 @@
-﻿using Microsoft.AspNetCore.Authentication.Cookies;
+﻿using JavaScriptEngineSwitcher.Extensions.MsDependencyInjection;
+using JavaScriptEngineSwitcher.V8;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.Google;
+using Microsoft.AspNetCore.Localization;
 using Microsoft.IdentityModel.Tokens;
 using Sven.AutoValidation;
 using Sven.Configurations;
@@ -8,6 +11,7 @@ using Sven.Models;
 using Sven.PageModels;
 using Sven.PageModels.SignIn;
 using Sven.Services;
+using System.Globalization;
 using System.Security.Cryptography;
 
 namespace Sven
@@ -36,6 +40,23 @@ namespace Sven
             builder.Services.AddOptions<AuthOptions>().Bind(builder.Configuration.GetSection("Auth"))
                 .Validate(options => options.AuthorizationCodeLifetime <= TimeSpan.FromMinutes(10))
                 .ValidateOnStart();
+
+            //builder.Services.Configure<RequestLocalizationOptions>(options =>
+            //{
+            //    var supportedCultures = new[] { new CultureInfo("en"), new CultureInfo("hr") };
+
+            //    options.DefaultRequestCulture = new RequestCulture("en");
+            //    options.SupportedCultures = supportedCultures;
+            //    options.SupportedUICultures = supportedCultures;
+
+            //    options.RequestCultureProviders = new List<IRequestCultureProvider>
+            //    {
+            //        new RouteDataRequestCultureProvider(),
+            //        new AcceptLanguageHeaderRequestCultureProvider(),
+            //        new QueryStringRequestCultureProvider(),
+            //        new CookieRequestCultureProvider()
+            //    };
+            //});
 
             builder.Services.AddSingleton<RsaSecurityKey>(provider =>
             {
@@ -98,7 +119,15 @@ namespace Sven
 
             builder.Services.AddAuthorization();
             builder.Services.AddControllers();
+            builder.Services.AddLocalization(options => { options.ResourcesPath = "Resources"; });
             builder.Services.AddRazorPages();
+
+            builder.Services.AddJsEngineSwitcher(options => options.DefaultEngineName = V8JsEngine.EngineName)
+    .AddV8();
+            builder.Services.AddWebOptimizer(pipeline =>
+            {
+                pipeline.AddScssBundle("/css/connect.signin.min.css", "scss/connect.base.scss", "scss/connect.signin.scss");
+            });
 
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             builder.Services.AddEndpointsApiExplorer();
@@ -106,7 +135,24 @@ namespace Sven
 
             WebApplication app = builder.Build();
 
+            app.UseWebOptimizer();
             app.UseStaticFiles(); // if you want CSS
+
+            app.UseRequestLocalization(options =>
+            {
+                var supportedCultures = new[] { new CultureInfo("en"), new CultureInfo("hr") };
+
+                options.DefaultRequestCulture = new RequestCulture("en");
+                options.SupportedCultures = supportedCultures;
+                options.SupportedUICultures = supportedCultures;
+
+                options.RequestCultureProviders = new List<IRequestCultureProvider>
+                {
+                    new CookieRequestCultureProvider(),
+                    new QueryStringRequestCultureProvider(),
+                    new AcceptLanguageHeaderRequestCultureProvider(),
+                };
+            });
             app.MapRazorPages();
             // Configure the HTTP request pipeline.
             if (app.Environment.IsDevelopment())
