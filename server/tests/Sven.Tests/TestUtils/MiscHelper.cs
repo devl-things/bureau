@@ -1,4 +1,6 @@
-﻿using System.Text.RegularExpressions;
+﻿using System.Collections.Specialized;
+using System.Text.RegularExpressions;
+using System.Web;
 
 namespace Sven.Tests.TestUtils
 {
@@ -10,5 +12,14 @@ namespace Sven.Tests.TestUtils
             return Regex.Match(content, @"<input name=""__RequestVerificationToken"" type=""hidden"" value=""([^""]+)"" />").Groups[1].Value;
         }
 
+        public static string? BuildQueryString(Dictionary<string, string> parameters)
+        {
+            NameValueCollection query = HttpUtility.ParseQueryString(string.Empty);
+            foreach (KeyValuePair<string, string> param in parameters)
+            {
+                query[param.Key] = param.Value;
+            }
+            return query.ToString();
+        }
     }
 }

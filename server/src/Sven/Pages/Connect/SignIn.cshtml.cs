@@ -17,7 +17,7 @@ namespace Sven.Pages.Connect
         private readonly IStringLocalizer<SignInModel> _localizer;
 
         protected SignInModelText _text;
-        protected SignInModelText Text
+        public SignInModelText Text
         {
             get { return _text; }
         }

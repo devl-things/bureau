@@ -41,23 +41,6 @@ namespace Sven
                 .Validate(options => options.AuthorizationCodeLifetime <= TimeSpan.FromMinutes(10))
                 .ValidateOnStart();
 
-            //builder.Services.Configure<RequestLocalizationOptions>(options =>
-            //{
-            //    var supportedCultures = new[] { new CultureInfo("en"), new CultureInfo("hr") };
-
-            //    options.DefaultRequestCulture = new RequestCulture("en");
-            //    options.SupportedCultures = supportedCultures;
-            //    options.SupportedUICultures = supportedCultures;
-
-            //    options.RequestCultureProviders = new List<IRequestCultureProvider>
-            //    {
-            //        new RouteDataRequestCultureProvider(),
-            //        new AcceptLanguageHeaderRequestCultureProvider(),
-            //        new QueryStringRequestCultureProvider(),
-            //        new CookieRequestCultureProvider()
-            //    };
-            //});
-
             builder.Services.AddSingleton<RsaSecurityKey>(provider =>
             {
                 RSA rsa = RSA.Create(2048);
