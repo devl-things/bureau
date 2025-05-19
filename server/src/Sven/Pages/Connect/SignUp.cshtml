@@ -23,9 +23,13 @@
 
         <form method="post">
             <input type="text" name="username" placeholder="@Model.Text.Username" required />
+            <br />
             <input type="email" name="email" placeholder="@Model.Text.Email" required />
+            <br />
             <input type="password" name="password" placeholder="@Model.Text.Password" required />
+            <br />
             <input type="password" name="confirmPassword" placeholder="@Model.Text.ConfirmPassword" required />
+            <br />
             <button type="submit" asp-page-handler="SignUp">@Model.Text.Create</button>
         </form>
 
