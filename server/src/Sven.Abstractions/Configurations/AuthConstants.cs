@@ -80,12 +80,6 @@
                 public const string ExpiresIn = "expires_in";
                 public const string Nonce = "nonce";
 
-                //Login field names
-                public const string Username = "username";
-                public const string Password = "password";
-
-                public const string Mode = "mode";
-
                 //Dynamic registration
                 public const string RedirectUris = "redirect_uris";
                 public const string TokenEndpointAuthMethod = "token_endpoint_auth_method";
@@ -171,6 +165,20 @@
                 public const string RequestedScopeExceedsGranted = "Requested scope exceeds originally granted scope.";
                 public const string RequestedScopeNotGranted = "Requested scope is not granted.";
             }
+        }
+
+        public static class PropertyNames
+        {
+            //Login field names
+            public const string ConfirmPassword = "confirmPassword";
+            public const string Email = "email";
+            public const string Password = "password";
+            public const string VerificationCode = "verificationCode";
+            public const string Username = "username";
+
+
+            public const string Mode = "mode";
+            public const string Step = "step";
         }
         public static class CookieNames
         {

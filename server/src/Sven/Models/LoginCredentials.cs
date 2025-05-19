@@ -6,10 +6,10 @@ namespace Sven.Models
 {
     public class LoginCredentials
     {
-        [FromForm(Name = AuthConstants.OAuth.FieldNames.Username)]
+        [FromForm(Name = AuthConstants.PropertyNames.Username)]
         [Required]
         public string Username { get; set; } = string.Empty;
-        [FromForm(Name = AuthConstants.OAuth.FieldNames.Password)]
+        [FromForm(Name = AuthConstants.PropertyNames.Password)]
         [Required]
         public string Password { get; set; } = string.Empty;
     }

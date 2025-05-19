@@ -384,9 +384,9 @@ namespace Sven.Tests.Controllers
             HttpRequestMessage loginRequest = new HttpRequestMessage(HttpMethod.Post, url);
             loginRequest.Content = new FormUrlEncodedContent(new Dictionary<string, string>
             {
-                { AuthConstants.OAuth.FieldNames.Username, TestDataConstants.TestUserUsername },
-                { AuthConstants.OAuth.FieldNames.Password, TestDataConstants.TestUserPassword },
-                { AuthConstants.OAuth.FieldNames.Mode, PageModelTypes.SignIn.Pkce },
+                { AuthConstants.PropertyNames.Username, TestDataConstants.TestUserUsername },
+                { AuthConstants.PropertyNames.Password, TestDataConstants.TestUserPassword },
+                { AuthConstants.PropertyNames.Mode, PageModelTypes.SignIn.Pkce },
                 { MiscHelper.AntiforgeryFormKey, antiforgeryToken }
             });
             loginRequest.Headers.Add("Cookie", $"{AuthConstants.CookieNames.PkceKey}={pkceKey}");

@@ -21,11 +21,11 @@
         }
 
         <form method="post">
-            <input type="text" name="@AuthConstants.OAuth.FieldNames.Username" placeholder="@Model.Text.Username" required autocomplete="on" />
+            <input type="text" name="@AuthConstants.PropertyNames.Username" placeholder="@Model.Text.Username" required autocomplete="on" />
             <br />
-            <input type="password" name="@AuthConstants.OAuth.FieldNames.Password" placeholder="@Model.Text.Password" required />
+            <input type="password" name="@AuthConstants.PropertyNames.Password" placeholder="@Model.Text.Password" required />
             <br />
-            <input type="hidden" name="@AuthConstants.OAuth.FieldNames.Mode" value="@Model.CurrentModel.Mode" />
+            <input type="hidden" name="@AuthConstants.PropertyNames.Mode" value="@Model.CurrentModel.Mode" />
             <button type="submit" asp-page-handler="Login">@Model.Text.Login</button>
         </form>
 

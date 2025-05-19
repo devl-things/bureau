@@ -58,9 +58,9 @@ namespace Sven.Tests.Pages.Connect.SignIn
             string url = $"{Endpoints.Connect.SignIn}?handler=Login";
             Dictionary<string, string> formData = new Dictionary<string, string>
             {
-                [AuthConstants.OAuth.FieldNames.Username] = "test-user",
-                [AuthConstants.OAuth.FieldNames.Password] = "test-pass",
-                [AuthConstants.OAuth.FieldNames.Mode] = PageModelTypes.SignIn.Pkce,
+                [AuthConstants.PropertyNames.Username] = "test-user",
+                [AuthConstants.PropertyNames.Password] = "test-pass",
+                [AuthConstants.PropertyNames.Mode] = PageModelTypes.SignIn.Pkce,
                 [MiscHelper.AntiforgeryFormKey] = token
             };
 

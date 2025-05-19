@@ -54,7 +54,7 @@ namespace Sven.Configurations
             public const string Token = $"/{Base}/{TokenPath}";
             public const string Revocation = $"/{Base}/{RevocationPath}";
             public const string SignIn = $"/{Base}/{SignInPath}";
-            public const string SignInPkce = $"{SignIn}?{AuthConstants.OAuth.FieldNames.Mode}={PageModelTypes.SignIn.Pkce}";
+            public const string SignInPkce = $"{SignIn}?{AuthConstants.PropertyNames.Mode}={PageModelTypes.SignIn.Pkce}";
             public const string SignUp = $"/{Base}/{SignUpPath}";
             public const string ForgotPassword = $"/{Base}/{ForgotPasswordPath}";
             public const string Login = $"/{Base}/{LoginPath}";

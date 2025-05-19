@@ -34,7 +34,7 @@ namespace Sven.Pages.Connect
 
         public override SignInModelText Text { get { return _text; } }
 
-        public IActionResult OnGet([FromQuery(Name = AuthConstants.OAuth.FieldNames.Mode)] string? mode)
+        public IActionResult OnGet([FromQuery(Name = AuthConstants.PropertyNames.Mode)] string? mode)
         {
             SetCurrentModel(mode);
             return CurrentModel.HandleGetRequest();
