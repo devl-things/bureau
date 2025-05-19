@@ -3,6 +3,8 @@
 .sonarqube/
 ## sonarqube test coverage script
 docs/test-coverage.md
+## exchange with perplexity
+docs/perplexity-data/
 
 # ignore local settings
 appsettings.Development.json
