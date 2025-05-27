@@ -1,6 +1,4 @@
 ﻿using Bureau.Core;
-using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Mvc;
 using Sven.Configurations;
 using Sven.Models;
@@ -11,17 +9,17 @@ namespace Sven.PageModels.SignIn
 {
     public class PlainSignInPageModel : SignInPageModel
     {
-        public PlainSignInPageModel(ILogger<PlainSignInPageModel> logger, IUserClaimsProvider userProvider) : base(logger, userProvider)
+        public PlainSignInPageModel(ILogger<PlainSignInPageModel> logger, IUserClaimsProvider userClaimsProvider) : base(logger, userClaimsProvider)
         {
         }
-        public override IActionResult HandleGetRequest()
+        public override Task<IActionResult> HandleGetRequestAsync(CancellationToken cancellationToken = default)
         {
-            return Page();
+            return Task.FromResult<IActionResult>(Page());
         }
 
         public override async Task<IActionResult> HandleLoginAsync(LoginCredentials credentials, CancellationToken cancellationToken = default)
         {
-            Result<ClaimsPrincipal> claimsPrincipalResult = await _userProvider.GetClaimsPrincipalAsync(credentials.Username, credentials.Password, cancellationToken);
+            Result<ClaimsPrincipal> claimsPrincipalResult = await _userClaimsProvider.GetClaimsPrincipalAsync(credentials.Username, credentials.Password, cancellationToken);
 
             if (claimsPrincipalResult.IsError)
             {
@@ -29,8 +27,7 @@ namespace Sven.PageModels.SignIn
                 ErrorMessage = AuthConstants.OAuth.ErrorDescriptions.InvalidUsernamePassword;
                 return Page();
             }
-
-            await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, claimsPrincipalResult.Value);
+            await SignInUserAsync(claimsPrincipalResult.Value, cancellationToken);
 
             return Redirect(Endpoints.Account.AccountInfo);
         }

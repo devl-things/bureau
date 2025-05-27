@@ -1,6 +1,4 @@
 ﻿using Bureau.Core;
-using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Mvc;
 using Sven.Configurations;
 using Sven.Extensions;
@@ -14,20 +12,20 @@ namespace Sven.PageModels.SignIn
     {
         private readonly AuthCodeProvider _authCodeManager;
 
-        public PkceSignInPageModel(ILogger<PkceSignInPageModel> logger, IUserClaimsProvider userProvider, AuthCodeProvider authCodeManager)
-            : base(logger, userProvider)
+        public PkceSignInPageModel(ILogger<PkceSignInPageModel> logger, IUserClaimsProvider userClaimsProvider, AuthCodeProvider authCodeManager)
+            : base(logger, userClaimsProvider)
         {
             Mode = PageModelTypes.SignIn.Pkce;
             _authCodeManager = authCodeManager;
         }
-        public override IActionResult HandleGetRequest()
+        public override Task<IActionResult> HandleGetRequestAsync(CancellationToken cancellationToken = default)
         {
             if (ValidatePkceKey() is { IsError: true } result)
             {
-                return OAuthError(result.Error);
+                return Task.FromResult(OAuthError(result.Error));
             }
 
-            return Page();
+            return Task.FromResult<IActionResult>(Page());
         }
 
         public override async Task<IActionResult> HandleLoginAsync(LoginCredentials credentials, CancellationToken cancellationToken = default)
@@ -37,7 +35,7 @@ namespace Sven.PageModels.SignIn
                 return OAuthError(result.Error);
             }
 
-            Result<ClaimsPrincipal> claimsPrincipalResult = await _userProvider.GetClaimsPrincipalAsync(credentials.Username, credentials.Password, cancellationToken);
+            Result<ClaimsPrincipal> claimsPrincipalResult = await _userClaimsProvider.GetClaimsPrincipalAsync(credentials.Username, credentials.Password, cancellationToken);
 
             if (claimsPrincipalResult.IsError)
             {
@@ -46,7 +44,7 @@ namespace Sven.PageModels.SignIn
                 return Page();
             }
 
-            await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, claimsPrincipalResult.Value);
+            await SignInUserAsync(claimsPrincipalResult.Value, cancellationToken);
 
             return Redirect(Endpoints.Connect.AuthorizeContinue);
         }
@@ -67,7 +65,7 @@ namespace Sven.PageModels.SignIn
 
         protected IActionResult OAuthError(ResultError resultError)
         {
-            return BadRequest(new OAuthError(resultError.ErrorMessage, resultError.LogMessage));
+            return BadRequest(new OAuthError(resultError.ErrorMessage, resultError.UserMessage));
         }
     }
 }

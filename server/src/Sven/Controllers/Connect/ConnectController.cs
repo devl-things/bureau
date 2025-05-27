@@ -30,7 +30,7 @@ namespace Sven.Controllers
         }
         protected IActionResult OAuthError(ResultError resultError)
         {
-            return BadRequest(new OAuthError(resultError.ErrorMessage, resultError.LogMessage));
+            return BadRequest(new OAuthError(resultError.ErrorMessage, resultError.UserMessage));
         }
         protected IActionResult RedirectWithOAuthError(string redirectUri, string error, string? errorDescription, string? state)
         {

@@ -8,6 +8,7 @@ namespace Sven.PageModels.SignIn
         public required string Login { get; init; }
         public required string SignInWith { get; init; }
         public required string SignUp { get; init; }
+        public required string UsernameOrEmail { get; init; }
         public required string Welcome { get; init; }
     }
 }

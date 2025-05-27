@@ -26,7 +26,7 @@ namespace Sven.Pages.Connect
                 Password = _sharedLocalizer[nameof(SignInModelText.Password)],
                 SignInWith = _localizer[nameof(SignInModelText.SignInWith)],
                 SignUp = _localizer[nameof(SignInModelText.SignUp)],
-                Username = _sharedLocalizer[nameof(SignInModelText.Username)],
+                UsernameOrEmail = _sharedLocalizer[nameof(SignInModelText.UsernameOrEmail)],
                 Welcome = _localizer[nameof(SignInModelText.Welcome)]
             };
         }
@@ -34,10 +34,10 @@ namespace Sven.Pages.Connect
 
         public override SignInModelText Text { get { return _text; } }
 
-        public IActionResult OnGet([FromQuery(Name = AuthConstants.PropertyNames.Mode)] string? mode)
+        public async Task<IActionResult> OnGetAsync([FromQuery(Name = AuthConstants.PropertyNames.Mode)] string? mode, CancellationToken cancellationToken = default)
         {
             SetCurrentModel(mode);
-            return CurrentModel.HandleGetRequest();
+            return await CurrentModel.HandleGetRequestAsync(cancellationToken);
         }
 
         public Task<IActionResult> OnPostLoginAsync([FromForm] LoginCredentials credentials, string? mode, CancellationToken cancellationToken = default)
