@@ -10,7 +10,7 @@ namespace Sven.PageModels.SignIn
     public class TicketSignInPageModel : SignInPageModel
     {
         private readonly IUserProvider _userProvider;
-        public TicketSignInPageModel(ILogger<PlainSignInPageModel> logger, IUserProvider userProvider, IUserClaimsProvider userClaimProvider) : base(logger, userClaimProvider)
+        public TicketSignInPageModel(ILogger<TicketSignInPageModel> logger, IUserProvider userProvider, IUserClaimsProvider userClaimProvider) : base(logger, userClaimProvider)
         {
             _userProvider = userProvider;
         }
