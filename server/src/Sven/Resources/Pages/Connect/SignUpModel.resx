@@ -145,7 +145,7 @@
     <value>Sign up with </value>
   </data>
   <data name="VerifyCode" xml:space="preserve">
-    <value> Verify code</value>
+    <value>Verify code</value>
   </data>
   <data name="VerifyCodeMessage" xml:space="preserve">
     <value>Please, enter the verification code from the email in your inbox or spam folder sent to</value>

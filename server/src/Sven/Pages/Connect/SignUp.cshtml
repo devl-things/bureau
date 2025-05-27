@@ -1,6 +1,7 @@
 ﻿@page
 @using Sven.Configurations;
 @using Sven.PageModels;
+@using Sven.PageModels.ExternalLogins
 @using Sven.PageModels.SignUp;
 @model Sven.Pages.Connect.SignUpModel
 @{
@@ -11,10 +12,7 @@
     <h2>@Model.Title</h2>
 }
 
-@if (Model.ErrorMessage != null)
-{
-    <div class="error">@Model.ErrorMessage</div>
-}
+@await Html.PartialAsync("_ErrorMessage", Model.ErrorMessage)
 
 <form method="post">
     <input type="hidden" name="@AuthConstants.PropertyNames.Step" value="@((int)Model.Step)" />
@@ -54,13 +52,11 @@
 {
     <div class="divider">@Model.Text.Or</div>
 
-    @foreach (ExternalLoginPageModel login in Model.ExternalLogins)
+    @await Html.PartialAsync("_ExternalLogins", new ExternalLoginsViewModel
     {
-        @if (login.IsSignInEnabled)
-        {
-            <a class="social-button @login.CssClass" href="@login.SignInLink">@Model.Text.SignUpWith @login.ProviderName</a>
-        }
-    }
+        ExternalLogins = Model.ExternalLogins,
+        PrefixText = Model.Text.SignUpWith
+    })
 }
 
 @section Footer {

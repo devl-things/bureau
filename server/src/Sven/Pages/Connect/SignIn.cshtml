@@ -1,48 +1,38 @@
 ﻿@page
 @using Sven.Configurations;
-@using Sven.PageModels;
+@using Sven.PageModels.ExternalLogins
 @model Sven.Pages.Connect.SignInModel
 @{
-    Layout = "_ConnectLayout";
+    Layout = "_SignLayout";
 }
-@section Styles {
-    <link rel="stylesheet" href="@StylesScriptNames.ConnectSignMin" />
+
+@section Header {
+    <h2>@Model.Text.Welcome</h2>
 }
-<div class="connect-wrapper">
-    <div class="connect-card">
-        <div class="logo-container">
-            <img src="/images/logo.png" alt="Sven logo" class="logo" />
-        </div>
-        <h2>@Model.Text.Welcome</h2>
 
-        @if (Model.CurrentModel.ErrorMessage != null)
-        {
-            <div class="error">@Model.CurrentModel.ErrorMessage</div>
-        }
+@await Html.PartialAsync("_ErrorMessage", Model.CurrentModel.ErrorMessage)
 
-        <form method="post">
-            <input type="text" name="@AuthConstants.PropertyNames.Username" placeholder="@Model.Text.UsernameOrEmail" required autocomplete="on" />
-            <br />
-            <input type="password" name="@AuthConstants.PropertyNames.Password" placeholder="@Model.Text.Password" required />
-            <br />
-            <input type="hidden" name="@AuthConstants.PropertyNames.Mode" value="@Model.CurrentModel.Mode" />
-            <button type="submit" asp-page-handler="Login">@Model.Text.Login</button>
-        </form>
+<form method="post">
+    <input type="text" name="@AuthConstants.PropertyNames.Username" placeholder="@Model.Text.UsernameOrEmail" required autocomplete="on" />
+    <br />
+    <input type="password" name="@AuthConstants.PropertyNames.Password" placeholder="@Model.Text.Password" required />
+    <br />
+    <input type="hidden" name="@AuthConstants.PropertyNames.Mode" value="@Model.CurrentModel.Mode" />
+    <button type="submit" asp-page-handler="Login">@Model.Text.Login</button>
+</form>
 
-        <div class="divider">@Model.Text.Or</div>
+<div class="divider">@Model.Text.Or</div>
 
-        @foreach (ExternalLoginPageModel login in Model.CurrentModel.ExternalLogins)
-        {
-            @if (login.IsSignInEnabled)
-            {
-                <a class="social-button @login.CssClass" href="@login.SignInLink">@Model.Text.SignInWith @login.ProviderName</a>
-            }
-        }
+@await Html.PartialAsync("_ExternalLogins", new ExternalLoginsViewModel
+{
+    ExternalLogins = Model.CurrentModel.ExternalLogins,
+    PrefixText = Model.Text.SignInWith
+})
 
-        <div class="links">
-            <a href="@Endpoints.Connect.ForgotPassword">@Model.Text.ForgotPassword</a>
-            <span>|</span>
-            <a href="@Endpoints.Connect.SignUp">@Model.Text.SignUp</a>
-        </div>
+@section Footer {
+    <div class="links">
+        <a href="@Endpoints.Connect.ForgotPassword">@Model.Text.ForgotPassword</a>
+        <span>|</span>
+        <a href="@Endpoints.Connect.SignUp">@Model.Text.SignUp</a>
     </div>
-</div>
+}

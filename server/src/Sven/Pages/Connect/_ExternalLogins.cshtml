@@ -1,0 +1,10 @@
+﻿@using Sven.PageModels.ExternalLogins
+@model ExternalLoginsViewModel
+
+@foreach (ExternalLoginModel login in Model.ExternalLogins)
+{
+    if (login.IsSignInEnabled)
+    {
+        <a class="social-button @login.CssClass" href="@login.SignInLink">@Model.PrefixText @login.ProviderName</a>
+    }
+}

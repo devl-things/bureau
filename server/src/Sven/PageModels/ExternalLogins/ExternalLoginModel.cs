@@ -1,6 +1,6 @@
-﻿namespace Sven.PageModels
+﻿namespace Sven.PageModels.ExternalLogins
 {
-    public class ExternalLoginPageModel
+    public class ExternalLoginModel
     {
         public bool IsSignInEnabled { get; set; }
         public string SignInLink { get; set; } = string.Empty;

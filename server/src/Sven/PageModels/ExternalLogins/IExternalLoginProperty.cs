@@ -1,23 +1,23 @@
 ﻿using Sven.Configurations;
 
-namespace Sven.PageModels
+namespace Sven.PageModels.ExternalLogins
 {
     public interface IExternalLoginProperty
     {
-        public List<ExternalLoginPageModel> ExternalLogins { get; init; }
+        public List<ExternalLoginModel> ExternalLogins { get; init; }
     }
 
     public static class ExternalLoginProviders
     {
-        public static readonly List<ExternalLoginPageModel> ExternalList =
+        public static readonly List<ExternalLoginModel> ExternalList =
         [
-            new ExternalLoginPageModel()
+            new ExternalLoginModel()
             {
                 IsSignInEnabled = true,
                 SignInLink = Endpoints.External.SignInGoogle,
                 ProviderName = "Google"
             },
-            new ExternalLoginPageModel()
+            new ExternalLoginModel()
             {
                 IsSignInEnabled = false,
                 SignInLink = Endpoints.External.SignInMicrosoft,

@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.Extensions.Primitives;
 using Sven.Models;
+using Sven.PageModels.ExternalLogins;
 using Sven.Services;
 using System.Security.Claims;
 
@@ -16,7 +17,7 @@ namespace Sven.PageModels.SignIn
         protected readonly IUserClaimsProvider _userClaimsProvider;
         public string Mode { get; set; } = PageModelTypes.SignIn.Plain;
         public string? ErrorMessage { get; set; }
-        public List<ExternalLoginPageModel> ExternalLogins { get; set; }
+        public List<ExternalLoginModel> ExternalLogins { get; set; }
 
         protected SignInPageModel(ILogger<SignInPageModel> logger, IUserClaimsProvider userProvider)
         {

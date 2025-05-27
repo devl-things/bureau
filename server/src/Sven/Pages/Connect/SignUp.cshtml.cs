@@ -5,6 +5,7 @@ using Microsoft.Extensions.Localization;
 using Sven.Configurations;
 using Sven.Models;
 using Sven.PageModels;
+using Sven.PageModels.ExternalLogins;
 using Sven.PageModels.SignUp;
 using Sven.Services;
 using System.ComponentModel.DataAnnotations;
@@ -75,7 +76,7 @@ namespace Sven.Pages.Connect
         }
         public override SignUpModelText Text { get { return _text; } }
 
-        public List<ExternalLoginPageModel> ExternalLogins { get; init; }
+        public List<ExternalLoginModel> ExternalLogins { get; init; }
 
         public IActionResult OnGet([FromQuery(Name = AuthConstants.OAuth.FieldNames.Challenge)] string? challenge)
         {
