@@ -1,50 +1,77 @@
 ﻿@page
 @using Sven.Configurations;
 @using Sven.PageModels;
+@using Sven.PageModels.SignUp;
 @model Sven.Pages.Connect.SignUpModel
 @{
-    Layout = "_ConnectLayout";
-}
-@section Styles {
-    <link rel="stylesheet" href="@StylesScriptNames.ConnectSignMin" />
+    Layout = "_SignLayout";
 }
 
-<div class="connect-wrapper">
-    <div class="connect-card">
-        <div class="logo-container">
-            <img src="/images/logo.png" alt="Sven logo" class="logo" />
+@section Header {
+    <h2>@Model.Title</h2>
+}
+
+@if (Model.ErrorMessage != null)
+{
+    <div class="error">@Model.ErrorMessage</div>
+}
+
+<form method="post">
+    <input type="hidden" name="@AuthConstants.PropertyNames.Step" value="@((int)Model.Step)" />
+    @if (Model.Step == SignUpStep.EnterEmail)
+    {
+        <input type="email" placeholder="@Model.Text.Email" name="@AuthConstants.PropertyNames.Email" value="@Model.Email" required />
+        <br />
+        <button type="submit">@Model.Text.Continue</button>
+    }
+    else if (Model.Step == SignUpStep.VerifyCode)
+    {
+        <div class="centered-spans">
+            <span>@Model.Text.VerifyCodeMessage</span>
+            <span class="sign-up-email">@Model.Email</span>
         </div>
-        <h2>@Model.Text.CreateAccountTitle</h2>
+        <input type="hidden" name="@AuthConstants.PropertyNames.Email" value="@Model.Email" required />
+        <input type="text" name="@AuthConstants.PropertyNames.VerificationCode" required />
+        <br />
+        <button type="submit">@Model.Text.VerifyCode</button>
+    }
+    else if (Model.Step == SignUpStep.SetPassword)
+    {
+        <div class="centered-spans">
+            <span>@Model.Text.SetPasswordMessage</span>
+            <span class="sign-up-email">@Model.Email</span>
+        </div>
+        <input type="hidden" name="@AuthConstants.PropertyNames.Email" value="@Model.Email" required />
+        <input type="hidden" name="@AuthConstants.PropertyNames.VerificationCode" value="@Model.VerificationCode" required />
+        <input type="password" placeholder="@Model.Text.Password" name="@AuthConstants.PropertyNames.Password" required />
+        <br />
+        <input type="password" placeholder="@Model.Text.ConfirmPassword" name="@AuthConstants.PropertyNames.ConfirmPassword" required />
+        <br />
+        <button type="submit">@Model.Text.Create</button>
+    }
+</form>
+@if (Model.Step == SignUpStep.EnterEmail)
+{
+    <div class="divider">@Model.Text.Or</div>
 
-        @* @if (Model.ErrorMessage != null)
+    @foreach (ExternalLoginPageModel login in Model.ExternalLogins)
+    {
+        @if (login.IsSignInEnabled)
         {
-            <div class="error">@Model.ErrorMessage</div>
-        } *@
-
-        <form method="post">
-            <input type="text" name="username" placeholder="@Model.Text.Username" required />
-            <br />
-            <input type="email" name="email" placeholder="@Model.Text.Email" required />
-            <br />
-            <input type="password" name="password" placeholder="@Model.Text.Password" required />
-            <br />
-            <input type="password" name="confirmPassword" placeholder="@Model.Text.ConfirmPassword" required />
-            <br />
-            <button type="submit" asp-page-handler="SignUp">@Model.Text.Create</button>
-        </form>
-
-        <div class="divider">@Model.Text.Or</div>
-
-        @foreach (ExternalLoginPageModel login in Model.ExternalLogins)
-        {
-            @if (login.IsSignInEnabled)
-            {
-                <a class="social-button @login.CssClass" href="@login.SignInLink">@Model.Text.SignUpWith @login.ProviderName</a>
-            }
+            <a class="social-button @login.CssClass" href="@login.SignInLink">@Model.Text.SignUpWith @login.ProviderName</a>
         }
+    }
+}
 
-        <div class="links">
-            @Model.Text.AlreadyAccount<a href="@Endpoints.Connect.SignIn">@Model.Text.SignIn</a>
-        </div>
+@section Footer {
+    <div class="links">
+    @if (Model.Step == SignUpStep.EnterEmail)
+    {
+        @Model.Text.AlreadyAccount<a href="@Endpoints.Connect.SignIn">@Model.Text.SignIn</a>
+    }
+    else if (Model.Step == SignUpStep.VerifyCode)
+    {
+        @Model.Text.NeedNewCode<a href="@Endpoints.Connect.SignIn">@Model.Text.ResendCode</a>
+    }
     </div>
-</div>
+}

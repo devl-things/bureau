@@ -40,6 +40,9 @@ namespace Sven
             builder.Services.AddOptions<AuthOptions>().Bind(builder.Configuration.GetSection("Auth"))
                 .Validate(options => options.AuthorizationCodeLifetime <= TimeSpan.FromMinutes(10))
                 .ValidateOnStart();
+            builder.Services.AddOptions<EncryptionKeysOptions>().Bind(builder.Configuration.GetSection("Encrypt"))
+                .Validate(options => !string.IsNullOrWhiteSpace(options.SymKey) && options.SymKey.Length == 44)
+                .ValidateOnStart();
 
             builder.Services.AddSingleton<RsaSecurityKey>(provider =>
             {
@@ -49,14 +52,17 @@ namespace Sven
                     KeyId = Guid.NewGuid().ToString()
                 };
             });
-
+            builder.Services.AddSingleton<ISymEncryptor, AesEncryptor>();
             builder.Services.AddSingleton(TimeProvider.System);
             builder.Services.AddSingleton<DiscoveryService>();
             builder.Services.AddSingleton<IStore<string, AuthCode>, InMemoryStore<string, AuthCode>>();
             builder.Services.AddSingleton<IStore<string, OAuthRequest>, InMemoryStore<string, OAuthRequest>>();
             builder.Services.AddSingleton<IStore<string, RefreshToken>, InMemoryStore<string, RefreshToken>>();
+            builder.Services.AddSingleton<IStore<string, string>, InMemoryStore<string, string>>();
             builder.Services.AddSingleton<AuthCodeProvider>();
+            builder.Services.AddScoped<INotificationService<VerificationCodeNotification>, EmailNotificationService>();
             builder.Services.AddScoped<IUserClaimsProvider, UserClaimsProvider>();
+            builder.Services.AddScoped<IUserProvider, UserProvider>();
             builder.Services.AddScoped<IClientProvider, ClientProvider>();
             builder.Services.AddScoped<ITokenProvider, SvenTokenProvider>();
             builder.Services.AddScoped<OAuthValidationFilter>();
@@ -64,6 +70,7 @@ namespace Sven
             builder.Services.AddScoped<IPageModelFactory<SignInPageModel>, SignInPageModelFactory>();
             builder.Services.AddScoped<PkceSignInPageModel>();
             builder.Services.AddScoped<PlainSignInPageModel>();
+            builder.Services.AddScoped<TicketSignInPageModel>();
             builder.Services.AddSvenSqlServer(options =>
             {
                 options.ConnectionString = builder.Configuration.GetConnectionString("SqlServer");

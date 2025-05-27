@@ -15,6 +15,7 @@ namespace Sven.PageModels.SignIn
             {
                 PageModelTypes.SignIn.Pkce => _serviceProvider.GetRequiredService<PkceSignInPageModel>(),
                 PageModelTypes.SignIn.Plain => _serviceProvider.GetRequiredService<PlainSignInPageModel>(),
+                PageModelTypes.SignIn.Ticket => _serviceProvider.GetRequiredService<TicketSignInPageModel>(),
                 _ => _serviceProvider.GetRequiredService<PlainSignInPageModel>()
             };
 

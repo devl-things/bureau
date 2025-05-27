@@ -113,6 +113,9 @@
                 public const string CodeChallengeMethodsSupported = "code_challenge_methods_supported";
                 public const string ScopesSupported = "scopes_supported";
 
+                //User creation
+                public const string Challenge = "challenge";
+
                 //Errors
                 public const string Error = "error";
                 public const string ErrorDescription = "error_description";
@@ -179,6 +182,7 @@
 
             public const string Mode = "mode";
             public const string Step = "step";
+            public const string Ticket = "t";
         }
         public static class CookieNames
         {

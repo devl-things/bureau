@@ -28,6 +28,16 @@ namespace Sven.Services
             return CreatePrincipal(userResult.Value);
         }
 
+        public async Task<Result<ClaimsPrincipal>> GetClaimsPrincipalAsync(string userId, CancellationToken cancellationToken = default)
+        {
+            Result<SvenUser> userResult = await _userStore.GetByIdentifierAsync(userId, cancellationToken);
+            if (userResult.IsError)
+            {
+                return userResult.Error;
+            }
+            return CreatePrincipal(userResult.Value);
+        }
+
         private ClaimsPrincipal CreatePrincipal(SvenUser user)
         {
             List<Claim> claims = new()
