@@ -1,5 +1,6 @@
 using Bureau.Core;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.Extensions.Localization;
 using Sven.Configurations;
@@ -164,9 +165,14 @@ namespace Sven.Pages.Connect
 
         private Result ValidateEmail()
         {
-            if (string.IsNullOrWhiteSpace(Email) || ModelState[AuthConstants.PropertyNames.Email]?.ValidationState != Microsoft.AspNetCore.Mvc.ModelBinding.ModelValidationState.Valid)
+            if (string.IsNullOrWhiteSpace(Email))
             {
-                return new ResultError("Invalid email address.");
+                return new ResultError("Email address is required.");
+            }
+            ModelStateEntry? entry;
+            if (!ModelState.TryGetValue(AuthConstants.PropertyNames.Email, out entry) || entry.ValidationState != ModelValidationState.Valid)
+            {
+                return new ResultError(entry?.Errors.FirstOrDefault()?.ErrorMessage ?? "Invalid email address.");
             }
             return true;
         }
