@@ -118,7 +118,10 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <data name="AlreadyAccount" xml:space="preserve">
-    <value>Već imaš račun?</value>
+    <value>Već imaš račun? </value>
+  </data>
+  <data name="Continue" xml:space="preserve">
+    <value>Nastavi</value>
   </data>
   <data name="Create" xml:space="preserve">
     <value>Prijava</value>
@@ -126,10 +129,25 @@
   <data name="CreateAccountTitle" xml:space="preserve">
     <value>Napravi novi račun</value>
   </data>
+  <data name="NeedNewCode" xml:space="preserve">
+    <value>Trebaš novi kod? </value>
+  </data>
+  <data name="ResendCode" xml:space="preserve">
+    <value>Pošalji ponovo</value>
+  </data>
+  <data name="SetPasswordMessage" xml:space="preserve">
+    <value>Molim, postavite lozinku za novi račun</value>
+  </data>
   <data name="SignIn" xml:space="preserve">
     <value>Uđi</value>
   </data>
   <data name="SignUpWith" xml:space="preserve">
     <value>Prijavi se s</value>
+  </data>
+  <data name="VerifyCode" xml:space="preserve">
+    <value>Provjeri kod</value>
+  </data>
+  <data name="VerifyCodeMessage" xml:space="preserve">
+    <value>Molim, unesite verifikacijski kod iz emaila (provjerite i spam pretinac) poslano na</value>
   </data>
 </root>

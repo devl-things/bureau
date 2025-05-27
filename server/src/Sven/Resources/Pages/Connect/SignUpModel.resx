@@ -120,16 +120,34 @@
   <data name="AlreadyAccount" xml:space="preserve">
     <value>Already have an account? </value>
   </data>
+  <data name="Continue" xml:space="preserve">
+    <value>Continue</value>
+  </data>
   <data name="Create" xml:space="preserve">
     <value>Create</value>
   </data>
   <data name="CreateAccountTitle" xml:space="preserve">
     <value>Create an account</value>
   </data>
+  <data name="NeedNewCode" xml:space="preserve">
+    <value>Need a new code? </value>
+  </data>
+  <data name="ResendCode" xml:space="preserve">
+    <value>Resend</value>
+  </data>
+  <data name="SetPasswordMessage" xml:space="preserve">
+    <value>Please, set the password for new account</value>
+  </data>
   <data name="SignIn" xml:space="preserve">
     <value>Log in</value>
   </data>
   <data name="SignUpWith" xml:space="preserve">
     <value>Sign up with </value>
+  </data>
+  <data name="VerifyCode" xml:space="preserve">
+    <value> Verify code</value>
+  </data>
+  <data name="VerifyCodeMessage" xml:space="preserve">
+    <value>Please, enter the verification code from the email in your inbox or spam folder sent to</value>
   </data>
 </root>
