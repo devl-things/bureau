@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace Sven.Models
 {
-    public class LoginCredentials
+    public class LoginCredentialsRequest
     {
         [FromForm(Name = AuthConstants.PropertyNames.Username)]
         [Required]
