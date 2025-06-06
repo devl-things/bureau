@@ -28,7 +28,7 @@ namespace Sven.PageModels.SignIn
             return Task.FromResult<IActionResult>(Page());
         }
 
-        public override async Task<IActionResult> HandleLoginAsync(LoginCredentials credentials, CancellationToken cancellationToken = default)
+        public override async Task<IActionResult> HandleLoginAsync(LoginCredentialsRequest credentials, CancellationToken cancellationToken = default)
         {
             if (ValidatePkceKey() is { IsError: true } result)
             {

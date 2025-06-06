@@ -1,6 +1,7 @@
 ﻿using Bureau.Core;
 using Microsoft.AspNetCore.Mvc;
 using Sven.Configurations;
+using Sven.Extensions;
 using Sven.Models;
 using Sven.Services;
 using System.Security.Claims;
@@ -16,7 +17,7 @@ namespace Sven.PageModels.SignIn
         }
         public async override Task<IActionResult> HandleGetRequestAsync(CancellationToken cancellationToken = default)
         {
-            string? ticket = GetQueryStringParameter(AuthConstants.PropertyNames.Ticket);
+            string? ticket = Request.GetQueryStringParameter(AuthConstants.PropertyNames.Ticket);
             if (string.IsNullOrWhiteSpace(ticket))
             {
                 return Redirect(Endpoints.Connect.SignIn);
@@ -42,7 +43,7 @@ namespace Sven.PageModels.SignIn
             return Redirect(Endpoints.Account.AccountInfo);
         }
 
-        public override Task<IActionResult> HandleLoginAsync(LoginCredentials credentials, CancellationToken cancellationToken = default)
+        public override Task<IActionResult> HandleLoginAsync(LoginCredentialsRequest credentials, CancellationToken cancellationToken = default)
         {
             _logger.LogResultError(new ResultError("Something called post method with ticket mode"));
             return Task.FromResult<IActionResult>(StatusCode(StatusCodes.Status405MethodNotAllowed));

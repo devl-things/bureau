@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.Extensions.Localization;
 using Sven.Configurations;
 using Sven.Models;
@@ -10,12 +11,12 @@ namespace Sven.Pages.Connect
     [ValidateAntiForgeryToken]
     public class SignInModel : LocalizationPageModel<SignInModel, SignInModelText>
     {
-        private readonly IPageModelFactory<SignInPageModel> _modelFactory;
+        private readonly IPageModelFactory<PageContext, SignInPageModel> _modelFactory;
 
         private readonly SignInModelText _text;
 
         public SignInModel(IStringLocalizer<Common> sharedLocalizer, IStringLocalizer<SignInModel> localizer,
-            IPageModelFactory<SignInPageModel> modelFactory) : base(sharedLocalizer, localizer)
+            IPageModelFactory<PageContext, SignInPageModel> modelFactory) : base(sharedLocalizer, localizer)
         {
             _modelFactory = modelFactory;
             _text = new SignInModelText()
@@ -34,13 +35,13 @@ namespace Sven.Pages.Connect
 
         public override SignInModelText Text { get { return _text; } }
 
-        public async Task<IActionResult> OnGetAsync([FromQuery(Name = AuthConstants.PropertyNames.Mode)] string? mode, CancellationToken cancellationToken = default)
+        public Task<IActionResult> OnGetAsync([FromQuery(Name = AuthConstants.PropertyNames.Mode)] string? mode, CancellationToken cancellationToken = default)
         {
             SetCurrentModel(mode);
-            return await CurrentModel.HandleGetRequestAsync(cancellationToken);
+            return CurrentModel.HandleGetRequestAsync(cancellationToken);
         }
 
-        public Task<IActionResult> OnPostLoginAsync([FromForm] LoginCredentials credentials, string? mode, CancellationToken cancellationToken = default)
+        public Task<IActionResult> OnPostLoginAsync([FromForm] LoginCredentialsRequest credentials, string? mode, CancellationToken cancellationToken = default)
         {
             SetCurrentModel(mode);
             return CurrentModel.HandleLoginAsync(credentials, cancellationToken);

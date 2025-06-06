@@ -17,7 +17,7 @@ namespace Sven.PageModels.SignIn
             return Task.FromResult<IActionResult>(Page());
         }
 
-        public override async Task<IActionResult> HandleLoginAsync(LoginCredentials credentials, CancellationToken cancellationToken = default)
+        public override async Task<IActionResult> HandleLoginAsync(LoginCredentialsRequest credentials, CancellationToken cancellationToken = default)
         {
             Result<ClaimsPrincipal> claimsPrincipalResult = await _userClaimsProvider.GetClaimsPrincipalAsync(credentials.Username, credentials.Password, cancellationToken);
 

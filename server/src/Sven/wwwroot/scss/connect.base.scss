@@ -97,17 +97,27 @@ input[type="email"] {
 }
 
 button {
-    background-color: #0056d2;
-    color: white;
-    border: none;
     padding: 0.75rem;
     font-size: 1rem;
     border-radius: 6px;
     cursor: pointer;
+    border: none;
+    background-color: #0056d2;
+    color: white;
 }
 
 button:hover {
     background-color: #003fa0;
+}
+
+.button-secondary {
+    background-color: #f0f0f0;
+    color: #333;
+    border: 1px solid #ccc;
+}
+
+.button-secondary:hover {
+    background-color: #e0e0e0;
 }
 
 .divider {

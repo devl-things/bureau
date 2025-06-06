@@ -118,34 +118,58 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <data name="AlreadyAccount" xml:space="preserve">
-    <value>Već imaš račun? </value>
+    <value>Već imate račun? </value>
+  </data>
+  <data name="CodeSentMessage" xml:space="preserve">
+    <value>Poveznica za ponovno postavljanje lozinke poslana je na</value>
+  </data>
+  <data name="CodeSentMessageLine1" xml:space="preserve">
+    <value>Popratite upute u email za ponovno postavljanje lozinke</value>
+  </data>
+  <data name="CodeSentMessageLine2" xml:space="preserve">
+    <value>Nekad email može završiti u spam pretincu, ako ga niste dobili probajte ponovo poslati</value>
   </data>
   <data name="Continue" xml:space="preserve">
-    <value>Nastavi</value>
+    <value>Nastavite</value>
   </data>
   <data name="Create" xml:space="preserve">
     <value>Prijava</value>
   </data>
   <data name="CreateAccountTitle" xml:space="preserve">
-    <value>Napravi novi račun</value>
+    <value>Napravite novi račun</value>
+  </data>
+  <data name="ForgotPasswordFinalMessage" xml:space="preserve">
+    <value>Vaša lozinka je uspješno resetirana</value>
+  </data>
+  <data name="ForgotPasswordFinalMessageLine1" xml:space="preserve">
+    <value>Sada se možete prijaviti s novom lozinkom</value>
+  </data>
+  <data name="ForgotPasswordSubtitle" xml:space="preserve">
+    <value>Upišite email i poslat ćemo Vam poveznicu za ponovno postavljanje lozinke</value>
+  </data>
+  <data name="ForgotPasswordTitle" xml:space="preserve">
+    <value>Zaboravili ste lozinku?</value>
   </data>
   <data name="NeedNewCode" xml:space="preserve">
-    <value>Trebaš novi kod? </value>
+    <value>Trebate novi kod? </value>
   </data>
   <data name="ResendCode" xml:space="preserve">
-    <value>Pošalji ponovo</value>
+    <value>Pošalji ponovo kod</value>
+  </data>
+  <data name="ResendResetLink" xml:space="preserve">
+    <value>Pošalji ponovo poveznicu</value>
   </data>
   <data name="SetPasswordMessage" xml:space="preserve">
     <value>Molim, postavite lozinku za novi račun</value>
   </data>
   <data name="SignIn" xml:space="preserve">
-    <value>Uđi</value>
+    <value>Uđite</value>
   </data>
   <data name="SignUpWith" xml:space="preserve">
-    <value>Prijavi se s</value>
+    <value>Prijavite se s</value>
   </data>
   <data name="VerifyCode" xml:space="preserve">
-    <value>Provjeri kod</value>
+    <value>Provjerite kod</value>
   </data>
   <data name="VerifyCodeMessage" xml:space="preserve">
     <value>Molim, unesite verifikacijski kod iz emaila (provjerite i spam pretinac) poslano na</value>

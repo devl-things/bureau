@@ -1,5 +1,6 @@
 ﻿
 using Bureau.Core;
+using Sven.Models;
 
 namespace Sven.Services
 {
@@ -9,9 +10,11 @@ namespace Sven.Services
         public int MaxVerificationCode { get; }
         Task<Result<string>> CreateUserAsync(string email, string password, CancellationToken cancellationToken = default);
         Task<bool> ExistsUserWithEmailAsync(string email, CancellationToken cancellationToken = default);
-        Task<Result<string>> GenerateVerificationCodeAsync(string email, CancellationToken cancellationToken);
+        Task<Result<UserVerificationCode>> GenerateVerificationCodeAsync(string email, CancellationToken cancellationToken = default);
+        Task<Result<UserVerificationCode>> GenerateVerificationCodeAsync(string email, VerificationStatus status, CancellationToken cancellationToken = default);
         Task<Result<string>> GenerateTicketAsync(string userIdentifier, CancellationToken cancellationToken = default);
-        Task<Result<string>> GetVerificationCodeAsync(string email, CancellationToken cancellationToken);
-        Task<Result<string>> GetUserIdByTicketAsync(string ticket, CancellationToken cancellationToken);
+        Task<Result<UserVerificationCode>> GetVerificationCodeAsync(string id, CancellationToken cancellationToken = default);
+        Task<Result<string>> GetUserIdByTicketAsync(string ticket, CancellationToken cancellationToken = default);
+        Task<Result> UpdateVerificationCodeAsync(UserVerificationCode code, CancellationToken cancellationToken = default);
     }
 }

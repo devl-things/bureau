@@ -113,9 +113,6 @@
                 public const string CodeChallengeMethodsSupported = "code_challenge_methods_supported";
                 public const string ScopesSupported = "scopes_supported";
 
-                //User creation
-                public const string Challenge = "challenge";
-
                 //Errors
                 public const string Error = "error";
                 public const string ErrorDescription = "error_description";
@@ -167,6 +164,9 @@
                 public const string CreationAuthCodeFailed = "Failed to create authorization code.";
                 public const string RequestedScopeExceedsGranted = "Requested scope exceeds originally granted scope.";
                 public const string RequestedScopeNotGranted = "Requested scope is not granted.";
+
+                public const string UnManageable = "Something went wrong, try refreshing the page and start over.";
+                public const string SignUpExistingUser = "You cannot create account with this email, try signing in.";
             }
         }
 
@@ -179,10 +179,17 @@
             public const string VerificationCode = "verificationCode";
             public const string Username = "username";
 
-
-            public const string Mode = "mode";
-            public const string Step = "step";
+            public const string Challenge = "c";
+            public const string Mode = "m";
+            public const string Step = "s";
             public const string Ticket = "t";
+            public const string Action = "action";
+        }
+        public static class Actions
+        {
+            public const string VerifyCode = "verify";
+            public const string ResendCode = "resend";
+
         }
         public static class CookieNames
         {

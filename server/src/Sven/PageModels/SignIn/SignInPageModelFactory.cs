@@ -2,7 +2,7 @@
 
 namespace Sven.PageModels.SignIn
 {
-    public class SignInPageModelFactory : IPageModelFactory<SignInPageModel>
+    public class SignInPageModelFactory : IPageModelFactory<PageContext, SignInPageModel>
     {
         private readonly IServiceProvider _serviceProvider;
         public SignInPageModelFactory(IServiceProvider serviceProvider)

@@ -1,9 +1,7 @@
-﻿using Microsoft.AspNetCore.Mvc.RazorPages;
-
-namespace Sven.PageModels
+﻿namespace Sven.PageModels
 {
-    public interface IPageModelFactory<out T>
+    public interface IPageModelFactory<in C, out T>
     {
-        public T CreateModel(string? type, PageContext context);
+        public T CreateModel(string? type, C context);
     }
 }

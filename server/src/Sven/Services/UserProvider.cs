@@ -11,11 +11,15 @@ namespace Sven.Services
         private const int MIN_VERIFICATION_CODE = 100000;
 
         private readonly IStore<string, string> _miscStore;
+        private readonly IStore<string, UserVerificationCode> _verificationCodeStore;
         private readonly IUserStore _userStore;
-        public UserProvider(IStore<string, string> miscStore, IUserStore userStore)
+        private readonly TimeProvider _timeProvider;
+        public UserProvider(IStore<string, string> miscStore, IStore<string, UserVerificationCode> verificationCodeStore, IUserStore userStore, TimeProvider timeProvider)
         {
             _miscStore = miscStore;
+            _verificationCodeStore = verificationCodeStore;
             _userStore = userStore;
+            _timeProvider = timeProvider;
         }
 
         public int MinVerificationCode { get { return MIN_VERIFICATION_CODE; } }
@@ -46,22 +50,10 @@ namespace Sven.Services
             return _userStore.ExistsWithEmail(email, cancellationToken);
         }
 
-        public async Task<Result<string>> GenerateVerificationCodeAsync(string email, CancellationToken cancellationToken)
-        {
-            string code = new Random().Next(MinVerificationCode, MaxVerificationCode).ToString();
-
-            // TODO add expiration date 60min
-            if (await _miscStore.StoreAsync(email, code, cancellationToken) is { IsError: true } result)
-            {
-                return result.Error;
-            }
-            return new Result<string>(code);
-        }
-
         public async Task<Result<string>> GenerateTicketAsync(string userIdentifier, CancellationToken cancellationToken = default)
         {
             string ticket = new Random().Next(MinVerificationCode, MaxVerificationCode).ToString();
-            // TODO add expiration date 5min
+            // #53 add expiration date 5min
             if (await _miscStore.StoreAsync(ticket, userIdentifier, cancellationToken) is { IsError: true } result)
             {
                 return result.Error;
@@ -69,12 +61,47 @@ namespace Sven.Services
             return new Result<string>(ticket);
         }
 
-        public Task<Result<string>> GetVerificationCodeAsync(string email, CancellationToken cancellationToken)
+        public Task<Result<UserVerificationCode>> GenerateVerificationCodeAsync(string email, CancellationToken cancellationToken = default)
         {
-            return _miscStore.GetAsync(email, cancellationToken);
+            // #53 every generation of verification code needs to invalid all other verification codes for the same email 
+            return GenerateVerificationCodeAsync(email, VerificationStatus.None, cancellationToken);
+        }
+        public async Task<Result<UserVerificationCode>> GenerateVerificationCodeAsync(string email, VerificationStatus status, CancellationToken cancellationToken = default)
+        {
+            string code = new Random().Next(MinVerificationCode, MaxVerificationCode).ToString();
+            UserVerificationCode data = new(email, code, status, _timeProvider.GetUtcNow().AddMinutes(60));
+            if (await _verificationCodeStore.StoreAsync(data.Id, data, cancellationToken) is { IsError: true } result)
+            {
+                return result.Error;
+            }
+            return new Result<UserVerificationCode>(data);
         }
 
-        public Task<Result<string>> GetUserIdByTicketAsync(string ticket, CancellationToken cancellationToken)
+        public async Task<Result<UserVerificationCode>> GetVerificationCodeAsync(string id, CancellationToken cancellationToken = default)
+        {
+            if (string.IsNullOrWhiteSpace(id) || !Guid.TryParse(id, out _))
+            {
+                return new ResultError($"Verification code Id = {id} malformed");
+            }
+            Result<UserVerificationCode> result = await _verificationCodeStore.GetAsync(id, cancellationToken);
+            if (result.Value.Expiration < _timeProvider.GetUtcNow())
+            {
+                return new ResultError($"Verification code Id = {id} expired");
+            }
+            return result;
+        }
+        public async Task<Result> UpdateVerificationCodeAsync(UserVerificationCode code, CancellationToken cancellationToken = default)
+        {
+            Result<UserVerificationCode> result = await GetVerificationCodeAsync(code.Id, cancellationToken);
+            if (result.IsError)
+            {
+                return result.Error;
+            }
+            result.Value.Status = code.Status;
+            return true;
+        }
+
+        public Task<Result<string>> GetUserIdByTicketAsync(string ticket, CancellationToken cancellationToken = default)
         {
             return _miscStore.GetAsync(ticket, cancellationToken);
         }

@@ -3,6 +3,7 @@ using JavaScriptEngineSwitcher.V8;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.Google;
 using Microsoft.AspNetCore.Localization;
+using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.IdentityModel.Tokens;
 using Sven.AutoValidation;
 using Sven.Configurations;
@@ -10,6 +11,8 @@ using Sven.Data.SqlServer.Configurations;
 using Sven.Models;
 using Sven.PageModels;
 using Sven.PageModels.SignIn;
+using Sven.PageModels.SignUp;
+using Sven.Pages.Connect;
 using Sven.Services;
 using System.Globalization;
 using System.Security.Cryptography;
@@ -59,18 +62,24 @@ namespace Sven
             builder.Services.AddSingleton<IStore<string, OAuthRequest>, InMemoryStore<string, OAuthRequest>>();
             builder.Services.AddSingleton<IStore<string, RefreshToken>, InMemoryStore<string, RefreshToken>>();
             builder.Services.AddSingleton<IStore<string, string>, InMemoryStore<string, string>>();
+            builder.Services.AddSingleton<IStore<string, UserVerificationCode>, InMemoryStore<string, UserVerificationCode>>();
             builder.Services.AddSingleton<AuthCodeProvider>();
-            builder.Services.AddScoped<INotificationService<VerificationCodeNotification>, EmailNotificationService>();
+            builder.Services.AddScoped<INotificationService<UserVerificationCodeNotification>, EmailNotificationService<UserVerificationCodeNotification>>();
+            builder.Services.AddScoped<INotificationService<PasswordResetNotification>, EmailNotificationService<PasswordResetNotification>>();
             builder.Services.AddScoped<IUserClaimsProvider, UserClaimsProvider>();
             builder.Services.AddScoped<IUserProvider, UserProvider>();
             builder.Services.AddScoped<IClientProvider, ClientProvider>();
             builder.Services.AddScoped<ITokenProvider, SvenTokenProvider>();
             builder.Services.AddScoped<OAuthValidationFilter>();
 
-            builder.Services.AddScoped<IPageModelFactory<SignInPageModel>, SignInPageModelFactory>();
+            builder.Services.AddScoped<IPageModelFactory<PageContext, SignInPageModel>, SignInPageModelFactory>();
             builder.Services.AddScoped<PkceSignInPageModel>();
             builder.Services.AddScoped<PlainSignInPageModel>();
             builder.Services.AddScoped<TicketSignInPageModel>();
+            builder.Services.AddScoped<IPageModelFactory<SignUpModel, SignUpPageModel>, SignUpPageModelFactory>();
+            builder.Services.AddScoped<PlainSignUpPageModel>();
+            builder.Services.AddScoped<ForgotSignUpPageModel>();
+
             builder.Services.AddSvenSqlServer(options =>
             {
                 options.ConnectionString = builder.Configuration.GetConnectionString("SqlServer");
@@ -110,7 +119,10 @@ namespace Sven
             builder.Services.AddAuthorization();
             builder.Services.AddControllers();
             builder.Services.AddLocalization(options => { options.ResourcesPath = "Resources"; });
-            builder.Services.AddRazorPages();
+            builder.Services.AddRazorPages(options =>
+            {
+                options.Conventions.AddPageRoute(Endpoints.Connect.SignUp, Endpoints.Connect.ForgotPassword);
+            });
 
             builder.Services.AddJsEngineSwitcher(options => options.DefaultEngineName = V8JsEngine.EngineName)
     .AddV8();
