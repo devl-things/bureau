@@ -79,7 +79,7 @@ namespace Sven.Data.Stores
 
         public Task<bool> ExistsWithEmail(string email, CancellationToken cancellationToken)
         {
-            // TODO add emails
+            // #53 add emails
             return _context.Users.AnyAsync(x => x.Username == email);
         }
     }

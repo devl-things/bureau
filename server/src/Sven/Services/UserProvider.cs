@@ -6,7 +6,7 @@ namespace Sven.Services
 {
     public class UserProvider : IUserProvider
     {
-        // TODO move to configuration
+        // #53 move to configuration
         private const int MAX_VERIFICATION_CODE = 999999;
         private const int MIN_VERIFICATION_CODE = 100000;
 
@@ -52,6 +52,7 @@ namespace Sven.Services
 
         public async Task<Result<string>> GenerateTicketAsync(string userIdentifier, CancellationToken cancellationToken = default)
         {
+            // #53 Make sure that using this pseudorandom number generator is safe here csharpsquid:S2245
             string ticket = new Random().Next(MinVerificationCode, MaxVerificationCode).ToString();
             // #53 add expiration date 5min
             if (await _miscStore.StoreAsync(ticket, userIdentifier, cancellationToken) is { IsError: true } result)
@@ -68,6 +69,7 @@ namespace Sven.Services
         }
         public async Task<Result<UserVerificationCode>> GenerateVerificationCodeAsync(string email, VerificationStatus status, CancellationToken cancellationToken = default)
         {
+            // #53 Make sure that using this pseudorandom number generator is safe here csharpsquid:S2245
             string code = new Random().Next(MinVerificationCode, MaxVerificationCode).ToString();
             UserVerificationCode data = new(email, code, status, _timeProvider.GetUtcNow().AddMinutes(60));
             if (await _verificationCodeStore.StoreAsync(data.Id, data, cancellationToken) is { IsError: true } result)

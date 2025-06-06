@@ -78,7 +78,7 @@ namespace Sven.PageModels.SignUp
                 codeResult.Value.Status = VerificationStatus.Invalid;
                 if (await _userProvider.UpdateVerificationCodeAsync(codeResult.Value, cancellationToken) is { IsError: true } updateResult)
                 {
-                    //TODO what to do here
+                    // #54 have a error message pass to redirect
                     _logger.LogResultError(new ResultError(updateResult.Error, $"Error when setting the verification status  ({Email}, {codeResult.Value})"));
                 }
                 return GoToWithChallenge(Endpoints.Connect.ForgotPassword, new StepChallengeRequest(SignUpStep.CodeSent) { Challenge = codeResult.Value.Id });
@@ -90,7 +90,8 @@ namespace Sven.PageModels.SignUp
             codeResult.Value.Status = VerificationStatus.EmailSent;
             if (await _userProvider.UpdateVerificationCodeAsync(codeResult.Value, cancellationToken) is { IsError: true } result)
             {
-                _logger.LogResultError(new ResultError($"Error when setting the verification status  ({Email}, {codeResult.Value})"));
+                // #54 have a error message pass to redirect
+                _logger.LogResultError(new ResultError(result.Error, $"Error when setting the verification status  ({Email}, {codeResult.Value})"));
             }
             return GoToWithChallenge(Endpoints.Connect.ForgotPassword, new StepChallengeRequest(SignUpStep.CodeSent) { Challenge = codeResult.Value.Id });
         }

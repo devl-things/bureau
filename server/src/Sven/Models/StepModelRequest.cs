@@ -4,7 +4,7 @@ using Sven.PageModels.SignUp;
 
 namespace Sven.Models
 {
-    public record StepModelRequest : IStepEmailProperties, IVerificationCodeProperties, IPasswordResetProperties
+    public record StepModelRequest : IVerificationCodeProperties, IPasswordResetProperties
     {
         [FromForm(Name = AuthConstants.PropertyNames.ConfirmPassword)]
         public string? ConfirmPassword { get; set; }

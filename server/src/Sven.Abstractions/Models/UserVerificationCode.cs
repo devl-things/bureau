@@ -3,8 +3,8 @@
     public class UserVerificationCode
     {
         public string Id { get; set; } = Guid.NewGuid().ToString("N");
-        public string Email { get; set; } = string.Empty;
-        public string VerificationCode { get; set; } = string.Empty;
+        public string Email { get; set; }
+        public string VerificationCode { get; set; }
         public VerificationStatus Status { get; set; }
         public DateTimeOffset Expiration { get; set; }
 

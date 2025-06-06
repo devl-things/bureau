@@ -109,7 +109,7 @@ namespace Sven.PageModels.SignUp
             return Task.FromResult<IActionResult>(new StatusCodeResult(StatusCodes.Status405MethodNotAllowed));
         }
 
-        public string CreateUrl(string url, StepChallengeRequest stepChallenge)
+        public static string CreateUrl(string url, StepChallengeRequest stepChallenge)
         {
             return $"{url}?{AuthConstants.PropertyNames.Step}={stepChallenge.StepShort}&{AuthConstants.PropertyNames.Challenge}={stepChallenge.Challenge}";
         }
