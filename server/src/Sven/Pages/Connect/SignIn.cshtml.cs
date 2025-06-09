@@ -41,7 +41,7 @@ namespace Sven.Pages.Connect
             return CurrentModel.HandleGetRequestAsync(cancellationToken);
         }
 
-        public Task<IActionResult> OnPostLoginAsync([FromForm] LoginCredentialsRequest credentials, string? mode, CancellationToken cancellationToken = default)
+        public Task<IActionResult> OnPostLoginAsync([FromForm] LoginCredentialsRequest credentials, [FromForm(Name = AuthConstants.PropertyNames.Mode)] string? mode, CancellationToken cancellationToken = default)
         {
             SetCurrentModel(mode);
             return CurrentModel.HandleLoginAsync(credentials, cancellationToken);
