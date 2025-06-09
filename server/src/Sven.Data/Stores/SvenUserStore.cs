@@ -16,6 +16,7 @@ namespace Sven.Data.Stores
             _context = context;
             _timeProvider = timeProvider;
         }
+        // #53 is it username or email!!
         public async Task<Result<SvenUser>> GetByUsernameAsync(string username, CancellationToken cancellationToken = default)
         {
             if (string.IsNullOrWhiteSpace(username))
@@ -81,6 +82,19 @@ namespace Sven.Data.Stores
         {
             // #53 add emails
             return _context.Users.AnyAsync(x => x.Username == email);
+        }
+
+        public async Task<Result> RemoveAsync(string userId, CancellationToken cancellationToken)
+        {
+            UserDb? dbEntity = await GetUserDbAsync(userId, cancellationToken);
+
+            if (dbEntity == null)
+            {
+                return new ResultError($"User does not exist.");
+            }
+            _context.Users.Remove(dbEntity);
+            await _context.SaveChangesAsync(cancellationToken);
+            return true;
         }
     }
 }

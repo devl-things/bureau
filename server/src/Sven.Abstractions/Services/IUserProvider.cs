@@ -16,5 +16,6 @@ namespace Sven.Services
         Task<Result<UserVerificationCode>> GetVerificationCodeAsync(string id, CancellationToken cancellationToken = default);
         Task<Result<string>> GetUserIdByTicketAsync(string ticket, CancellationToken cancellationToken = default);
         Task<Result> UpdateVerificationCodeAsync(UserVerificationCode code, CancellationToken cancellationToken = default);
+        Task<Result> DeleteUserAsync(string email, CancellationToken cancellationToken = default);
     }
 }

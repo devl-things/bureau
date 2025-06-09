@@ -107,5 +107,19 @@ namespace Sven.Services
         {
             return _miscStore.GetAsync(ticket, cancellationToken);
         }
+
+        public async Task<Result> DeleteUserAsync(string email, CancellationToken cancellationToken = default)
+        {
+            Result<SvenUser> userResult = await _userStore.GetByUsernameAsync(email, cancellationToken);
+            if (userResult.IsError)
+            {
+                return userResult.Error;
+            }
+            if (await _userStore.RemoveAsync(userResult.Value.SubjectId, cancellationToken) is { IsError: true } storedResult)
+            {
+                return storedResult.Error;
+            }
+            return true;
+        }
     }
 }

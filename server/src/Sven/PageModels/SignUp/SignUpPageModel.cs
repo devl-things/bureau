@@ -78,6 +78,11 @@ namespace Sven.PageModels.SignUp
         }
         internal async Task<IActionResult> HandlePostRequestAsync(StepChallengeRequest stepChallenge, StepModelRequest model, CancellationToken cancellationToken)
         {
+            if (stepChallenge.Step != model.Step)
+            {
+                _logger.LogResultError(new ResultError($"Step mismatch: {stepChallenge.Step} != {model.Step}"));
+                return new StatusCodeResult(StatusCodes.Status400BadRequest);
+            }
             Step = stepChallenge.Step;
             return stepChallenge.Step switch
             {

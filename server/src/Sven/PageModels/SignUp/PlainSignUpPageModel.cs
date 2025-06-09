@@ -146,7 +146,7 @@ namespace Sven.PageModels.SignUp
                 _logger.LogResultError(new ResultError(verifyCodeResult.Error, "Verification code not created."));
                 return BasePage.GoToUrl(Endpoints.Connect.SignUp);
             }
-            if (verifyCodeResult.Value.Email.Equals(model.Email, StringComparison.OrdinalIgnoreCase))
+            if (!verifyCodeResult.Value.Email.Equals(model.Email, StringComparison.OrdinalIgnoreCase))
             {
                 _logger.LogResultError(new ResultError("Incorrect email."));
                 return BasePage.GoToUrl(Endpoints.Connect.SignUp);
@@ -186,7 +186,7 @@ namespace Sven.PageModels.SignUp
             {
                 return new ResultError("Incorrect verification code.");
             }
-            if (verifyCodeResult.Value.Email.Equals(model.Email, StringComparison.OrdinalIgnoreCase))
+            if (!verifyCodeResult.Value.Email.Equals(model.Email, StringComparison.OrdinalIgnoreCase))
             {
                 return new ResultError("Incorrect email.");
             }
