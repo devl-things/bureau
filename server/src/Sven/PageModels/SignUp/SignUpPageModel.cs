@@ -6,6 +6,7 @@ using Sven.Models;
 using Sven.PageModels.ExternalLogins;
 using Sven.Pages.Connect;
 using Sven.Services;
+using System.Runtime.CompilerServices;
 
 namespace Sven.PageModels.SignUp
 {
@@ -36,46 +37,25 @@ namespace Sven.PageModels.SignUp
             ExternalLogins = ExternalLoginProviders.ExternalList;
         }
 
-        internal async Task<IActionResult> HandleGetRequestAsync(StepChallengeRequest stepChallenge, CancellationToken cancellationToken)
+        internal Task<IActionResult> HandleGetRequestAsync(StepChallengeRequest stepChallenge, CancellationToken cancellationToken = default)
         {
             Step = stepChallenge.Step;
-            switch (stepChallenge.Step)
-            {
-                case SignUpStep.VerifyCode:
-                    return await HandleGetVerifyCodeAsync(stepChallenge, cancellationToken);
-                case SignUpStep.CodeSent:
-                    return await HandleGetCodeSentAsync(stepChallenge, cancellationToken);
-                case SignUpStep.SetPassword:
-                    return await HandleGetSetPasswordAsync(stepChallenge, cancellationToken);
-                case SignUpStep.FinalMessage:
-                    return await HandleGetFinalMessageAsync(stepChallenge, cancellationToken);
-                case SignUpStep.EnterEmail:
-                default:
-                    return await HandleGetEnterEmailAsync(stepChallenge, cancellationToken);
-            }
+            return HandleGetRequestInternalAsync(stepChallenge, cancellationToken);
         }
 
-        protected virtual Task<IActionResult> HandleGetVerifyCodeAsync(StepChallengeRequest stepChallenge, CancellationToken cancellationToken = default)
+        protected abstract Task<IActionResult> HandleGetRequestInternalAsync(StepChallengeRequest stepChallenge, CancellationToken cancellationToken);
+
+        protected IActionResult HandleUnallowed(StepChallengeRequest stepChallenge, [CallerMemberName] string callerName = "")
         {
-            _logger.LogResultError(new ResultError($"Something called {nameof(HandleGetVerifyCodeAsync)} in not supported mode, with {stepChallenge}"));
-            return Task.FromResult<IActionResult>(new StatusCodeResult(StatusCodes.Status405MethodNotAllowed));
+            return HandleUnallowed(new ResultError(string.Format(LogMessages.UnsupportedModality, callerName, stepChallenge)));
         }
-        protected virtual Task<IActionResult> HandleGetCodeSentAsync(StepChallengeRequest stepChallenge, CancellationToken cancellationToken = default)
+
+        protected IActionResult HandleUnallowed(ResultError error, [CallerMemberName] string callerName = "")
         {
-            _logger.LogResultError(new ResultError($"Something called {nameof(HandleGetCodeSentAsync)} in not supported mode, with {stepChallenge}"));
-            return Task.FromResult<IActionResult>(new StatusCodeResult(StatusCodes.Status405MethodNotAllowed));
+            _logger.LogResultError(error);
+            return new StatusCodeResult(StatusCodes.Status405MethodNotAllowed);
         }
-        protected abstract Task<IActionResult> HandleGetSetPasswordAsync(StepChallengeRequest stepChallenge, CancellationToken cancellationToken = default);
-        protected virtual Task<IActionResult> HandleGetFinalMessageAsync(StepChallengeRequest stepChallenge, CancellationToken cancellationToken = default)
-        {
-            _logger.LogResultError(new ResultError($"Something called {nameof(HandleGetFinalMessageAsync)} in not supported mode, with {stepChallenge}"));
-            return Task.FromResult<IActionResult>(new StatusCodeResult(StatusCodes.Status405MethodNotAllowed));
-        }
-        protected virtual Task<IActionResult> HandleGetEnterEmailAsync(StepChallengeRequest stepChallenge, CancellationToken cancellationToken = default)
-        {
-            Step = stepChallenge.Step;
-            return Task.FromResult<IActionResult>(BasePage.Page());
-        }
+
         internal async Task<IActionResult> HandlePostRequestAsync(StepChallengeRequest stepChallenge, StepModelRequest model, CancellationToken cancellationToken)
         {
             if (stepChallenge.Step != model.Step)
@@ -89,15 +69,11 @@ namespace Sven.PageModels.SignUp
                 SignUpStep.SetPassword => await HandlePostSetPasswordAsync(stepChallenge, model, cancellationToken),
                 SignUpStep.VerifyCode => await HandlePostVerifyCodeAsync(stepChallenge, model, cancellationToken),
                 SignUpStep.CodeSent => await HandlePostCodeSentAsync(stepChallenge, model, cancellationToken),
-                SignUpStep.FinalMessage => HandlePostFinalMessage(stepChallenge, model),
+                SignUpStep.FinalMessage => HandleUnallowed(new ResultError($"Something called {nameof(HandlePostVerifyCodeAsync)} in not supported mode, with {stepChallenge} and {model}")),
                 _ => await HandlePostSetEmailAsync(stepChallenge, model, cancellationToken), // this is EnterEmail too
             };
         }
-        private IActionResult HandlePostFinalMessage(StepChallengeRequest stepChallenge, StepModelRequest model)
-        {
-            _logger.LogResultError(new ResultError($"Something called {nameof(HandlePostVerifyCodeAsync)} in not supported mode, with {stepChallenge} and {model}"));
-            return new StatusCodeResult(StatusCodes.Status405MethodNotAllowed);
-        }
+
         public abstract Task<IActionResult> HandlePostSetEmailAsync(StepChallengeRequest stepChallenge, IStepEmailProperties model, CancellationToken cancellationToken = default);
 
         public abstract Task<IActionResult> HandlePostSetPasswordAsync(StepChallengeRequest stepChallenge, IPasswordResetProperties model, CancellationToken cancellationToken = default);

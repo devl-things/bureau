@@ -23,32 +23,37 @@ namespace Sven.PageModels.SignUp
         {
             _notificationService = notificationService;
             Title = _localizer[nameof(SignUpModelText.CreateAccountTitle)];
-
+            FinalMessage = _localizer[nameof(SignUpModelText.ForgotPasswordFinalMessage)];
+            FinalMessageLine1 = _localizer[nameof(SignUpModelText.ForgotPasswordFinalMessageLine1)];
         }
 
-        protected override async Task<IActionResult> HandleGetVerifyCodeAsync(StepChallengeRequest stepChallenge, CancellationToken cancellationToken = default)
+        protected override async Task<IActionResult> HandleGetRequestInternalAsync(StepChallengeRequest stepChallenge, CancellationToken cancellationToken)
+        {
+            switch (stepChallenge.Step)
+            {
+                case SignUpStep.CodeSent:
+                    return HandleUnallowed(stepChallenge);
+                case SignUpStep.VerifyCode:
+                case SignUpStep.SetPassword:
+                    return await HandleGetStepsAsync(stepChallenge, cancellationToken);
+                case SignUpStep.EnterEmail:
+                case SignUpStep.FinalMessage:
+                default:
+                    return BasePage.Page();
+            }
+        }
+
+        private async Task<IActionResult> HandleGetStepsAsync(StepChallengeRequest stepChallenge, CancellationToken cancellationToken)
         {
             Result<UserVerificationCode> codeResult = await _userProvider.GetVerificationCodeAsync(stepChallenge.Challenge!, cancellationToken);
             if (codeResult.IsError)
             {
-                _logger.LogResultError(new ResultError(codeResult.Error, $"User tried to open Verify code step with wrong challenge ({stepChallenge.Challenge!})"));
+                _logger.LogResultError(new ResultError(codeResult.Error, string.Format(LogMessages.InvalidChallengeForStep, nameof(HandleGetStepsAsync), stepChallenge.Challenge)));
                 return BasePage.GoToUrl(Endpoints.Connect.SignIn);
             }
-            Email = codeResult.Value.Email;
-            return BasePage.Page();
-        }
-
-        protected override async Task<IActionResult> HandleGetSetPasswordAsync(StepChallengeRequest stepChallenge, CancellationToken cancellationToken = default)
-        {
-            Result<UserVerificationCode> codeResult = await _userProvider.GetVerificationCodeAsync(stepChallenge.Challenge!, cancellationToken);
-            if (codeResult.IsError)
+            if (SignUpStep.SetPassword.Equals(Step) && !codeResult.Value.Status.HasFlag(VerificationStatus.Verified))
             {
-                _logger.LogResultError(new ResultError(codeResult.Error, $"User tried to open Verify code step with wrong challenge ({stepChallenge.Challenge!})"));
-                return BasePage.GoToUrl(Endpoints.Connect.SignIn);
-            }
-            if (!codeResult.Value.Status.HasFlag(VerificationStatus.Verified))
-            {
-                _logger.LogResultError(new ResultError(codeResult.Error, $"User tried to open Verify code step with wrong challenge ({stepChallenge.Challenge!})"));
+                _logger.LogResultError(new ResultError(string.Format(LogMessages.InvalidChallengeForStep, nameof(HandleGetStepsAsync), stepChallenge.Challenge)));
                 return GoToWithChallenge(Endpoints.Connect.SignUp, new StepChallengeRequest(SignUpStep.VerifyCode) { Challenge = codeResult.Value.Id });
             }
             Email = codeResult.Value.Email;

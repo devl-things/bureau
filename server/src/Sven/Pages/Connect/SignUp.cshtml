@@ -69,7 +69,10 @@
             <span class="bold">@Model.CurrentModel.FinalMessage</span>
             <span>@Model.CurrentModel.FinalMessageLine1</span>
         </div>
-        <button type="submit">@Model.Text.SignIn</button>
+        <a href="@Endpoints.Connect.SignIn" class="btn btn-primary">
+            @Model.Text.SignIn
+        </a>
+        @* <button type="submit">@Model.Text.SignIn</button> *@
     }
 </form>
 

@@ -6,6 +6,7 @@ using Sven.Configurations;
 using Sven.Models;
 using Sven.Pages.Connect;
 using Sven.Services;
+using System.Runtime.CompilerServices;
 
 namespace Sven.PageModels.SignUp
 {
@@ -28,9 +29,27 @@ namespace Sven.PageModels.SignUp
             _notificationService = notificationService;
         }
 
-        protected override async Task<IActionResult> HandleGetCodeSentAsync(StepChallengeRequest stepChallenge, CancellationToken cancellationToken = default)
+        protected override async Task<IActionResult> HandleGetRequestInternalAsync(StepChallengeRequest stepChallenge, CancellationToken cancellationToken)
         {
-            Result<UserVerificationCode> codeResult = await VerifyChallengeStatusAsync(stepChallenge.Challenge!, VerificationStatus.EmailSent, cancellationToken);
+            switch (stepChallenge.Step)
+            {
+                case SignUpStep.EnterEmail:
+                case SignUpStep.FinalMessage:
+                    return BasePage.Page();
+                case SignUpStep.VerifyCode:
+                    return HandleUnallowed(stepChallenge);
+                case SignUpStep.CodeSent:
+                case SignUpStep.SetPassword:
+                    return await HandleGetWithChallengeAsync(stepChallenge, cancellationToken);
+                default:
+                    _logger.LogResultError(new ResultError($"Unexpected step in {nameof(ForgotSignUpPageModel)}: {stepChallenge.Step}"));
+                    return BasePage.GoToUrl(Endpoints.Connect.SignIn);
+            }
+        }
+
+        private async Task<IActionResult> HandleGetWithChallengeAsync(StepChallengeRequest stepChallenge, CancellationToken cancellationToken, [CallerMemberName] string callerName = "")
+        {
+            Result<UserVerificationCode> codeResult = await VerifyChallengeStatusAsync(stepChallenge.Challenge!, VerificationStatus.EmailSent, cancellationToken, callerName);
             if (codeResult.IsError)
             {
                 _logger.LogResultError(codeResult.Error);
@@ -40,17 +59,12 @@ namespace Sven.PageModels.SignUp
             return BasePage.Page();
         }
 
-        protected override Task<IActionResult> HandleGetSetPasswordAsync(StepChallengeRequest stepChallenge, CancellationToken cancellationToken = default)
-        {
-            return HandleGetCodeSentAsync(stepChallenge, cancellationToken);
-        }
-
-        protected async Task<Result<UserVerificationCode>> VerifyChallengeStatusAsync(string challenge, VerificationStatus status, CancellationToken cancellationToken = default)
+        protected async Task<Result<UserVerificationCode>> VerifyChallengeStatusAsync(string challenge, VerificationStatus status, CancellationToken cancellationToken, string callerName)
         {
             Result<UserVerificationCode> codeResult = await _userProvider.GetVerificationCodeAsync(challenge, cancellationToken);
             if (codeResult.IsError)
             {
-                return new ResultError(codeResult.Error, $"User tried to open Code sent step with wrong challenge ({challenge})");
+                return new ResultError(codeResult.Error, string.Format(LogMessages.InvalidChallengeForStep, callerName, challenge));
             }
             if (!codeResult.Value.Status.HasFlag(status))
             {
@@ -131,7 +145,7 @@ namespace Sven.PageModels.SignUp
             {
                 return BasePage.PageWithError(validationResult.Error);
             }
-            Result<UserVerificationCode> codeResult = await VerifyChallengeStatusAsync(stepChallenge.Challenge!, VerificationStatus.EmailSent, cancellationToken);
+            Result<UserVerificationCode> codeResult = await VerifyChallengeStatusAsync(stepChallenge.Challenge!, VerificationStatus.EmailSent, cancellationToken, nameof(HandlePostSetPasswordAsync));
             if (codeResult.IsError)
             {
                 _logger.LogResultError(codeResult.Error);
