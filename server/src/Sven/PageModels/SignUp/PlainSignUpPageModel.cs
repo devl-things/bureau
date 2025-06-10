@@ -30,18 +30,12 @@ namespace Sven.PageModels.SignUp
 
         protected override async Task<IActionResult> HandleGetRequestInternalAsync(StepChallengeRequest stepChallenge, CancellationToken cancellationToken)
         {
-            switch (stepChallenge.Step)
+            return stepChallenge.Step switch
             {
-                case SignUpStep.CodeSent:
-                    return HandleUnallowed(stepChallenge);
-                case SignUpStep.VerifyCode:
-                case SignUpStep.SetPassword:
-                    return await HandleGetStepsAsync(stepChallenge, cancellationToken);
-                case SignUpStep.EnterEmail:
-                case SignUpStep.FinalMessage:
-                default:
-                    return BasePage.Page();
-            }
+                SignUpStep.CodeSent => HandleUnallowed(stepChallenge),
+                SignUpStep.VerifyCode or SignUpStep.SetPassword => await HandleGetStepsAsync(stepChallenge, cancellationToken),
+                _ => BasePage.Page(),
+            };
         }
 
         private async Task<IActionResult> HandleGetStepsAsync(StepChallengeRequest stepChallenge, CancellationToken cancellationToken)
@@ -96,14 +90,11 @@ namespace Sven.PageModels.SignUp
                 return GoToUrlWithError(Endpoints.Connect.SignIn, new ResultError("Unexpected behaviour: either incorrect email or known user."));
             }
             string? action = BasePage.Request.GetFormStringParameter(AuthConstants.PropertyNames.Action);
-            switch (action)
+            return action switch
             {
-                case AuthConstants.Actions.ResendCode:
-                    return await ResendAction(verifyCodeResult.Value, cancellationToken);
-                case AuthConstants.Actions.VerifyCode:
-                default:
-                    return await VerifyAction(verifyCodeResult.Value, model, cancellationToken);
-            }
+                AuthConstants.Actions.ResendCode => await ResendAction(verifyCodeResult.Value, cancellationToken),
+                _ => await VerifyAction(verifyCodeResult.Value, model, cancellationToken),
+            };
         }
 
         private async Task<IActionResult> VerifyAction(UserVerificationCode verificationCode, IVerificationCodeProperties model, CancellationToken cancellationToken)

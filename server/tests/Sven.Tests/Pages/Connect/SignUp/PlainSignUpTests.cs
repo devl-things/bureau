@@ -53,7 +53,7 @@ namespace Sven.Tests.Pages.Connect.SignUp
             };
             HttpResponseMessage enterEmailResponse = await _client.SendAsync(step1);
             Assert.Equal(HttpStatusCode.OK, enterEmailResponse.StatusCode);
-            SvenUrl urlStep2 = new SvenUrl(enterEmailResponse.RequestMessage?.RequestUri?.ToString());
+            SvenUrl urlStep2 = new(enterEmailResponse.RequestMessage?.RequestUri?.ToString());
             urlStep2.CheckForParameter(AuthConstants.PropertyNames.Step, SignUpStep.VerifyCode.ToCode());
             urlStep2.CheckForParameter(AuthConstants.PropertyNames.Challenge);
 
@@ -74,7 +74,7 @@ namespace Sven.Tests.Pages.Connect.SignUp
             };
             HttpResponseMessage verifyCodeResponse = await _client.SendAsync(step2);
             Assert.Equal(HttpStatusCode.OK, verifyCodeResponse.StatusCode);
-            SvenUrl urlStep3 = new SvenUrl(verifyCodeResponse.RequestMessage?.RequestUri?.ToString());
+            SvenUrl urlStep3 = new(verifyCodeResponse.RequestMessage?.RequestUri?.ToString());
             urlStep3.CheckForParameter(AuthConstants.PropertyNames.Step, SignUpStep.SetPassword.ToCode());
             urlStep3.CheckForParameter(AuthConstants.PropertyNames.Challenge);
 
@@ -144,7 +144,7 @@ namespace Sven.Tests.Pages.Connect.SignUp
             };
             HttpResponseMessage enterEmailResponse = await _client.SendAsync(step1);
             Assert.Equal(HttpStatusCode.OK, enterEmailResponse.StatusCode);
-            SvenUrl urlStep2 = new SvenUrl(enterEmailResponse.RequestMessage?.RequestUri?.ToString());
+            SvenUrl urlStep2 = new(enterEmailResponse.RequestMessage?.RequestUri?.ToString());
             urlStep2.CheckForParameter(AuthConstants.PropertyNames.Step, SignUpStep.VerifyCode.ToCode());
             urlStep2.CheckForParameter(AuthConstants.PropertyNames.Challenge);
 

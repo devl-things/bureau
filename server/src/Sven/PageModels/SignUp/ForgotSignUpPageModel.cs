@@ -36,20 +36,14 @@ namespace Sven.PageModels.SignUp
 
         protected override async Task<IActionResult> HandleGetRequestInternalAsync(StepChallengeRequest stepChallenge, CancellationToken cancellationToken)
         {
-            switch (stepChallenge.Step)
+            return stepChallenge.Step switch
             {
-                case SignUpStep.EnterEmail:
-                case SignUpStep.FinalMessage:
-                    return BasePage.Page();
-                case SignUpStep.VerifyCode:
-                    return HandleUnallowed(stepChallenge);
-                case SignUpStep.CodeSent:
-                    return HandleGetWithEmail(stepChallenge);
-                case SignUpStep.SetPassword:
-                    return await HandleGetWithChallengeAsync(stepChallenge, cancellationToken);
-                default:
-                    return GoToUrlWithError(Endpoints.Connect.SignIn, new ResultError($"Unexpected step in {nameof(ForgotSignUpPageModel)}: {stepChallenge.Step}"));
-            }
+                SignUpStep.EnterEmail or SignUpStep.FinalMessage => BasePage.Page(),
+                SignUpStep.VerifyCode => HandleUnallowed(stepChallenge),
+                SignUpStep.CodeSent => HandleGetWithEmail(stepChallenge),
+                SignUpStep.SetPassword => await HandleGetWithChallengeAsync(stepChallenge, cancellationToken),
+                _ => GoToUrlWithError(Endpoints.Connect.SignIn, new ResultError($"Unexpected step in {nameof(ForgotSignUpPageModel)}: {stepChallenge.Step}")),
+            };
         }
 
         private async Task<IActionResult> HandleGetWithChallengeAsync(StepChallengeRequest stepChallenge, CancellationToken cancellationToken, [CallerMemberName] string callerName = "")

@@ -55,7 +55,7 @@ namespace Sven.Tests.Pages.Connect.SignUp
             // Step 2: get the reset link from email
             List<TestLoggerProvider.LogEntry> logs = _factory.LoggerProvider.Logs;
 
-            TestLoggerProvider.LogEntry log = logs.FirstOrDefault(l =>
+            TestLoggerProvider.LogEntry? log = logs.FirstOrDefault(l =>
                 l.Category.Contains(nameof(EmailNotificationService<PasswordResetNotification>)) &&
                 l.Message.Contains("Verification code") &&
                 l.Message.Contains("sent to"));

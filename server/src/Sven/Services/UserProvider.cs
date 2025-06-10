@@ -125,7 +125,6 @@ namespace Sven.Services
             {
                 return updateResult.Error;
             }
-            ;
             return new Result<UserVerificationCode>(data);
         }
 
