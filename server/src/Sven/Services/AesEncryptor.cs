@@ -49,6 +49,19 @@ namespace Sven.Services
 
             return EncryptWithCombinedIV(input);
         }
+        public Result<string> Encrypt(string value)
+        {
+            byte[] input = Encoding.UTF8.GetBytes(value);
+
+            return EncryptWithCombinedIV(input);
+        }
+
+        public Result<string> DecryptString(string encrypted)
+        {
+            Result<string[]> r = DecryptStringArray(encrypted);
+            if (r.IsError || r.Value.Length < 1) return r.Error;
+            return new Result<string>(r.Value[0]);
+        }
 
         public Result<string[]> DecryptStringArray(string encrypted)
         {

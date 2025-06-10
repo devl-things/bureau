@@ -89,11 +89,11 @@ namespace Sven.PageModels.SignUp
                 SignUpStep.SetPassword => await HandlePostSetPasswordAsync(stepChallenge, model, cancellationToken),
                 SignUpStep.VerifyCode => await HandlePostVerifyCodeAsync(stepChallenge, model, cancellationToken),
                 SignUpStep.CodeSent => await HandlePostCodeSentAsync(stepChallenge, model, cancellationToken),
-                _ => await HandlePostSetEmailAsync(stepChallenge, model, cancellationToken), // this is EnterEmail too
+                _ => await HandlePostSetEmailAsync(cancellationToken), // this is EnterEmail too
             };
         }
 
-        public abstract Task<IActionResult> HandlePostSetEmailAsync(StepChallengeRequest stepChallenge, IStepEmailProperties model, CancellationToken cancellationToken = default);
+        public abstract Task<IActionResult> HandlePostSetEmailAsync(CancellationToken cancellationToken = default);
 
         public async Task<IActionResult> HandlePostSetPasswordAsync(StepChallengeRequest stepChallenge, IPasswordResetProperties model, CancellationToken cancellationToken = default)
         {
@@ -104,8 +104,7 @@ namespace Sven.PageModels.SignUp
             Result<UserVerificationCode> codeResult = await VerifyChallengeStatusAsync(stepChallenge.Challenge!, StatusToValidateInSetPassword(), cancellationToken);
             if (codeResult.IsError)
             {
-                _logger.LogResultError(codeResult.Error);
-                return BasePage.GoToUrl(Endpoints.Connect.SignIn);
+                return GoToUrlWithError(Endpoints.Connect.SignIn, codeResult.Error);
             }
             return await HandlePostSetPasswordInternalAsync(model, codeResult.Value, cancellationToken);
         }
@@ -139,13 +138,22 @@ namespace Sven.PageModels.SignUp
 
         public static string CreateUrl(string url, StepChallengeRequest stepChallenge)
         {
+            if (string.IsNullOrEmpty(stepChallenge.Challenge))
+            {
+                return $"{url}?{AuthConstants.PropertyNames.Step}={stepChallenge.StepShort}";
+            }
             return $"{url}?{AuthConstants.PropertyNames.Step}={stepChallenge.StepShort}&{AuthConstants.PropertyNames.Challenge}={stepChallenge.Challenge}";
         }
 
-        public IActionResult GoToSamePageWithChallenge(StepChallengeRequest stepChallenge)
+        protected IActionResult GoToSameRouteWithChallenge(StepChallengeRequest stepChallenge)
         {
             return BasePage.GoToUrl(CreateUrl(BasePage.Request.Path, stepChallenge));
         }
-
+        protected IActionResult GoToUrlWithError(string url, ResultError error)
+        {
+            // #54 have a error message pass to redirect
+            _logger.LogResultError(error);
+            return BasePage.GoToUrl(url);
+        }
     }
 }

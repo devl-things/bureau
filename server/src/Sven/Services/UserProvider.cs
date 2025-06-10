@@ -101,6 +101,8 @@ namespace Sven.Services
         }
         public async Task<Result<UserVerificationCode>> GenerateVerificationCodeAsync(string email, VerificationStatus status, CancellationToken cancellationToken = default)
         {
+            //TODO invalid all other verification codes for this email
+
             Result<string> userIdResult = await GetUserIdByEmailAsync(email, cancellationToken);
             // #53 Make sure that using this pseudorandom number generator is safe here csharpsquid:S2245         
             string code = new Random().Next(MinVerificationCode, MaxVerificationCode).ToString();
@@ -119,6 +121,11 @@ namespace Sven.Services
             {
                 return result.Error;
             }
+            if (await UpdateVerificationCodeStatusAsync(verificationCode.Id, VerificationStatus.Invalid, cancellationToken) is { IsError: true } updateResult)
+            {
+                return updateResult.Error;
+            }
+            ;
             return new Result<UserVerificationCode>(data);
         }
 

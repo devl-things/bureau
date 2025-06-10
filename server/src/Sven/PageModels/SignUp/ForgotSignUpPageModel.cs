@@ -12,6 +12,7 @@ namespace Sven.PageModels.SignUp
 {
     public class ForgotSignUpPageModel : SignUpPageModel
     {
+        private readonly ISymEncryptor _encryptor;
         private readonly INotificationService<PasswordResetNotification> _notificationService;
         public override bool ShowExternalLoginsOption { get { return false; } }
         public override bool ShowSignInOption { get { return false; } }
@@ -19,6 +20,7 @@ namespace Sven.PageModels.SignUp
         public ForgotSignUpPageModel(ILogger<ForgotSignUpPageModel> logger,
             IStringLocalizer<SignUpModel> localizer,
             IUserProvider userProvider,
+            ISymEncryptor encryptor,
             INotificationService<PasswordResetNotification> notificationService) : base(logger, localizer, userProvider)
         {
             Title = _localizer[nameof(SignUpModelText.ForgotPasswordTitle)];
@@ -26,6 +28,7 @@ namespace Sven.PageModels.SignUp
             Subtitle = _localizer[nameof(SignUpModelText.ForgotPasswordSubtitle)];
             FinalMessage = _localizer[nameof(SignUpModelText.ForgotPasswordFinalMessage)];
             FinalMessageLine1 = _localizer[nameof(SignUpModelText.ForgotPasswordFinalMessageLine1)];
+            _encryptor = encryptor;
             _notificationService = notificationService;
         }
 
@@ -41,11 +44,11 @@ namespace Sven.PageModels.SignUp
                 case SignUpStep.VerifyCode:
                     return HandleUnallowed(stepChallenge);
                 case SignUpStep.CodeSent:
+                    return HandleGetWithEmail(stepChallenge);
                 case SignUpStep.SetPassword:
                     return await HandleGetWithChallengeAsync(stepChallenge, cancellationToken);
                 default:
-                    _logger.LogResultError(new ResultError($"Unexpected step in {nameof(ForgotSignUpPageModel)}: {stepChallenge.Step}"));
-                    return BasePage.GoToUrl(Endpoints.Connect.SignIn);
+                    return GoToUrlWithError(Endpoints.Connect.SignIn, new ResultError($"Unexpected step in {nameof(ForgotSignUpPageModel)}: {stepChallenge.Step}"));
             }
         }
 
@@ -54,16 +57,44 @@ namespace Sven.PageModels.SignUp
             Result<UserVerificationCode> codeResult = await VerifyChallengeStatusAsync(stepChallenge.Challenge!, VerificationStatus.EmailSent, cancellationToken, callerName);
             if (codeResult.IsError)
             {
-                _logger.LogResultError(codeResult.Error);
-                return BasePage.GoToUrl(Endpoints.Connect.SignIn);
+                return GoToUrlWithError(Endpoints.Connect.SignIn, codeResult.Error);
             }
             Email = codeResult.Value.Email;
             return BasePage.Page();
         }
 
+        private IActionResult HandleGetWithEmail(StepChallengeRequest stepChallenge)
+        {
+            if (string.IsNullOrWhiteSpace(stepChallenge.Challenge))
+            {
+                return GoToUrlWithError(Endpoints.Connect.SignIn, new ResultError("Challenge is required for CodeSent step."));
+            }
+            Result<string> emailResult = _encryptor.DecryptString(stepChallenge.Challenge);
+            if (emailResult.IsError)
+            {
+                return GoToUrlWithError(Endpoints.Connect.SignIn, new ResultError(emailResult.Error, "Challenge is required for CodeSent step."));
+            }
+            if (SvenValidators.ValidateEmail(emailResult.Value) is { IsError: true } result)
+            {
+                return GoToUrlWithError(Endpoints.Connect.SignIn, new ResultError(result.Error, $"Challenge is required for CodeSent step."));
+            }
+            Email = emailResult.Value;
+            return BasePage.Page();
+        }
 
 
-        public override async Task<IActionResult> HandlePostSetEmailAsync(StepChallengeRequest stepChallenge, IStepEmailProperties model, CancellationToken cancellationToken = default)
+
+        public override async Task<IActionResult> HandlePostSetEmailAsync(CancellationToken cancellationToken = default)
+        {
+            Result<string> emailEncryptedResult = _encryptor.Encrypt(Email!);
+            if (emailEncryptedResult.IsError)
+            {
+                return BasePage.PageWithError(new ResultError(emailEncryptedResult.Error, AuthConstants.OAuth.ErrorDescriptions.UnManageable));
+            }
+            return await GenerateAndSendAsync(() => GoToSameRouteWithChallenge(new StepChallengeRequest(SignUpStep.CodeSent) { Challenge = emailEncryptedResult.Value }), cancellationToken);
+        }
+
+        private async Task<IActionResult> GenerateAndSendAsync(Func<IActionResult> returnFunc, CancellationToken cancellationToken)
         {
             Result<UserVerificationCode> codeResult = await _userProvider.GenerateVerificationCodeAsync(Email!, cancellationToken);
             if (codeResult.IsError)
@@ -75,52 +106,35 @@ namespace Sven.PageModels.SignUp
                 _logger.LogResultError(new ResultError($"User tried to reset password with non existing email ({Email}, {codeResult.Value})"));
                 if (await _userProvider.UpdateVerificationCodeStatusAsync(codeResult.Value.Id, VerificationStatus.Invalid, cancellationToken) is { IsError: true } updateResult)
                 {
-                    // #54 have a error message pass to redirect
                     _logger.LogResultError(new ResultError(updateResult.Error, $"Error when setting the verification status  ({Email}, {codeResult.Value})"));
                 }
-                return GoToSamePageWithChallenge(new StepChallengeRequest(SignUpStep.CodeSent) { Challenge = codeResult.Value.Id });
+                return returnFunc();
             }
-            if (await SendVerificationEmailAsync(codeResult.Value, cancellationToken) is { IsError: true } codeSentResult)
+            if (await SendAndUpdateAsync(codeResult.Value, cancellationToken) is { IsError: true } codeSentResult)
             {
                 return BasePage.PageWithError(new ResultError(codeSentResult.Error, AuthConstants.OAuth.ErrorDescriptions.UnManageable));
             }
-            if (await _userProvider.UpdateVerificationCodeStatusAsync(codeResult.Value.Id, VerificationStatus.EmailSent, cancellationToken) is { IsError: true } result)
-            {
-                // #54 have a error message pass to redirect
-                _logger.LogResultError(new ResultError(result.Error, $"Error when setting the verification status  ({Email}, {codeResult.Value})"));
-            }
-            return GoToSamePageWithChallenge(new StepChallengeRequest(SignUpStep.CodeSent) { Challenge = codeResult.Value.Id });
+            return returnFunc();
         }
 
+        /// <summary>
+        /// This is doing resending
+        /// </summary>
+        /// <param name="stepChallenge"></param>
+        /// <param name="model"></param>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
         public override async Task<IActionResult> HandlePostCodeSentAsync(StepChallengeRequest stepChallenge, IStepEmailProperties model, CancellationToken cancellationToken = default)
         {
-            Result<UserVerificationCode> verifyCodeResult = await _userProvider.GetVerificationCodeAsync(stepChallenge.Challenge!, cancellationToken);
-            if (verifyCodeResult.IsError)
+            Result<string> emailResult = _encryptor.DecryptString(stepChallenge.Challenge!);
+            if (emailResult.IsError || !emailResult.Value.Equals(Email))
             {
-                _logger.LogResultError(new ResultError(verifyCodeResult.Error, "Reset password flow expired."));
-                return BasePage.GoToUrl(Endpoints.Connect.ForgotPassword);
+                return GoToUrlWithError(Endpoints.Connect.ForgotPassword, new ResultError("Unexpected behaviour: email not in challenge or not the same."));
             }
-            if (!verifyCodeResult.Value.Email.Equals(model.Email, StringComparison.OrdinalIgnoreCase) ||
-                !verifyCodeResult.Value.IsUserKnown)
-            {
-                _logger.LogResultError(new ResultError("Unexpected behaviour: either incorrect email or unknown user."));
-                return BasePage.GoToUrl(Endpoints.Connect.SignIn);
-            }
-
-            Result<UserVerificationCode> codeResult = await _userProvider.RegenerateVerificationCodeAsync(verifyCodeResult.Value, cancellationToken);
-            if (codeResult.IsError)
-            {
-                return BasePage.PageWithError(new ResultError(codeResult.Error, AuthConstants.OAuth.ErrorDescriptions.UnManageable));
-            }
-            if (await SendVerificationEmailAsync(codeResult.Value, cancellationToken) is { IsError: true } codeSentResult)
-            {
-                return BasePage.PageWithError(new ResultError(codeSentResult.Error, AuthConstants.OAuth.ErrorDescriptions.UnManageable));
-            }
-            return GoToSamePageWithChallenge(new StepChallengeRequest(SignUpStep.VerifyCode) { Challenge = codeResult.Value.Id });
+            return await GenerateAndSendAsync(() => BasePage.Page(), cancellationToken);
         }
 
-
-        private async Task<Result> SendVerificationEmailAsync(UserVerificationCode code, CancellationToken cancellationToken)
+        private async Task<Result> SendAndUpdateAsync(UserVerificationCode code, CancellationToken cancellationToken)
         {
             PasswordResetNotification notification = new()
             {
@@ -131,6 +145,10 @@ namespace Sven.PageModels.SignUp
             if (notificationResult.IsError)
             {
                 return new ResultError(notificationResult.Error, "Email cannot be sent.");
+            }
+            if (await _userProvider.UpdateVerificationCodeStatusAsync(code.Id, VerificationStatus.EmailSent, cancellationToken) is { IsError: true } result)
+            {
+                return new ResultError($"Error when setting the verification status  ({Email}, {code})");
             }
             return notificationResult;
         }
@@ -146,7 +164,7 @@ namespace Sven.PageModels.SignUp
             {
                 return BasePage.PageWithError(new ResultError(userCreatedResult.Error, AuthConstants.OAuth.ErrorDescriptions.UnManageable));
             }
-            return GoToSamePageWithChallenge(new StepChallengeRequest(SignUpStep.FinalMessage) { Challenge = verificationCode.Id });
+            return GoToSameRouteWithChallenge(new StepChallengeRequest(SignUpStep.FinalMessage) { Challenge = verificationCode.Id });
         }
     }
 }

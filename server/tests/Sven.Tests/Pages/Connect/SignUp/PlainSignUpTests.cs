@@ -93,7 +93,7 @@ namespace Sven.Tests.Pages.Connect.SignUp
             })
             };
             HttpResponseMessage setPasswordResponse = await _client.SendAsync(step3);
-            Assert.Equal(HttpStatusCode.OK, verifyCodeResponse.StatusCode);
+            Assert.Equal(HttpStatusCode.OK, setPasswordResponse.StatusCode);
         }
 
         [Fact(DisplayName = "signup flow fails if email already exists")]

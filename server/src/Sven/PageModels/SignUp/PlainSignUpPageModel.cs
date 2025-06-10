@@ -55,13 +55,13 @@ namespace Sven.PageModels.SignUp
             if (SignUpStep.SetPassword.Equals(Step) && !codeResult.Value.Status.HasFlag(VerificationStatus.Verified))
             {
                 _logger.LogResultError(new ResultError(string.Format(LogMessages.InvalidChallengeForStep, nameof(HandleGetStepsAsync), stepChallenge.Challenge)));
-                return GoToSamePageWithChallenge(new StepChallengeRequest(SignUpStep.VerifyCode) { Challenge = codeResult.Value.Id });
+                return GoToSameRouteWithChallenge(new StepChallengeRequest(SignUpStep.VerifyCode) { Challenge = codeResult.Value.Id });
             }
             Email = codeResult.Value.Email;
             return BasePage.Page();
         }
 
-        public override async Task<IActionResult> HandlePostSetEmailAsync(StepChallengeRequest stepChallenge, IStepEmailProperties model, CancellationToken cancellationToken = default)
+        public override async Task<IActionResult> HandlePostSetEmailAsync(CancellationToken cancellationToken = default)
         {
             if (await _userProvider.ExistsUserWithEmailAsync(Email!, cancellationToken))
             {
@@ -78,7 +78,7 @@ namespace Sven.PageModels.SignUp
             {
                 return BasePage.PageWithError(new ResultError(codeSentResult.Error, AuthConstants.OAuth.ErrorDescriptions.UnManageable));
             }
-            return GoToSamePageWithChallenge(new StepChallengeRequest(SignUpStep.VerifyCode) { Challenge = codeResult.Value.Id });
+            return GoToSameRouteWithChallenge(new StepChallengeRequest(SignUpStep.VerifyCode) { Challenge = codeResult.Value.Id });
         }
 
         public override async Task<IActionResult> HandlePostVerifyCodeAsync(StepChallengeRequest stepChallenge, IVerificationCodeProperties model, CancellationToken cancellationToken = default)
@@ -115,7 +115,7 @@ namespace Sven.PageModels.SignUp
 #if DEBUG
             if ("000000".Equals(model.VerificationCode, StringComparison.OrdinalIgnoreCase))
             {
-                return GoToSamePageWithChallenge(new StepChallengeRequest(SignUpStep.SetPassword) { Challenge = verificationCode.Id });
+                return GoToSameRouteWithChallenge(new StepChallengeRequest(SignUpStep.SetPassword) { Challenge = verificationCode.Id });
             }
 #endif
             if (string.IsNullOrWhiteSpace(model.VerificationCode) || !int.TryParse(model.VerificationCode, out int parsedCode)
@@ -128,7 +128,7 @@ namespace Sven.PageModels.SignUp
             {
                 return BasePage.PageWithError(new ResultError(codeValidatedResult.Error, AuthConstants.OAuth.ErrorDescriptions.UnManageable));
             }
-            return GoToSamePageWithChallenge(new StepChallengeRequest(SignUpStep.SetPassword) { Challenge = verificationCode.Id });
+            return GoToSameRouteWithChallenge(new StepChallengeRequest(SignUpStep.SetPassword) { Challenge = verificationCode.Id });
         }
 
         private async Task<IActionResult> ResendAction(UserVerificationCode verificationCode, CancellationToken cancellationToken)
@@ -142,7 +142,7 @@ namespace Sven.PageModels.SignUp
             {
                 return BasePage.PageWithError(new ResultError(codeSentResult.Error, AuthConstants.OAuth.ErrorDescriptions.UnManageable));
             }
-            return GoToSamePageWithChallenge(new StepChallengeRequest(SignUpStep.VerifyCode) { Challenge = codeResult.Value.Id });
+            return GoToSameRouteWithChallenge(new StepChallengeRequest(SignUpStep.VerifyCode) { Challenge = codeResult.Value.Id });
         }
 
         /// <summary>
@@ -177,7 +177,7 @@ namespace Sven.PageModels.SignUp
             {
                 return BasePage.PageWithError(new ResultError(userCreatedResult.Error, AuthConstants.OAuth.ErrorDescriptions.UnManageable));
             }
-            return GoToSamePageWithChallenge(new StepChallengeRequest(SignUpStep.FinalMessage) { Challenge = verificationCode.Id });
+            return GoToSameRouteWithChallenge(new StepChallengeRequest(SignUpStep.FinalMessage) { Challenge = verificationCode.Id });
         }
     }
 }

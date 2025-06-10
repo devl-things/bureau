@@ -48,5 +48,12 @@ namespace Sven.Tests.TestUtils
             }
             return query.ToString();
         }
+
+        public static string? ExtractWholeUrlStartingWith(string input, string url)
+        {
+            // Match anything starting with /connect/forgot up to the next whitespace
+            var match = Regex.Match(input, @$"({url}\S*)");
+            return match.Success ? match.Value : null;
+        }
     }
 }
