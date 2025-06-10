@@ -82,8 +82,6 @@ namespace Sven.PageModels.SignUp
             return BasePage.Page();
         }
 
-
-
         public override async Task<IActionResult> HandlePostSetEmailAsync(CancellationToken cancellationToken = default)
         {
             Result<string> emailEncryptedResult = _encryptor.Encrypt(Email!);
@@ -148,7 +146,7 @@ namespace Sven.PageModels.SignUp
             }
             if (await _userProvider.UpdateVerificationCodeStatusAsync(code.Id, VerificationStatus.EmailSent, cancellationToken) is { IsError: true } result)
             {
-                return new ResultError($"Error when setting the verification status  ({Email}, {code})");
+                return new ResultError(result.Error, $"Error when setting the verification status  ({Email}, {code})");
             }
             return notificationResult;
         }

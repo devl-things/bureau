@@ -65,9 +65,7 @@ namespace Sven.PageModels.SignUp
         {
             if (await _userProvider.ExistsUserWithEmailAsync(Email!, cancellationToken))
             {
-                // #54 have a error message pass to redirect
-                _logger.LogResultError(new ResultError($"User tried to sign up with existing email ({Email})", AuthConstants.OAuth.ErrorDescriptions.SignUpExistingUser));
-                return BasePage.GoToUrl(Endpoints.Connect.SignIn);
+                return BasePage.PageWithError(new ResultError(string.Format(ErrorMessages.EmailExisting, Email), AuthConstants.OAuth.ErrorDescriptions.SignUpExistingUser));
             }
             Result<UserVerificationCode> codeResult = await _userProvider.GenerateVerificationCodeAsync(Email!, cancellationToken);
             if (codeResult.IsError)
@@ -85,19 +83,17 @@ namespace Sven.PageModels.SignUp
         {
             if (await _userProvider.ExistsUserWithEmailAsync(Email!, cancellationToken))
             {
-                return BasePage.PageWithError(new ResultError($"User tried to sign up with existing email ({Email})", AuthConstants.OAuth.ErrorDescriptions.SignUpExistingUser));
+                return GoToUrlWithError(Endpoints.Connect.SignIn, new ResultError(string.Format(ErrorMessages.EmailExisting, Email), AuthConstants.OAuth.ErrorDescriptions.SignUpExistingUser));
             }
             Result<UserVerificationCode> verifyCodeResult = await _userProvider.GetVerificationCodeAsync(stepChallenge.Challenge!, cancellationToken);
             if (verifyCodeResult.IsError)
             {
-                _logger.LogResultError(new ResultError(verifyCodeResult.Error, "Verification code not created."));
-                return BasePage.GoToUrl(Endpoints.Connect.SignUp);
+                return GoToUrlWithError(Endpoints.Connect.SignUp, new ResultError(verifyCodeResult.Error, "Verification code not created."));
             }
             if (!verifyCodeResult.Value.Email.Equals(model.Email, StringComparison.OrdinalIgnoreCase) ||
                 verifyCodeResult.Value.IsUserKnown)
             {
-                _logger.LogResultError(new ResultError("Unexpected behaviour: either incorrect email or known user."));
-                return BasePage.GoToUrl(Endpoints.Connect.SignIn);
+                return GoToUrlWithError(Endpoints.Connect.SignIn, new ResultError("Unexpected behaviour: either incorrect email or known user."));
             }
             string? action = BasePage.Request.GetFormStringParameter(AuthConstants.PropertyNames.Action);
             switch (action)
@@ -165,7 +161,7 @@ namespace Sven.PageModels.SignUp
             }
             if (await _userProvider.UpdateVerificationCodeStatusAsync(code.Id, VerificationStatus.EmailSent, cancellationToken) is { IsError: true } result)
             {
-                return new ResultError($"Error when setting the verification status  ({Email}, {code})");
+                return new ResultError(result.Error, $"Error when setting the verification status  ({Email}, {code})");
             }
             return notificationResult;
         }
