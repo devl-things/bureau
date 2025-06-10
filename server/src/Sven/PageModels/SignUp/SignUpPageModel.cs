@@ -47,7 +47,12 @@ namespace Sven.PageModels.SignUp
 
         protected IActionResult HandleUnallowed(StepChallengeRequest stepChallenge, [CallerMemberName] string callerName = "")
         {
-            return HandleUnallowed(new ResultError(string.Format(LogMessages.UnsupportedModality, callerName, stepChallenge)));
+            return HandleUnallowed(new ResultError(string.Format(LogMessages.UnsupportedModality1, callerName, stepChallenge)));
+        }
+
+        protected IActionResult HandleUnallowed(StepChallengeRequest stepChallenge, object model, [CallerMemberName] string callerName = "")
+        {
+            return HandleUnallowed(new ResultError(string.Format(LogMessages.UnsupportedModality2, callerName, stepChallenge, model)));
         }
 
         protected IActionResult HandleUnallowed(ResultError error, [CallerMemberName] string callerName = "")
@@ -64,30 +69,72 @@ namespace Sven.PageModels.SignUp
                 return new StatusCodeResult(StatusCodes.Status400BadRequest);
             }
             Step = stepChallenge.Step;
+            if (SignUpStep.FinalMessage.Equals(Step))
+            {
+                return HandleUnallowed(stepChallenge, model, nameof(HandlePostRequestAsync));
+            }
+            return await HandlePostStepsAsync(stepChallenge, model, cancellationToken);
+
+        }
+
+        private async Task<IActionResult> HandlePostStepsAsync(StepChallengeRequest stepChallenge, StepModelRequest model, CancellationToken cancellationToken)
+        {
+            if (SvenValidators.ValidateEmail(model.Email) is { IsError: true } emailValidationResult)
+            {
+                return BasePage.PageWithError(emailValidationResult.Error);
+            }
+            Email = model.Email;
             return stepChallenge.Step switch
             {
                 SignUpStep.SetPassword => await HandlePostSetPasswordAsync(stepChallenge, model, cancellationToken),
                 SignUpStep.VerifyCode => await HandlePostVerifyCodeAsync(stepChallenge, model, cancellationToken),
                 SignUpStep.CodeSent => await HandlePostCodeSentAsync(stepChallenge, model, cancellationToken),
-                SignUpStep.FinalMessage => HandleUnallowed(new ResultError($"Something called {nameof(HandlePostVerifyCodeAsync)} in not supported mode, with {stepChallenge} and {model}")),
                 _ => await HandlePostSetEmailAsync(stepChallenge, model, cancellationToken), // this is EnterEmail too
             };
         }
 
         public abstract Task<IActionResult> HandlePostSetEmailAsync(StepChallengeRequest stepChallenge, IStepEmailProperties model, CancellationToken cancellationToken = default);
 
-        public abstract Task<IActionResult> HandlePostSetPasswordAsync(StepChallengeRequest stepChallenge, IPasswordResetProperties model, CancellationToken cancellationToken = default);
+        public async Task<IActionResult> HandlePostSetPasswordAsync(StepChallengeRequest stepChallenge, IPasswordResetProperties model, CancellationToken cancellationToken = default)
+        {
+            if (SvenValidators.ValidatePasswords(model) is { IsError: true } validationResult)
+            {
+                return BasePage.PageWithError(validationResult.Error);
+            }
+            Result<UserVerificationCode> codeResult = await VerifyChallengeStatusAsync(stepChallenge.Challenge!, StatusToValidateInSetPassword(), cancellationToken);
+            if (codeResult.IsError)
+            {
+                _logger.LogResultError(codeResult.Error);
+                return BasePage.GoToUrl(Endpoints.Connect.SignIn);
+            }
+            return await HandlePostSetPasswordInternalAsync(model, codeResult.Value, cancellationToken);
+        }
+        protected abstract Task<IActionResult> HandlePostSetPasswordInternalAsync(IPasswordResetProperties model, UserVerificationCode verificationCode, CancellationToken cancellationToken = default);
+
+        protected abstract VerificationStatus StatusToValidateInSetPassword();
 
         public virtual Task<IActionResult> HandlePostVerifyCodeAsync(StepChallengeRequest stepChallenge, IVerificationCodeProperties model, CancellationToken cancellationToken = default)
         {
-            _logger.LogResultError(new ResultError($"Something called {nameof(HandlePostVerifyCodeAsync)} in not supported mode, with  {stepChallenge} and {model}"));
-            return Task.FromResult<IActionResult>(new StatusCodeResult(StatusCodes.Status405MethodNotAllowed));
+            return Task.FromResult(HandleUnallowed(stepChallenge, model, nameof(HandlePostVerifyCodeAsync)));
         }
 
         public virtual Task<IActionResult> HandlePostCodeSentAsync(StepChallengeRequest stepChallenge, IStepEmailProperties model, CancellationToken cancellationToken = default)
         {
-            _logger.LogResultError(new ResultError($"Something called {nameof(HandlePostCodeSentAsync)} in not supported mode, with  {stepChallenge} and {model}"));
-            return Task.FromResult<IActionResult>(new StatusCodeResult(StatusCodes.Status405MethodNotAllowed));
+            return Task.FromResult(HandleUnallowed(stepChallenge, model, nameof(HandlePostCodeSentAsync)));
+        }
+
+        protected async Task<Result<UserVerificationCode>> VerifyChallengeStatusAsync(string challenge, VerificationStatus status, CancellationToken cancellationToken, [CallerMemberName] string callerName = "")
+        {
+            Result<UserVerificationCode> codeResult = await _userProvider.GetVerificationCodeAsync(challenge, cancellationToken);
+            if (codeResult.IsError)
+            {
+                return new ResultError(codeResult.Error, string.Format(LogMessages.InvalidChallengeForStep, callerName, challenge));
+            }
+            if (!codeResult.Value.Status.HasFlag(status))
+            {
+                return new ResultError($"Verification status is not good ({codeResult.Value.Status})");
+            }
+            return codeResult.Value;
         }
 
         public static string CreateUrl(string url, StepChallengeRequest stepChallenge)
@@ -95,9 +142,9 @@ namespace Sven.PageModels.SignUp
             return $"{url}?{AuthConstants.PropertyNames.Step}={stepChallenge.StepShort}&{AuthConstants.PropertyNames.Challenge}={stepChallenge.Challenge}";
         }
 
-        public IActionResult GoToWithChallenge(string url, StepChallengeRequest stepChallenge)
+        public IActionResult GoToSamePageWithChallenge(StepChallengeRequest stepChallenge)
         {
-            return BasePage.GoToUrl(CreateUrl(url, stepChallenge));
+            return BasePage.GoToUrl(CreateUrl(BasePage.Request.Path, stepChallenge));
         }
 
     }

@@ -1,4 +1,5 @@
 ﻿using Bureau.Core;
+using Sven.Configurations;
 using Sven.Data;
 using Sven.Models;
 
@@ -45,6 +46,37 @@ namespace Sven.Services
             return new Result<string>(user.SubjectId);
         }
 
+        public async Task<Result> UpdatePasswordAsync(string userId, string password, CancellationToken cancellationToken = default)
+        {
+            if (string.IsNullOrWhiteSpace(password))
+            {
+                return new ResultError(ErrorMessages.PasswordEmpty);
+            }
+            Result<SvenUser> userResult = await _userStore.GetByIdentifierAsync(userId, cancellationToken);
+            if (userResult.IsError)
+            {
+                return userResult.Error;
+            }
+            userResult.Value.PasswordHash = PasswordHasher.HashPassword(password);
+            if (await _userStore.StoreAsync(userResult.Value, cancellationToken) is { IsError: true } storedResult)
+            {
+                return storedResult.Error;
+            }
+            return true;
+        }
+
+        private Task<Result<string>> GetUserIdByEmailAsync(string email, CancellationToken cancellationToken = default)
+        {
+            return _userStore.GetByUsernameAsync(email, cancellationToken)
+                .ContinueWith(x =>
+                {
+                    if (x.Result.IsError)
+                    {
+                        return x.Result.Error;
+                    }
+                    return new Result<string>(x.Result.Value.SubjectId);
+                }, cancellationToken);
+        }
         public Task<bool> ExistsUserWithEmailAsync(string email, CancellationToken cancellationToken = default)
         {
             return _userStore.ExistsWithEmail(email, cancellationToken);
@@ -69,9 +101,20 @@ namespace Sven.Services
         }
         public async Task<Result<UserVerificationCode>> GenerateVerificationCodeAsync(string email, VerificationStatus status, CancellationToken cancellationToken = default)
         {
-            // #53 Make sure that using this pseudorandom number generator is safe here csharpsquid:S2245
+            Result<string> userIdResult = await GetUserIdByEmailAsync(email, cancellationToken);
+            // #53 Make sure that using this pseudorandom number generator is safe here csharpsquid:S2245         
             string code = new Random().Next(MinVerificationCode, MaxVerificationCode).ToString();
-            UserVerificationCode data = new(email, code, status, _timeProvider.GetUtcNow().AddMinutes(60));
+            UserVerificationCode data = new(email, code, userIdResult.Value, status, _timeProvider.GetUtcNow().AddMinutes(60));
+            if (await _verificationCodeStore.StoreAsync(data.Id, data, cancellationToken) is { IsError: true } result)
+            {
+                return result.Error;
+            }
+            return new Result<UserVerificationCode>(data);
+        }
+        public async Task<Result<UserVerificationCode>> RegenerateVerificationCodeAsync(UserVerificationCode verificationCode, CancellationToken cancellationToken = default)
+        {
+            string code = new Random().Next(MinVerificationCode, MaxVerificationCode).ToString();
+            UserVerificationCode data = new(verificationCode.Email, code, verificationCode.UserId, VerificationStatus.None, _timeProvider.GetUtcNow().AddMinutes(60));
             if (await _verificationCodeStore.StoreAsync(data.Id, data, cancellationToken) is { IsError: true } result)
             {
                 return result.Error;
@@ -92,14 +135,19 @@ namespace Sven.Services
             }
             return result;
         }
-        public async Task<Result> UpdateVerificationCodeAsync(UserVerificationCode code, CancellationToken cancellationToken = default)
+
+        public async Task<Result> UpdateVerificationCodeStatusAsync(string codeId, VerificationStatus status, CancellationToken cancellationToken = default)
         {
-            Result<UserVerificationCode> result = await GetVerificationCodeAsync(code.Id, cancellationToken);
+            Result<UserVerificationCode> result = await GetVerificationCodeAsync(codeId, cancellationToken);
             if (result.IsError)
             {
                 return result.Error;
             }
-            result.Value.Status = code.Status;
+            result.Value.Status = status;
+            if (VerificationStatus.Invalid.Equals(status))
+            {
+                result.Value.Expiration = _timeProvider.GetUtcNow(); // invalidate the code
+            }
             return true;
         }
 

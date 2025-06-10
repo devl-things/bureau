@@ -4,14 +4,18 @@
     {
         public string Id { get; set; } = Guid.NewGuid().ToString("N");
         public string Email { get; set; }
+        public string? UserId { get; set; }
         public string VerificationCode { get; set; }
         public VerificationStatus Status { get; set; }
         public DateTimeOffset Expiration { get; set; }
 
-        public UserVerificationCode(string email, string code, VerificationStatus status, DateTimeOffset expiration)
+        public bool IsUserKnown => !string.IsNullOrWhiteSpace(UserId);
+
+        public UserVerificationCode(string email, string code, string? userId, VerificationStatus status, DateTimeOffset expiration)
         {
             Email = email;
             VerificationCode = code;
+            UserId = userId;
             Status = status;
             Expiration = expiration;
         }

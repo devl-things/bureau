@@ -120,9 +120,7 @@ namespace Sven.Tests.Pages.Connect.SignUp
             };
             HttpResponseMessage enterEmailResponse = await _client.SendAsync(step1);
             Assert.Equal(HttpStatusCode.OK, enterEmailResponse.StatusCode);
-            string content = await enterEmailResponse.Content.ReadAsStringAsync();
-            Assert.Contains("cannot create account with this email", content, StringComparison.OrdinalIgnoreCase);
-
+            Assert.Contains(Endpoints.Connect.SignIn, enterEmailResponse.RequestMessage?.RequestUri?.ToString(), StringComparison.OrdinalIgnoreCase);
         }
 
         [Fact(DisplayName = "signup flow fails with invalid verification code")]

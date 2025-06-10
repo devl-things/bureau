@@ -1,4 +1,5 @@
 ﻿using Bureau.Core;
+using Sven.Configurations;
 using Sven.Models;
 using System.ComponentModel.DataAnnotations;
 using System.Text.RegularExpressions;
@@ -35,7 +36,7 @@ namespace Sven.Services
         {
             if (string.IsNullOrWhiteSpace(email))
             {
-                return new ResultError("Email address is required.");
+                return new ResultError(ErrorMessages.EmailEmpty);
             }
             var regex = new Regex(@"^[a-zA-Z0-9._+-]+@[a-zA-Z0-9-]+(\.[a-zA-Z0-9-]+)*\.[a-zA-Z]{2,}$", RegexOptions.None, TimeSpan.FromMilliseconds(100));
             if (!regex.IsMatch(email))
@@ -49,7 +50,7 @@ namespace Sven.Services
         {
             if (string.IsNullOrWhiteSpace(model.Password) || string.IsNullOrWhiteSpace(model.ConfirmPassword))
             {
-                return new ResultError("Password cannot be empty.");
+                return new ResultError(ErrorMessages.PasswordEmpty);
             }
             if (model.Password != model.ConfirmPassword)
             {

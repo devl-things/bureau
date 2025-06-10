@@ -12,10 +12,12 @@ namespace Sven.Services
         Task<bool> ExistsUserWithEmailAsync(string email, CancellationToken cancellationToken = default);
         Task<Result<UserVerificationCode>> GenerateVerificationCodeAsync(string email, CancellationToken cancellationToken = default);
         Task<Result<UserVerificationCode>> GenerateVerificationCodeAsync(string email, VerificationStatus status, CancellationToken cancellationToken = default);
+        Task<Result<UserVerificationCode>> RegenerateVerificationCodeAsync(UserVerificationCode verificationCode, CancellationToken cancellationToken = default);
         Task<Result<string>> GenerateTicketAsync(string userIdentifier, CancellationToken cancellationToken = default);
         Task<Result<UserVerificationCode>> GetVerificationCodeAsync(string id, CancellationToken cancellationToken = default);
         Task<Result<string>> GetUserIdByTicketAsync(string ticket, CancellationToken cancellationToken = default);
-        Task<Result> UpdateVerificationCodeAsync(UserVerificationCode code, CancellationToken cancellationToken = default);
+        Task<Result> UpdateVerificationCodeStatusAsync(string codeId, VerificationStatus status, CancellationToken cancellationToken = default);
         Task<Result> DeleteUserAsync(string email, CancellationToken cancellationToken = default);
+        Task<Result> UpdatePasswordAsync(string userId, string password, CancellationToken cancellationToken = default);
     }
 }
