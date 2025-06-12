@@ -1,0 +1,76 @@
+﻿// 1. Import required Bootstrap functions and variables
+@import "bootstrap/functions";
+@import "bootstrap/variables";
+
+// 2. Override variables (optional)
+$primary: #0d6efd;
+$font-family-base: 'Segoe UI', sans-serif;
+
+// 3. Import rest of Bootstrap
+@import "bootstrap/bootstrap";
+
+.sven-layout {
+    min-height: 100vh;
+}
+
+.sidebar {
+    width: 220px;
+    background-color: #f8f9fa;
+    transition: width 0.3s ease;
+    padding-top: 1rem;
+
+    .logo-wrapper {
+        padding: 0.25rem 0;
+        display: flex;
+        justify-content: center;
+    }
+
+    .logo {
+        height: 40px;
+    }
+
+    .nav-link {
+        white-space: nowrap;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .nav-link.active {
+        background-color: rgba(0, 0, 0, 0.05);
+        font-weight: 600;
+        border-left: 4px solid #0d6efd;
+        padding-left: 0.75rem;
+    }
+
+    &.collapsed {
+        width: 60px;
+
+        .label {
+            display: none;
+        }
+    }
+}
+
+.main-content {
+    display: flex;
+    flex-direction: column;
+}
+
+.hamburger-toggle {
+    background: transparent;
+    border: none;
+    padding: 0.25rem;
+    margin-left: -0.25rem;
+    color: #333;
+    font-size: 1.25rem;
+
+    &:hover {
+        color: #000;
+    }
+
+    &:focus {
+        outline: none;
+        box-shadow: none;
+    }
+}

@@ -1,5 +1,6 @@
 ﻿using JavaScriptEngineSwitcher.Extensions.MsDependencyInjection;
 using JavaScriptEngineSwitcher.V8;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.Google;
 using Microsoft.AspNetCore.Localization;
@@ -15,7 +16,9 @@ using Sven.PageModels.SignUp;
 using Sven.Pages.Connect;
 using Sven.Services;
 using System.Globalization;
+using System.Security.Claims;
 using System.Security.Cryptography;
+using WebOptimizer.Processors;
 
 namespace Sven
 {
@@ -124,12 +127,15 @@ namespace Sven
                 options.Conventions.AddPageRoute(Endpoints.Connect.SignUp, Endpoints.Connect.ForgotPassword);
             });
 
-            builder.Services.AddJsEngineSwitcher(options => options.DefaultEngineName = V8JsEngine.EngineName)
-    .AddV8();
+            builder.Services.AddJsEngineSwitcher(options => options.DefaultEngineName = V8JsEngine.EngineName).AddV8();
             builder.Services.AddWebOptimizer(pipeline =>
             {
                 pipeline.AddScssBundle(StylesScriptNames.ConnectMin, "scss/connect.base.scss");
                 pipeline.AddScssBundle(StylesScriptNames.ConnectSignMin, "scss/connect.sign.scss");
+                pipeline.AddScssBundle(StylesScriptNames.SvenMin, "scss/sven.scss");
+
+                pipeline.AddJavaScriptBundle(JsScriptNames.SvenMin, new JsSettings() { GenerateSourceMap = true }, "js/bootstrap.bundle.min.js",
+                    "js/layout.js");
             });
 
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
@@ -167,6 +173,28 @@ namespace Sven
             app.UseCors();
             app.UseAuthentication();
             app.UseAuthorization();
+
+#if DEBUG
+            app.Use(async (context, next) =>
+            {
+                if (!context.User.Identity?.IsAuthenticated ?? true)
+                {
+                    var claims = new List<Claim>
+                    {
+                        new Claim(ClaimTypes.NameIdentifier, "debug-user-id"),
+                        new Claim(ClaimTypes.Name, "debug@example.com"),
+                        new Claim(ClaimTypes.Email, "debug@example.com")
+                    };
+
+                    var identity = new ClaimsIdentity(claims, "Debug");
+                    var principal = new ClaimsPrincipal(identity);
+
+                    await context.SignInAsync(principal);
+                }
+
+                await next();
+            });
+#endif
             app.MapControllers();
 
 

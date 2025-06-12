@@ -29,7 +29,9 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Folder Include="ViewComponents\" />
     <Folder Include="wwwroot\css\" />
+    <Folder Include="wwwroot\scss\bootstrap\" />
   </ItemGroup>
 
 </Project>
