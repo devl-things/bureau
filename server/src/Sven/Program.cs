@@ -5,10 +5,12 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.Google;
 using Microsoft.AspNetCore.Localization;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using Microsoft.IdentityModel.JsonWebTokens;
 using Microsoft.IdentityModel.Tokens;
 using Sven.AutoValidation;
 using Sven.Configurations;
 using Sven.Data.SqlServer.Configurations;
+using Sven.Middleware;
 using Sven.Models;
 using Sven.PageModels;
 using Sven.PageModels.SignIn;
@@ -70,6 +72,7 @@ namespace Sven
             builder.Services.AddScoped<INotificationService<UserVerificationCodeNotification>, EmailNotificationService<UserVerificationCodeNotification>>();
             builder.Services.AddScoped<INotificationService<PasswordResetNotification>, EmailNotificationService<PasswordResetNotification>>();
             builder.Services.AddScoped<IUserClaimsProvider, UserClaimsProvider>();
+            builder.Services.AddScoped<ICurrentUserProvider, UserClaimsProvider>();
             builder.Services.AddScoped<IUserProvider, UserProvider>();
             builder.Services.AddScoped<IClientProvider, ClientProvider>();
             builder.Services.AddScoped<ITokenProvider, SvenTokenProvider>();
@@ -181,7 +184,7 @@ namespace Sven
                 {
                     var claims = new List<Claim>
                     {
-                        new Claim(ClaimTypes.NameIdentifier, "debug-user-id"),
+                        new Claim(JwtRegisteredClaimNames.Sub, "test-user"),
                         new Claim(ClaimTypes.Name, "debug@example.com"),
                         new Claim(ClaimTypes.Email, "debug@example.com")
                     };
@@ -195,6 +198,7 @@ namespace Sven
                 await next();
             });
 #endif
+            app.UseMiddleware<CurrentUserMiddleware>();
             app.MapControllers();
 
 

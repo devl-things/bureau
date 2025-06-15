@@ -4,4 +4,17 @@
     Layout = "_SvenLayout";
 }
 
-This is protected
+<h2>@Model.Text.Title</h2>
+
+@if (TempData[TempDataNames.SuccessMessage] is string msg)
+{
+    <div class="alert alert-success">@msg</div>
+}
+
+ <div class="card mb-4">
+    <div class="card-body">
+        <p><strong>@Model.Text.LblEmail:</strong> @Model.CurrentUser.DisplayName</p>
+        <p><strong>@Model.Text.LblUsername:</strong> @Model.CurrentUser.Username</p>
+        <p><strong>@Model.Text.LblPassword:</strong> <a class="btn btn-outline-primary" href="/account/change-password">@Model.Text.BtnChangePassword</a></p>
+    </div>
+</div>

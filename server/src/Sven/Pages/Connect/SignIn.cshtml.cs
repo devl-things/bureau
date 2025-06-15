@@ -9,31 +9,29 @@ using Sven.PageModels.SignIn;
 namespace Sven.Pages.Connect
 {
     [ValidateAntiForgeryToken]
-    public class SignInModel : LocalizationPageModel<SignInModel, SignInModelText>
+    public class SignInModel : PageModel
     {
         private readonly IPageModelFactory<PageContext, SignInPageModel> _modelFactory;
 
-        private readonly SignInModelText _text;
+        public SignInPageModel CurrentModel { get; protected set; } = null!;
+        public SignInModelText Text { get; init; }
 
-        public SignInModel(IStringLocalizer<Common> sharedLocalizer, IStringLocalizer<SignInModel> localizer,
-            IPageModelFactory<PageContext, SignInPageModel> modelFactory) : base(sharedLocalizer, localizer)
+        public SignInModel(IStringLocalizer<Resources.Common> localizer, IStringLocalizer<Resources.Pages.Connect> pageLocalizer,
+            IPageModelFactory<PageContext, SignInPageModel> modelFactory) : base()
         {
             _modelFactory = modelFactory;
-            _text = new SignInModelText()
+            Text = new SignInModelText()
             {
-                ForgotPassword = _localizer[nameof(SignInModelText.ForgotPassword)],
-                Login = _localizer[nameof(SignInModelText.Login)],
-                Or = _sharedLocalizer[nameof(SignInModelText.Or)],
-                Password = _sharedLocalizer[nameof(SignInModelText.Password)],
-                SignInWith = _localizer[nameof(SignInModelText.SignInWith)],
-                SignUp = _localizer[nameof(SignInModelText.SignUp)],
-                UsernameOrEmail = _sharedLocalizer[nameof(SignInModelText.UsernameOrEmail)],
-                Welcome = _localizer[nameof(SignInModelText.Welcome)]
+                ForgotPassword = pageLocalizer[Resources.Pages.Connect.MsgForgotPassword],
+                Login = pageLocalizer[Resources.Pages.Connect.BtnLogin],
+                Or = localizer[Resources.Common.Or],
+                Password = localizer[Resources.Common.LblPassword],
+                SignInWith = pageLocalizer[Resources.Pages.Connect.MsgSignInWith],
+                SignUp = pageLocalizer[Resources.Pages.Connect.BtnSignUp],
+                UsernameOrEmail = localizer[Resources.Common.LblUsernameOrEmail],
+                Welcome = pageLocalizer[Resources.Pages.Connect.MsgWelcome]
             };
         }
-        public SignInPageModel CurrentModel { get; protected set; } = null!;
-
-        public override SignInModelText Text { get { return _text; } }
 
         public Task<IActionResult> OnGetAsync([FromQuery(Name = AuthConstants.PropertyNames.Mode)] string? mode, CancellationToken cancellationToken = default)
         {

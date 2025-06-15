@@ -5,49 +5,46 @@ using Microsoft.Extensions.Localization;
 using Sven.Models;
 using Sven.PageModels;
 using Sven.PageModels.SignUp;
-using Sven.Services;
 
 namespace Sven.Pages.Connect
 {
     [ValidateAntiForgeryToken]
-    public class SignUpModel : LocalizationPageModel<SignUpModel, SignUpModelText>
+    public class SignUpModel : PageModel
     {
         private readonly ILogger<SignUpModel> _logger;
         private readonly IPageModelFactory<SignUpModel, SignUpPageModel> _modelFactory;
 
-        private readonly SignUpModelText _text;
-
-        public override SignUpModelText Text { get { return _text; } }
-
+        public SignUpModelText Text { get; init; }
         public SignUpPageModel CurrentModel { get; protected set; } = null!;
         public string? ErrorMessage { get; set; }
-        public SignUpModel(ILogger<SignUpModel> logger, ISymEncryptor encryptor,
-            IStringLocalizer<Common> stringLocalizer,
-            IStringLocalizer<SignUpModel> localizer,
-            IPageModelFactory<SignUpModel, SignUpPageModel> modelFactory) : base(stringLocalizer, localizer)
+
+        public SignUpModel(ILogger<SignUpModel> logger,
+            IStringLocalizer<Resources.Common> localizer,
+            IStringLocalizer<Resources.Pages.Connect> signUpLocalizer,
+            IPageModelFactory<SignUpModel, SignUpPageModel> modelFactory) : base()
         {
             _logger = logger;
             _modelFactory = modelFactory;
-            _text = new SignUpModelText()
+            Text = new SignUpModelText()
             {
-                AlreadyAccount = _localizer[nameof(SignUpModelText.AlreadyAccount)],
-                Create = _localizer[nameof(SignUpModelText.Create)],
-                CodeSentMessage = _localizer[nameof(SignUpModelText.CodeSentMessage)],
-                CodeSentMessageLine1 = _localizer[nameof(SignUpModelText.CodeSentMessageLine1)],
-                CodeSentMessageLine2 = _localizer[nameof(SignUpModelText.CodeSentMessageLine2)],
-                ConfirmPassword = _sharedLocalizer[nameof(SignUpModelText.ConfirmPassword)],
-                Continue = _localizer[nameof(SignUpModelText.Continue)],
-                Email = _sharedLocalizer[nameof(SignUpModelText.Email)],
-                NeedNewCode = _localizer[nameof(SignUpModelText.NeedNewCode)],
-                Or = _sharedLocalizer[nameof(SignUpModelText.Or)],
-                Password = _sharedLocalizer[nameof(SignUpModelText.Password)],
-                ResendCode = _localizer[nameof(SignUpModelText.ResendCode)],
-                ResendResetLink = _localizer[nameof(SignUpModelText.ResendResetLink)],
-                SetPasswordMessage = _localizer[nameof(SignUpModelText.SetPasswordMessage)],
-                SignIn = _localizer[nameof(SignUpModelText.SignIn)],
-                SignUpWith = _localizer[nameof(SignUpModelText.SignUpWith)],
-                VerifyCode = _localizer[nameof(SignUpModelText.VerifyCode)],
-                VerifyCodeMessage = _localizer[nameof(SignUpModelText.VerifyCodeMessage)],
+                AlreadyAccount = signUpLocalizer[Resources.Pages.Connect.MsgAlreadyAccount],
+                Create = signUpLocalizer[Resources.Pages.Connect.BtnCreate],
+                CodeSentMessage = signUpLocalizer[Resources.Pages.Connect.CodeSent_MsgMain],
+                CodeSentMessageLine1 = signUpLocalizer[Resources.Pages.Connect.CodeSent_MsgLine1],
+                CodeSentMessageLine2 = signUpLocalizer[Resources.Pages.Connect.CodeSent_MsgLine2],
+                ConfirmPassword = localizer[Resources.Common.LblConfirmPassword],
+                Continue = localizer[Resources.Common.BtnContinue],
+                Email = localizer[Resources.Common.LblEmail],
+                NeedNewCode = signUpLocalizer[Resources.Pages.Connect.MsgNeedNewCode],
+                Or = localizer[Resources.Common.Or],
+                Password = localizer[Resources.Common.LblPassword],
+                ResendCode = signUpLocalizer[Resources.Pages.Connect.BtnResendCode],
+                ResendResetLink = signUpLocalizer[Resources.Pages.Connect.BtnResendResetLink],
+                SetPasswordMessage = signUpLocalizer[Resources.Pages.Connect.SetPassword_Msg],
+                SignIn = signUpLocalizer[Resources.Pages.Connect.BtnLogin],
+                SignUpWith = signUpLocalizer[Resources.Pages.Connect.MsgSignUpWith],
+                VerifyCode = signUpLocalizer[Resources.Pages.Connect.BtnVerifyCode],
+                VerifyCodeMessage = signUpLocalizer[Resources.Pages.Connect.VerifyCode_Msg],
 
             };
         }

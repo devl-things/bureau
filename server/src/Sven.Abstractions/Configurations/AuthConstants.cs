@@ -173,6 +173,7 @@
         public static class PropertyNames
         {
             //Login field names
+            public const string CurrentPassword = "currentPassword";
             public const string ConfirmPassword = "confirmPassword";
             public const string Email = "email";
             public const string Password = "password";

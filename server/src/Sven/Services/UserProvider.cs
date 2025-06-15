@@ -11,6 +11,9 @@ namespace Sven.Services
         private const int MAX_VERIFICATION_CODE = 999999;
         private const int MIN_VERIFICATION_CODE = 100000;
 
+        private string _currentUserId = string.Empty;
+        private SvenUser _currentUser = null!;
+
         private readonly IStore<string, string> _miscStore;
         private readonly IStore<string, UserVerificationCode> _verificationCodeStore;
         private readonly IUserStore _userStore;

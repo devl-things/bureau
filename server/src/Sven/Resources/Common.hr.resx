@@ -117,22 +117,49 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <data name="ConfirmPassword" xml:space="preserve">
-    <value>Potvrdi lozinku</value>
+  <data name="LblConfirmPassword" xml:space="preserve">
+    <value>Potvrdite lozinku</value>
   </data>
-  <data name="Email" xml:space="preserve">
+  <data name="LblCurrentPassword" xml:space="preserve">
+    <value>Postojeća lozinka</value>
+  </data>
+  <data name="LblEmail" xml:space="preserve">
     <value>Email</value>
+  </data>
+  <data name="MsgFieldIsRequired" xml:space="preserve">
+    <value>Polje "{0}" je obavezno.</value>
+  </data>
+  <data name="LblNewPassword" xml:space="preserve">
+    <value>Nova lozinka</value>
   </data>
   <data name="Or" xml:space="preserve">
     <value>ili</value>
   </data>
-  <data name="Password" xml:space="preserve">
-    <value>Lozinka</value>
-  </data>
-  <data name="Username" xml:space="preserve">
+  <data name="LblUsername" xml:space="preserve">
     <value>Korisničko ime</value>
   </data>
-  <data name="UsernameOrEmail" xml:space="preserve">
+  <data name="LblUsernameOrEmail" xml:space="preserve">
     <value>Korisničko ime ili email</value>
+  </data>
+  <data name="MsgFieldsShouldMatch" xml:space="preserve">
+    <value>Vrijednosti polja "{0}" i "{1}" trebaju biti jednaka.</value>
+  </data>
+  <data name="BtnCancel" xml:space="preserve">
+    <value>Otkažite</value>
+  </data>
+  <data name="BtnSave" xml:space="preserve">
+    <value>Spremite</value>
+  </data>
+  <data name="BtnUpdate" xml:space="preserve">
+    <value>Ažurirajte</value>
+  </data>
+  <data name="MsgInputIsInvalid" xml:space="preserve">
+    <value>Unos je nevažeći.</value>
+  </data>
+  <data name="LblPassword" xml:space="preserve">
+    <value>Lozinka</value>
+  </data>
+  <data name="BtnContinue" xml:space="preserve">
+    <value>Nastavite</value>
   </data>
 </root>

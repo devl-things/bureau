@@ -5,7 +5,6 @@ using Microsoft.Extensions.Localization;
 using Sven.Configurations;
 using Sven.Extensions;
 using Sven.Models;
-using Sven.Pages.Connect;
 using Sven.Services;
 
 namespace Sven.PageModels.SignUp
@@ -18,13 +17,13 @@ namespace Sven.PageModels.SignUp
         public override bool ShowExternalLoginsOption { get { return Step == SignUpStep.EnterEmail; } }
 
         public override bool ShowSignInOption { get { return Step == SignUpStep.EnterEmail; } }
-        public PlainSignUpPageModel(ILogger<PlainSignUpPageModel> logger, IStringLocalizer<SignUpModel> localizer, IUserProvider userProvider,
-            INotificationService<UserVerificationCodeNotification> notificationService) : base(logger, localizer, userProvider)
+        public PlainSignUpPageModel(ILogger<PlainSignUpPageModel> logger, IStringLocalizer<Resources.Pages.Connect> pageLocalizer, IUserProvider userProvider,
+            INotificationService<UserVerificationCodeNotification> notificationService) : base(logger, pageLocalizer, userProvider)
         {
             _notificationService = notificationService;
-            Title = _localizer[nameof(SignUpModelText.CreateAccountTitle)];
-            FinalMessage = _localizer[nameof(SignUpModelText.ForgotPasswordFinalMessage)];
-            FinalMessageLine1 = _localizer[nameof(SignUpModelText.ForgotPasswordFinalMessageLine1)];
+            Title = pageLocalizer[Resources.Pages.Connect.PlainSignUp_Title];
+            FinalMessage = pageLocalizer[Resources.Pages.Connect.ForgotSignUp_MsgFinal];
+            FinalMessageLine1 = _pageLocalizer[Resources.Pages.Connect.ForgotSignUp_MsgLine1];
         }
         protected override VerificationStatus StatusToValidateInSetPassword() => VerificationStatus.Verified;
 

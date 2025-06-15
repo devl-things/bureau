@@ -117,61 +117,70 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <data name="AlreadyAccount" xml:space="preserve">
-    <value>Već imate račun? </value>
+  <data name="BtnCreate" xml:space="preserve">
+    <value>Create</value>
   </data>
-  <data name="CodeSentMessage" xml:space="preserve">
-    <value>Poveznica za ponovno postavljanje lozinke poslana je na</value>
+  <data name="BtnLogin" xml:space="preserve">
+    <value>Log in</value>
   </data>
-  <data name="CodeSentMessageLine1" xml:space="preserve">
-    <value>Popratite upute u email za ponovno postavljanje lozinke</value>
+  <data name="BtnResendCode" xml:space="preserve">
+    <value>Resend code</value>
   </data>
-  <data name="CodeSentMessageLine2" xml:space="preserve">
-    <value>Nekad email može završiti u spam pretincu, ako ga niste dobili probajte ponovo poslati</value>
+  <data name="BtnResendResetLink" xml:space="preserve">
+    <value>Resend reset link</value>
   </data>
-  <data name="Continue" xml:space="preserve">
-    <value>Nastavite</value>
+  <data name="BtnSignUp" xml:space="preserve">
+    <value>Sign up</value>
   </data>
-  <data name="Create" xml:space="preserve">
-    <value>Prijava</value>
+  <data name="BtnVerifyCode" xml:space="preserve">
+    <value>Verify code</value>
   </data>
-  <data name="CreateAccountTitle" xml:space="preserve">
-    <value>Napravite novi račun</value>
+  <data name="CodeSent_MsgLine1" xml:space="preserve">
+    <value>Follow the instructions in email to complete password reset.</value>
   </data>
-  <data name="ForgotPasswordFinalMessage" xml:space="preserve">
-    <value>Vaša lozinka je uspješno resetirana</value>
+  <data name="CodeSent_MsgLine2" xml:space="preserve">
+    <value>Sometimes email ends up in spam folder, if you didn't received it try resending</value>
   </data>
-  <data name="ForgotPasswordFinalMessageLine1" xml:space="preserve">
-    <value>Sada se možete prijaviti s novom lozinkom</value>
+  <data name="CodeSent_MsgMain" xml:space="preserve">
+    <value>Email with reset link was sent to</value>
   </data>
-  <data name="ForgotPasswordSubtitle" xml:space="preserve">
-    <value>Upišite email i poslat ćemo Vam poveznicu za ponovno postavljanje lozinke</value>
+  <data name="ForgotSignUp_MsgFinal" xml:space="preserve">
+    <value>Your password has been successfully reset</value>
   </data>
-  <data name="ForgotPasswordTitle" xml:space="preserve">
-    <value>Zaboravili ste lozinku?</value>
+  <data name="ForgotSignUp_MsgLine1" xml:space="preserve">
+    <value>You can now sign in with your new password.</value>
   </data>
-  <data name="NeedNewCode" xml:space="preserve">
-    <value>Trebate novi kod? </value>
+  <data name="ForgotSignUp_Subtitle" xml:space="preserve">
+    <value>Write your email and we'll send you a reset link</value>
   </data>
-  <data name="ResendCode" xml:space="preserve">
-    <value>Pošalji ponovo kod</value>
+  <data name="ForgotSignUp_Title" xml:space="preserve">
+    <value>Forgot the password?</value>
   </data>
-  <data name="ResendResetLink" xml:space="preserve">
-    <value>Pošalji ponovo poveznicu</value>
+  <data name="MsgAlreadyAccount" xml:space="preserve">
+    <value>Already have an account? </value>
   </data>
-  <data name="SetPasswordMessage" xml:space="preserve">
-    <value>Molim, postavite lozinku za novi račun</value>
+  <data name="MsgForgotPassword" xml:space="preserve">
+    <value>Forgot password?</value>
   </data>
-  <data name="SignIn" xml:space="preserve">
-    <value>Uđite</value>
+  <data name="MsgNeedNewCode" xml:space="preserve">
+    <value>Need a new code? </value>
   </data>
-  <data name="SignUpWith" xml:space="preserve">
-    <value>Prijavite se s</value>
+  <data name="MsgSignInWith" xml:space="preserve">
+    <value>Login with</value>
   </data>
-  <data name="VerifyCode" xml:space="preserve">
-    <value>Provjerite kod</value>
+  <data name="MsgSignUpWith" xml:space="preserve">
+    <value>Sign up with</value>
   </data>
-  <data name="VerifyCodeMessage" xml:space="preserve">
-    <value>Molim, unesite verifikacijski kod iz emaila (provjerite i spam pretinac) poslano na</value>
+  <data name="MsgWelcome" xml:space="preserve">
+    <value>Welcome</value>
+  </data>
+  <data name="PlainSignUp_Title" xml:space="preserve">
+    <value>Create an account</value>
+  </data>
+  <data name="SetPassword_Msg" xml:space="preserve">
+    <value>Please, set the password for new account</value>
+  </data>
+  <data name="VerifyCode_Msg" xml:space="preserve">
+    <value>Please, enter the verification code from the email in your inbox or spam folder sent to</value>
   </data>
 </root>

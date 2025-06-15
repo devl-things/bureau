@@ -117,22 +117,49 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <data name="ConfirmPassword" xml:space="preserve">
+  <data name="LblConfirmPassword" xml:space="preserve">
     <value>Confirm password</value>
   </data>
-  <data name="Email" xml:space="preserve">
+  <data name="LblCurrentPassword" xml:space="preserve">
+    <value>Current password</value>
+  </data>
+  <data name="LblEmail" xml:space="preserve">
     <value>Email</value>
+  </data>
+  <data name="MsgFieldIsRequired" xml:space="preserve">
+    <value>Field "{0}" is required.</value>
+  </data>
+  <data name="LblNewPassword" xml:space="preserve">
+    <value>New password</value>
   </data>
   <data name="Or" xml:space="preserve">
     <value>or</value>
   </data>
-  <data name="Password" xml:space="preserve">
-    <value>Password</value>
-  </data>
-  <data name="Username" xml:space="preserve">
+  <data name="LblUsername" xml:space="preserve">
     <value>Username</value>
   </data>
-  <data name="UsernameOrEmail" xml:space="preserve">
+  <data name="LblUsernameOrEmail" xml:space="preserve">
     <value>Username or email</value>
+  </data>
+  <data name="MsgFieldsShouldMatch" xml:space="preserve">
+    <value>Field values "{0}" and "{1}" should match.</value>
+  </data>
+  <data name="BtnCancel" xml:space="preserve">
+    <value>Cancel</value>
+  </data>
+  <data name="BtnSave" xml:space="preserve">
+    <value>Save</value>
+  </data>
+  <data name="BtnUpdate" xml:space="preserve">
+    <value>Update</value>
+  </data>
+  <data name="MsgInputIsInvalid" xml:space="preserve">
+    <value>Input is invalid.</value>
+  </data>
+  <data name="LblPassword" xml:space="preserve">
+    <value>Password</value>
+  </data>
+  <data name="BtnContinue" xml:space="preserve">
+    <value>Continue</value>
   </data>
 </root>

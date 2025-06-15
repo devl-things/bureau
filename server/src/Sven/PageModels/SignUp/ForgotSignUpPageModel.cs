@@ -4,7 +4,6 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Localization;
 using Sven.Configurations;
 using Sven.Models;
-using Sven.Pages.Connect;
 using Sven.Services;
 using System.Runtime.CompilerServices;
 
@@ -18,16 +17,15 @@ namespace Sven.PageModels.SignUp
         public override bool ShowSignInOption { get { return false; } }
 
         public ForgotSignUpPageModel(ILogger<ForgotSignUpPageModel> logger,
-            IStringLocalizer<SignUpModel> localizer,
+            IStringLocalizer<Resources.Pages.Connect> pageLocalizer,
             IUserProvider userProvider,
             ISymEncryptor encryptor,
-            INotificationService<PasswordResetNotification> notificationService) : base(logger, localizer, userProvider)
+            INotificationService<PasswordResetNotification> notificationService) : base(logger, pageLocalizer, userProvider)
         {
-            Title = _localizer[nameof(SignUpModelText.ForgotPasswordTitle)];
-            Subtitle = _localizer[nameof(SignUpModelText.ForgotPasswordSubtitle)];
-            Subtitle = _localizer[nameof(SignUpModelText.ForgotPasswordSubtitle)];
-            FinalMessage = _localizer[nameof(SignUpModelText.ForgotPasswordFinalMessage)];
-            FinalMessageLine1 = _localizer[nameof(SignUpModelText.ForgotPasswordFinalMessageLine1)];
+            Title = _pageLocalizer[Resources.Pages.Connect.ForgotSignUp_Title];
+            Subtitle = _pageLocalizer[Resources.Pages.Connect.ForgotSignUp_Subtitle];
+            FinalMessage = _pageLocalizer[Resources.Pages.Connect.ForgotSignUp_MsgFinal];
+            FinalMessageLine1 = _pageLocalizer[Resources.Pages.Connect.ForgotSignUp_MsgLine1];
             _encryptor = encryptor;
             _notificationService = notificationService;
         }

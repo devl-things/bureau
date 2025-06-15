@@ -117,19 +117,70 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <data name="SignInWith" xml:space="preserve">
-    <value>Login with</value>
+  <data name="BtnCreate" xml:space="preserve">
+    <value>Prijava</value>
   </data>
-  <data name="ForgotPassword" xml:space="preserve">
-    <value>Forgot password?</value>
+  <data name="BtnLogin" xml:space="preserve">
+    <value>Uđite</value>
   </data>
-  <data name="Login" xml:space="preserve">
-    <value>Login</value>
+  <data name="BtnResendCode" xml:space="preserve">
+    <value>Pošalji ponovo kod</value>
   </data>
-  <data name="SignUp" xml:space="preserve">
-    <value>Sign up</value>
+  <data name="BtnResendResetLink" xml:space="preserve">
+    <value>Pošalji ponovo poveznicu</value>
   </data>
-  <data name="Welcome" xml:space="preserve">
-    <value>Welcome</value>
+  <data name="BtnSignUp" xml:space="preserve">
+    <value>Prijavite se</value>
+  </data>
+  <data name="BtnVerifyCode" xml:space="preserve">
+    <value>Provjerite kod</value>
+  </data>
+  <data name="CodeSent_MsgLine1" xml:space="preserve">
+    <value>Popratite upute u email za ponovno postavljanje lozinke</value>
+  </data>
+  <data name="CodeSent_MsgLine2" xml:space="preserve">
+    <value>Nekad email može završiti u spam pretincu, ako ga niste dobili probajte ponovo poslati</value>
+  </data>
+  <data name="CodeSent_MsgMain" xml:space="preserve">
+    <value>Poveznica za ponovno postavljanje lozinke poslana je na</value>
+  </data>
+  <data name="ForgotSignUp_MsgFinal" xml:space="preserve">
+    <value>Vaša lozinka je uspješno resetirana</value>
+  </data>
+  <data name="ForgotSignUp_MsgLine1" xml:space="preserve">
+    <value>Sada se možete prijaviti s novom lozinkom</value>
+  </data>
+  <data name="ForgotSignUp_Subtitle" xml:space="preserve">
+    <value>Upišite email i poslat ćemo Vam poveznicu za ponovno postavljanje lozinke</value>
+  </data>
+  <data name="ForgotSignUp_Title" xml:space="preserve">
+    <value>Zaboravili ste lozinku?</value>
+  </data>
+  <data name="MsgAlreadyAccount" xml:space="preserve">
+    <value>Već imate račun? </value>
+  </data>
+  <data name="MsgForgotPassword" xml:space="preserve">
+    <value>Zaboravili ste lozinku?</value>
+  </data>
+  <data name="MsgNeedNewCode" xml:space="preserve">
+    <value>Trebate novi kod? </value>
+  </data>
+  <data name="MsgSignInWith" xml:space="preserve">
+    <value>Uđite s </value>
+  </data>
+  <data name="MsgSignUpWith" xml:space="preserve">
+    <value>Prijavite se s</value>
+  </data>
+  <data name="MsgWelcome" xml:space="preserve">
+    <value>Dobrodošli</value>
+  </data>
+  <data name="PlainSignUp_Title" xml:space="preserve">
+    <value>Napravite novi račun</value>
+  </data>
+  <data name="SetPassword_Msg" xml:space="preserve">
+    <value>Molim, postavite lozinku za novi račun</value>
+  </data>
+  <data name="VerifyCode_Msg" xml:space="preserve">
+    <value>Molim, unesite verifikacijski kod iz emaila (provjerite i spam pretinac) poslano na</value>
   </data>
 </root>

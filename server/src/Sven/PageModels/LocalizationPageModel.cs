@@ -5,13 +5,13 @@ namespace Sven.PageModels
 {
     public abstract class LocalizationPageModel<TPageModel, TText> : PageModel
     {
-        protected readonly IStringLocalizer<TPageModel> _localizer;
-        protected readonly IStringLocalizer<Common> _sharedLocalizer;
+        protected readonly IStringLocalizer<TPageModel> _pageLocalizer;
+        protected readonly IStringLocalizer<Resources.Common> _localizer;
         public abstract TText Text { get; }
-        protected LocalizationPageModel(IStringLocalizer<Common> sharedLocalizer, IStringLocalizer<TPageModel> localizer)
+        protected LocalizationPageModel(IStringLocalizer<Resources.Common> localizer, IStringLocalizer<TPageModel> pageLocalizer)
         {
-            _sharedLocalizer = sharedLocalizer;
             _localizer = localizer;
+            _pageLocalizer = pageLocalizer;
         }
     }
 }

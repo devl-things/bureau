@@ -1,5 +1,7 @@
-﻿@{
+﻿@using System.Globalization
+@{
     string brand = "Sven";
+    string currentCulture = CultureInfo.CurrentUICulture.TwoLetterISOLanguageName;
 }
 @functions {
     bool IsActive(string path, bool exact = false)
@@ -36,6 +38,13 @@
         <div id="main-content" class="main-content d-flex flex-column flex-grow-1">
             <header class="navbar navbar-expand-lg navbar-light bg-light border-bottom shadow-sm ps-2 pe-4">
                 <div class="container-fluid d-flex align-items-center">
+                    <div class="language-switcher">
+                        <select id="languageSwitcher" onchange="onLanguageChange(this)">
+                            <option value="en" selected="@(currentCulture == "en")">English</option>
+                            <option value="hr" selected="@(currentCulture == "hr")">Hrvatski</option>
+                        </select>
+                    </div>
+                    
                     <button class="hamburger-toggle me-3" onclick="toggleSidebar()" title="Toggle menu">
                         <i class="bi bi-list"></i>
                     </button>
@@ -63,7 +72,13 @@
     <environment names="Staging,Production">
         <script src="~@JsScriptNames.SvenMin" asp-append-version="true"></script>
     </environment>
-
+    <script>
+        function onLanguageChange(select) {
+            const selectedLang = select.value;
+            document.cookie = `.AspNetCore.Culture=c=${selectedLang}|uic=${selectedLang}; path=/; max-age=31536000; SameSite=Lax; Secure`; // 1 year
+            window.location.reload();
+        }
+    </script>
     @await RenderSectionAsync("ScriptsFooter", required: false)
 </body>
 </html>

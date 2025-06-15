@@ -7,7 +7,9 @@ namespace Sven.Configurations
         public static class Account
         {
             public const string Base = "account";
+            public const string ChangePasswordPath = "change-password";
             public const string AccountInfo = $"/{Base}";
+            public const string ChangePassword = $"/{Base}/{ChangePasswordPath}";
         }
         public static class Oidc
         {

@@ -6,6 +6,5 @@ namespace Sven.Models
     {
         public string SubjectId { get; set; } = Guid.NewGuid().ToString("N");
         public string PasswordHash { get; set; } = string.Empty;
-
     }
 }

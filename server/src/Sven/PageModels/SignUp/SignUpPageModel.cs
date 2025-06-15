@@ -13,7 +13,7 @@ namespace Sven.PageModels.SignUp
     public abstract class SignUpPageModel : IExternalLoginProperty
     {
         protected readonly ILogger<SignUpPageModel> _logger;
-        protected readonly IStringLocalizer<SignUpModel> _localizer;
+        protected readonly IStringLocalizer<Resources.Pages.Connect> _pageLocalizer;
         protected readonly IUserProvider _userProvider;
 
         public SignUpModel BasePage { get; set; } = null!;
@@ -29,10 +29,10 @@ namespace Sven.PageModels.SignUp
         public virtual bool ShowSignInOption { get; }
         public List<ExternalLoginModel> ExternalLogins { get; init; }
 
-        protected SignUpPageModel(ILogger<SignUpPageModel> logger, IStringLocalizer<SignUpModel> localizer, IUserProvider userProvider)
+        protected SignUpPageModel(ILogger<SignUpPageModel> logger, IStringLocalizer<Resources.Pages.Connect> pageLocalizer, IUserProvider userProvider)
         {
             _logger = logger;
-            _localizer = localizer;
+            _pageLocalizer = pageLocalizer;
             _userProvider = userProvider;
             ExternalLogins = ExternalLoginProviders.ExternalList;
         }
