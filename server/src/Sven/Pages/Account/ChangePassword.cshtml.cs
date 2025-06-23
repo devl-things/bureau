@@ -50,6 +50,7 @@ namespace Sven.Pages.Account
                 return Page();
             }
 
+            // #54
             Result result = await _userProvider.UpdatePasswordAsync(CurrentUser.SubjectId, Input.Password!, cancellationToken);
 
             TempData[TempDataNames.SuccessMessage] = _accountLocalizer[Resources.Pages.Account.ChangePassword_MsgSuccess].ToString();

@@ -11,10 +11,23 @@
     <div class="alert alert-success">@msg</div>
 }
 
- <div class="card mb-4">
+<div class="card mb-4" style="max-width: 800px;">
     <div class="card-body">
-        <p><strong>@Model.Text.LblEmail:</strong> @Model.CurrentUser.DisplayName</p>
-        <p><strong>@Model.Text.LblUsername:</strong> @Model.CurrentUser.Username</p>
-        <p><strong>@Model.Text.LblPassword:</strong> <a class="btn btn-outline-primary" href="/account/change-password">@Model.Text.BtnChangePassword</a></p>
+        <div class="row mb-3">
+            <div class="col-4 fw-semibold">@Model.Text.LblEmail:</div>
+            <div class="col-8">@Model.CurrentUser.DisplayName</div>
+        </div>
+        <div class="row mb-3">
+            <div class="col-4 fw-semibold">@Model.Text.LblUsername:</div>
+            <div class="col-8">@Model.CurrentUser.Username</div>
+        </div>
+        <div class="row mb-0">
+            <div class="col-4 fw-semibold">@Model.Text.LblPassword:</div>
+            <div class="col-8">
+                <a class="btn btn-outline-primary btn-sm" href="/account/change-password">
+                    @Model.Text.BtnChangePassword
+                </a>
+            </div>
+        </div>
     </div>
 </div>
