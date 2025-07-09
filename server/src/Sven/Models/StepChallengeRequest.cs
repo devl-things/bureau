@@ -1,13 +1,13 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Sven.Configurations;
-using Sven.PageModels.SignUp;
+using Sven.PageModels.Connect.SignUp;
 
 namespace Sven.Models
 {
     public record StepChallengeRequest
     {
         private string _stepShort = string.Empty;
-        [FromQuery(Name = AuthConstants.PropertyNames.Step)]
+        [FromQuery(Name = ViewConstants.PropertyNames.Step)]
         public string StepShort
         {
             get { return _stepShort; }

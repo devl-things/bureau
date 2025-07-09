@@ -61,11 +61,20 @@ namespace Sven.Resources.Pages {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to External logins.
+        /// </summary>
+        public static string Account_ExternalProviders_Subtitle {
+            get {
+                return ResourceManager.GetString("Account_ExternalProviders_Subtitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Account information.
         /// </summary>
-        public static string Account_Title {
+        public static string Account_Info_Subtitle {
             get {
-                return ResourceManager.GetString("Account_Title", resourceCulture);
+                return ResourceManager.GetString("Account_Info_Subtitle", resourceCulture);
             }
         }
         
@@ -93,6 +102,33 @@ namespace Sven.Resources.Pages {
         public static string ChangePassword_Title {
             get {
                 return ResourceManager.GetString("ChangePassword_Title", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Account.
+        /// </summary>
+        public static string LblAccount {
+            get {
+                return ResourceManager.GetString("LblAccount", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Connected.
+        /// </summary>
+        public static string LinkedIdentity_Status_Connected {
+            get {
+                return ResourceManager.GetString("LinkedIdentity_Status_Connected", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Disconnected.
+        /// </summary>
+        public static string LinkedIdentity_Status_Disconnected {
+            get {
+                return ResourceManager.GetString("LinkedIdentity_Status_Disconnected", resourceCulture);
             }
         }
     }

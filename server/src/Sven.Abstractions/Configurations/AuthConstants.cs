@@ -172,26 +172,11 @@
 
         public static class PropertyNames
         {
-            //Login field names
-            public const string CurrentPassword = "currentPassword";
-            public const string ConfirmPassword = "confirmPassword";
-            public const string Email = "email";
-            public const string Password = "password";
-            public const string VerificationCode = "verificationCode";
-            public const string Username = "username";
-
             public const string Challenge = "c";
             public const string Mode = "m";
-            public const string Step = "s";
             public const string Ticket = "t";
-            public const string Action = "action";
         }
-        public static class Actions
-        {
-            public const string VerifyCode = "verify";
-            public const string ResendCode = "resend";
 
-        }
         public static class CookieNames
         {
             public const string PkceKey = "pkce_key";

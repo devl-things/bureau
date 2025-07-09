@@ -1,5 +1,5 @@
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Sven.Configurations;
 using Sven.PageModels;
 using Sven.PageModels.Account;
 using Sven.PageModels.Account.LinkedIdentities;
@@ -8,13 +8,11 @@ using Sven.Services;
 
 namespace Sven.Pages.Account
 {
-    [Authorize]
-    public class AccountModel : AuthPageModel
+    public class LinkedIdentitiesModel : AuthPageModel
     {
         public LinkedIdentitiesViewModel LinkedIdentitiesViewModel { get; init; }
         public AccountTranslations T9n { get; init; }
-
-        public AccountModel(ICurrentUserProvider currentUserProvider,
+        public LinkedIdentitiesModel(ICurrentUserProvider currentUserProvider,
             AccountTranslations translations) : base(currentUserProvider)
         {
             T9n = translations;
@@ -26,8 +24,9 @@ namespace Sven.Pages.Account
                 },
                 Options = new LinkedIdentityViewOptions()
                 {
-                    ShowManageBtn = true,
-                    ShowActions = false,
+                    ShowManageBtn = false,
+                    ShowActions = true,
+                    ShowAddOption = true
                 },
                 T9n = translations,
             };
@@ -38,6 +37,7 @@ namespace Sven.Pages.Account
             LinkedIdentitiesViewModel.Data.LinkedIdentities = CurrentUser.LinkedIdentities?
                 .Select(x => new LinkedIdentityModel()
                 {
+                    Id = Guid.NewGuid().ToString(),
                     ProviderName = x.ProviderName,
                     Email = x.Email,
                     Status = x.Status,
@@ -45,6 +45,24 @@ namespace Sven.Pages.Account
                     AvailableActions = LinkedIdentityActions.Remove | (x.Status.HasValue && x.Status.Value ? LinkedIdentityActions.Disconnect : LinkedIdentityActions.Connect)
                 }).ToList() ?? [];
             return Page();
+        }
+
+        public async Task<IActionResult> OnPostActionsAsync([FromForm(Name = ViewConstants.PropertyNames.Id)] string id, [FromForm(Name = ViewConstants.PropertyNames.Action)] LinkedIdentityActions action)
+        {
+            if (action.HasFlag(LinkedIdentityActions.Connect))
+            {
+                // Handle Connect
+            }
+            else if (action.HasFlag(LinkedIdentityActions.Disconnect))
+            {
+                // Handle Disconnect
+            }
+            else if (action.HasFlag(LinkedIdentityActions.Remove))
+            {
+                // Handle Remove
+            }
+
+            return RedirectToPage();
         }
     }
 }

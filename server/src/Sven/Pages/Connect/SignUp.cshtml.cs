@@ -1,10 +1,10 @@
 using Bureau.Core;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using Microsoft.Extensions.Localization;
 using Sven.Models;
 using Sven.PageModels;
-using Sven.PageModels.SignUp;
+using Sven.PageModels.Connect;
+using Sven.PageModels.Connect.SignUp;
 
 namespace Sven.Pages.Connect
 {
@@ -14,39 +14,17 @@ namespace Sven.Pages.Connect
         private readonly ILogger<SignUpModel> _logger;
         private readonly IPageModelFactory<SignUpModel, SignUpPageModel> _modelFactory;
 
-        public SignUpModelText Text { get; init; }
+        public ConnectTranslations T9n { get; init; }
         public SignUpPageModel CurrentModel { get; protected set; } = null!;
         public string? ErrorMessage { get; set; }
 
         public SignUpModel(ILogger<SignUpModel> logger,
-            IStringLocalizer<Resources.Common> localizer,
-            IStringLocalizer<Resources.Pages.Connect> signUpLocalizer,
+            ConnectTranslations translations,
             IPageModelFactory<SignUpModel, SignUpPageModel> modelFactory) : base()
         {
             _logger = logger;
             _modelFactory = modelFactory;
-            Text = new SignUpModelText()
-            {
-                AlreadyAccount = signUpLocalizer[Resources.Pages.Connect.MsgAlreadyAccount],
-                Create = signUpLocalizer[Resources.Pages.Connect.BtnCreate],
-                CodeSentMessage = signUpLocalizer[Resources.Pages.Connect.CodeSent_MsgMain],
-                CodeSentMessageLine1 = signUpLocalizer[Resources.Pages.Connect.CodeSent_MsgLine1],
-                CodeSentMessageLine2 = signUpLocalizer[Resources.Pages.Connect.CodeSent_MsgLine2],
-                ConfirmPassword = localizer[Resources.Common.LblConfirmPassword],
-                Continue = localizer[Resources.Common.BtnContinue],
-                Email = localizer[Resources.Common.LblEmail],
-                NeedNewCode = signUpLocalizer[Resources.Pages.Connect.MsgNeedNewCode],
-                Or = localizer[Resources.Common.Or],
-                Password = localizer[Resources.Common.LblPassword],
-                ResendCode = signUpLocalizer[Resources.Pages.Connect.BtnResendCode],
-                ResendResetLink = signUpLocalizer[Resources.Pages.Connect.BtnResendResetLink],
-                SetPasswordMessage = signUpLocalizer[Resources.Pages.Connect.SetPassword_Msg],
-                SignIn = signUpLocalizer[Resources.Pages.Connect.BtnLogin],
-                SignUpWith = signUpLocalizer[Resources.Pages.Connect.MsgSignUpWith],
-                VerifyCode = signUpLocalizer[Resources.Pages.Connect.BtnVerifyCode],
-                VerifyCodeMessage = signUpLocalizer[Resources.Pages.Connect.VerifyCode_Msg],
-
-            };
+            T9n = translations;
         }
 
 

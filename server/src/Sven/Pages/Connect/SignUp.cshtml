@@ -1,76 +1,77 @@
 ﻿@page
 @using Sven.Configurations;
 @using Sven.PageModels;
-@using Sven.PageModels.ExternalLogins
-@using Sven.PageModels.SignUp;
+@using Sven.PageModels.Connect;
+@using Sven.PageModels.Connect.SignUp;
+@using Sven.PageModels.Connect.ExternalProviders;
 @model Sven.Pages.Connect.SignUpModel
 @{
     Layout = "_SignLayout";
 }
 
 @section Header {
-    <h2>@Model.CurrentModel.Title</h2>
-    @if (!string.IsNullOrWhiteSpace(Model.CurrentModel.Subtitle))
+    <h2>@Model.CurrentModel.T9n.Title</h2>
+    @if (!string.IsNullOrWhiteSpace(Model.CurrentModel.T9n.Subtitle))
     {
-        <h4>@Model.CurrentModel.Subtitle</h4>
+        <h4>@Model.CurrentModel.T9n.Subtitle</h4>
     }
 }
 
 @await Html.PartialAsync("_ErrorMessage", Model.ErrorMessage)
 
 <form method="post">
-    <input type="hidden" name="@AuthConstants.PropertyNames.Step" value="@((int)Model.CurrentModel.Step)" />
+    <input type="hidden" name="@ViewConstants.PropertyNames.Step" value="@((int)Model.CurrentModel.Step)" />
     @if (Model.CurrentModel.Step == SignUpStep.EnterEmail)
     {
-        <input type="email" placeholder="@Model.Text.Email" name="@AuthConstants.PropertyNames.Email" value="@Model.CurrentModel.Email" required />
+        <input type="email" placeholder="@Model.T9n.Email" name="@ViewConstants.PropertyNames.Email" value="@Model.CurrentModel.Email" required />
         <br />
-        <button type="submit">@Model.Text.Continue</button>
+        <button type="submit">@Model.T9n.Continue</button>
     }
     else if (Model.CurrentModel.Step == SignUpStep.VerifyCode)
     {
         <div class="centered-spans">
-            <span>@Model.Text.VerifyCodeMessage</span>
+            <span>@Model.T9n.VerifyCodeMessage</span>
             <span class="bold">@Model.CurrentModel.Email</span>
         </div>
-        <input type="hidden" name="@AuthConstants.PropertyNames.Email" value="@Model.CurrentModel.Email" required />
-        <input type="text" name="@AuthConstants.PropertyNames.VerificationCode" required />
+        <input type="hidden" name="@ViewConstants.PropertyNames.Email" value="@Model.CurrentModel.Email" required />
+        <input type="text" name="@ViewConstants.PropertyNames.VerificationCode" required />
         <br />
-        <button type="submit" name="@AuthConstants.PropertyNames.Action" value="@AuthConstants.Actions.VerifyCode">@Model.Text.VerifyCode</button>
-        <button type="submit" class="button-secondary" name="@AuthConstants.PropertyNames.Action" value="@AuthConstants.Actions.ResendCode">@Model.Text.ResendCode</button>
+        <button type="submit" name="@ViewConstants.PropertyNames.Action" value="@ViewConstants.Actions.VerifyCode">@Model.T9n.VerifyCode</button>
+        <button type="submit" class="button-secondary" name="@ViewConstants.PropertyNames.Action" value="@ViewConstants.Actions.ResendCode">@Model.T9n.VerifyCode</button>
     }
     else if (Model.CurrentModel.Step == SignUpStep.CodeSent)
     {
         <div class="centered-spans">
-            <span>@Model.Text.CodeSentMessage</span>
+            <span>@Model.T9n.CodeSentMessage</span>
             <span class="bold">@Model.CurrentModel.Email</span>
-            <span>@Model.Text.CodeSentMessageLine1</span>
-            <span>@Model.Text.CodeSentMessageLine2</span>
+            <span>@Model.T9n.CodeSentMessageLine1</span>
+            <span>@Model.T9n.CodeSentMessageLine2</span>
         </div>
-        <input type="hidden" name="@AuthConstants.PropertyNames.Email" value="@Model.CurrentModel.Email" required />
+        <input type="hidden" name="@ViewConstants.PropertyNames.Email" value="@Model.CurrentModel.Email" required />
         <br />
-        <button type="submit" >@Model.Text.ResendResetLink</button>
+        <button type="submit">@Model.T9n.ResendResetLink</button>
     }
     else if (Model.CurrentModel.Step == SignUpStep.SetPassword)
     {
         <div class="centered-spans">
-            <span>@Model.Text.SetPasswordMessage</span>
+            <span>@Model.T9n.SetPasswordMessage</span>
             <span class="bold">@Model.CurrentModel.Email</span>
         </div>
-        <input type="hidden" name="@AuthConstants.PropertyNames.Email" value="@Model.CurrentModel.Email" required />
-        <input type="password" placeholder="@Model.Text.Password" name="@AuthConstants.PropertyNames.Password" required />
+        <input type="hidden" name="@ViewConstants.PropertyNames.Email" value="@Model.CurrentModel.Email" required />
+        <input type="password" placeholder="@Model.T9n.Password" name="@ViewConstants.PropertyNames.Password" required />
         <br />
-        <input type="password" placeholder="@Model.Text.ConfirmPassword" name="@AuthConstants.PropertyNames.ConfirmPassword" required />
+        <input type="password" placeholder="@Model.T9n.ConfirmPassword" name="@ViewConstants.PropertyNames.ConfirmPassword" required />
         <br />
-        <button type="submit">@Model.Text.Create</button>
+        <button type="submit">@Model.T9n.Create</button>
     }
     else if (Model.CurrentModel.Step == SignUpStep.FinalMessage)
     {
         <div class="centered-spans">
-            <span class="bold">@Model.CurrentModel.FinalMessage</span>
-            <span>@Model.CurrentModel.FinalMessageLine1</span>
+            <span class="bold">@Model.CurrentModel.T9n.FinalMessage</span>
+            <span>@Model.CurrentModel.T9n.FinalMessageLine1</span>
         </div>
         <a href="@Endpoints.Connect.SignIn" class="btn btn-primary">
-            @Model.Text.SignIn
+            @Model.T9n.SignIn
         </a>
         @* <button type="submit">@Model.Text.SignIn</button> *@
     }
@@ -78,20 +79,18 @@
 
 @if (Model.CurrentModel.ShowExternalLoginsOption)
 {
-    <div class="divider">@Model.Text.Or</div>
-
-    @await Html.PartialAsync("_ExternalLogins", new ExternalLoginsViewModel
-    {
-        ExternalLogins = Model.CurrentModel.ExternalLogins,
-        PrefixText = Model.Text.SignUpWith
-    })
+    <div class="divider">@Model.T9n.Or</div>
+    @* TODO  change the call to *@
+    @await Html.PartialAsync("_ExternalProviders", Model.CurrentModel.ExternalProvidersViewModel)
 }
 
 @section Footer {
     <div class="links">
         @if (@Model.CurrentModel.ShowSignInOption)
         {
-            @Model.Text.AlreadyAccount<a href="@Endpoints.Connect.SignIn">@Model.Text.SignIn</a>
+            @Model.T9n.AlreadyAccount
+
+            <a href="@Endpoints.Connect.SignIn">@Model.T9n.SignIn</a>
         }
     </div>
 }

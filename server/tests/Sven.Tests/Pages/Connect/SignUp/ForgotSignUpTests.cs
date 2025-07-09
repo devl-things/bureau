@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc.Testing;
 using Sven.Configurations;
 using Sven.Models;
-using Sven.PageModels.SignUp;
+using Sven.PageModels.Connect.SignUp;
 using Sven.Services;
 using Sven.Tests.Fixtures;
 using Sven.Tests.TestData;
@@ -41,15 +41,15 @@ namespace Sven.Tests.Pages.Connect.SignUp
             {
                 Content = new FormUrlEncodedContent(new Dictionary<string, string>
                 {
-                    { AuthConstants.PropertyNames.Email, _existingEmail },
-                    { AuthConstants.PropertyNames.Step, ((int)SignUpStep.EnterEmail).ToString() },
+                    { ViewConstants.PropertyNames.Email, _existingEmail },
+                    { ViewConstants.PropertyNames.Step, ((int)SignUpStep.EnterEmail).ToString() },
                     { MiscHelper.AntiforgeryFormKey, aftEmailGet }
                 })
             };
             HttpResponseMessage enterEmailResponse = await _client.SendAsync(step1);
             Assert.Equal(HttpStatusCode.OK, enterEmailResponse.StatusCode);
             SvenUrl responseUrl = new SvenUrl(enterEmailResponse.RequestMessage?.RequestUri?.ToString());
-            responseUrl.CheckForParameter(AuthConstants.PropertyNames.Step, SignUpStep.CodeSent.ToCode());
+            responseUrl.CheckForParameter(ViewConstants.PropertyNames.Step, SignUpStep.CodeSent.ToCode());
             responseUrl.CheckForParameter(AuthConstants.PropertyNames.Challenge);
 
             // Step 2: get the reset link from email
@@ -75,10 +75,10 @@ namespace Sven.Tests.Pages.Connect.SignUp
             {
                 Content = new FormUrlEncodedContent(new Dictionary<string, string>
                 {
-                    { AuthConstants.PropertyNames.Email, MiscHelper.GetHiddenInputValue(setPasswordGetResponseContent, AuthConstants.PropertyNames.Email) },
-                    { AuthConstants.PropertyNames.Password, TestDataConstants.NewUserPassword },
-                    { AuthConstants.PropertyNames.ConfirmPassword, TestDataConstants.NewUserPassword },
-                    { AuthConstants.PropertyNames.Step, ((int)SignUpStep.SetPassword).ToString() },
+                    { ViewConstants.PropertyNames.Email, MiscHelper.GetHiddenInputValue(setPasswordGetResponseContent, ViewConstants.PropertyNames.Email) },
+                    { ViewConstants.PropertyNames.Password, TestDataConstants.NewUserPassword },
+                    { ViewConstants.PropertyNames.ConfirmPassword, TestDataConstants.NewUserPassword },
+                    { ViewConstants.PropertyNames.Step, ((int)SignUpStep.SetPassword).ToString() },
                     { MiscHelper.AntiforgeryFormKey, aftSetPassword }
                 })
             };

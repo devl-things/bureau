@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.DependencyInjection;
 using Sven.Configurations;
 using Sven.Models;
-using Sven.PageModels.SignUp;
+using Sven.PageModels.Connect.SignUp;
 using Sven.Services;
 using Sven.Tests.Fixtures;
 using Sven.Tests.TestData;
@@ -46,15 +46,15 @@ namespace Sven.Tests.Pages.Connect.SignUp
             {
                 Content = new FormUrlEncodedContent(new Dictionary<string, string>
                 {
-                    { AuthConstants.PropertyNames.Email, _newUserEmail },
-                    { AuthConstants.PropertyNames.Step, ((int)SignUpStep.EnterEmail).ToString() },
+                    { ViewConstants.PropertyNames.Email, _newUserEmail },
+                    { ViewConstants.PropertyNames.Step, ((int)SignUpStep.EnterEmail).ToString() },
                     { MiscHelper.AntiforgeryFormKey, aftEmailGet }
                 })
             };
             HttpResponseMessage enterEmailResponse = await _client.SendAsync(step1);
             Assert.Equal(HttpStatusCode.OK, enterEmailResponse.StatusCode);
             SvenUrl urlStep2 = new(enterEmailResponse.RequestMessage?.RequestUri?.ToString());
-            urlStep2.CheckForParameter(AuthConstants.PropertyNames.Step, SignUpStep.VerifyCode.ToCode());
+            urlStep2.CheckForParameter(ViewConstants.PropertyNames.Step, SignUpStep.VerifyCode.ToCode());
             urlStep2.CheckForParameter(AuthConstants.PropertyNames.Challenge);
 
             // Step 2: Verify Code
@@ -65,17 +65,17 @@ namespace Sven.Tests.Pages.Connect.SignUp
             {
                 Content = new FormUrlEncodedContent(new Dictionary<string, string>
                 {
-                    { AuthConstants.PropertyNames.Email, MiscHelper.GetHiddenInputValue(enterEmailResponseContent, AuthConstants.PropertyNames.Email) },
-                    { AuthConstants.PropertyNames.VerificationCode, codeResult.Value.VerificationCode },
-                    { AuthConstants.PropertyNames.Action, AuthConstants.Actions.VerifyCode },
-                    { AuthConstants.PropertyNames.Step, ((int)SignUpStep.VerifyCode).ToString() },
+                    { ViewConstants.PropertyNames.Email, MiscHelper.GetHiddenInputValue(enterEmailResponseContent, ViewConstants.PropertyNames.Email) },
+                    { ViewConstants.PropertyNames.VerificationCode, codeResult.Value.VerificationCode },
+                    { ViewConstants.PropertyNames.Action, ViewConstants.Actions.VerifyCode },
+                    { ViewConstants.PropertyNames.Step, ((int)SignUpStep.VerifyCode).ToString() },
                     { MiscHelper.AntiforgeryFormKey, aftEnterEmail }
                 })
             };
             HttpResponseMessage verifyCodeResponse = await _client.SendAsync(step2);
             Assert.Equal(HttpStatusCode.OK, verifyCodeResponse.StatusCode);
             SvenUrl urlStep3 = new(verifyCodeResponse.RequestMessage?.RequestUri?.ToString());
-            urlStep3.CheckForParameter(AuthConstants.PropertyNames.Step, SignUpStep.SetPassword.ToCode());
+            urlStep3.CheckForParameter(ViewConstants.PropertyNames.Step, SignUpStep.SetPassword.ToCode());
             urlStep3.CheckForParameter(AuthConstants.PropertyNames.Challenge);
 
             // Step 3: Set Password
@@ -85,10 +85,10 @@ namespace Sven.Tests.Pages.Connect.SignUp
             {
                 Content = new FormUrlEncodedContent(new Dictionary<string, string>
             {
-                { AuthConstants.PropertyNames.Email, MiscHelper.GetHiddenInputValue(verifyCodeResponseContent, AuthConstants.PropertyNames.Email) },
-                { AuthConstants.PropertyNames.Password, _newUserPass },
-                { AuthConstants.PropertyNames.ConfirmPassword, _newUserPass },
-                { AuthConstants.PropertyNames.Step, ((int)SignUpStep.SetPassword).ToString() },
+                { ViewConstants.PropertyNames.Email, MiscHelper.GetHiddenInputValue(verifyCodeResponseContent, ViewConstants.PropertyNames.Email) },
+                { ViewConstants.PropertyNames.Password, _newUserPass },
+                { ViewConstants.PropertyNames.ConfirmPassword, _newUserPass },
+                { ViewConstants.PropertyNames.Step, ((int)SignUpStep.SetPassword).ToString() },
                 { MiscHelper.AntiforgeryFormKey, aftVerifyCode }
             })
             };
@@ -113,8 +113,8 @@ namespace Sven.Tests.Pages.Connect.SignUp
             {
                 Content = new FormUrlEncodedContent(new Dictionary<string, string>
                 {
-                    { AuthConstants.PropertyNames.Email, existingEmail },
-                    { AuthConstants.PropertyNames.Step, ((int)SignUpStep.EnterEmail).ToString() },
+                    { ViewConstants.PropertyNames.Email, existingEmail },
+                    { ViewConstants.PropertyNames.Step, ((int)SignUpStep.EnterEmail).ToString() },
                     { MiscHelper.AntiforgeryFormKey, aftEmailGet }
                 })
             };
@@ -137,15 +137,15 @@ namespace Sven.Tests.Pages.Connect.SignUp
             {
                 Content = new FormUrlEncodedContent(new Dictionary<string, string>
                 {
-                    { AuthConstants.PropertyNames.Email, userEmail },
-                    { AuthConstants.PropertyNames.Step, ((int)SignUpStep.EnterEmail).ToString() },
+                    { ViewConstants.PropertyNames.Email, userEmail },
+                    { ViewConstants.PropertyNames.Step, ((int)SignUpStep.EnterEmail).ToString() },
                     { MiscHelper.AntiforgeryFormKey, aftEmailGet }
                 })
             };
             HttpResponseMessage enterEmailResponse = await _client.SendAsync(step1);
             Assert.Equal(HttpStatusCode.OK, enterEmailResponse.StatusCode);
             SvenUrl urlStep2 = new(enterEmailResponse.RequestMessage?.RequestUri?.ToString());
-            urlStep2.CheckForParameter(AuthConstants.PropertyNames.Step, SignUpStep.VerifyCode.ToCode());
+            urlStep2.CheckForParameter(ViewConstants.PropertyNames.Step, SignUpStep.VerifyCode.ToCode());
             urlStep2.CheckForParameter(AuthConstants.PropertyNames.Challenge);
 
             // Step 2: Verify Code
@@ -156,10 +156,10 @@ namespace Sven.Tests.Pages.Connect.SignUp
             {
                 Content = new FormUrlEncodedContent(new Dictionary<string, string>
                 {
-                    { AuthConstants.PropertyNames.Email, MiscHelper.GetHiddenInputValue(enterEmailResponseContent, AuthConstants.PropertyNames.Email) },
-                    { AuthConstants.PropertyNames.VerificationCode, wrongVerificationCode },
-                    { AuthConstants.PropertyNames.Action, AuthConstants.Actions.VerifyCode },
-                    { AuthConstants.PropertyNames.Step, ((int)SignUpStep.VerifyCode).ToString() },
+                    { ViewConstants.PropertyNames.Email, MiscHelper.GetHiddenInputValue(enterEmailResponseContent, ViewConstants.PropertyNames.Email) },
+                    { ViewConstants.PropertyNames.VerificationCode, wrongVerificationCode },
+                    { ViewConstants.PropertyNames.Action, ViewConstants.Actions.VerifyCode },
+                    { ViewConstants.PropertyNames.Step, ((int)SignUpStep.VerifyCode).ToString() },
                     { MiscHelper.AntiforgeryFormKey, aftEnterEmail }
                 })
             };

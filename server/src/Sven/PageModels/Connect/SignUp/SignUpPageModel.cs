@@ -1,40 +1,39 @@
 ﻿using Bureau.Core;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Localization;
 using Sven.Configurations;
 using Sven.Models;
-using Sven.PageModels.ExternalLogins;
+using Sven.PageModels.Connect.ExternalProviders;
 using Sven.Pages.Connect;
 using Sven.Services;
 using System.Runtime.CompilerServices;
 
-namespace Sven.PageModels.SignUp
+namespace Sven.PageModels.Connect.SignUp
 {
-    public abstract class SignUpPageModel : IExternalLoginProperty
+    public abstract class SignUpPageModel
     {
         protected readonly ILogger<SignUpPageModel> _logger;
-        protected readonly IStringLocalizer<Resources.Pages.Connect> _pageLocalizer;
         protected readonly IUserProvider _userProvider;
+
+        public ExternalProvidersViewModel ExternalProvidersViewModel { get; init; }
 
         public SignUpModel BasePage { get; set; } = null!;
         public SignUpStep Step { get; set; }
         public string? Email { get; set; }
 
-        public string Title { get; set; } = string.Empty;
-        public string? Subtitle { get; set; }
+        public required SignUpTranslations T9n { get; set; }
 
-        public string? FinalMessage { get; set; }
-        public string? FinalMessageLine1 { get; set; }
         public virtual bool ShowExternalLoginsOption { get; }
         public virtual bool ShowSignInOption { get; }
-        public List<ExternalLoginModel> ExternalLogins { get; init; }
 
-        protected SignUpPageModel(ILogger<SignUpPageModel> logger, IStringLocalizer<Resources.Pages.Connect> pageLocalizer, IUserProvider userProvider)
+        protected SignUpPageModel(ILogger<SignUpPageModel> logger, ConnectTranslations translations, IUserProvider userProvider)
         {
             _logger = logger;
-            _pageLocalizer = pageLocalizer;
             _userProvider = userProvider;
-            ExternalLogins = ExternalLoginProviders.ExternalList;
+            ExternalProvidersViewModel = new ExternalProvidersViewModel
+            {
+                Data = ExternalProviders.ExternalProviders.ExternalList,
+                T9n = new ExternalProvidersTranslations(translations.SignUpWith)
+            };
         }
 
         internal Task<IActionResult> HandleGetRequestAsync(StepChallengeRequest stepChallenge, CancellationToken cancellationToken = default)
@@ -140,9 +139,9 @@ namespace Sven.PageModels.SignUp
         {
             if (string.IsNullOrEmpty(stepChallenge.Challenge))
             {
-                return $"{url}?{AuthConstants.PropertyNames.Step}={stepChallenge.StepShort}";
+                return $"{url}?{ViewConstants.PropertyNames.Step}={stepChallenge.StepShort}";
             }
-            return $"{url}?{AuthConstants.PropertyNames.Step}={stepChallenge.StepShort}&{AuthConstants.PropertyNames.Challenge}={stepChallenge.Challenge}";
+            return $"{url}?{ViewConstants.PropertyNames.Step}={stepChallenge.StepShort}&{AuthConstants.PropertyNames.Challenge}={stepChallenge.Challenge}";
         }
 
         protected IActionResult GoToSameRouteWithChallenge(StepChallengeRequest stepChallenge)

@@ -1,13 +1,12 @@
 ﻿
 using Bureau.Core;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Localization;
 using Sven.Configurations;
 using Sven.Extensions;
 using Sven.Models;
 using Sven.Services;
 
-namespace Sven.PageModels.SignUp
+namespace Sven.PageModels.Connect.SignUp
 {
     public class PlainSignUpPageModel : SignUpPageModel
     {
@@ -17,13 +16,16 @@ namespace Sven.PageModels.SignUp
         public override bool ShowExternalLoginsOption { get { return Step == SignUpStep.EnterEmail; } }
 
         public override bool ShowSignInOption { get { return Step == SignUpStep.EnterEmail; } }
-        public PlainSignUpPageModel(ILogger<PlainSignUpPageModel> logger, IStringLocalizer<Resources.Pages.Connect> pageLocalizer, IUserProvider userProvider,
-            INotificationService<UserVerificationCodeNotification> notificationService) : base(logger, pageLocalizer, userProvider)
+        public PlainSignUpPageModel(ILogger<PlainSignUpPageModel> logger, ConnectTranslations translations, IUserProvider userProvider,
+            INotificationService<UserVerificationCodeNotification> notificationService) : base(logger, translations, userProvider)
         {
+            T9n = new SignUpTranslations
+            {
+                Title = translations.LblPlainSignUpTitle,
+                FinalMessage = translations.MsgForgotSignUpFinalMessageTitle,
+                FinalMessageLine1 = translations.MsgForgotSignUpFinalMessageLine1
+            };
             _notificationService = notificationService;
-            Title = pageLocalizer[Resources.Pages.Connect.PlainSignUp_Title];
-            FinalMessage = pageLocalizer[Resources.Pages.Connect.ForgotSignUp_MsgFinal];
-            FinalMessageLine1 = _pageLocalizer[Resources.Pages.Connect.ForgotSignUp_MsgLine1];
         }
         protected override VerificationStatus StatusToValidateInSetPassword() => VerificationStatus.Verified;
 
@@ -88,10 +90,10 @@ namespace Sven.PageModels.SignUp
             {
                 return GoToUrlWithError(Endpoints.Connect.SignIn, new ResultError("Unexpected behaviour: either incorrect email or known user."));
             }
-            string? action = BasePage.Request.GetFormStringParameter(AuthConstants.PropertyNames.Action);
+            string? action = BasePage.Request.GetFormStringParameter(ViewConstants.PropertyNames.Action);
             return action switch
             {
-                AuthConstants.Actions.ResendCode => await ResendAction(verifyCodeResult.Value, cancellationToken),
+                ViewConstants.Actions.ResendCode => await ResendAction(verifyCodeResult.Value, cancellationToken),
                 _ => await VerifyAction(verifyCodeResult.Value, model, cancellationToken),
             };
         }

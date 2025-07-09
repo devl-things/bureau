@@ -8,8 +8,10 @@ namespace Sven.Configurations
         {
             public const string Base = "account";
             public const string ChangePasswordPath = "change-password";
+            public const string LinkedIdentitiesPath = "linked";
             public const string AccountInfo = $"/{Base}";
             public const string ChangePassword = $"/{Base}/{ChangePasswordPath}";
+            public const string LinkedIdentities = $"/{Base}/{LinkedIdentitiesPath}";
         }
         public static class Oidc
         {

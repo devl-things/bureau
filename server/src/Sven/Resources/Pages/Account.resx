@@ -117,8 +117,14 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <data name="Account_Title" xml:space="preserve">
+  <data name="Account_ExternalProviders_Subtitle" xml:space="preserve">
+    <value>External logins</value>
+  </data>
+  <data name="Account_Info_Subtitle" xml:space="preserve">
     <value>Account information</value>
+  </data>
+  <data name="LblAccount" xml:space="preserve">
+    <value>Account</value>
   </data>
   <data name="BtnChangePassword" xml:space="preserve">
     <value>Change password</value>
@@ -128,5 +134,11 @@
   </data>
   <data name="ChangePassword_Title" xml:space="preserve">
     <value>Change password</value>
+  </data>
+  <data name="LinkedIdentity_Status_Connected" xml:space="preserve">
+    <value>Connected</value>
+  </data>
+  <data name="LinkedIdentity_Status_Disconnected" xml:space="preserve">
+    <value>Disconnected</value>
   </data>
 </root>

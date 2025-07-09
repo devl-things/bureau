@@ -6,14 +6,14 @@ using Sven.Models;
 using Sven.Services;
 using System.Security.Claims;
 
-namespace Sven.PageModels.SignIn
+namespace Sven.PageModels.Connect.SignIn
 {
     public class PkceSignInPageModel : SignInPageModel
     {
         private readonly AuthCodeProvider _authCodeManager;
 
-        public PkceSignInPageModel(ILogger<PkceSignInPageModel> logger, IUserClaimsProvider userClaimsProvider, AuthCodeProvider authCodeManager)
-            : base(logger, userClaimsProvider)
+        public PkceSignInPageModel(ILogger<PkceSignInPageModel> logger, ConnectTranslations translations, IUserClaimsProvider userClaimsProvider, AuthCodeProvider authCodeManager)
+            : base(logger, translations, userClaimsProvider)
         {
             Mode = PageModelTypes.SignIn.Pkce;
             _authCodeManager = authCodeManager;

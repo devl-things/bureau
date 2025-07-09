@@ -97,11 +97,38 @@ namespace Sven.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Actions.
+        /// </summary>
+        public static string LblActions {
+            get {
+                return ResourceManager.GetString("LblActions", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Add.
+        /// </summary>
+        public static string LblAdd {
+            get {
+                return ResourceManager.GetString("LblAdd", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Confirm password.
         /// </summary>
         public static string LblConfirmPassword {
             get {
                 return ResourceManager.GetString("LblConfirmPassword", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Connect.
+        /// </summary>
+        public static string LblConnect {
+            get {
+                return ResourceManager.GetString("LblConnect", resourceCulture);
             }
         }
         
@@ -115,11 +142,38 @@ namespace Sven.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Disconnect.
+        /// </summary>
+        public static string LblDisconnect {
+            get {
+                return ResourceManager.GetString("LblDisconnect", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Email.
         /// </summary>
         public static string LblEmail {
             get {
                 return ResourceManager.GetString("LblEmail", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Error.
+        /// </summary>
+        public static string LblError {
+            get {
+                return ResourceManager.GetString("LblError", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Manage.
+        /// </summary>
+        public static string LblManage {
+            get {
+                return ResourceManager.GetString("LblManage", resourceCulture);
             }
         }
         
@@ -138,6 +192,33 @@ namespace Sven.Resources {
         public static string LblPassword {
             get {
                 return ResourceManager.GetString("LblPassword", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Provider.
+        /// </summary>
+        public static string LblProvider {
+            get {
+                return ResourceManager.GetString("LblProvider", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Remove.
+        /// </summary>
+        public static string LblRemove {
+            get {
+                return ResourceManager.GetString("LblRemove", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Status.
+        /// </summary>
+        public static string LblStatus {
+            get {
+                return ResourceManager.GetString("LblStatus", resourceCulture);
             }
         }
         
@@ -183,6 +264,15 @@ namespace Sven.Resources {
         public static string MsgInputIsInvalid {
             get {
                 return ResourceManager.GetString("MsgInputIsInvalid", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to No items found.
+        /// </summary>
+        public static string MsgNoItemsFound {
+            get {
+                return ResourceManager.GetString("MsgNoItemsFound", resourceCulture);
             }
         }
         

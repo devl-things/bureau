@@ -162,4 +162,34 @@
   <data name="BtnContinue" xml:space="preserve">
     <value>Nastavite</value>
   </data>
+  <data name="LblProvider" xml:space="preserve">
+    <value>Izvor</value>
+  </data>
+  <data name="LblStatus" xml:space="preserve">
+    <value>Status</value>
+  </data>
+  <data name="LblActions" xml:space="preserve">
+    <value>Opcije</value>
+  </data>
+  <data name="LblManage" xml:space="preserve">
+    <value>Uredite</value>
+  </data>
+  <data name="MsgNoItemsFound" xml:space="preserve">
+    <value>Nije pronađen ni jedan zapis</value>
+  </data>
+  <data name="LblError" xml:space="preserve">
+    <value>Greška</value>
+  </data>
+  <data name="LblDisconnect" xml:space="preserve">
+    <value>Odspojite se</value>
+  </data>
+  <data name="LblRemove" xml:space="preserve">
+    <value>Uklonite</value>
+  </data>
+  <data name="LblConnect" xml:space="preserve">
+    <value>Spojite se</value>
+  </data>
+  <data name="LblAdd" xml:space="preserve">
+    <value>Dodajte novi</value>
+  </data>
 </root>

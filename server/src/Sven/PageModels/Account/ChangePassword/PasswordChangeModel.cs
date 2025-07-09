@@ -1,7 +1,7 @@
 ﻿using Sven.Models;
 using System.ComponentModel.DataAnnotations;
 
-namespace Sven.PageModels.ChangePassword
+namespace Sven.PageModels.Account.ChangePassword
 {
     public class PasswordChangeModel : IPasswordChangeModel
     {

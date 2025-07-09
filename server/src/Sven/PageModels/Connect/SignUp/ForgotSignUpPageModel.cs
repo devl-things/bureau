@@ -1,13 +1,12 @@
 ﻿
 using Bureau.Core;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Localization;
 using Sven.Configurations;
 using Sven.Models;
 using Sven.Services;
 using System.Runtime.CompilerServices;
 
-namespace Sven.PageModels.SignUp
+namespace Sven.PageModels.Connect.SignUp
 {
     public class ForgotSignUpPageModel : SignUpPageModel
     {
@@ -17,15 +16,18 @@ namespace Sven.PageModels.SignUp
         public override bool ShowSignInOption { get { return false; } }
 
         public ForgotSignUpPageModel(ILogger<ForgotSignUpPageModel> logger,
-            IStringLocalizer<Resources.Pages.Connect> pageLocalizer,
+            ConnectTranslations translations,
             IUserProvider userProvider,
             ISymEncryptor encryptor,
-            INotificationService<PasswordResetNotification> notificationService) : base(logger, pageLocalizer, userProvider)
+            INotificationService<PasswordResetNotification> notificationService) : base(logger, translations, userProvider)
         {
-            Title = _pageLocalizer[Resources.Pages.Connect.ForgotSignUp_Title];
-            Subtitle = _pageLocalizer[Resources.Pages.Connect.ForgotSignUp_Subtitle];
-            FinalMessage = _pageLocalizer[Resources.Pages.Connect.ForgotSignUp_MsgFinal];
-            FinalMessageLine1 = _pageLocalizer[Resources.Pages.Connect.ForgotSignUp_MsgLine1];
+            T9n = new SignUpTranslations()
+            {
+                Title = translations.LblForgotSignUpTitle,
+                Subtitle = translations.LblForgotSignUpSubtitle,
+                FinalMessage = translations.MsgForgotSignUpFinalMessageTitle,
+                FinalMessageLine1 = translations.MsgForgotSignUpFinalMessageLine1
+            };
             _encryptor = encryptor;
             _notificationService = notificationService;
         }

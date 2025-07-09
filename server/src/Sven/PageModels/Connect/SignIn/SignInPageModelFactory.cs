@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc.RazorPages;
 
-namespace Sven.PageModels.SignIn
+namespace Sven.PageModels.Connect.SignIn
 {
     public class SignInPageModelFactory : IPageModelFactory<PageContext, SignInPageModel>
     {

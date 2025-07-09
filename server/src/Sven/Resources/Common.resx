@@ -162,4 +162,34 @@
   <data name="BtnContinue" xml:space="preserve">
     <value>Continue</value>
   </data>
+  <data name="LblProvider" xml:space="preserve">
+    <value>Provider</value>
+  </data>
+  <data name="LblStatus" xml:space="preserve">
+    <value>Status</value>
+  </data>
+  <data name="LblActions" xml:space="preserve">
+    <value>Actions</value>
+  </data>
+  <data name="LblManage" xml:space="preserve">
+    <value>Manage</value>
+  </data>
+  <data name="MsgNoItemsFound" xml:space="preserve">
+    <value>No items found</value>
+  </data>
+  <data name="LblError" xml:space="preserve">
+    <value>Error</value>
+  </data>
+  <data name="LblDisconnect" xml:space="preserve">
+    <value>Disconnect</value>
+  </data>
+  <data name="LblRemove" xml:space="preserve">
+    <value>Remove</value>
+  </data>
+  <data name="LblConnect" xml:space="preserve">
+    <value>Connect</value>
+  </data>
+  <data name="LblAdd" xml:space="preserve">
+    <value>Add</value>
+  </data>
 </root>

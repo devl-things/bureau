@@ -13,8 +13,10 @@ using Sven.Data.SqlServer.Configurations;
 using Sven.Middleware;
 using Sven.Models;
 using Sven.PageModels;
-using Sven.PageModels.SignIn;
-using Sven.PageModels.SignUp;
+using Sven.PageModels.Account;
+using Sven.PageModels.Connect;
+using Sven.PageModels.Connect.SignIn;
+using Sven.PageModels.Connect.SignUp;
 using Sven.Pages.Connect;
 using Sven.Services;
 using System.Globalization;
@@ -85,6 +87,9 @@ namespace Sven
             builder.Services.AddScoped<IPageModelFactory<SignUpModel, SignUpPageModel>, SignUpPageModelFactory>();
             builder.Services.AddScoped<PlainSignUpPageModel>();
             builder.Services.AddScoped<ForgotSignUpPageModel>();
+
+            builder.Services.AddScoped<AccountTranslations>();
+            builder.Services.AddScoped<ConnectTranslations>();
 
             builder.Services.AddSvenSqlServer(options =>
             {

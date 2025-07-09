@@ -1,4 +1,4 @@
-﻿namespace Sven.PageModels.SignUp
+﻿namespace Sven.PageModels.Connect.SignUp
 {
     public enum SignUpStep
     {

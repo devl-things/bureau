@@ -6,12 +6,13 @@ using Sven.Models;
 using Sven.Services;
 using System.Security.Claims;
 
-namespace Sven.PageModels.SignIn
+namespace Sven.PageModels.Connect.SignIn
 {
     public class TicketSignInPageModel : SignInPageModel
     {
         private readonly IUserProvider _userProvider;
-        public TicketSignInPageModel(ILogger<TicketSignInPageModel> logger, IUserProvider userProvider, IUserClaimsProvider userClaimProvider) : base(logger, userClaimProvider)
+        public TicketSignInPageModel(ILogger<TicketSignInPageModel> logger, ConnectTranslations translations, IUserProvider userProvider, IUserClaimsProvider userClaimProvider) :
+            base(logger, translations, userClaimProvider)
         {
             _userProvider = userProvider;
         }

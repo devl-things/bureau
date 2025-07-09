@@ -38,17 +38,16 @@
         <div id="main-content" class="main-content d-flex flex-column flex-grow-1">
             <header class="navbar navbar-expand-lg navbar-light bg-light border-bottom shadow-sm ps-2 pe-4">
                 <div class="container-fluid d-flex align-items-center">
-                    <div class="language-switcher">
-                        <select id="languageSwitcher" onchange="onLanguageChange(this)">
-                            <option value="en" selected="@(currentCulture == "en")">English</option>
-                            <option value="hr" selected="@(currentCulture == "hr")">Hrvatski</option>
-                        </select>
-                    </div>
-                    
                     <button class="hamburger-toggle me-3" onclick="toggleSidebar()" title="Toggle menu">
                         <i class="bi bi-list"></i>
                     </button>
                     <div class="ms-auto">
+                        <div class="language-switcher">
+                            <select id="languageSwitcher" onchange="onLanguageChange(this)">
+                                <option value="en" selected="@(currentCulture == "en")">English</option>
+                                <option value="hr" selected="@(currentCulture == "hr")">Hrvatski</option>
+                            </select>
+                        </div>
                         @await Component.InvokeAsync(ViewComponents.UserNav)
                     </div>
                 </div>

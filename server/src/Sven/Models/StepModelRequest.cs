@@ -1,20 +1,20 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Sven.Configurations;
-using Sven.PageModels.SignUp;
+using Sven.PageModels.Connect.SignUp;
 
 namespace Sven.Models
 {
     public record StepModelRequest : IVerificationCodeProperties, IPasswordResetProperties
     {
-        [FromForm(Name = AuthConstants.PropertyNames.ConfirmPassword)]
+        [FromForm(Name = ViewConstants.PropertyNames.ConfirmPassword)]
         public string? ConfirmPassword { get; set; }
-        [FromForm(Name = AuthConstants.PropertyNames.Email)]
+        [FromForm(Name = ViewConstants.PropertyNames.Email)]
         public string? Email { get; set; }
-        [FromForm(Name = AuthConstants.PropertyNames.Password)]
+        [FromForm(Name = ViewConstants.PropertyNames.Password)]
         public string? Password { get; set; }
-        [FromForm(Name = AuthConstants.PropertyNames.Step)]
+        [FromForm(Name = ViewConstants.PropertyNames.Step)]
         public SignUpStep Step { get; set; } = SignUpStep.EnterEmail;
-        [FromForm(Name = AuthConstants.PropertyNames.VerificationCode)]
+        [FromForm(Name = ViewConstants.PropertyNames.VerificationCode)]
         public string? VerificationCode { get; set; }
     }
     public interface IEmailProperty

@@ -29,6 +29,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Folder Include="PageModels\ExternalLogins\" />
     <Folder Include="ViewComponents\" />
     <Folder Include="wwwroot\css\" />
     <Folder Include="wwwroot\scss\bootstrap\" />

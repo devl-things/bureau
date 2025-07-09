@@ -1,0 +1,11 @@
+﻿@using Sven.PageModels.Connect
+@using Sven.PageModels.Connect.ExternalProviders
+@model ExternalProvidersViewModel
+
+@foreach (ExternalProviderModel login in Model.Data)
+{
+    if (login.IsSignInEnabled)
+    {
+        <a class="social-button @login.CssClass" href="@login.SignInLink">@Model.T9n.PrefixText @login.ProviderName</a>
+    }
+}

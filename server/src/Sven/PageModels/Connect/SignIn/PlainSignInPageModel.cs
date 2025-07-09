@@ -5,11 +5,12 @@ using Sven.Models;
 using Sven.Services;
 using System.Security.Claims;
 
-namespace Sven.PageModels.SignIn
+namespace Sven.PageModels.Connect.SignIn
 {
     public class PlainSignInPageModel : SignInPageModel
     {
-        public PlainSignInPageModel(ILogger<PlainSignInPageModel> logger, IUserClaimsProvider userClaimsProvider) : base(logger, userClaimsProvider)
+        public PlainSignInPageModel(ILogger<PlainSignInPageModel> logger, ConnectTranslations translations, IUserClaimsProvider userClaimsProvider) :
+            base(logger, translations, userClaimsProvider)
         {
         }
         public override Task<IActionResult> HandleGetRequestAsync(CancellationToken cancellationToken = default)

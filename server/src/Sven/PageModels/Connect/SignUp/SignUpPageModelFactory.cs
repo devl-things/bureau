@@ -1,7 +1,7 @@
 ﻿using Sven.Configurations;
 using Sven.Pages.Connect;
 
-namespace Sven.PageModels.SignUp
+namespace Sven.PageModels.Connect.SignUp
 {
     public class SignUpPageModelFactory : IPageModelFactory<SignUpModel, SignUpPageModel>
     {
