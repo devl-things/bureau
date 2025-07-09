@@ -26,6 +26,7 @@ namespace Sven.PageModels.Account
         public required string LblActions { get; init; }
         public required string MsgChangePasswordSuccess { get; init; }
         public required string MsgInputIsInvalid { get; init; }
+        public required string MsgGeneralError { get; init; }
         public required string MsgNoLinkedIdentities { get; init; }
         public AccountTranslations(IStringLocalizer<Resources.Common> localizer, IStringLocalizer<Resources.Pages.Account> accountLocalizer)
         {
@@ -51,6 +52,7 @@ namespace Sven.PageModels.Account
             LblUsername = localizer[Resources.Common.LblUsername];
             MsgNoLinkedIdentities = localizer[Resources.Common.MsgNoItemsFound];
             MsgInputIsInvalid = localizer[Resources.Common.MsgInputIsInvalid];
+            MsgGeneralError = localizer[Resources.Common.MsgGeneralError];
             MsgChangePasswordSuccess = accountLocalizer[Resources.Pages.Account.ChangePassword_MsgSuccess];
         }
     }
@@ -80,6 +82,7 @@ namespace Sven.PageModels.Account
         public string LblChangePasswordTitle { get; }
         public string MsgChangePasswordSuccess { get; }
         public string MsgInputIsInvalid { get; }
+        public string MsgGeneralError { get; }
 
     }
 

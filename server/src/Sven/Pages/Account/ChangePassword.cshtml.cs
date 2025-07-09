@@ -10,6 +10,7 @@ namespace Sven.Pages.Account
 {
     public class ChangePasswordModel : AuthPageModel
     {
+        private readonly ILogger<ChangePasswordModel> _logger;
         private readonly IUserProvider _userProvider;
 
         [BindProperty]
@@ -17,9 +18,10 @@ namespace Sven.Pages.Account
 
         public IPasswordChangeTranslations T9n { get; init; }
 
-        public ChangePasswordModel(ICurrentUserProvider currentUserProvider,
+        public ChangePasswordModel(ILogger<ChangePasswordModel> logger, ICurrentUserProvider currentUserProvider,
             AccountTranslations translations, IUserProvider userProvider) : base(currentUserProvider)
         {
+            _logger = logger;
             _userProvider = userProvider;
             T9n = translations;
         }
@@ -43,6 +45,12 @@ namespace Sven.Pages.Account
 
             // #54
             Result result = await _userProvider.UpdatePasswordAsync(CurrentUser.SubjectId, Input.Password!, cancellationToken);
+            if (result.IsError)
+            {
+                _logger.LogResultError(result.Error);
+                ModelState.AddModelError(string.Empty, T9n.MsgGeneralError);
+                return Page();
+            }
 
             TempData[TempDataNames.SuccessMessage] = T9n.MsgChangePasswordSuccess;
             return LocalRedirect(Endpoints.Account.AccountInfo);

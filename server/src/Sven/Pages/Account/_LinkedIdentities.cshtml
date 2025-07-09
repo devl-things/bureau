@@ -21,8 +21,8 @@
                 @if (Model.Options.ShowAddOption)
                 {
                     <tr>
-                        <th>@Model.T9n.LblAdd</th>
-                        <th colspan="@(Model.Options.ShowActions ? 3 : 2)">
+                        <th scope="row">@Model.T9n.LblAdd</th>
+                        <th scope="row" colspan="@(Model.Options.ShowActions ? 3 : 2)">
 
                             @foreach (ExternalProviderModel provider in Model.Data.ExternalProviders.Where(x => x.IsSignInEnabled))
                             {
@@ -34,12 +34,12 @@
                     </tr>
                 }
                 <tr>
-                    <th>@Model.T9n.LblProvider</th>
-                    <th>@Model.T9n.LblAccount</th>
-                    <th>@Model.T9n.LblStatus</th>
+                    <th scope="col">@Model.T9n.LblProvider</th>
+                    <th scope="col">@Model.T9n.LblAccount</th>
+                    <th scope="col">@Model.T9n.LblStatus</th>
                     @if (Model.Options.ShowActions)
                     {
-                        <th>@Model.T9n.LblActions</th>
+                        <th scope="col">@Model.T9n.LblActions</th>
                     }
                 </tr>
             </thead>

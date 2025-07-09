@@ -192,4 +192,7 @@
   <data name="LblAdd" xml:space="preserve">
     <value>Dodajte novi</value>
   </data>
+  <data name="MsgGeneralError" xml:space="preserve">
+    <value>Dogodila se greška. Molim, probajte kasnije.</value>
+  </data>
 </root>

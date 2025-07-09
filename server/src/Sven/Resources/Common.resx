@@ -192,4 +192,7 @@
   <data name="LblAdd" xml:space="preserve">
     <value>Add</value>
   </data>
+  <data name="MsgGeneralError" xml:space="preserve">
+    <value>An error occured. Please, try again later.</value>
+  </data>
 </root>

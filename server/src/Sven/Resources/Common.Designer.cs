@@ -259,6 +259,15 @@ namespace Sven.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to An error occured. Please, try again later..
+        /// </summary>
+        public static string MsgGeneralError {
+            get {
+                return ResourceManager.GetString("MsgGeneralError", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Input is invalid..
         /// </summary>
         public static string MsgInputIsInvalid {
