@@ -15,7 +15,7 @@ namespace Sven.PageModels.Connect.SignIn
         public PkceSignInPageModel(ILogger<PkceSignInPageModel> logger, ConnectTranslations translations, IUserClaimsProvider userClaimsProvider, AuthCodeProvider authCodeManager)
             : base(logger, translations, userClaimsProvider)
         {
-            Mode = PageModelTypes.SignIn.Pkce;
+            SetMode(Modes.Connect.SignIn.Pkce);
             _authCodeManager = authCodeManager;
         }
         public override Task<IActionResult> HandleGetRequestAsync(CancellationToken cancellationToken = default)
@@ -46,7 +46,7 @@ namespace Sven.PageModels.Connect.SignIn
 
             await SignInUserAsync(claimsPrincipalResult.Value, cancellationToken);
 
-            return Redirect(Endpoints.Connect.AuthorizeContinue);
+            return Redirect(Endpoints.Connect.AuthorizePkce);
         }
 
         private Result ValidatePkceKey()

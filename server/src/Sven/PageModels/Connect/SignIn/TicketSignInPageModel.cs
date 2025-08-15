@@ -15,6 +15,7 @@ namespace Sven.PageModels.Connect.SignIn
             base(logger, translations, userClaimProvider)
         {
             _userProvider = userProvider;
+            SetMode(Modes.Connect.SignIn.Ticket);
         }
         public async override Task<IActionResult> HandleGetRequestAsync(CancellationToken cancellationToken = default)
         {

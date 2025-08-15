@@ -14,6 +14,6 @@ namespace Sven.PageModels.Account.LinkedIdentities
     public class LinkedIdentitiesViewModelData
     {
         public List<LinkedIdentityModel> LinkedIdentities { get; set; } = [];
-        public List<ExternalProviderModel> ExternalProviders { get; set; } = [];
+        public ExternalProvidersModel ExternalProviders { get; set; } = new ExternalProvidersModel();
     }
 }

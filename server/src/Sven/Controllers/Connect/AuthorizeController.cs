@@ -86,10 +86,79 @@ namespace Sven.Controllers.Connect
             }
             return RedirectWithOAuthError(request.RedirectUri, AuthConstants.OAuth.Errors.UnsupportedResponseType, AuthConstants.OAuth.ErrorDescriptions.UnsupportedResponseType, request.State);
         }
+        //TODO new endpoint for registered users
 
-        [HttpGet(Endpoints.Connect.ContinuePath)]
-        public async Task<IActionResult> CompleteAuthorizeAsync(CancellationToken cancellationToken = default)
+        //TODO new endpoint for plain type, which will sign 
+        [HttpGet(Modes.ExternalLogin.Plain)]
+        public async Task<IActionResult> AuthorizePlainAsync(CancellationToken cancellationToken = default)
         {
+            //TODO take the principal, find out who is the user
+            //if user is new, create user and bring user to the page where s/he will fill out whatever else is needed
+            //if is not new, sign in user and redirect to url
+
+            AuthenticateResult result = await HttpContext.AuthenticateAsync(AuthConstants.AuthenticationSchemes.External);
+
+            if (!result.Succeeded || result.Principal == null || result.Principal.Claims == null)
+            {
+                // Handle external authentication failure
+                return RedirectWithOAuthError("/connect/error", AuthConstants.OAuth.Errors.AccessDenied, "User authentication failed.", null);
+            }
+
+            string returnUrl = Endpoints.Account.AccountInfo; // default return URL
+
+            if ((result.Properties?.Items.TryGetValue(AuthConstants.PropertyNames.RedirectUrl, out string? url) ?? false) &&
+                !string.IsNullOrWhiteSpace(url))
+            {
+                returnUrl = url!;
+            }
+
+
+            //ClaimsPrincipal externalPrincipal = result.Principal;
+            //string? externalProvider = result.Properties?.Items["scheme"] ?? externalPrincipal.Identity?.AuthenticationType;
+            //string? externalUserId = externalPrincipal.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            //if (string.IsNullOrWhiteSpace(externalProvider) || string.IsNullOrWhiteSpace(externalUserId))
+            //{
+            //    return RedirectWithOAuthError("/connect/error", AuthConstants.OAuth.Errors.AccessDenied, "Invalid external login information.", null);
+            //}
+
+            //// Example user lookup
+            //Result<User> userResult = await _userProvider.FindByExternalProviderAsync(externalProvider, externalUserId, cancellationToken);
+
+            //if (userResult.IsError)
+            //{
+            //    _logger.LogResultError(userResult.Error);
+
+            //    // New user flow: store external identity info in TempData or a temporary cookie, then redirect
+            //    ExternalLoginTempModel tempModel = new ExternalLoginTempModel
+            //    {
+            //        Provider = externalProvider,
+            //        ProviderUserId = externalUserId,
+            //        Email = externalPrincipal.FindFirst(ClaimTypes.Email)?.Value
+            //    };
+
+            //    TempData.Set(AuthConstants.TempDataKeys.ExternalLoginTemp, tempModel);
+
+            //    await HttpContext.SignOutAsync(AuthConstants.AuthenticationSchemes.External);
+
+            //    return Redirect("/connect/complete-profile");
+            //}
+
+            //// Existing user flow: create app principal and sign in
+            //ClaimsPrincipal appPrincipal = _principalFactory.Create(userResult.Value);
+
+            //await HttpContext.SignInAsync(AuthConstants.AuthenticationSchemes., appPrincipal);
+
+            //await HttpContext.SignOutAsync(AuthConstants.AuthenticationSchemes.External);
+
+            return Redirect(returnUrl);
+        }
+
+        [HttpGet(Modes.ExternalLogin.Pkce)]
+        public async Task<IActionResult> AuthorizePkceAsync(CancellationToken cancellationToken = default)
+        {
+            // TODO this should be only for pkce
+            // TODO Sign out the user that is automatically signed in by framework comming from external provider
             if (!Request.TryGetCookieValue(AuthConstants.CookieNames.PkceKey, out string? pkceKey))
             {
                 return OAuthError(AuthConstants.OAuth.Errors.InvalidRequest, AuthConstants.OAuth.ErrorDescriptions.MissingAuthorizationState);

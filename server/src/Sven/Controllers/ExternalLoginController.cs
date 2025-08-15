@@ -8,19 +8,45 @@ namespace Sven.Controllers
     [Route(Endpoints.External.Base)]
     public class ExternalLoginController : ControllerBase
     {
-        private static AuthenticationProperties _props = new AuthenticationProperties
+        private readonly AuthenticationProperties _props = new AuthenticationProperties
         {
-            RedirectUri = Endpoints.Connect.AuthorizeContinue
+            RedirectUri = Endpoints.Connect.AuthorizePlain
         };
 
         [HttpGet(Endpoints.External.SignInWithProvider)]
-        public IActionResult SignInExternal(string provider)
+        public IActionResult SignInExternal([FromRoute] string provider,
+            [FromQuery(Name = AuthConstants.PropertyNames.Mode)] string? mode,
+            [FromQuery(Name = AuthConstants.PropertyNames.RedirectUrl)] string? returnUrl)
         {
             if (!TryGetSupportedProvider(provider, out string supportedProvider))
             {
+                //#52
                 return BadRequest("Unsupported external provider.");
             }
-            return Challenge(_props, supportedProvider);
+
+            string redirectUri = Endpoints.Connect.AuthorizePlain;
+            if (!string.IsNullOrWhiteSpace(mode))
+            {
+                switch (mode)
+                {
+                    case Modes.ExternalLogin.Pkce:
+                        redirectUri = Endpoints.Connect.AuthorizePkce;
+                        break;
+                    default:
+                        break;
+                }
+            }
+            AuthenticationProperties props = new AuthenticationProperties
+            {
+                RedirectUri = redirectUri
+            };
+
+            if (!string.IsNullOrWhiteSpace(returnUrl))
+            {
+                props.Items[AuthConstants.PropertyNames.RedirectUrl] = returnUrl;
+            }
+
+            return Challenge(props, supportedProvider);
         }
 
         private bool TryGetSupportedProvider(string provider, out string supportedProvider)

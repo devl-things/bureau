@@ -1,11 +1,9 @@
 ﻿using JavaScriptEngineSwitcher.Extensions.MsDependencyInjection;
 using JavaScriptEngineSwitcher.V8;
-using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.Google;
 using Microsoft.AspNetCore.Localization;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using Microsoft.IdentityModel.JsonWebTokens;
 using Microsoft.IdentityModel.Tokens;
 using Sven.AutoValidation;
 using Sven.Configurations;
@@ -20,7 +18,6 @@ using Sven.PageModels.Connect.SignUp;
 using Sven.Pages.Connect;
 using Sven.Services;
 using System.Globalization;
-using System.Security.Claims;
 using System.Security.Cryptography;
 using WebOptimizer.Processors;
 
@@ -113,11 +110,13 @@ namespace Sven
             .AddCookie(CookieAuthenticationDefaults.AuthenticationScheme, options =>
             {
                 options.LoginPath = Endpoints.Connect.SignIn;
+                options.ReturnUrlParameter = AuthConstants.PropertyNames.RedirectUrl;
             })
+            .AddCookie(AuthConstants.AuthenticationSchemes.External)
             .AddGoogle(AuthConstants.ExternalSchemes.Google, options =>
             {
                 builder.Configuration.Bind("Google", options);
-                options.SignInScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+                options.SignInScheme = AuthConstants.AuthenticationSchemes.External;
             });
             // TODO when I get ClientId and ClientSecret
             //.AddMicrosoftAccount(options =>
@@ -183,25 +182,25 @@ namespace Sven
             app.UseAuthorization();
 
 #if DEBUG
-            app.Use(async (context, next) =>
-            {
-                if (!context.User.Identity?.IsAuthenticated ?? true)
-                {
-                    var claims = new List<Claim>
-                    {
-                        new Claim(JwtRegisteredClaimNames.Sub, "test-user"),
-                        new Claim(ClaimTypes.Name, "debug@example.com"),
-                        new Claim(ClaimTypes.Email, "debug@example.com")
-                    };
+            //app.Use(async (context, next) =>
+            //{
+            //    if (!context.User.Identity?.IsAuthenticated ?? true)
+            //    {
+            //        var claims = new List<Claim>
+            //        {
+            //            new Claim(JwtRegisteredClaimNames.Sub, "test-user"),
+            //            new Claim(ClaimTypes.Name, "debug@example.com"),
+            //            new Claim(ClaimTypes.Email, "debug@example.com")
+            //        };
 
-                    var identity = new ClaimsIdentity(claims, "Debug");
-                    var principal = new ClaimsPrincipal(identity);
+            //        var identity = new ClaimsIdentity(claims, "Debug");
+            //        var principal = new ClaimsPrincipal(identity);
 
-                    await context.SignInAsync(principal);
-                }
+            //        await context.SignInAsync(principal);
+            //    }
 
-                await next();
-            });
+            //    await next();
+            //});
 #endif
             app.UseMiddleware<CurrentUserMiddleware>();
             app.MapControllers();

@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc.RazorPages;
+using Sven.Configurations;
 
 namespace Sven.PageModels.Connect.SignIn
 {
@@ -13,9 +14,9 @@ namespace Sven.PageModels.Connect.SignIn
         {
             SignInPageModel model = type switch
             {
-                PageModelTypes.SignIn.Pkce => _serviceProvider.GetRequiredService<PkceSignInPageModel>(),
-                PageModelTypes.SignIn.Plain => _serviceProvider.GetRequiredService<PlainSignInPageModel>(),
-                PageModelTypes.SignIn.Ticket => _serviceProvider.GetRequiredService<TicketSignInPageModel>(),
+                Modes.Connect.SignIn.Pkce => _serviceProvider.GetRequiredService<PkceSignInPageModel>(),
+                Modes.Connect.SignIn.Plain => _serviceProvider.GetRequiredService<PlainSignInPageModel>(),
+                Modes.Connect.SignIn.Ticket => _serviceProvider.GetRequiredService<TicketSignInPageModel>(),
                 _ => _serviceProvider.GetRequiredService<PlainSignInPageModel>()
             };
 

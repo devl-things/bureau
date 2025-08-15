@@ -24,9 +24,9 @@
                         <th scope="row">@Model.T9n.LblAdd</th>
                         <th scope="row" colspan="@(Model.Options.ShowActions ? 3 : 2)">
 
-                            @foreach (ExternalProviderModel provider in Model.Data.ExternalProviders.Where(x => x.IsSignInEnabled))
+                            @foreach (ExternalProvider provider in Model.Data.ExternalProviders.Providers.Where(x => x.IsSignInEnabled))
                             {
-                                <a class="btn btn-outline-secondary btn-sm border-0" href="@provider.SignInLink" title="@provider.ProviderName">
+                                <a class="btn btn-outline-secondary btn-sm border-0" href="@provider.GetSignInLink(Model.Data.ExternalProviders.Mode)" title="@provider.ProviderName">
                                     <i class="bi @provider.IconCssClass"></i>
                                 </a>
                             }

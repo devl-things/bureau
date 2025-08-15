@@ -3,7 +3,6 @@ using Sven.Configurations;
 using Sven.PageModels;
 using Sven.PageModels.Account;
 using Sven.PageModels.Account.LinkedIdentities;
-using Sven.PageModels.Connect.ExternalProviders;
 using Sven.Services;
 
 namespace Sven.Pages.Account
@@ -18,10 +17,7 @@ namespace Sven.Pages.Account
             T9n = translations;
             LinkedIdentitiesViewModel = new LinkedIdentitiesViewModel()
             {
-                Data = new LinkedIdentitiesViewModelData()
-                {
-                    ExternalProviders = ExternalProviders.ExternalList
-                },
+                Data = new LinkedIdentitiesViewModelData(),
                 Options = new LinkedIdentityViewOptions()
                 {
                     ShowManageBtn = false,

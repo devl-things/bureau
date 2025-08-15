@@ -5,9 +5,10 @@
     Layout = "_SvenLayout";
 }
 
-@if (TempData[TempDataNames.SuccessMessage] is string msg)
+@if (TempData.TryGetValue(TempDataNames.SuccessMessage, out object? msg)
+    && msg is string successMessage && !string.IsNullOrWhiteSpace(successMessage))
 {
-    <div class="alert alert-success">@msg</div>
+    <div class="alert alert-success">@successMessage</div>
 }
 
 <div class="sven-card">

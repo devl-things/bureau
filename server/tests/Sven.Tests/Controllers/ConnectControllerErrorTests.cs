@@ -62,12 +62,12 @@ namespace Sven.Tests.Controllers
             Assert.Contains(AuthConstants.OAuth.ErrorDescriptions.UnsupportedResponseType, location);
         }
 
-        [Fact(DisplayName = $"{Endpoints.Connect.AuthorizeContinue} {AuthConstants.OAuth.ErrorDescriptions.MissingAuthorizationState}")]
+        [Fact(DisplayName = $"{Endpoints.Connect.AuthorizePkce} {AuthConstants.OAuth.ErrorDescriptions.MissingAuthorizationState}")]
         [Trait("Category", "Unit")]
         [Trait("Type", "Expected error")]
         public async Task CompleteAuthorizeAsync_MissingPkceCookie_ReturnsBadRequest()
         {
-            HttpResponseMessage response = await _client.GetAsync(Endpoints.Connect.AuthorizeContinue);
+            HttpResponseMessage response = await _client.GetAsync(Endpoints.Connect.AuthorizePkce);
             string content = await response.Content.ReadAsStringAsync();
 
             Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);

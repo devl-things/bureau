@@ -31,7 +31,6 @@ namespace Sven.PageModels.Connect.SignUp
             _userProvider = userProvider;
             ExternalProvidersViewModel = new ExternalProvidersViewModel
             {
-                Data = ExternalProviders.ExternalProviders.ExternalList,
                 T9n = new ExternalProvidersTranslations(translations.SignUpWith)
             };
         }

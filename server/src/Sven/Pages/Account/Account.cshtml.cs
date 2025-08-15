@@ -3,7 +3,6 @@ using Microsoft.AspNetCore.Mvc;
 using Sven.PageModels;
 using Sven.PageModels.Account;
 using Sven.PageModels.Account.LinkedIdentities;
-using Sven.PageModels.Connect.ExternalProviders;
 using Sven.Services;
 
 namespace Sven.Pages.Account
@@ -20,10 +19,7 @@ namespace Sven.Pages.Account
             T9n = translations;
             LinkedIdentitiesViewModel = new LinkedIdentitiesViewModel()
             {
-                Data = new LinkedIdentitiesViewModelData()
-                {
-                    ExternalProviders = ExternalProviders.ExternalList
-                },
+                Data = new LinkedIdentitiesViewModelData(),
                 Options = new LinkedIdentityViewOptions()
                 {
                     ShowManageBtn = true,
@@ -35,7 +31,7 @@ namespace Sven.Pages.Account
 
         public IActionResult OnGet()
         {
-            LinkedIdentitiesViewModel.Data.LinkedIdentities = CurrentUser.LinkedIdentities?
+            LinkedIdentitiesViewModel.Data.LinkedIdentities = CurrentUser?.LinkedIdentities?
                 .Select(x => new LinkedIdentityModel()
                 {
                     ProviderName = x.ProviderName,

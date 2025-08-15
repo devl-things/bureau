@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using Sven.Configurations;
 using Sven.Models;
 using Sven.PageModels.Connect.ExternalProviders;
 using Sven.Services;
@@ -11,10 +12,10 @@ namespace Sven.PageModels.Connect.SignIn
 {
     public abstract class SignInPageModel : PageModel
     {
-
+        protected string _mode;
         protected readonly ILogger<SignInPageModel> _logger;
         protected readonly IUserClaimsProvider _userClaimsProvider;
-        public string Mode { get; set; } = PageModelTypes.SignIn.Plain;
+        public string Mode { get { return _mode; } }
         public string? ErrorMessage { get; set; }
 
         public ExternalProvidersViewModel ExternalProvidersViewModel { get; init; }
@@ -27,9 +28,13 @@ namespace Sven.PageModels.Connect.SignIn
             _userClaimsProvider = userProvider;
             ExternalProvidersViewModel = new ExternalProvidersViewModel
             {
-                Data = ExternalProviders.ExternalProviders.ExternalList,
                 T9n = new ExternalProvidersTranslations(translations.SignInWith)
             };
+        }
+        protected void SetMode(string? mode)
+        {
+            _mode = string.IsNullOrWhiteSpace(mode) ? Modes.Connect.SignIn.Plain : mode;
+            ExternalProvidersViewModel.Data.SetMode(_mode);
         }
 
         public abstract Task<IActionResult> HandleGetRequestAsync(CancellationToken cancellationToken = default);

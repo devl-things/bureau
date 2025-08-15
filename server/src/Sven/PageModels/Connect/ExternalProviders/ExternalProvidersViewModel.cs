@@ -2,7 +2,8 @@
 {
     public class ExternalProvidersViewModel
     {
-        public List<ExternalProviderModel> Data { get; set; } = [];
+        public ExternalProvidersModel Data { get; set; } = new ExternalProvidersModel();
+
         public required ExternalProvidersTranslations T9n { get; set; }
     }
 }
