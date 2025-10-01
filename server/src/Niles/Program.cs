@@ -4,8 +4,8 @@ using Microsoft.OpenApi.Models;
 using Niles.Data;
 using Niles.Data.Contexts;
 using Niles.Data.Repositories;
-using Niles.Etl.Abstractions.Configurations;
 using Niles.Etl.Abstractions.Extract;
+using Niles.Etl.Configurations;
 using Niles.Etl.Extract;
 using Niles.Etl.Jobs;
 using Niles.Etl.Lidl.Services;
@@ -20,9 +20,13 @@ namespace Niles
         {
             WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
-            builder.Services.AddOptions<DownloaderOptions>().Bind(builder.Configuration.GetSection("Lidl:Downloader"))
-                .Validate(options => !string.IsNullOrWhiteSpace(options.MainUrl))
-                .ValidateOnStart();
+            foreach (IConfigurationSection child in builder.Configuration.GetSection("Retailers").GetChildren())
+            {
+                builder.Services.AddOptions<RetailerEtlOptions>(child.Key).Bind(child)
+                    .Validate(options => !string.IsNullOrWhiteSpace(options.ExtractUrl))
+                    .ValidateOnStart();
+            }
+
 
             //TODO: change db context this as in Sven
             builder.Services.AddDbContext<NilesContext>(options =>
@@ -36,24 +40,23 @@ namespace Niles
             builder.Services.AddSingleton<IJobDispatcher, JobDispatcher>();
             builder.Services.AddHostedService<JobsBackgroundWorker>();
 
-            builder.Services.AddHttpClient<DownloaderService>(client =>
+            builder.Services.AddHttpClient<LidlDownloaderService>(client =>
             {
                 client.Timeout = TimeSpan.FromSeconds(100);
             });
 
             // Add services to the container.
-            builder.Services.AddKeyedTransient<IJobHandler, DownloaderJobHandler>(JobType.Downloader);
-            builder.Services.AddKeyedTransient<IJobHandler, PricesEtlJobHandler>(JobType.Importer);
-            builder.Services.AddTransient<Niles.Etl.Lidl.Services.DownloaderService>();
+            builder.Services.AddKeyedTransient<IJobHandler, LidlEtlPricesJobHandler>(JobType.LidlEtlPrices);
+            builder.Services.AddTransient<Niles.Etl.Lidl.Services.LidlDownloaderService>();
 
             builder.Services.AddSingleton<IFileEnumerator, FileEnumerator>();
             builder.Services.AddSingleton<IFileNameParser, LidlFileNameParser>();
             builder.Services.AddSingleton<CsvExtractorService>();
             builder.Services.AddSingleton<RowTransformerService>();
             builder.Services.AddSingleton<IChecksumService, Sha256ChecksumService>();
-            builder.Services.AddSingleton<IFileArchiver>(sp => new FileArchiver("archive", "error"));
+            builder.Services.AddSingleton<IFileManager>(sp => new FileArchiver("archive", "error"));
 
-            builder.Services.AddScoped<IImportFileRepository, EfImportFileRepository>();
+            builder.Services.AddScoped<IArtifactRepository, EfImportFileRepository>();
             builder.Services.AddScoped<IPriceRepository, EfPriceRepository>();
 
             builder.Services.AddScoped<Niles.Etl.Lidl.Services.LoaderService>();

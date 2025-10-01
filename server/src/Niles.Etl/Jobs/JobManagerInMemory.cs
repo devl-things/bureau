@@ -7,6 +7,7 @@ namespace Niles.Etl.Jobs
     {
         private readonly Channel<JobWorkItem> _queue;
         private readonly ConcurrentDictionary<string, JobStatus> _jobs;
+        private readonly ConcurrentDictionary<string, List<JobProgress>> _jobProgress;
         private readonly ConcurrentDictionary<string, CancellationTokenSource> _tokens;
 
         public JobManagerInMemory()
@@ -17,6 +18,7 @@ namespace Niles.Etl.Jobs
                 SingleWriter = false
             });
             _jobs = new ConcurrentDictionary<string, JobStatus>(StringComparer.OrdinalIgnoreCase);
+            _jobProgress = new ConcurrentDictionary<string, List<JobProgress>>(StringComparer.OrdinalIgnoreCase);
             _tokens = new ConcurrentDictionary<string, CancellationTokenSource>(StringComparer.OrdinalIgnoreCase);
         }
 
@@ -24,6 +26,7 @@ namespace Niles.Etl.Jobs
         {
             JobStatus status = new JobStatus { Type = type };
             _jobs[status.Id] = status;
+            _jobProgress[status.Id] = new List<JobProgress>();
 
             CancellationTokenSource jobCts = new CancellationTokenSource();
             _tokens[status.Id] = jobCts;
@@ -81,12 +84,15 @@ namespace Niles.Etl.Jobs
         {
             if (!_jobs.TryGetValue(jobId, out JobStatus? s)) return;
 
-            if (progress.TotalFound.HasValue) s.TotalFound = progress.TotalFound.Value;
+            if (progress.Found.HasValue) s.Found = progress.Found.Value;
+            if (progress.Inserted.HasValue) s.Inserted += progress.Inserted.Value;
+            if (progress.Updated.HasValue) s.Updated += progress.Updated.Value;
             if (progress.Processed.HasValue) s.Processed = progress.Processed.Value;
             if (progress.Skipped.HasValue) s.Skipped = progress.Skipped.Value;
-            if (progress.CurrentItem != null) s.CurrentItem = progress.CurrentItem;
             if (progress.Message != null) s.Message = progress.Message;
             if (progress.Error != null) s.Errors.Add(progress.Error);
+
+            _jobProgress[jobId].Add(progress);
         }
 
         public void MarkRunning(string jobId)

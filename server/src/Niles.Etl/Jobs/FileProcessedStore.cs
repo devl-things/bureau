@@ -1,5 +1,5 @@
 ﻿using Microsoft.Extensions.Options;
-using Niles.Etl.Abstractions.Configurations;
+using Niles.Etl.Configurations;
 using System.Collections.Concurrent;
 
 namespace Niles.Etl.Jobs
@@ -20,12 +20,13 @@ namespace Niles.Etl.Jobs
         private readonly ConcurrentDictionary<string, object> _locks =
             new ConcurrentDictionary<string, object>(StringComparer.OrdinalIgnoreCase);
 
-        public FileProcessedStore(IOptions<DownloaderOptions> options)
+        //TODO Fix this, it cannot be these options
+        public FileProcessedStore(IOptions<RetailerEtlOptions> options)
         {
             // Reuse your existing TempDirectory as default root; feel free to add a dedicated option later
-            string baseDir = string.IsNullOrWhiteSpace(options.Value.TempDirectory)
+            string baseDir = string.IsNullOrWhiteSpace(options.Value.InboundFolder)
                 ? Path.Combine(AppContext.BaseDirectory, "processed")
-                : Path.Combine(options.Value.TempDirectory, "processed");
+                : Path.Combine(options.Value.InboundFolder, "processed");
 
             Directory.CreateDirectory(baseDir);
             _rootDir = baseDir;

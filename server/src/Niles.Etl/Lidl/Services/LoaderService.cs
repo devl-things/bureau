@@ -1,5 +1,7 @@
-﻿using Niles.Data;
-using Niles.Etl.Lidl.Models;
+﻿using Bureau.Core;
+using Niles.Data;
+using Niles.Etl.Jobs;
+using Niles.Etl.Models;
 using Niles.Etl.Transform;
 
 namespace Niles.Etl.Lidl.Services
@@ -7,16 +9,23 @@ namespace Niles.Etl.Lidl.Services
     public sealed class LoaderService
     {
         private readonly IChecksumService _checksum;
-        private readonly IImportFileRepository _files;
+        private readonly IArtifactRepository _files;
         private readonly IPriceRepository _repo;
-        private readonly IFileArchiver _archiver;
+        private readonly IFileManager _archiver;
 
-        public LoaderService(IChecksumService checksum, IImportFileRepository files, IPriceRepository repo, IFileArchiver archiver)
+        public LoaderService(IChecksumService checksum, IArtifactRepository files, IPriceRepository repo, IFileManager archiver)
         {
             _checksum = checksum;
             _files = files;
             _repo = repo;
             _archiver = archiver;
+        }
+
+
+        public async Task<ProgressInfo> LoadDataAsync(List<LineSnapshot> data, CancellationToken cancellationToken = default)
+        {
+            ProgressInfo result = new JobProgress();
+            return result;
         }
 
         public async Task<(int found, int inserted, int upserted)> LoadFileAsync(
@@ -27,8 +36,8 @@ namespace Niles.Etl.Lidl.Services
             CancellationToken ct)
         {
             string sha = _checksum.ComputeSha256(filePath);
-            ImportFileStatus? existing = await _files.GetStatusByHashAsync(sha, ct);
-            if (existing == ImportFileStatus.Completed)
+            ArtifactStatus? existing = await _files.GetStatusByHashAsync(sha, ct);
+            if (existing == ArtifactStatus.Completed)
             {
                 // Already processed successfully — skip silently.
                 return (0, 0, 0);

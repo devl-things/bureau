@@ -1,18 +1,41 @@
-﻿using System.Security.Cryptography;
-using System.Text;
+﻿using Niles.IO;
+using System.Security.Cryptography;
 
 namespace Niles.Etl.Transform
 {
     public sealed class Sha256ChecksumService : IChecksumService
     {
-        public string ComputeSha256(string filePath)
+        public string ComputeHash(string filePath)
         {
-            using FileStream fs = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.Read);
-            using SHA256 sha = SHA256.Create();
-            byte[] hash = sha.ComputeHash(fs);
-            StringBuilder sb = new StringBuilder(hash.Length * 2);
-            for (int i = 0; i < hash.Length; i++) sb.Append(hash[i].ToString("X2"));
-            return sb.ToString();
+            byte[] hash;
+            using (FileStream fs = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.Read))
+            using (SHA256 sha = SHA256.Create())
+            {
+                hash = sha.ComputeHash(fs);
+            }
+
+            return Convert.ToHexString(hash);
+        }
+        public string ComputeHash(byte[] data)
+        {
+            byte[] hash;
+            using (SHA256 sha = SHA256.Create())
+            {
+                hash = sha.ComputeHash(data);
+            }
+
+            return Convert.ToHexString(hash);
+        }
+
+        public async Task<string> ComputeHashAsync(Stream data, CancellationToken cancellationToken = default)
+        {
+            byte[] hash;
+            using (SHA256 sha = SHA256.Create())
+            {
+                hash = await sha.ComputeHashAsync(data, cancellationToken);
+            }
+
+            return Convert.ToHexString(hash);
         }
     }
 }

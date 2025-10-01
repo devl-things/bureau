@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using Bureau.Core;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Niles.Etl.Jobs
 {
@@ -7,11 +8,11 @@ namespace Niles.Etl.Jobs
         private readonly IServiceProvider _sp;
         public JobDispatcher(IServiceProvider sp) { _sp = sp; }
 
-        public async Task DispatchAsync(JobWorkItem work, IJobReporter reporter, CancellationToken cancellationToken = default)
+        public async Task<Result> DispatchAsync(JobWorkItem work, IJobReporter reporter, CancellationToken cancellationToken = default)
         {
             using IServiceScope scope = _sp.CreateScope();
             IJobHandler handler = scope.ServiceProvider.GetRequiredKeyedService<IJobHandler>(work.Type);
-            await handler.HandleAsync(work.JobId, work.Args, reporter, cancellationToken);
+            return await handler.HandleAsync(work, reporter, cancellationToken);
         }
     }
 }

@@ -1,4 +1,5 @@
 ﻿using Niles.Etl.Lidl.Models;
+using Niles.Etl.Models;
 using Niles.Models;
 using System.Globalization;
 

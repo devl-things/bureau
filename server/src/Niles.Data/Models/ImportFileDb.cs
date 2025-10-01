@@ -18,5 +18,5 @@
         public string? Error { get; set; }
     }
 
-    public enum ImportFileStatusDb { Pending, InProgress, Completed, Failed }
+    public enum ImportFileStatusDb { Pending, InProgress, Completed, Skipped, Failed }
 }

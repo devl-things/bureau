@@ -7,20 +7,53 @@ namespace Niles.Etl.Lidl.Services
     {
         public IEnumerable<CsvRowRaw> ReadRows(string filePath, Encoding encoding)
         {
-            using FileStream fs = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.Read);
-            using StreamReader sr = new StreamReader(fs, encoding, detectEncodingFromByteOrderMarks: true);
+            using (FileStream fs = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.Read))
+            using (StreamReader sr = new StreamReader(fs, encoding, detectEncodingFromByteOrderMarks: true))
+            {
+                foreach (CsvRowRaw row in ReadRowsCore(sr))
+                {
+                    yield return row;
+                }
+            }
+        }
 
-            string? header = sr.ReadLine();
-            if (string.IsNullOrWhiteSpace(header)) yield break;
+        /// <summary>
+        /// Reads CSV rows from an already-open stream. The stream is left open.
+        /// </summary>
+        public IEnumerable<CsvRowRaw> ReadRows(Stream stream, Encoding encoding)
+        {
+            using (StreamReader sr = new StreamReader(stream, encoding, detectEncodingFromByteOrderMarks: true, bufferSize: 1024, leaveOpen: true))
+            {
+                foreach (CsvRowRaw row in ReadRowsCore(sr))
+                {
+                    yield return row;
+                }
+            }
+        }
+
+        private static IEnumerable<CsvRowRaw> ReadRowsCore(TextReader reader)
+        {
+            string? header = reader.ReadLine();
+            if (string.IsNullOrWhiteSpace(header))
+            {
+                yield break;
+            }
 
             string[] headers = SplitCsv(header);
             string? line;
-            while ((line = sr.ReadLine()) != null)
+            while ((line = reader.ReadLine()) != null)
             {
-                if (string.IsNullOrWhiteSpace(line)) continue;
+                if (string.IsNullOrWhiteSpace(line))
+                {
+                    continue;
+                }
+
                 string[] fields = SplitCsv(line);
                 CsvRowRaw row = Map(headers, fields);
-                if (!string.IsNullOrWhiteSpace(row.Name)) yield return row;
+                if (!string.IsNullOrWhiteSpace(row.Name))
+                {
+                    yield return row;
+                }
             }
         }
 
@@ -35,12 +68,27 @@ namespace Niles.Etl.Lidl.Services
                 char c = line[i];
                 if (c == '"')
                 {
-                    if (inQuotes && i + 1 < line.Length && line[i + 1] == '"') { sb.Append('"'); i++; }
-                    else { inQuotes = !inQuotes; }
+                    if (inQuotes && i + 1 < line.Length && line[i + 1] == '"')
+                    {
+                        sb.Append('"');
+                        i++;
+                    }
+                    else
+                    {
+                        inQuotes = !inQuotes;
+                    }
                 }
-                else if (c == ',' && !inQuotes) { result.Add(sb.ToString()); sb.Clear(); }
-                else { sb.Append(c); }
+                else if (c == ',' && !inQuotes)
+                {
+                    result.Add(sb.ToString());
+                    sb.Clear();
+                }
+                else
+                {
+                    sb.Append(c);
+                }
             }
+
             result.Add(sb.ToString());
             return result.ToArray();
         }
@@ -48,6 +96,7 @@ namespace Niles.Etl.Lidl.Services
         private static CsvRowRaw Map(string[] headers, string[] fields)
         {
             CsvRowRaw r = new CsvRowRaw();
+
             for (int i = 0; i < headers.Length; i++)
             {
                 string h = headers[i].Trim();
@@ -64,6 +113,7 @@ namespace Niles.Etl.Lidl.Services
                 else if (h.StartsWith("MPC_ZA_VRIJEME_POSEBNOG_OBLIKA_PRODAJE", StringComparison.OrdinalIgnoreCase)) r.PromoPrice = v;
                 else if (h.StartsWith("NAJNIZA_CIJENA_U_POSLJ.", StringComparison.OrdinalIgnoreCase)) r.Lowest30 = v;
             }
+
             return r;
         }
     }

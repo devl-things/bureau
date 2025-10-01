@@ -4,6 +4,13 @@
 ## sonarqube test coverage script
 docs/test-coverage.md
 
+## file used to sync with perplexity
+docs/perplexity-data
+
+## temp folders where data is processed
+temp/
+
+
 # ignore local settings
 appsettings.Development.json
 

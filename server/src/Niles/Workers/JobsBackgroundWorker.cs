@@ -1,4 +1,5 @@
-﻿using Niles.Etl.Jobs;
+﻿using Bureau.Core;
+using Niles.Etl.Jobs;
 
 namespace Niles.Workers
 {
@@ -23,14 +24,23 @@ namespace Niles.Workers
 
                 try
                 {
-                    await _dispatcher.DispatchAsync(work, _jobs, work.Cts.Token);
+                    Result result = await _dispatcher.DispatchAsync(work, _jobs, work.Cts.Token);
+
                     if (work.Cts.IsCancellationRequested)
                     {
                         _jobs.MarkCanceled(work.JobId);
                     }
                     else
                     {
-                        _jobs.MarkCompleted(work.JobId);
+                        if (result.IsError)
+                        {
+                            _logger.LogError("Job {JobId} failed with error: {Error}", work.JobId, result.Error);
+                            _jobs.MarkFailed(work.JobId, result.Error.ErrorMessage);
+                        }
+                        else
+                        {
+                            _jobs.MarkCompleted(work.JobId);
+                        }
                     }
                 }
                 catch (OperationCanceledException)

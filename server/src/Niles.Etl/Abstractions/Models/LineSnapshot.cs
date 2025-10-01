@@ -1,6 +1,6 @@
 ﻿using Niles.Models;
 
-namespace Niles.Etl.Lidl.Models
+namespace Niles.Etl.Models
 {
     public sealed class LineSnapshot
     {

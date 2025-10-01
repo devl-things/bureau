@@ -1,12 +1,14 @@
-﻿namespace Niles.Etl.Jobs
+﻿using Bureau.Core;
+
+namespace Niles.Etl.Jobs
 {
-    public sealed class JobProgress
+    public sealed class JobProgress : ProgressInfo
     {
-        public int? TotalFound { get; init; }
-        public int? Processed { get; init; }
-        public int? Skipped { get; init; }
-        public string? CurrentItem { get; init; }
+        public JobArtifact? Item { get; init; }
         public string? Message { get; init; }
         public string? Error { get; init; }
+        public int? Processed { get; init; }
+        public int? Skipped { get; init; }
+
     }
 }

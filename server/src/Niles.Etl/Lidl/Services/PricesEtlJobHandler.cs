@@ -1,5 +1,8 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using Bureau.Core;
+using Bureau.Core.Extensions;
+using Microsoft.Extensions.Logging;
 using Niles.Etl.Abstractions.Extract;
+using Niles.Etl.Abstractions.Models;
 using Niles.Etl.Extract;
 using Niles.Etl.Jobs;
 using Niles.Etl.Lidl.Models;
@@ -33,28 +36,29 @@ namespace Niles.Etl.Lidl.Services
             _loader = loader;
         }
 
-        public JobType Type { get { return JobType.Importer; } }
+        public JobType Type { get { return JobType.LidlEtlPrices; } }
 
-        public async Task HandleAsync(string jobId, Dictionary<string, string>? args, IJobReporter reporter, CancellationToken cancellationToken = default)
+        public async Task<Result> HandleAsync(JobWorkItemBase workItem, IJobReporter reporter, CancellationToken cancellationToken = default)
         {
-            if (args == null) throw new ArgumentException("Arguments required.");
+            if (workItem.Args == null) return new ResultError("Arguments required.");
 
-            string retailerName = Require(args, "retailer");
-            string inputFolder = Require(args, "input");
-            string encodingName = GetOr(args, "encoding", "windows-1250");
-
+            string retailerName = Require(workItem.Args, "retailer");
+            string inputFolder = Require(workItem.Args, "input");
+            string encodingName = workItem.Args.GetNotNullOrDefault("encoding", "windows-1250");
             Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
             Encoding enc = Encoding.GetEncoding(encodingName);
 
             List<string> files = _enumerator.EnumerateCsv(inputFolder).ToList();
-            reporter.Report(jobId, new JobProgress { TotalFound = files.Count, Message = "Starting ETL..." });
+            reporter.Report(workItem.JobId, new JobProgress { TotalFound = files.Count, Message = "Starting ETL..." });
 
             int done = 0;
 
             foreach (string file in files)
             {
-                cancellationToken.ThrowIfCancellationRequested();
-
+                if (cancellationToken.IsCancellationRequested)
+                {
+                    return false;
+                }
                 try
                 {
                     (Store store, DateOnly date) meta = _fileNameParser.Parse(retailerName, file);
@@ -71,10 +75,10 @@ namespace Niles.Etl.Lidl.Services
                     }
 
                     (int found, int inserted, int upserted) result =
-                        await _loader.LoadFileAsync(jobId, file, retailerName, lines, cancellationToken);
+                        await _loader.LoadFileAsync(workItem.JobId, file, retailerName, lines, cancellationToken);
 
                     done++;
-                    reporter.Report(jobId, new JobProgress
+                    reporter.Report(workItem.JobId, new JobProgress
                     {
                         Processed = done,
                         CurrentItem = Path.GetFileName(file),
@@ -85,23 +89,18 @@ namespace Niles.Etl.Lidl.Services
                 catch (Exception ex)
                 {
                     _logger.LogError(ex, "ETL failed for {File}", file);
-                    reporter.Report(jobId, new JobProgress { Error = ex.Message, CurrentItem = Path.GetFileName(file) });
+                    reporter.Report(workItem.JobId, new JobProgress { Error = ex.Message, CurrentItem = Path.GetFileName(file) });
                 }
             }
 
-            reporter.Report(jobId, new JobProgress { Message = "ETL finished", Processed = done });
+            reporter.Report(workItem.JobId, new JobProgress { Message = "ETL finished", Processed = done });
+            return true;
         }
 
         private static string Require(Dictionary<string, string> args, string key)
         {
             if (args.TryGetValue(key, out string? v) && !string.IsNullOrWhiteSpace(v)) return v;
             throw new ArgumentException("Missing argument: " + key);
-        }
-
-        private static string GetOr(Dictionary<string, string> args, string key, string fallback)
-        {
-            if (args.TryGetValue(key, out string? v) && !string.IsNullOrWhiteSpace(v)) return v;
-            return fallback;
         }
     }
 }

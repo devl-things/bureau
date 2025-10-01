@@ -6,8 +6,10 @@
         public JobType Type { get; init; }
         public JobState State { get; set; } = JobState.Queued;
 
-        public int TotalFound { get; set; }
+        public int Found { get; set; }
+        public int Inserted { get; set; }
         public int Processed { get; set; }
+        public int Updated { get; set; }
         public int Skipped { get; set; }
         public string? CurrentItem { get; set; }
         public string? Message { get; set; }

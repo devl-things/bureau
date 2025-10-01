@@ -1,4 +1,5 @@
-﻿using Niles.Etl.Abstractions.Extract;
+﻿using Niles.Etl.Configurations;
+using Niles.Etl.Extract;
 using Niles.Models;
 using System.Globalization;
 using System.Text.RegularExpressions;
@@ -7,7 +8,10 @@ namespace Niles.Etl.Lidl.Services
 {
     public sealed class LidlFileNameParser : IFileNameParser
     {
-        public (Store store, DateOnly date) Parse(string retailerName, string filePath)
+        public string RetailerName => Definitions.Retailers.Lidl;
+
+        //TODO change signature into something better
+        public (Store store, DateOnly date) Parse(string filePath)
         {
             string name = Path.GetFileNameWithoutExtension(filePath);
             string[] parts = name.Split('_', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
@@ -37,7 +41,7 @@ namespace Niles.Etl.Lidl.Services
             Store store = new Store
             {
                 Name = storeName,
-                Retailer = new Retailer { Name = retailerName },
+                Retailer = new Retailer { Name = RetailerName },
                 Address = address,
                 City = city,
                 PostalCode = postal
