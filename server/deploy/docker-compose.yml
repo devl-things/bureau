@@ -1,0 +1,17 @@
+name: niles
+version: "3.9"
+
+services:
+  niles-chores-api:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile.chores
+    container_name: chores-api
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+    networks:
+      - nuc-network
+
+networks:
+  nuc-network:
+    external: true

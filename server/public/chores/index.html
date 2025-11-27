@@ -1,0 +1,1008 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <title>Daily Chores</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <style>
+        :root {
+            --bg: #f3f4f6;
+            --bg-card: #ffffff;
+            --accent: #16a34a;
+            --text-main: #111827;
+            --text-muted: #6b7280;
+            --border-subtle: #e5e7eb;
+            --radius-lg: 18px;
+            --shadow-soft: 0 8px 22px rgba(15, 23, 42, 0.12);
+
+            --priority-critical: #9f1239;
+            --priority-high: #b45309;
+            --priority-medium: #1d4ed8;
+            --priority-low: #15803d;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        html,
+        body {
+            height: 100%;
+        }
+
+        body {
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            background: radial-gradient(circle at top, #e5e7eb 0, #f9fafb 45%, #f3f4f6 100%);
+            color: var(--text-main);
+            margin: 0;
+        }
+
+        .app {
+            width: 100vw;
+            height: 100vh;
+            max-width: 100vw;
+            max-height: 100vh;
+            background: var(--bg);
+            padding: 16px;
+            overflow: hidden;
+        }
+
+        .app-inner {
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            max-width: 700px;
+            margin: 0 auto;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+
+        .title-block {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .app-title {
+            font-size: 1.4rem;
+            font-weight: 650;
+            letter-spacing: 0.02em;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .date {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+        }
+
+        .status-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 14px;
+            font-size: 0.78rem;
+            color: var(--text-muted);
+            gap: 8px;
+        }
+
+        .status-left {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex: 1;
+            min-width: 0;
+        }
+
+        .status-text strong {
+            color: var(--text-main);
+            font-weight: 600;
+        }
+
+        .status-pill {
+            border-radius: 999px;
+            padding: 3px 6px 3px 4px;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: #ffffff;
+            border: 1px solid #d1d5db;
+        }
+
+        .status-indicator {
+            width: 9px;
+            height: 9px;
+            border-radius: 999px;
+            background: radial-gradient(circle, #22c55e, #16a34a);
+            box-shadow: 0 0 0 4px rgba(34, 197, 94, 0.25);
+        }
+
+        .status-label {
+            font-size: 0.7rem;
+            color: #166534;
+        }
+
+        .status-label.offline {
+            color: #b91c1c;
+        }
+
+        .status-dot-offline {
+            background: radial-gradient(circle, #f97373, #ef4444);
+            box-shadow: 0 0 0 4px rgba(248, 113, 113, 0.25);
+        }
+
+        .status-actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .refresh-btn {
+            border: 1px solid #d1d5db;
+            background: #ffffff;
+            border-radius: 999px;
+            padding: 4px 10px;
+            font-size: 0.78rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            cursor: pointer;
+            box-shadow: 0 3px 8px rgba(15, 23, 42, 0.08);
+        }
+
+        .refresh-btn span {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .refresh-btn:active {
+            transform: translateY(1px);
+            box-shadow: 0 1px 4px rgba(15, 23, 42, 0.08);
+        }
+
+        .refresh-btn[disabled] {
+            opacity: 0.6;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+
+        .chores-card {
+            background: var(--bg-card);
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--border-subtle);
+            padding: 12px 10px 12px;
+            box-shadow: var(--shadow-soft);
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            flex: 1;
+            min-height: 0;
+        }
+
+        .chores-header-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 4px;
+        }
+
+        .chores-title {
+            font-size: 0.94rem;
+            font-weight: 600;
+            letter-spacing: 0.01em;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .chores-count {
+            font-size: 0.76rem;
+            color: var(--text-muted);
+        }
+
+        .progress-bar {
+            position: relative;
+            width: 100%;
+            height: 6px;
+            border-radius: 999px;
+            background: #e5e7eb;
+            overflow: hidden;
+            border: 1px solid #d1d5db;
+            margin-bottom: 4px;
+        }
+
+        .progress-fill {
+            position: absolute;
+            inset: 0;
+            width: 0%;
+            border-radius: 999px;
+            background: linear-gradient(90deg, #22c55e, #4ade80);
+            transition: width 0.25s ease-out;
+        }
+
+        .chores-list {
+            list-style: none;
+            margin: 0;
+            padding: 2px 1px 0;
+            display: flex;
+            flex-direction: column;
+            gap: 7px;
+            overflow-y: auto;
+            padding-right: 3px;
+            flex: 1;
+        }
+
+        .chores-list::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .chores-list::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .chores-list::-webkit-scrollbar-thumb {
+            background: #d1d5db;
+            border-radius: 999px;
+        }
+
+        .chore {
+            position: relative;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 9px 9px 9px 10px;
+            border-radius: 14px;
+            background: #f9fafb;
+            border: 1px solid #e5e7eb;
+            box-shadow: 0 4px 10px rgba(15, 23, 42, 0.05);
+            transform: translateY(0);
+            transition: transform 0.18s ease-out, box-shadow 0.18s ease-out,
+                border-color 0.18s ease-out, background 0.18s ease-out,
+                opacity 0.18s ease-out;
+            cursor: pointer;
+        }
+
+        .chore:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 14px rgba(15, 23, 42, 0.08);
+            border-color: rgba(59, 130, 246, 0.5);
+            background: #ffffff;
+        }
+
+        .chore.completed {
+            border-color: rgba(22, 163, 74, 0.75);
+            background: #ecfdf5;
+            opacity: 0.95;
+        }
+
+        .chore-left {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            flex: 1;
+        }
+
+        .chore-texts {
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+        }
+
+        .chore-title {
+            font-size: 0.9rem;
+            font-weight: 500;
+            margin-bottom: 0;
+        }
+
+        .chore-desc {
+            font-size: 0.76rem;
+            color: var(--text-muted);
+        }
+
+        .chore-meta {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.72rem;
+        }
+
+        .priority-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 2px 6px;
+            border-radius: 999px;
+            background: #fff;
+            border: 1px solid #e5e7eb;
+            font-weight: 500;
+            cursor: default;
+        }
+
+        .priority-arrow {
+            font-size: 0.8rem;
+        }
+
+        .priority-label-short {
+            font-size: 0.7rem;
+            font-weight: 700;
+            padding: 1px 4px;
+            border-radius: 999px;
+            background: #f9fafb;
+        }
+
+        .priority-critical {
+            border-color: rgba(159, 18, 57, 0.4);
+            color: var(--priority-critical);
+        }
+
+        .priority-critical .priority-label-short {
+            background: #fdf2f8;
+            color: var(--priority-critical);
+        }
+
+        .priority-high {
+            border-color: rgba(180, 83, 9, 0.4);
+            color: var(--priority-high);
+        }
+
+        .priority-high .priority-label-short {
+            background: #fffbeb;
+            color: var(--priority-high);
+        }
+
+        .priority-medium {
+            border-color: rgba(37, 99, 235, 0.35);
+            color: var(--priority-medium);
+        }
+
+        .priority-medium .priority-label-short {
+            background: #eff6ff;
+            color: var(--priority-medium);
+        }
+
+        .priority-low {
+            border-color: rgba(21, 128, 61, 0.35);
+            color: var(--priority-low);
+        }
+
+        .priority-low .priority-label-short {
+            background: #ecfdf5;
+            color: var(--priority-low);
+        }
+
+        .type-pill {
+            padding: 2px 6px;
+            border-radius: 999px;
+            background: #f3f4f6;
+            border: 1px solid #e5e7eb;
+            color: #4b5563;
+        }
+
+        .type-pill.extra {
+            background: #fff7ed;
+            border-color: #fed7aa;
+            color: #9a3412;
+        }
+
+        .checkbox-wrap {
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        input[type="checkbox"] {
+            appearance: none;
+            -webkit-appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 6px;
+            border: 1.6px solid #d1d5db;
+            background: #ffffff;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            position: relative;
+            transition: border-color 0.16s ease-out, background 0.16s ease-out, box-shadow 0.16s ease-out;
+        }
+
+        input[type="checkbox"]::after {
+            content: "✓";
+            font-size: 0.9rem;
+            color: white;
+            transform: scale(0);
+            transition: transform 0.14s ease-out;
+        }
+
+        input[type="checkbox"]:checked {
+            border-color: transparent;
+            background: linear-gradient(135deg, #22c55e, #16a34a);
+            box-shadow: 0 0 0 2px rgba(22, 163, 74, 0.35);
+        }
+
+        input[type="checkbox"]:checked::after {
+            transform: scale(1);
+        }
+
+        .toast {
+            position: fixed;
+            left: 50%;
+            bottom: 16px;
+            transform: translateX(-50%) translateY(120%);
+            padding: 9px 14px;
+            border-radius: 999px;
+            font-size: 0.78rem;
+            background: #111827;
+            color: #f9fafb;
+            border: 1px solid rgba(31, 41, 55, 0.65);
+            box-shadow: 0 15px 30px rgba(15, 23, 42, 0.6);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            z-index: 20;
+            opacity: 0;
+            transition: transform 0.22s ease-out, opacity 0.22s ease-out;
+        }
+
+        .toast.visible {
+            transform: translateX(-50%) translateY(0);
+            opacity: 1;
+        }
+
+        .toast-icon {
+            font-size: 1rem;
+        }
+
+        .toast-text {
+            white-space: nowrap;
+        }
+
+        .toast-error {
+            background: #7f1d1d;
+            border-color: #fecaca;
+            color: #fee2e2;
+        }
+
+        .empty-state {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            text-align: center;
+            padding: 12px 6px;
+        }
+
+        .badge-offline {
+            font-size: 0.7rem;
+            color: #b91c1c;
+        }
+
+        .loading-row {
+            font-size: 0.78rem;
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 5px 2px 2px;
+        }
+
+        .loading-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 999px;
+            background: #9ca3af;
+            animation: pulse 1s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                transform: scale(1);
+                opacity: 0.8;
+            }
+
+            50% {
+                transform: scale(1.3);
+                opacity: 0.4;
+            }
+        }
+
+        @media (min-width: 600px) {
+            .app {
+                padding: 24px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="app">
+        <div class="app-inner">
+            <header>
+                <div class="title-block">
+                    <div class="app-title">Today’s Chores</div>
+                    <div id="today-date" class="date"></div>
+                </div>
+            </header>
+
+            <div class="status-row">
+                <div class="status-left">
+                    <div class="status-text">
+                        <span id="status-message">Checking connection…</span>
+                    </div>
+                </div>
+                <div class="status-actions">
+                    <button class="refresh-btn" id="refresh-btn" type="button" title="Refresh" aria-label="Refresh">
+                        <span>🔄</span><span>Refresh</span>
+                    </button>
+                    <div class="status-pill" id="status-pill">
+                        <span class="status-indicator"></span>
+                        <span class="status-label" id="status-label">Online</span>
+                    </div>
+                </div>
+            </div>
+
+            <form id="chores-form" style="display:flex;flex-direction:column;flex:1;min-height:0;">
+                <div class="chores-card">
+                    <div class="chores-header-row">
+                        <div class="chores-title">
+                            <span>Checklist</span>
+                            <span class="badge-offline" id="offline-badge" style="display:none;">(offline)</span>
+                        </div>
+                        <div class="chores-count" id="chores-count">0 done · 0 total</div>
+                    </div>
+
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="progress-fill"></div>
+                    </div>
+
+                    <div class="loading-row" id="loading-row">
+                        <span class="loading-dot"></span>
+                        <span>Loading your tasks…</span>
+                    </div>
+
+                    <ul id="chores-list" class="chores-list"></ul>
+
+                    <div class="empty-state" id="empty-state" style="display:none;">
+                        No chores found for today.
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="toast" id="toast">
+        <span class="toast-icon" id="toast-icon">✓</span>
+        <span class="toast-text" id="toast-text">Saved</span>
+    </div>
+
+    <script>
+        // ---- CONFIG ----
+        const API_BASE = "/api/chores";  // GET chores, PATCH chore
+        const API_HEALTH = "/api/health";  // health check
+
+        // Priority numbers: 1=critical, 2=high, 3=medium, 4=low
+        const PRIORITY = {
+            CRITICAL: 1,
+            HIGH: 2,
+            MEDIUM: 3,
+            LOW: 4
+        };
+
+        let todayIso = null; // YYYY-MM-DD
+
+        document.addEventListener("DOMContentLoaded", () => {
+            renderTodayDate();
+            const refreshBtn = document.getElementById("refresh-btn");
+            refreshBtn.addEventListener("click", () => {
+                checkApiHealthAndLoad();
+            });
+            checkApiHealthAndLoad();
+        });
+
+        function renderTodayDate() {
+            const dateEl = document.getElementById("today-date");
+            const now = new Date();
+
+            dateEl.textContent = now.toLocaleDateString(undefined, {
+                weekday: "long",
+                year: "numeric",
+                month: "long",
+                day: "numeric"
+            });
+
+            const year = now.getFullYear();
+            const month = String(now.getMonth() + 1).padStart(2, "0");
+            const day = String(now.getDate()).padStart(2, "0");
+            todayIso = `${year}-${month}-${day}`;
+        }
+
+        async function checkApiHealthAndLoad() {
+            setLoading(true);
+            try {
+                setStatus("Checking connection…", "online");
+                const healthy = await checkHealth();
+                if (!healthy) {
+                    setStatus("API unreachable", "offline");
+                    document.getElementById("offline-badge").style.display = "inline";
+                    clearChoresList();
+                    showToast("Service currently unavailable.", true);
+                    return;
+                }
+
+                setStatus("Loading chores…", "online");
+                document.getElementById("offline-badge").style.display = "none";
+                await loadChores();
+                setStatus("Chores loaded", "online");
+            } catch (err) {
+                console.error("Health check / load failed:", err);
+                setStatus("API unreachable", "offline");
+                document.getElementById("offline-badge").style.display = "inline";
+                clearChoresList();
+                showToast("Service currently unavailable.", true);
+            } finally {
+                setLoading(false);
+            }
+        }
+
+        async function checkHealth() {
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 3000);
+
+            try {
+                const resp = await fetch(API_HEALTH, { signal: controller.signal });
+                clearTimeout(timeoutId);
+                return resp.ok;
+            } catch (e) {
+                clearTimeout(timeoutId);
+                return false;
+            }
+        }
+
+        async function loadChores() {
+            try {
+                setLoading(true);
+                const chores = await fetchChoresFromApi();
+                renderChores(chores);
+            } catch (error) {
+                console.error("Failed to load chores:", error);
+                showToast("Couldn’t load chores.", true);
+                setStatus("Error loading chores", "online");
+                clearChoresList();
+            } finally {
+                setLoading(false);
+            }
+        }
+
+        async function fetchChoresFromApi() {
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 5000);
+
+            const url = `${API_BASE}?date=${encodeURIComponent(todayIso)}`;
+            const response = await fetch(url, { signal: controller.signal });
+            clearTimeout(timeoutId);
+
+            if (!response.ok) {
+                throw new Error("API response not OK: " + response.status);
+            }
+
+            const data = await response.json();
+            if (!Array.isArray(data)) {
+                throw new Error("Unexpected API format (expected array)");
+            }
+
+            return data.map((item, index) => {
+                const normalizedPriority = normalizePriority(item.priority);
+                return {
+                    id: item.id ?? String(index),
+                    title: item.title ?? "Untitled chore",
+                    description: item.description ?? "",
+                    completed: !!item.completed,
+                    priorityNumber: normalizedPriority,        // 1-4
+                    priorityName: priorityNameFromNumber(normalizedPriority), // "critical" | "high" | "medium" | "low"
+                    type: normalizeType(item.type)            // "Maintenance" | "Extra"
+                };
+            });
+        }
+
+        function normalizePriority(value) {
+            const num = Number(value);
+            if (num === PRIORITY.CRITICAL) return PRIORITY.CRITICAL;
+            if (num === PRIORITY.HIGH) return PRIORITY.HIGH;
+            if (num === PRIORITY.LOW) return PRIORITY.LOW;
+            // default medium
+            return PRIORITY.MEDIUM;
+        }
+
+        function priorityNameFromNumber(num) {
+            switch (num) {
+                case PRIORITY.CRITICAL: return "critical";
+                case PRIORITY.HIGH: return "high";
+                case PRIORITY.LOW: return "low";
+                default: return "medium";
+            }
+        }
+
+        function priorityLabelShort(name) {
+            switch (name) {
+                case "critical": return "C";
+                case "high": return "H";
+                case "medium": return "M";
+                case "low": return "L";
+                default: return "?";
+            }
+        }
+
+        function priorityTooltip(name) {
+            switch (name) {
+                case "critical": return "Critical priority";
+                case "high": return "High priority";
+                case "medium": return "Medium priority";
+                case "low": return "Low priority";
+                default: return "Priority";
+            }
+        }
+
+        function normalizeType(value) {
+            if (!value) return "Maintenance";
+            const v = String(value).toLowerCase();
+            if (v === "extra") return "Extra";
+            return "Maintenance";
+        }
+
+        function renderChores(chores) {
+            const listEl = document.getElementById("chores-list");
+            const emptyState = document.getElementById("empty-state");
+            listEl.innerHTML = "";
+
+            if (!chores || chores.length === 0) {
+                emptyState.style.display = "block";
+                updateProgress(0, 0);
+                updateCount(0, 0);
+                return;
+            }
+
+            emptyState.style.display = "none";
+
+            chores.forEach((chore, index) => {
+                const li = document.createElement("li");
+                li.className = "chore";
+                li.dataset.choreId = chore.id;
+                li.dataset.priorityNumber = String(chore.priorityNumber);
+                li.dataset.originalIndex = String(index);
+
+                const leftDiv = document.createElement("div");
+                leftDiv.className = "chore-left";
+
+                const textDiv = document.createElement("div");
+                textDiv.className = "chore-texts";
+
+                const titleEl = document.createElement("div");
+                titleEl.className = "chore-title";
+                titleEl.textContent = chore.title;
+
+                const descEl = document.createElement("div");
+                descEl.className = "chore-desc";
+                descEl.textContent = chore.description || "";
+
+                textDiv.appendChild(titleEl);
+                if (chore.description) {
+                    textDiv.appendChild(descEl);
+                }
+
+                const metaEl = document.createElement("div");
+                metaEl.className = "chore-meta";
+
+                // Priority pill (Jira-like arrow + label + tooltip)
+                const priorityPill = document.createElement("div");
+                const priorityName = chore.priorityName; // "critical" | "high" | "medium" | "low"
+                priorityPill.className = `priority-pill priority-${priorityName}`;
+                priorityPill.title = priorityTooltip(priorityName);
+
+                const arrowSpan = document.createElement("span");
+                arrowSpan.className = "priority-arrow";
+                // Use filled triangle arrow pointing up for "higher" priority, same icon for all
+                arrowSpan.textContent = "▲";
+
+                const shortLabel = document.createElement("span");
+                shortLabel.className = "priority-label-short";
+                shortLabel.textContent = priorityLabelShort(priorityName);
+
+                priorityPill.appendChild(arrowSpan);
+                priorityPill.appendChild(shortLabel);
+
+                const typePill = document.createElement("div");
+                typePill.className = "type-pill" + (chore.type === "Extra" ? " extra" : "");
+                typePill.textContent = chore.type;
+
+                metaEl.appendChild(priorityPill);
+                metaEl.appendChild(typePill);
+
+                textDiv.appendChild(metaEl);
+
+                leftDiv.appendChild(textDiv);
+
+                const checkboxWrap = document.createElement("div");
+                checkboxWrap.className = "checkbox-wrap";
+
+                const checkbox = document.createElement("input");
+                checkbox.type = "checkbox";
+                checkbox.name = "chore";
+                checkbox.value = chore.id;
+                checkbox.checked = !!chore.completed;
+
+                checkboxWrap.appendChild(checkbox);
+
+                li.appendChild(leftDiv);
+                li.appendChild(checkboxWrap);
+
+                if (checkbox.checked) {
+                    li.classList.add("completed");
+                }
+
+                li.addEventListener("click", (event) => {
+                    if (event.target === checkbox) return;
+                    checkbox.checked = !checkbox.checked;
+                    handleCheckboxChange(checkbox, li);
+                });
+
+                checkbox.addEventListener("change", () => handleCheckboxChange(checkbox, li));
+
+                listEl.appendChild(li);
+            });
+
+            reorderList();
+            refreshProgressAndCount();
+        }
+
+        function handleCheckboxChange(checkbox, choreElement) {
+            const completed = checkbox.checked;
+
+            if (completed) {
+                choreElement.classList.add("completed");
+            } else {
+                choreElement.classList.remove("completed");
+            }
+
+            refreshProgressAndCount();
+            reorderList();
+            sendChoreStatusToApi(choreElement.dataset.choreId, completed);
+        }
+
+        // Sort: unchecked first, completed last, then by priority (1=critical → 4=low), then by original index
+        function reorderList() {
+            const listEl = document.getElementById("chores-list");
+            const items = Array.from(listEl.children);
+
+            items.sort((a, b) => {
+                const aChecked = a.querySelector('input[name="chore"]').checked;
+                const bChecked = b.querySelector('input[name="chore"]').checked;
+
+                if (aChecked !== bChecked) {
+                    return aChecked ? 1 : -1; // unchecked first
+                }
+
+                const aPriority = Number(a.dataset.priorityNumber || PRIORITY.MEDIUM);
+                const bPriority = Number(b.dataset.priorityNumber || PRIORITY.MEDIUM);
+
+                if (aPriority !== bPriority) {
+                    return aPriority - bPriority; // lower number = higher priority
+                }
+
+                const aIndex = Number(a.dataset.originalIndex || 0);
+                const bIndex = Number(b.dataset.originalIndex || 0);
+                return aIndex - bIndex;
+            });
+
+            items.forEach((item) => listEl.appendChild(item));
+        }
+
+        function refreshProgressAndCount() {
+            const checkboxes = Array.from(document.querySelectorAll('input[name="chore"]'));
+            const total = checkboxes.length;
+            const done = checkboxes.filter((cb) => cb.checked).length;
+            updateProgress(done, total);
+            updateCount(done, total);
+        }
+
+        function updateProgress(done, total) {
+            const fillEl = document.getElementById("progress-fill");
+            const percent = total === 0 ? 0 : Math.round((done / total) * 100);
+            fillEl.style.width = percent + "%";
+        }
+
+        function updateCount(done, total) {
+            const countEl = document.getElementById("chores-count");
+            countEl.textContent = `${done} done · ${total} total`;
+        }
+
+        function clearChoresList() {
+            const listEl = document.getElementById("chores-list");
+            const emptyState = document.getElementById("empty-state");
+            listEl.innerHTML = "";
+            emptyState.style.display = "block";
+            updateProgress(0, 0);
+            updateCount(0, 0);
+        }
+
+        function setStatus(message, mode) {
+            const statusMessageEl = document.getElementById("status-message");
+            const statusLabelEl = document.getElementById("status-label");
+            const statusPill = document.getElementById("status-pill");
+            const indicator = statusPill.querySelector(".status-indicator");
+
+            statusMessageEl.textContent = message;
+
+            if (mode === "offline") {
+                statusLabelEl.textContent = "Offline";
+                statusLabelEl.classList.add("offline");
+                indicator.classList.add("status-dot-offline");
+            } else {
+                statusLabelEl.textContent = "Online";
+                statusLabelEl.classList.remove("offline");
+                indicator.classList.remove("status-dot-offline");
+            }
+        }
+
+        function setLoading(isLoading) {
+            const loadingRow = document.getElementById("loading-row");
+            const refreshBtn = document.getElementById("refresh-btn");
+            loadingRow.style.display = isLoading ? "flex" : "none";
+            refreshBtn.disabled = isLoading;
+        }
+
+        async function sendChoreStatusToApi(choreId, completed) {
+            try {
+                const url = `${API_BASE}/${encodeURIComponent(choreId)}`;
+
+                const response = await fetch(url, {
+                    method: "PATCH",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ date: todayIso, completed: completed })
+                });
+
+                if (!response.ok) {
+                    throw new Error("Update failed with status " + response.status);
+                }
+
+                showToast("Saved ✔");
+            } catch (error) {
+                console.error("Failed to update chore:", error);
+                showToast("Couldn’t save that change.", true);
+                setStatus("Error updating chore", "online");
+                clearChoresList(); // consider data unreliable -> empty
+            }
+        }
+
+        function showToast(message, isError = false) {
+            const toast = document.getElementById("toast");
+            const text = document.getElementById("toast-text");
+            const icon = document.getElementById("toast-icon");
+
+            text.textContent = message;
+            toast.classList.toggle("toast-error", isError);
+            icon.textContent = isError ? "⚠️" : "✨";
+
+            toast.classList.add("visible");
+
+            clearTimeout(showToast._timeoutId);
+            showToast._timeoutId = setTimeout(() => {
+                toast.classList.remove("visible");
+            }, 2600);
+        }
+    </script>
+</body>
+
+</html>

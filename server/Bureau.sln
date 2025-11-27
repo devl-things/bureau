@@ -1,6 +1,6 @@
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 17
-VisualStudioVersion = 17.14.35906.104
+# Visual Studio Version 18
+VisualStudioVersion = 18.0.11018.127
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sven", "src\Sven\Sven.csproj", "{FAAFB695-FE4E-42F5-9511-841591A23F36}"
 EndProject
@@ -26,6 +26,8 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{87F065F7-50F7-42D5-A0F5-843D08848510}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Core", "Core", "{51F29E23-731D-4B0E-9E00-B361374A3B77}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Niles.Chores.Api", "src\Niles.Chores.Api\Niles.Chores.Api.csproj", "{83AC26A3-4264-4EDA-9F22-92437C97E0A3}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -61,6 +63,10 @@ Global
 		{3041BA79-D4F7-4F51-A0CB-D52A7DE2A1EE}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{3041BA79-D4F7-4F51-A0CB-D52A7DE2A1EE}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{3041BA79-D4F7-4F51-A0CB-D52A7DE2A1EE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{83AC26A3-4264-4EDA-9F22-92437C97E0A3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{83AC26A3-4264-4EDA-9F22-92437C97E0A3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{83AC26A3-4264-4EDA-9F22-92437C97E0A3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{83AC26A3-4264-4EDA-9F22-92437C97E0A3}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
