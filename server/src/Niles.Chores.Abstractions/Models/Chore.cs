@@ -10,5 +10,8 @@
         /// Every N week(s)
         /// </summary>
         public int WeeklyInterval { get; set; }
+        public bool IsImportant { get; set; }
+        public DateTime? ImportantReminderDate { get; set; }
+        public string? ImportantNotes { get; set; }
     }
 }

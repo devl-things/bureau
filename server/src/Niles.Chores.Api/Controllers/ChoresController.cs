@@ -110,7 +110,10 @@ namespace Niles.Chores.Api.Controllers
                 Type = chore.Type.ToString(),
                 Priority = 0, // Regular chores don't have priority
                 IsCompleted = false,
-                WeeklyInterval = chore.WeeklyInterval
+                WeeklyInterval = chore.WeeklyInterval,
+                IsImportant = chore.IsImportant,
+                ImportantReminderDate = chore.ImportantReminderDate,
+                ImportantNotes = chore.ImportantNotes
             });
 
             return Ok(dtos);
@@ -134,7 +137,10 @@ namespace Niles.Chores.Api.Controllers
                 Type = chore.Type.ToString(),
                 Priority = 0,
                 IsCompleted = false,
-                WeeklyInterval = chore.WeeklyInterval
+                WeeklyInterval = chore.WeeklyInterval,
+                IsImportant = chore.IsImportant,
+                ImportantReminderDate = chore.ImportantReminderDate,
+                ImportantNotes = chore.ImportantNotes
             };
 
             return Ok(dto);
@@ -174,7 +180,10 @@ namespace Niles.Chores.Api.Controllers
                     Type = created.Type.ToString(),
                     Priority = 0,
                     IsCompleted = false,
-                    WeeklyInterval = created.WeeklyInterval
+                    WeeklyInterval = created.WeeklyInterval,
+                    IsImportant = created.IsImportant,
+                    ImportantReminderDate = created.ImportantReminderDate,
+                    ImportantNotes = created.ImportantNotes
                 };
 
                 return CreatedAtAction(nameof(GetChore), new { id = created.Id }, responseDto);
@@ -226,7 +235,10 @@ namespace Niles.Chores.Api.Controllers
                 Type = updated.Type.ToString(),
                 Priority = 0,
                 IsCompleted = false,
-                WeeklyInterval = updated.WeeklyInterval
+                WeeklyInterval = updated.WeeklyInterval,
+                IsImportant = updated.IsImportant,
+                ImportantReminderDate = updated.ImportantReminderDate,
+                ImportantNotes = updated.ImportantNotes
             };
 
             return Ok(responseDto);
@@ -243,6 +255,53 @@ namespace Niles.Chores.Api.Controllers
             }
 
             return NoContent();
+        }
+
+        // POST: api/chores/{id}/important - Mark chore as important
+        [HttpPost("{id}/important")]
+        public async Task<ActionResult<ChoreDto>> MarkImportant(int id, [FromBody] ChoreImportantDto dto, CancellationToken cancellationToken = default)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            Chore? chore = await _choreService.GetChoreAsync(id, cancellationToken);
+            if (chore == null)
+            {
+                return NotFound();
+            }
+
+            if (!DateTime.TryParse(dto.Date, out DateTime reminderDate))
+            {
+                return BadRequest(new { error = "Invalid date format." });
+            }
+
+            chore.IsImportant = true;
+            chore.ImportantReminderDate = reminderDate;
+            chore.ImportantNotes = dto.Description;
+
+            Chore? updated = await _choreService.UpdateChoreAsync(chore, cancellationToken);
+            if (updated == null)
+            {
+                return NotFound();
+            }
+
+            var responseDto = new ChoreDto
+            {
+                Id = updated.Id,
+                Title = updated.Title,
+                Description = updated.Description ?? string.Empty,
+                Type = updated.Type.ToString(),
+                Priority = 0,
+                IsCompleted = false,
+                WeeklyInterval = updated.WeeklyInterval,
+                IsImportant = updated.IsImportant,
+                ImportantReminderDate = updated.ImportantReminderDate,
+                ImportantNotes = updated.ImportantNotes
+            };
+
+            return Ok(responseDto);
         }
     }
 }

@@ -18,6 +18,12 @@ namespace Niles.Chores.Api.Dtos
         public bool IsCompleted { get; set; }
         [JsonPropertyName("repeatEveryWeeks")]
         public int? WeeklyInterval { get; set; }
+        [JsonPropertyName("important")]
+        public bool IsImportant { get; set; }
+        [JsonPropertyName("importantReminderDate")]
+        public DateTime? ImportantReminderDate { get; set; }
+        [JsonPropertyName("importantNotes")]
+        public string? ImportantNotes { get; set; }
         [JsonIgnore]
         public DateOnly Date { get; set; }
     }

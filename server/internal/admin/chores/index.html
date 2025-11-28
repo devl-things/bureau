@@ -378,7 +378,10 @@
                     type: chore.type || "Maintenance",
                     priority: chore.priority || 0,
                     weeklyInterval: chore.repeatEveryWeeks ?? chore.weeklyInterval ?? 1,
-                    repeatEveryWeeks: chore.repeatEveryWeeks ?? chore.weeklyInterval ?? 1
+                    repeatEveryWeeks: chore.repeatEveryWeeks ?? chore.weeklyInterval ?? 1,
+                    important: chore.important || false,
+                    importantReminderDate: chore.importantReminderDate,
+                    importantNotes: chore.importantNotes
                 }));
                 state.meta = { total: chores.length };
             } catch (err) {
@@ -438,10 +441,14 @@
                     ? `<small class="badge subtle">${sanitize(chore.description)}</small>`
                     : "";
 
+                const importantBadge = chore.important
+                    ? `<span class="badge" style="background: rgba(251, 191, 36, 0.2); border-color: rgba(251, 191, 36, 0.4); color: #fbbf24;">⚠ Important</span>`
+                    : "";
                 titleCell.innerHTML = `<div>${sanitize(chore.title ?? "Untitled")}</div>
                     <div class="meta-line">
                         ${type}
                         ${repeatLabel}
+                        ${importantBadge}
                     </div>
                     ${descriptionBadge}`;
 
@@ -630,8 +637,31 @@
 
         async function handleImportantSubmit(event) {
             event.preventDefault();
-            showToast("Marking chores as important is not yet implemented in the backend API.", true);
-            closeModal();
+            const formData = new FormData(event.target);
+            const payload = {
+                date: formData.get("date"),
+                description: formData.get("description")
+            };
+
+            try {
+                const response = await fetch(`${API_BASE}/${state.activeChore.id}/important`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!response.ok) {
+                    const error = await response.json().catch(() => ({ error: "Request failed" }));
+                    throw new Error(error.error || "Request failed");
+                }
+
+                showToast("Chore marked as important", true);
+                closeModal();
+                await fetchChores(); // Refresh list
+            } catch (err) {
+                console.error(err);
+                showToast(err.message || "Could not mark chore as important");
+            }
         }
 
         function closeModal() {

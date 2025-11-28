@@ -87,9 +87,21 @@ if [ -n "$CHORE_ID" ]; then
     echo ""
 fi
 
-# Test 11: Delete chore
+# Test 11: Mark chore as important
 if [ -n "$CHORE_ID" ]; then
-    echo "1️⃣1️⃣  Testing DELETE /api/chores/$CHORE_ID..."
+    echo "1️⃣1️⃣  Testing POST /api/chores/$CHORE_ID/important..."
+    curl -s -X POST "$API_BASE/chores/$CHORE_ID/important" \
+      -H "Content-Type: application/json" \
+      -d '{
+        "date": "2025-12-15",
+        "description": "This is an important chore that needs attention"
+      }' | jq '.' || echo "❌ Failed to mark chore as important"
+    echo ""
+fi
+
+# Test 12: Delete chore
+if [ -n "$CHORE_ID" ]; then
+    echo "1️⃣2️⃣  Testing DELETE /api/chores/$CHORE_ID..."
     curl -s -X DELETE "$API_BASE/chores/$CHORE_ID" -w "\nHTTP Status: %{http_code}\n" || echo "❌ Failed to delete chore"
     echo ""
 fi

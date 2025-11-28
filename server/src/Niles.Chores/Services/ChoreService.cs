@@ -84,7 +84,10 @@ namespace Niles.Chores.Services
                 Title = source.Title,
                 Description = source.Description,
                 Type = source.Type,
-                WeeklyInterval = source.WeeklyInterval
+                WeeklyInterval = source.WeeklyInterval,
+                IsImportant = source.IsImportant,
+                ImportantReminderDate = source.ImportantReminderDate,
+                ImportantNotes = source.ImportantNotes
             };
         }
     }
