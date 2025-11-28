@@ -934,8 +934,8 @@
 
             return data.map((item, index) => {
                 // Use isCritical flag if available, otherwise normalize the calculated priority
-                const normalizedPriority = item.isCritical 
-                    ? PRIORITY.CRITICAL 
+                const normalizedPriority = item.isCritical
+                    ? PRIORITY.CRITICAL
                     : normalizePriority(item.priority);
                 return {
                     id: item.id ?? String(index),
@@ -952,10 +952,10 @@
 
         function normalizePriority(value) {
             const num = Number(value);
-            
+
             // If it's exactly 1, it's critical (but should be handled by isCritical flag)
             if (num === PRIORITY.CRITICAL) return PRIORITY.CRITICAL;
-            
+
             // The PrioritizedChoreService calculates priority as:
             // - CRITICAL = 1 (handled by isCritical flag)
             // - HIGH = 2 * importance_score (e.g., 2, 4, 6, 8, 10, 12, 14, 16...)
@@ -965,7 +965,7 @@
             // To determine which factor was used, we check divisibility in priority order:
             // Higher priority factors are checked first (2 > 3 > 4)
             // This handles overlaps correctly (e.g., 12 could be 2*6, 3*4, or 4*3, but 2*6 takes precedence)
-            
+
             // Check if it's a HIGH priority (divisible by 2)
             // Numbers like 2, 4, 6, 8, 10, 12, 14, 16, 18, 20...
             if (num % 2 === 0) {
