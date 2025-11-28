@@ -1,0 +1,13 @@
+{
+  "status": "success",
+  "message": "Chore created successfully",
+  "chore": {
+    "id": "C-999",
+    "type": "custom",
+    "title": "New chore placeholder",
+    "description": "This response represents a fake creation",
+    "repeatEveryWeeks": 1,
+    "important": false
+  }
+}
+

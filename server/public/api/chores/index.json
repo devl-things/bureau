@@ -1,0 +1,58 @@
+{
+  "data": [
+    {
+      "id": "C-101",
+      "type": "cleaning",
+      "title": "Kitchen deep clean",
+      "description": "Full wipe down of counters and appliances",
+      "repeatEveryWeeks": 2,
+      "important": true,
+      "lastCompletedAt": "2025-11-17T10:00:00Z",
+      "notes": "Focus on stovetop and backsplash"
+    },
+    {
+      "id": "C-102",
+      "type": "laundry",
+      "title": "Laundry",
+      "description": "Whites + colors, two loads",
+      "repeatEveryWeeks": 1,
+      "important": false,
+      "lastCompletedAt": "2025-11-24T08:30:00Z",
+      "notes": "Use delicate cycle for sweaters"
+    },
+    {
+      "id": "C-103",
+      "type": "garden",
+      "title": "Garden check",
+      "description": "Inspect raised beds, pull weeds, water plants",
+      "repeatEveryWeeks": 3,
+      "important": false,
+      "lastCompletedAt": "2025-11-05T15:45:00Z",
+      "notes": "Check drip timers"
+    },
+    {
+      "id": "C-104",
+      "type": "maintenance",
+      "title": "HVAC filter swap",
+      "description": "Replace hallway HVAC filter",
+      "repeatEveryWeeks": 8,
+      "important": true,
+      "lastCompletedAt": "2025-10-30T12:10:00Z",
+      "notes": "Keep spare filter in closet"
+    },
+    {
+      "id": "C-105",
+      "type": "errand",
+      "title": "Grocery run",
+      "description": "Restock pantry staples and snacks",
+      "repeatEveryWeeks": 1,
+      "important": false,
+      "lastCompletedAt": "2025-11-26T18:05:00Z",
+      "notes": "Check oat milk inventory"
+    }
+  ],
+  "meta": {
+    "total": 5,
+    "generatedAt": "2025-11-28T00:00:00.000Z"
+  }
+}
