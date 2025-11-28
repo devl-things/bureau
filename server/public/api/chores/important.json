@@ -1,9 +1,0 @@
-{
-  "status": "success",
-  "message": "Chore flagged as important",
-  "reminder": {
-    "date": "2025-12-12",
-    "description": "Auto-generated reminder notes"
-  }
-}
-

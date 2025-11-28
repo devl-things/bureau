@@ -26,10 +26,20 @@ namespace Niles.Chores.Services
 
         public async Task<List<PrioritizedChore>> GetPrioritizedChoresAsync(DateOnly requestedDate, CancellationToken cancellationToken = default)
         {
-            DateTime today = _timeProvider.GetUtcNow().UtcDateTime;
-            if (requestedDate == default || requestedDate < DateOnly.FromDateTime(today))
+            // Allow today and future dates, reject past dates
+            if (requestedDate == default)
             {
-                _logger.LogError("Requested date ({requestedDate}) is either default or in the past from today ({today})", requestedDate, today);
+                _logger.LogWarning("Requested date is default");
+                return [];
+            }
+            
+            DateTime utcNow = _timeProvider.GetUtcNow().UtcDateTime;
+            DateOnly today = DateOnly.FromDateTime(utcNow);
+            
+            // Allow today and future dates
+            if (requestedDate < today)
+            {
+                _logger.LogWarning("Requested date ({requestedDate}) is in the past from today ({today})", requestedDate, today);
                 return [];
             }
             YearsWeek requestedYearWeek = new YearsWeek(requestedDate);
@@ -78,6 +88,7 @@ namespace Niles.Chores.Services
                     Description = chore.Chore.Description,
                     Priority = priority,
                     Type = chore.Chore.Type,
+                    WeeklyInterval = chore.Chore.WeeklyInterval,
                     Note = chore.OpenCritical?.Note
                 });
             }

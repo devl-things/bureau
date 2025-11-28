@@ -1,48 +1,150 @@
-﻿namespace Niles.Chores.Services
+﻿using Microsoft.EntityFrameworkCore;
+using Niles.Chores;
+using Niles.Chores.Contexts;
+using Niles.Chores.Models;
+
+namespace Niles.Chores.Services
 {
     internal class HouseKeepingService : IHouseKeepingService
     {
-        private readonly List<Housekeeping> _store = new();
+        private readonly ChoresContext _context;
+        private readonly ICriticalChoreService _criticalChoreService;
 
-        private int _nextId = 1;
-
-        public Task<bool> CreateHousekeepingAsync(Housekeeping housekeeping, CancellationToken cancellationToken = default)
+        public HouseKeepingService(ChoresContext context, ICriticalChoreService criticalChoreService)
         {
-            if (housekeeping == null) return Task.FromResult(false);
-            if (!housekeeping.Id.HasValue || housekeeping.Id == 0)
+            _context = context;
+            _criticalChoreService = criticalChoreService;
+        }
+
+        public async Task<bool> CreateHousekeepingAsync(Housekeeping housekeeping, CancellationToken cancellationToken = default)
+        {
+            if (housekeeping == null) return false;
+
+            var housekeepingDb = new HousekeepingDb
             {
-                housekeeping.Id = _nextId++;
+                Timestamp = housekeeping.DateTime,
+                Duration = housekeeping.Duration,
+                Note = housekeeping.Note,
+                CreatedAt = DateTimeOffset.UtcNow,
+                UpdatedAt = DateTimeOffset.UtcNow
+            };
+
+            _context.Housekeeping.Add(housekeepingDb);
+            await _context.SaveChangesAsync(cancellationToken);
+
+            // Add completed chores
+            if (housekeeping.CompletedChoreIds != null && housekeeping.CompletedChoreIds.Count > 0)
+            {
+                var completedChores = new List<CompletedChoreDb>();
+                foreach (var choreId in housekeeping.CompletedChoreIds)
+                {
+                    var completedChore = new CompletedChoreDb
+                    {
+                        ChoreId = choreId,
+                        HousekeepingId = housekeepingDb.Id
+                    };
+                    _context.CompletedChores.Add(completedChore);
+                    completedChores.Add(completedChore);
+                }
+                await _context.SaveChangesAsync(cancellationToken);
+
+                // Mark critical chores as completed if they exist
+                var choreIdToCompletedChoreIdMap = completedChores
+                    .ToDictionary(cc => cc.ChoreId, cc => cc.Id);
+                await _criticalChoreService.MarkCriticalChoresAsCompletedAsync(choreIdToCompletedChoreIdMap, cancellationToken);
             }
-            _store.Add(housekeeping);
-            return Task.FromResult(true);
+
+            housekeeping.Id = housekeepingDb.Id;
+            return true;
         }
 
-        public Task<Housekeeping?> GetHousekeepingAsync(int id, CancellationToken cancellationToken = default)
+        public async Task<Housekeeping?> GetHousekeepingAsync(int id, CancellationToken cancellationToken = default)
         {
-            Housekeeping? found = _store.FirstOrDefault(x => x.Id == id);
-            return Task.FromResult(found);
+            var housekeepingDb = await _context.Housekeeping
+                .Include(h => h.CompletedChores)
+                .FirstOrDefaultAsync(h => h.Id == id, cancellationToken);
+
+            if (housekeepingDb == null) return null;
+
+            return MapToHousekeeping(housekeepingDb);
         }
 
-        public Task<IEnumerable<Housekeeping>> ListHousekeepingsAsync(CancellationToken cancellationToken = default)
+        public async Task<IEnumerable<Housekeeping>> ListHousekeepingsAsync(CancellationToken cancellationToken = default)
         {
-            return Task.FromResult<IEnumerable<Housekeeping>>(_store.ToList());
+            var housekeepingsDb = await _context.Housekeeping
+                .Include(h => h.CompletedChores)
+                .ToListAsync(cancellationToken);
+
+            return housekeepingsDb.Select(MapToHousekeeping);
         }
 
-        public Task<bool> UpdateHousekeepingAsync(Housekeeping housekeeping, CancellationToken cancellationToken = default)
+        public async Task<bool> UpdateHousekeepingAsync(Housekeeping housekeeping, CancellationToken cancellationToken = default)
         {
-            if (housekeeping == null || !housekeeping.Id.HasValue) return Task.FromResult(false);
-            int idx = _store.FindIndex(x => x.Id == housekeeping.Id);
-            if (idx == -1) return Task.FromResult(false);
-            _store[idx] = housekeeping;
-            return Task.FromResult(true);
+            if (housekeeping == null || !housekeeping.Id.HasValue) return false;
+
+            var housekeepingDb = await _context.Housekeeping
+                .Include(h => h.CompletedChores)
+                .FirstOrDefaultAsync(h => h.Id == housekeeping.Id.Value, cancellationToken);
+
+            if (housekeepingDb == null) return false;
+
+            housekeepingDb.Timestamp = housekeeping.DateTime;
+            housekeepingDb.Duration = housekeeping.Duration;
+            housekeepingDb.Note = housekeeping.Note;
+            housekeepingDb.UpdatedAt = DateTimeOffset.UtcNow;
+
+            // Update completed chores
+            var existingChoreIds = housekeepingDb.CompletedChores.Select(c => c.ChoreId).ToList();
+            var newChoreIds = housekeeping.CompletedChoreIds ?? new List<int>();
+
+            // Remove completed chores that are no longer in the list
+            var toRemove = housekeepingDb.CompletedChores
+                .Where(c => !newChoreIds.Contains(c.ChoreId))
+                .ToList();
+            foreach (var completedChore in toRemove)
+            {
+                _context.CompletedChores.Remove(completedChore);
+            }
+
+            // Add new completed chores
+            var toAdd = newChoreIds
+                .Where(id => !existingChoreIds.Contains(id))
+                .Select(choreId => new CompletedChoreDb
+                {
+                    ChoreId = choreId,
+                    HousekeepingId = housekeepingDb.Id
+                });
+            await _context.CompletedChores.AddRangeAsync(toAdd, cancellationToken);
+
+            await _context.SaveChangesAsync(cancellationToken);
+            return true;
         }
 
-        public Task<bool> DeleteHousekeepingAsync(int id, CancellationToken cancellationToken = default)
+        public async Task<bool> DeleteHousekeepingAsync(int id, CancellationToken cancellationToken = default)
         {
-            int idx = _store.FindIndex(x => x.Id == id);
-            if (idx == -1) return Task.FromResult(false);
-            _store.RemoveAt(idx);
-            return Task.FromResult(true);
+            var housekeepingDb = await _context.Housekeeping
+                .Include(h => h.CompletedChores)
+                .FirstOrDefaultAsync(h => h.Id == id, cancellationToken);
+
+            if (housekeepingDb == null) return false;
+
+            // Remove completed chores first
+            _context.CompletedChores.RemoveRange(housekeepingDb.CompletedChores);
+            _context.Housekeeping.Remove(housekeepingDb);
+            await _context.SaveChangesAsync(cancellationToken);
+            return true;
+        }
+
+        private static Housekeeping MapToHousekeeping(HousekeepingDb housekeepingDb)
+        {
+            return new Housekeeping
+            {
+                Id = housekeepingDb.Id,
+                DateTime = housekeepingDb.Timestamp,
+                Duration = housekeepingDb.Duration,
+                Note = housekeepingDb.Note,
+                CompletedChoreIds = housekeepingDb.CompletedChores.Select(c => c.ChoreId).ToList()
+            };
         }
     }
 }

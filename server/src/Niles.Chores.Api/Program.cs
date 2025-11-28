@@ -12,6 +12,17 @@ namespace Niles.Chores.Api
             // Add services to the container.
             builder.Services.AddChores(builder.Configuration.GetConnectionString("NilesDb")!);
 
+            // Configure CORS
+            builder.Services.AddCors(options =>
+            {
+                options.AddDefaultPolicy(policy =>
+                {
+                    policy.AllowAnyOrigin()
+                          .AllowAnyHeader()
+                          .AllowAnyMethod();
+                });
+            });
+
             builder.Services.AddControllers();
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
@@ -29,6 +40,7 @@ namespace Niles.Chores.Api
                 });
             }
 
+            app.UseCors();
             app.UseAuthorization();
 
 

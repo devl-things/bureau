@@ -23,6 +23,7 @@ namespace Niles.Chores.Configurations
             services.AddScoped<IHouseKeepingService, HouseKeepingService>();
             services.AddScoped<IChoreService, ChoreService>();
             services.AddScoped<IPrioritizedChoreService, PrioritizedChoreService>();
+            services.AddScoped<ICriticalChoreService, CriticalChoreService>();
             return services;
         }
     }

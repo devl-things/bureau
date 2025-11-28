@@ -18,20 +18,69 @@ namespace Niles.Chores.Api.Controllers
             _housekeepingService = housekeepingService;
         }
 
-        // GET: api/housekeeping
+        // GET: api/housekeeping?search=term&page=1&pageSize=10
+        // GET: api/housekeeping (returns all housekeeping records)
         [HttpGet]
-        public async Task<IActionResult> Get(CancellationToken cancellationToken)
+        public async Task<IActionResult> Get(
+            [FromQuery] string? search,
+            [FromQuery] int page = 1,
+            [FromQuery] int pageSize = 20,
+            CancellationToken cancellationToken = default)
         {
-            IEnumerable<Housekeeping> items = await _housekeepingService.ListHousekeepingsAsync(cancellationToken);
-            var dtos = items.Select(m => new HousekeepingDto
+            // Validate pagination parameters
+            if (page < 1) page = 1;
+            if (pageSize < 1) pageSize = 20;
+            if (pageSize > 100) pageSize = 100;
+
+            // Get all housekeeping records
+            IEnumerable<Housekeeping> allItems = await _housekeepingService.ListHousekeepingsAsync(cancellationToken);
+
+            // Apply search filter if provided
+            if (!string.IsNullOrWhiteSpace(search))
             {
-                Id = m.Id.HasValue ? IdObfuscator.Encode(m.Id.Value) : null,
-                DateTime = m.DateTime.UtcDateTime,
-                Duration = m.Duration.ToString(),
-                Note = m.Note,
-                CompletedChoreIds = m.CompletedChoreIds ?? new List<int>()
-            });
-            return Ok(dtos);
+                var searchLower = search.ToLowerInvariant();
+                allItems = allItems.Where(h =>
+                    (h.Note?.ToLowerInvariant().Contains(searchLower) ?? false) ||
+                    h.DateTime.ToString("yyyy-MM-dd").Contains(searchLower) ||
+                    h.CompletedChoreIds.Any(id => id.ToString().Contains(searchLower))
+                );
+            }
+
+            // Order by date descending (most recent first)
+            allItems = allItems.OrderByDescending(h => h.DateTime);
+
+            var itemsList = allItems.ToList();
+            var total = itemsList.Count;
+            var totalPages = (int)Math.Ceiling(total / (double)pageSize);
+
+            // Apply pagination
+            var pagedItems = itemsList
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .Select(m => new HousekeepingDto
+                {
+                    Id = m.Id.HasValue ? IdObfuscator.Encode(m.Id.Value) : null,
+                    DateTime = m.DateTime.UtcDateTime,
+                    Duration = m.Duration.ToString(),
+                    Note = m.Note,
+                    CompletedChoreIds = m.CompletedChoreIds ?? new List<int>()
+                });
+
+            var result = new PagedResult<HousekeepingDto>
+            {
+                Data = pagedItems,
+                Meta = new PagedMeta
+                {
+                    Page = page,
+                    PageSize = pageSize,
+                    Total = total,
+                    TotalPages = totalPages,
+                    HasNext = page < totalPages,
+                    HasPrevious = page > 1
+                }
+            };
+
+            return Ok(result);
         }
 
         // GET api/housekeeping/{id}

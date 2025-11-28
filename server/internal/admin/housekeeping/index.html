@@ -236,6 +236,12 @@
             text-decoration: underline;
         }
 
+        #pagination {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
         @media (max-width: 640px) {
             tbody td {
                 font-size: 0.9rem;
@@ -272,6 +278,18 @@
                     </tr>
                 </tbody>
             </table>
+            <div id="pagination" style="display: none; padding: 16px 20px; border-top: 1px solid var(--border);">
+                <div style="color: var(--muted); font-size: 0.85rem;">
+                    <span id="pagination-info">Showing 0-0 of 0</span>
+                </div>
+                <div style="display: flex; gap: 8px; align-items: center;">
+                    <button id="prev-page" class="btn" style="padding: 6px 12px; font-size: 0.85rem;" disabled>Previous</button>
+                    <span style="color: var(--muted); font-size: 0.85rem;">
+                        Page <span id="current-page">1</span> of <span id="total-pages">1</span>
+                    </span>
+                    <button id="next-page" class="btn" style="padding: 6px 12px; font-size: 0.85rem;" disabled>Next</button>
+                </div>
+            </div>
         </section>
     </div>
 
@@ -280,89 +298,109 @@
     </div>
 
     <script>
-        const API_BASE = "/bureau/server/public/api/housekeeping";
+        const API_BASE = "http://localhost:5032/api/housekeeping";
         const state = {
             logs: [],
-            filtered: [],
-            search: ""
+            meta: null,
+            search: "",
+            currentPage: 1,
+            pageSize: 20,
+            searchTimeout: null
         };
 
         document.addEventListener("DOMContentLoaded", () => {
             document.getElementById("search-input").addEventListener("input", handleSearch);
+            document.getElementById("prev-page").addEventListener("click", () => changePage(state.currentPage - 1));
+            document.getElementById("next-page").addEventListener("click", () => changePage(state.currentPage + 1));
             fetchLogs();
         });
 
         async function fetchLogs() {
             setTableMessage("Loading logs…");
             try {
-                const response = await fetch(`${API_BASE}/index.json?t=${Date.now()}`);
+                const params = new URLSearchParams({
+                    page: state.currentPage.toString(),
+                    pageSize: state.pageSize.toString()
+                });
+                if (state.search) {
+                    params.append("search", state.search);
+                }
+                
+                const response = await fetch(`${API_BASE}?${params.toString()}`);
                 if (!response.ok) throw new Error("Failed to load housekeeping logs");
                 const payload = await response.json();
-                state.logs = Array.isArray(payload?.data)
-                    ? payload.data
-                    : Array.isArray(payload)
-                        ? payload
-                        : [];
+                
+                if (payload.data && payload.meta) {
+                    // Paginated response
+                    state.logs = Array.isArray(payload.data) ? payload.data : [];
+                    state.meta = payload.meta;
+                } else if (Array.isArray(payload)) {
+                    // Fallback: array response
+                    state.logs = payload;
+                    state.meta = null;
+                } else {
+                    state.logs = [];
+                    state.meta = null;
+                }
             } catch (err) {
                 console.error(err);
                 state.logs = fallbackLogs();
+                state.meta = null;
+                showToast("Using fallback data because API failed");
             }
-            applyFilter();
+            renderTable();
         }
 
         function handleSearch(event) {
-            state.search = event.target.value.trim().toLowerCase();
-            applyFilter();
+            const searchValue = event.target.value.trim();
+            state.search = searchValue;
+            state.currentPage = 1; // Reset to first page on search
+            
+            // Debounce search
+            clearTimeout(state.searchTimeout);
+            state.searchTimeout = setTimeout(() => {
+                fetchLogs();
+            }, 300);
         }
 
-        function applyFilter() {
-            if (!state.logs.length) {
-                setTableMessage("No housekeeping logs available.");
-                return;
-            }
-
-            state.filtered = state.logs.filter((log) => {
-                if (!state.search) return true;
-                const haystack = [
-                    formatDate(log.date),
-                    log.notes ?? "",
-                    ...(log.chores ?? []).map((chore) => chore.title ?? chore.id ?? "")
-                ]
-                    .join(" ")
-                    .toLowerCase();
-                return haystack.includes(state.search);
-            });
-
-            if (!state.filtered.length) {
-                setTableMessage("No logs match that search.");
-                return;
-            }
-
-            renderTable(state.filtered);
+        function changePage(page) {
+            if (page < 1 || (state.meta && page > state.meta.totalPages)) return;
+            state.currentPage = page;
+            fetchLogs();
         }
 
-        function renderTable(logs) {
+        function renderTable() {
             const tbody = document.getElementById("logs-table-body");
+            const pagination = document.getElementById("pagination");
             tbody.innerHTML = "";
 
-            logs.forEach((log) => {
+            if (!state.logs || state.logs.length === 0) {
+                setTableMessage(state.search ? "No logs match that search." : "No housekeeping logs available.");
+                pagination.style.display = "none";
+                return;
+            }
+
+            pagination.style.display = "flex";
+            updatePagination();
+
+            state.logs.forEach((log) => {
                 const row = document.createElement("tr");
                 row.tabIndex = 0;
                 row.addEventListener("click", () => openLogModal(log));
 
                 const dateCell = document.createElement("td");
-                dateCell.textContent = formatDate(log.date);
+                dateCell.textContent = formatDate(log.datetime);
 
                 const durationCell = document.createElement("td");
-                durationCell.textContent = formatDuration(log.durationMinutes);
+                durationCell.textContent = formatDuration(log.duration);
 
                 const notesCell = document.createElement("td");
-                notesCell.innerHTML = log.notes
-                    ? `<span class="notes">${sanitize(log.notes)}</span>`
+                notesCell.innerHTML = log.note
+                    ? `<span class="notes">${sanitize(log.note)}</span>`
                     : `<span class="notes">—</span>`;
 
                 const countCell = document.createElement("td");
-                const count = log.chores?.length ?? log.completedChoresCount ?? 0;
+                const count = log.completedChoreIds?.length ?? 0;
                 countCell.innerHTML = `<span class="count-pill">${count}</span>`;
 
                 row.appendChild(dateCell);
@@ -373,6 +411,30 @@
             });
         }
 
+        function updatePagination() {
+            const prevBtn = document.getElementById("prev-page");
+            const nextBtn = document.getElementById("next-page");
+            const currentPageEl = document.getElementById("current-page");
+            const totalPagesEl = document.getElementById("total-pages");
+            const paginationInfo = document.getElementById("pagination-info");
+
+            if (state.meta) {
+                const start = (state.meta.page - 1) * state.meta.pageSize + 1;
+                const end = Math.min(state.meta.page * state.meta.pageSize, state.meta.total);
+                paginationInfo.textContent = `Showing ${start}-${end} of ${state.meta.total}`;
+                currentPageEl.textContent = state.meta.page;
+                totalPagesEl.textContent = state.meta.totalPages;
+                prevBtn.disabled = !state.meta.hasPrevious;
+                nextBtn.disabled = !state.meta.hasNext;
+            } else {
+                paginationInfo.textContent = `Showing ${state.logs.length} items`;
+                currentPageEl.textContent = "1";
+                totalPagesEl.textContent = "1";
+                prevBtn.disabled = true;
+                nextBtn.disabled = true;
+            }
+        }
+
         function setTableMessage(message) {
             const tbody = document.getElementById("logs-table-body");
             tbody.innerHTML = `<tr><td colspan="4" class="empty">${message}</td></tr>`;
@@ -380,39 +442,34 @@
 
         function openLogModal(log) {
             const modal = document.getElementById("modal");
-            const chores = log.chores ?? [];
+            const choreIds = log.completedChoreIds ?? [];
 
             modal.innerHTML = `
                 <header>
-                    <h2>${formatDate(log.date)}</h2>
-                    <p>${sanitize(log.notes || "No notes provided")}</p>
+                    <h2>${formatDate(log.datetime)}</h2>
+                    <p>${sanitize(log.note || "No notes provided")}</p>
                 </header>
                 <ul class="detail-list">
                     <li>
                         <span class="detail-label">Duration</span>
-                        <span>${formatDuration(log.durationMinutes)}</span>
+                        <span>${formatDuration(log.duration)}</span>
                     </li>
                     <li>
                         <span class="detail-label">Chores completed</span>
-                        <span>${chores.length}</span>
+                        <span>${choreIds.length}</span>
                     </li>
                 </ul>
                 <section>
-                    <h3 style="margin:0;">Completed chores</h3>
-                    <p class="notes" style="margin:4px 0 8px;">${chores.length ? "Tap a line for details in your main system." : "No chore data available."}</p>
+                    <h3 style="margin:0;">Completed chore IDs</h3>
+                    <p class="notes" style="margin:4px 0 8px;">${choreIds.length ? "List of completed chore IDs." : "No chore data available."}</p>
                     <ul class="chores-list">
                         ${
-                            chores.length
-                                ? chores
+                            choreIds.length
+                                ? choreIds
                                       .map(
-                                          (chore) =>
+                                          (id) =>
                                               `<li>
-                                                  <strong>${sanitize(chore.title ?? chore.id ?? "Chore")}</strong>
-                                                  ${
-                                                      chore.description
-                                                          ? `<div class="notes">${sanitize(chore.description)}</div>`
-                                                          : ""
-                                                  }
+                                                  <strong>Chore ID: ${sanitize(id.toString())}</strong>
                                               </li>`
                                       )
                                       .join("")
@@ -452,14 +509,22 @@
             }).format(date);
         }
 
-        function formatDuration(minutes) {
-            const total = Number(minutes);
-            if (!Number.isFinite(total) || total <= 0) return "—";
-            const hrs = Math.floor(total / 60);
-            const mins = total % 60;
+        function formatDuration(duration) {
+            if (!duration) return "—";
+            // Parse TimeSpan string format (hh:mm:ss or h:mm:ss)
+            const parts = duration.toString().split(":").map(Number);
+            if (parts.length < 2) return duration;
+            const hrs = parts[0] || 0;
+            const mins = parts[1] || 0;
+            if (!hrs && !mins) return "—";
             if (!hrs) return `${mins} min`;
             if (!mins) return `${hrs} hr${hrs > 1 ? "s" : ""}`;
             return `${hrs} hr${hrs > 1 ? "s" : ""} ${mins} min`;
+        }
+
+        function showToast(message, positive = false) {
+            // Simple toast notification (you can enhance this if needed)
+            console.log(message);
         }
 
         function sanitize(str = "") {
@@ -478,23 +543,17 @@
             return [
                 {
                     id: "HK-201",
-                    date: "2025-11-20T09:00:00Z",
-                    durationMinutes: 95,
-                    notes: "Weekly reset of shared spaces.",
-                    chores: [
-                        { id: "C-101", title: "Kitchen deep clean" },
-                        { id: "C-105", title: "Grocery run" }
-                    ]
+                    datetime: "2025-11-20T09:00:00Z",
+                    duration: "01:35:00",
+                    note: "Weekly reset of shared spaces.",
+                    completedChoreIds: [1, 5]
                 },
                 {
                     id: "HK-202",
-                    date: "2025-11-25T14:00:00Z",
-                    durationMinutes: 60,
-                    notes: "Quick tidy before guests arrived.",
-                    chores: [
-                        { id: "C-102", title: "Laundry" },
-                        { id: "C-103", title: "Garden check" }
-                    ]
+                    datetime: "2025-11-25T14:00:00Z",
+                    duration: "01:00:00",
+                    note: "Quick tidy before guests arrived.",
+                    completedChoreIds: [2, 3]
                 }
             ];
         }

@@ -1,5 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Niles.Chores;
 using Niles.Chores.Api.Dtos;
+using Niles.Chores.Api.Utilities;
 
 namespace Niles.Chores.Api.Controllers
 {
@@ -24,12 +26,12 @@ namespace Niles.Chores.Api.Controllers
 
             return Ok(pChores.Select(c => new ChoreDto
             {
-                Id = c.Id,
+                Id = IdObfuscator.Encode(c.Id),
                 Title = c.Title,
                 Description = c.Description ?? string.Empty,
                 Priority = c.Priority,
                 Type = c.Type.ToString(),
-                IsCompleted = false
+                WeeklyInterval = c.WeeklyInterval
             }));
         }
     }
