@@ -2,7 +2,7 @@
 
 namespace Niles.Chores.Api.Dtos
 {
-    public class Chore
+    public class ChoreDto
     {
         [JsonPropertyName("id")]
         public int Id { get; set; }

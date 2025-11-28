@@ -39,20 +39,20 @@
             background: radial-gradient(circle at top, #e5e7eb 0, #f9fafb 45%, #f3f4f6 100%);
             color: var(--text-main);
             margin: 0;
+            overflow-y: auto;
+            /* allow normal page scroll (single scroll) */
         }
 
         .app {
+            min-height: 100vh;
             width: 100vw;
-            height: 100vh;
             max-width: 100vw;
-            max-height: 100vh;
             background: var(--bg);
             padding: 16px;
-            overflow: hidden;
         }
 
         .app-inner {
-            height: 100%;
+            min-height: calc(100vh - 32px);
             display: flex;
             flex-direction: column;
             max-width: 700px;
@@ -148,23 +148,20 @@
             gap: 8px;
         }
 
+        /* Round refresh button */
         .refresh-btn {
             border: 1px solid #d1d5db;
             background: #ffffff;
             border-radius: 999px;
-            padding: 4px 10px;
-            font-size: 0.78rem;
-            display: inline-flex;
-            align-items: center;
-            gap: 5px;
-            cursor: pointer;
-            box-shadow: 0 3px 8px rgba(15, 23, 42, 0.08);
-        }
-
-        .refresh-btn span {
+            width: 32px;
+            height: 32px;
+            padding: 0;
+            font-size: 0.9rem;
             display: inline-flex;
             align-items: center;
             justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 3px 8px rgba(15, 23, 42, 0.08);
         }
 
         .refresh-btn:active {
@@ -178,15 +175,35 @@
             box-shadow: none;
         }
 
+        .refresh-icon {
+            font-size: 1rem;
+            display: inline-block;
+            transition: transform 0.25s ease-out;
+        }
+
+        .refresh-btn.loading .refresh-icon {
+            animation: spin 0.85s linear infinite;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
         .chores-card {
             background: var(--bg-card);
             border-radius: var(--radius-lg);
             border: 1px solid var(--border-subtle);
-            padding: 12px 10px 12px;
+            padding: 12px 10px 10px;
             box-shadow: var(--shadow-soft);
             display: flex;
             flex-direction: column;
-            gap: 10px;
+            gap: 8px;
             flex: 1;
             min-height: 0;
         }
@@ -220,7 +237,7 @@
             background: #e5e7eb;
             overflow: hidden;
             border: 1px solid #d1d5db;
-            margin-bottom: 4px;
+            margin-bottom: 2px;
         }
 
         .progress-fill {
@@ -232,29 +249,21 @@
             transition: width 0.25s ease-out;
         }
 
+        .chores-scroll {
+            flex: 1;
+            min-height: 0;
+            display: flex;
+            flex-direction: column;
+            margin-top: 4px;
+        }
+
         .chores-list {
             list-style: none;
             margin: 0;
-            padding: 2px 1px 0;
+            padding: 2px 1px 4px;
             display: flex;
             flex-direction: column;
             gap: 7px;
-            overflow-y: auto;
-            padding-right: 3px;
-            flex: 1;
-        }
-
-        .chores-list::-webkit-scrollbar {
-            width: 4px;
-        }
-
-        .chores-list::-webkit-scrollbar-track {
-            background: transparent;
-        }
-
-        .chores-list::-webkit-scrollbar-thumb {
-            background: #d1d5db;
-            border-radius: 999px;
         }
 
         .chore {
@@ -437,6 +446,40 @@
             transform: scale(1);
         }
 
+        .submit-row {
+            display: flex;
+            justify-content: flex-end;
+            margin-top: 6px;
+            position: sticky;
+            bottom: 0;
+            padding-top: 6px;
+            padding-bottom: 4px;
+            background: linear-gradient(to top, var(--bg-card), rgba(255, 255, 255, 0.85));
+        }
+
+        .submit-btn {
+            border-radius: 999px;
+            padding: 8px 16px;
+            border: none;
+            font-size: 0.85rem;
+            font-weight: 500;
+            background: linear-gradient(135deg, #22c55e, #16a34a);
+            color: #f9fafb;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(22, 163, 74, 0.35);
+        }
+
+        .submit-btn:active {
+            transform: translateY(1px);
+            box-shadow: 0 2px 6px rgba(22, 163, 74, 0.3);
+        }
+
+        .submit-btn:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+
         .toast {
             position: fixed;
             left: 50%;
@@ -452,7 +495,7 @@
             display: flex;
             align-items: center;
             gap: 8px;
-            z-index: 20;
+            z-index: 40;
             opacity: 0;
             transition: transform 0.22s ease-out, opacity 0.22s ease-out;
         }
@@ -519,9 +562,140 @@
             }
         }
 
+        /* Modal popup for summary (duration + note) */
+        .modal-backdrop {
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 23, 42, 0.45);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 16px;
+            z-index: 30;
+        }
+
+        .modal-backdrop.visible {
+            display: flex;
+        }
+
+        .modal-panel {
+            background: #ffffff;
+            border-radius: 18px;
+            padding: 16px 16px 14px;
+            max-width: 480px;
+            width: 100%;
+            box-shadow: 0 20px 40px rgba(15, 23, 42, 0.35);
+        }
+
+        .modal-title {
+            font-size: 1.05rem;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .modal-subtitle {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-bottom: 12px;
+        }
+
+        .modal-fields {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+
+        .modal-field label {
+            font-size: 0.8rem;
+            color: var(--text-main);
+            display: block;
+            margin-bottom: 3px;
+        }
+
+        .modal-field input,
+        .modal-field textarea {
+            width: 100%;
+            border-radius: 10px;
+            border: 1px solid #d1d5db;
+            padding: 6px 8px;
+            font-size: 0.85rem;
+            font-family: inherit;
+        }
+
+        .modal-field input:focus,
+        .modal-field textarea:focus {
+            outline: none;
+            border-color: #2563eb;
+            box-shadow: 0 0 0 1px rgba(37, 99, 235, 0.35);
+        }
+
+        .modal-field input[type="number"] {
+            -moz-appearance: textfield;
+        }
+
+        .modal-field input[type="number"]::-webkit-outer-spin-button,
+        .modal-field input[type="number"]::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+
+        .modal-field textarea {
+            resize: vertical;
+            min-height: 60px;
+            max-height: 160px;
+        }
+
+        .modal-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 8px;
+            margin-top: 4px;
+        }
+
+        .btn {
+            border-radius: 999px;
+            padding: 7px 14px;
+            font-size: 0.82rem;
+            cursor: pointer;
+            border: none;
+            font-weight: 500;
+        }
+
+        .btn-secondary {
+            background: #f3f4f6;
+            color: #111827;
+            border: 1px solid #d1d5db;
+        }
+
+        .btn-secondary:active {
+            transform: translateY(1px);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #22c55e, #16a34a);
+            color: #f9fafb;
+            box-shadow: 0 4px 10px rgba(22, 163, 74, 0.35);
+        }
+
+        .btn-primary:active {
+            transform: translateY(1px);
+            box-shadow: 0 2px 6px rgba(22, 163, 74, 0.3);
+        }
+
+        .btn[disabled] {
+            opacity: 0.7;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+
         @media (min-width: 600px) {
             .app {
                 padding: 24px;
+            }
+
+            .app-inner {
+                min-height: calc(100vh - 48px);
             }
         }
     </style>
@@ -545,7 +719,7 @@
                 </div>
                 <div class="status-actions">
                     <button class="refresh-btn" id="refresh-btn" type="button" title="Refresh" aria-label="Refresh">
-                        <span>🔄</span><span>Refresh</span>
+                        <span class="refresh-icon">⟳</span>
                     </button>
                     <div class="status-pill" id="status-pill">
                         <span class="status-indicator"></span>
@@ -568,18 +742,54 @@
                         <div class="progress-fill" id="progress-fill"></div>
                     </div>
 
-                    <div class="loading-row" id="loading-row">
-                        <span class="loading-dot"></span>
-                        <span>Loading your tasks…</span>
+                    <div class="chores-scroll">
+                        <div class="loading-row" id="loading-row">
+                            <span class="loading-dot"></span>
+                            <span>Loading your tasks…</span>
+                        </div>
+
+                        <ul id="chores-list" class="chores-list"></ul>
+
+                        <div class="empty-state" id="empty-state" style="display:none;">
+                            No chores found for today.
+                        </div>
                     </div>
 
-                    <ul id="chores-list" class="chores-list"></ul>
-
-                    <div class="empty-state" id="empty-state" style="display:none;">
-                        No chores found for today.
+                    <div class="submit-row">
+                        <button type="button" id="submit-btn" class="submit-btn">
+                            Submit
+                        </button>
                     </div>
                 </div>
             </form>
+        </div>
+    </div>
+
+    <!-- Modal popup for duration + note -->
+    <div class="modal-backdrop" id="summary-modal">
+        <div class="modal-panel">
+            <div class="modal-title">Finish today’s chores</div>
+            <div class="modal-subtitle">
+                Add how long it took and any short note before submitting.
+            </div>
+            <div class="modal-fields">
+                <div class="modal-field">
+                    <label for="modal-duration">Duration (minutes)</label>
+                    <input type="number" id="modal-duration" min="0" placeholder="e.g. 45" />
+                </div>
+                <div class="modal-field">
+                    <label for="modal-note">Note</label>
+                    <textarea id="modal-note" placeholder="Optional note about today’s chores..."></textarea>
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="btn btn-secondary" id="modal-cancel-btn">
+                    Cancel
+                </button>
+                <button type="button" class="btn btn-primary" id="modal-confirm-btn">
+                    Confirm
+                </button>
+            </div>
         </div>
     </div>
 
@@ -590,8 +800,9 @@
 
     <script>
         // ---- CONFIG ----
-        const API_BASE = "/api/chores";  // GET chores, PATCH chore
-        const API_HEALTH = "/api/health";  // health check
+        const API_BASE = "/api/chores";        // GET chores
+        const API_HEALTH = "/api/health";        // health check
+        const API_SUBMIT = "/api/chores/submit"; // summary submit endpoint
 
         // Priority numbers: 1=critical, 2=high, 3=medium, 4=low
         const PRIORITY = {
@@ -605,10 +816,28 @@
 
         document.addEventListener("DOMContentLoaded", () => {
             renderTodayDate();
+
             const refreshBtn = document.getElementById("refresh-btn");
             refreshBtn.addEventListener("click", () => {
                 checkApiHealthAndLoad();
             });
+
+            const submitBtn = document.getElementById("submit-btn");
+            submitBtn.addEventListener("click", openSummaryModal);
+
+            const modalCancelBtn = document.getElementById("modal-cancel-btn");
+            modalCancelBtn.addEventListener("click", closeSummaryModal);
+
+            const modalConfirmBtn = document.getElementById("modal-confirm-btn");
+            modalConfirmBtn.addEventListener("click", handleConfirmSubmit);
+
+            const modalBackdrop = document.getElementById("summary-modal");
+            modalBackdrop.addEventListener("click", (e) => {
+                if (e.target === modalBackdrop) {
+                    closeSummaryModal();
+                }
+            });
+
             checkApiHealthAndLoad();
         });
 
@@ -710,9 +939,9 @@
                     title: item.title ?? "Untitled chore",
                     description: item.description ?? "",
                     completed: !!item.completed,
-                    priorityNumber: normalizedPriority,        // 1-4
-                    priorityName: priorityNameFromNumber(normalizedPriority), // "critical" | "high" | "medium" | "low"
-                    type: normalizeType(item.type)            // "Maintenance" | "Extra"
+                    priorityNumber: normalizedPriority,
+                    priorityName: priorityNameFromNumber(normalizedPriority),
+                    type: normalizeType(item.type)
                 };
             });
         }
@@ -722,7 +951,6 @@
             if (num === PRIORITY.CRITICAL) return PRIORITY.CRITICAL;
             if (num === PRIORITY.HIGH) return PRIORITY.HIGH;
             if (num === PRIORITY.LOW) return PRIORITY.LOW;
-            // default medium
             return PRIORITY.MEDIUM;
         }
 
@@ -805,15 +1033,13 @@
                 const metaEl = document.createElement("div");
                 metaEl.className = "chore-meta";
 
-                // Priority pill (Jira-like arrow + label + tooltip)
                 const priorityPill = document.createElement("div");
-                const priorityName = chore.priorityName; // "critical" | "high" | "medium" | "low"
+                const priorityName = chore.priorityName;
                 priorityPill.className = `priority-pill priority-${priorityName}`;
                 priorityPill.title = priorityTooltip(priorityName);
 
                 const arrowSpan = document.createElement("span");
                 arrowSpan.className = "priority-arrow";
-                // Use filled triangle arrow pointing up for "higher" priority, same icon for all
                 arrowSpan.textContent = "▲";
 
                 const shortLabel = document.createElement("span");
@@ -878,7 +1104,7 @@
 
             refreshProgressAndCount();
             reorderList();
-            sendChoreStatusToApi(choreElement.dataset.choreId, completed);
+            // No per-toggle API call anymore
         }
 
         // Sort: unchecked first, completed last, then by priority (1=critical → 4=low), then by original index
@@ -961,28 +1187,80 @@
             const refreshBtn = document.getElementById("refresh-btn");
             loadingRow.style.display = isLoading ? "flex" : "none";
             refreshBtn.disabled = isLoading;
+            refreshBtn.classList.toggle("loading", isLoading);
         }
 
-        async function sendChoreStatusToApi(choreId, completed) {
-            try {
-                const url = `${API_BASE}/${encodeURIComponent(choreId)}`;
+        function openSummaryModal() {
+            const modal = document.getElementById("summary-modal");
+            const durationInput = document.getElementById("modal-duration");
+            const noteInput = document.getElementById("modal-note");
 
-                const response = await fetch(url, {
-                    method: "PATCH",
+            if (getCompletedChoreIds().length === 0) {
+                showToast("No completed chores to submit.", true);
+                return;
+            }
+
+            modal.classList.add("visible");
+            durationInput.value = "";
+            noteInput.value = "";
+            durationInput.focus();
+        }
+
+        function closeSummaryModal() {
+            const modal = document.getElementById("summary-modal");
+            const confirmBtn = document.getElementById("modal-confirm-btn");
+            confirmBtn.disabled = false;
+            modal.classList.remove("visible");
+        }
+
+        function getCompletedChoreIds() {
+            const checkboxes = Array.from(document.querySelectorAll('input[name="chore"]'));
+            return checkboxes
+                .filter((cb) => cb.checked)
+                .map((cb) => cb.value);
+        }
+
+        async function handleConfirmSubmit() {
+            const confirmBtn = document.getElementById("modal-confirm-btn");
+            const durationInput = document.getElementById("modal-duration");
+            const noteInput = document.getElementById("modal-note");
+
+            const completedIds = getCompletedChoreIds();
+            if (completedIds.length === 0) {
+                showToast("No completed chores to submit.", true);
+                return;
+            }
+
+            const durationRaw = durationInput.value.trim();
+            const duration = durationRaw === "" ? null : Number(durationRaw);
+            const note = noteInput.value.trim();
+
+            confirmBtn.disabled = true;
+
+            try {
+                const payload = {
+                    date: todayIso,
+                    duration: duration,
+                    note: note,
+                    completedChoreIds: completedIds
+                };
+
+                const response = await fetch(API_SUBMIT, {
+                    method: "POST",
                     headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ date: todayIso, completed: completed })
+                    body: JSON.stringify(payload)
                 });
 
                 if (!response.ok) {
-                    throw new Error("Update failed with status " + response.status);
+                    throw new Error("Submit failed with status " + response.status);
                 }
 
-                showToast("Saved ✔");
+                showToast("Chores submitted ✔");
+                closeSummaryModal();
             } catch (error) {
-                console.error("Failed to update chore:", error);
-                showToast("Couldn’t save that change.", true);
-                setStatus("Error updating chore", "online");
-                clearChoresList(); // consider data unreliable -> empty
+                console.error("Failed to submit chores summary:", error);
+                showToast("Couldn’t submit chores.", true);
+                confirmBtn.disabled = false;
             }
         }
 
