@@ -346,14 +346,7 @@
     <div class="toast" id="toast"></div>
 
     <script>
-        const API_BASE = "/bureau/server/public/api/chores";
-        const FAKE_ENDPOINTS = {
-            list: `${API_BASE}/index.json`,
-            create: `${API_BASE}/create.json`,
-            update: `${API_BASE}/update.json`,
-            delete: `${API_BASE}/delete.json`,
-            important: `${API_BASE}/important.json`
-        };
+        const API_BASE = "http://localhost:5032/api/chores";
         const state = {
             chores: [],
             filtered: [],
@@ -372,15 +365,22 @@
         async function fetchChores() {
             setTableMessage("Loading chores…");
             try {
-                const response = await fetch(`${FAKE_ENDPOINTS.list}?t=${Date.now()}`);
+                // Get all chores for admin panel
+                const response = await fetch(`${API_BASE}/all`);
                 if (!response.ok) throw new Error("Failed to load chores");
-                const payload = await response.json();
-                state.meta = payload?.meta ?? null;
-                state.chores = Array.isArray(payload?.data)
-                    ? payload.data
-                    : Array.isArray(payload)
-                        ? payload
-                        : [];
+                const data = await response.json();
+                const chores = Array.isArray(data) ? data : [];
+                // Map backend ChoreDto to frontend format
+                state.chores = chores.map(chore => ({
+                    id: String(chore.id),
+                    title: chore.title || "Untitled",
+                    description: chore.description || "",
+                    type: chore.type || "Maintenance",
+                    priority: chore.priority || 0,
+                    weeklyInterval: chore.repeatEveryWeeks ?? chore.weeklyInterval ?? 1,
+                    repeatEveryWeeks: chore.repeatEveryWeeks ?? chore.weeklyInterval ?? 1
+                }));
+                state.meta = { total: chores.length };
             } catch (err) {
                 console.error(err);
                 state.meta = null;
@@ -458,11 +458,15 @@
             });
         }
 
-        function createActionButton(label, handler, isDanger = false) {
+        function createActionButton(label, handler, isDanger = false, isDisabled = false) {
             const btn = document.createElement("button");
             btn.type = "button";
             btn.textContent = label;
             btn.className = `btn${isDanger ? " btn-danger" : ""}`;
+            if (isDisabled) {
+                btn.style.opacity = "0.6";
+                btn.style.cursor = "not-allowed";
+            }
             btn.addEventListener("click", handler);
             return btn;
         }
@@ -515,32 +519,42 @@
             const formData = new FormData(event.target);
             const payload = {
                 title: formData.get("title"),
-                description: formData.get("description"),
+                description: formData.get("description") || null,
                 type: formData.get("type") || null,
                 repeatEveryWeeks: numberOrNull(formData.get("repeatEveryWeeks"))
             };
+
             try {
                 const isEdit = state.activeModal === "edit";
-                const endpoint = isEdit ? FAKE_ENDPOINTS.update : FAKE_ENDPOINTS.create;
-                const response = await fetch(`${endpoint}?t=${Date.now()}`);
-                if (!response.ok) throw new Error("Request failed");
-                const result = await response.json().catch(() => ({}));
+                let response;
+
                 if (isEdit) {
-                    state.chores = state.chores.map((chore) =>
-                        chore.id === state.activeChore.id ? { ...chore, ...payload } : chore
-                    );
+                    // PATCH /api/chores/{id}
+                    response = await fetch(`${API_BASE}/${state.activeChore.id}`, {
+                        method: "PATCH",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify(payload)
+                    });
                 } else {
-                    const newChore = result?.chore
-                        ? normalizeNewChore(result.chore, payload)
-                        : { id: generateChoreId(), ...payload };
-                    state.chores = [newChore, ...state.chores];
+                    // POST /api/chores
+                    response = await fetch(API_BASE, {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify(payload)
+                    });
                 }
-                applyFilter();
+
+                if (!response.ok) {
+                    const error = await response.json().catch(() => ({ error: "Request failed" }));
+                    throw new Error(error.error || "Request failed");
+                }
+
                 showToast(isEdit ? "Chore updated" : "Chore created", true);
                 closeModal();
+                await fetchChores(); // Refresh list
             } catch (err) {
                 console.error(err);
-                showToast("Could not save chore");
+                showToast(err.message || "Could not save chore");
             }
         }
 
@@ -565,15 +579,23 @@
 
         async function handleDelete() {
             try {
-                const response = await fetch(`${FAKE_ENDPOINTS.delete}?t=${Date.now()}`);
-                if (!response.ok) throw new Error("Delete failed");
-                state.chores = state.chores.filter((chore) => chore.id !== state.activeChore.id);
-                applyFilter();
+                const response = await fetch(`${API_BASE}/${state.activeChore.id}`, {
+                    method: "DELETE"
+                });
+
+                if (!response.ok) {
+                    if (response.status === 404) {
+                        throw new Error("Chore not found");
+                    }
+                    throw new Error("Delete failed");
+                }
+
                 showToast("Chore deleted", true);
                 closeModal();
+                await fetchChores(); // Refresh list
             } catch (err) {
                 console.error(err);
-                showToast("Could not delete chore");
+                showToast(err.message || "Could not delete chore");
             }
         }
 
@@ -608,31 +630,8 @@
 
         async function handleImportantSubmit(event) {
             event.preventDefault();
-            const formData = new FormData(event.target);
-            const payload = {
-                date: formData.get("date"),
-                description: formData.get("description")
-            };
-            try {
-                const response = await fetch(`${FAKE_ENDPOINTS.important}?t=${Date.now()}`);
-                if (!response.ok) throw new Error("Important flag failed");
-                const result = await response.json().catch(() => ({}));
-                state.chores = state.chores.map((chore) =>
-                    chore.id === state.activeChore.id
-                        ? {
-                              ...chore,
-                              important: true,
-                              reminder: result?.reminder ?? payload
-                          }
-                        : chore
-                );
-                applyFilter();
-                showToast("Chore marked important", true);
-                closeModal();
-            } catch (err) {
-                console.error(err);
-                showToast("Could not mark chore important");
-            }
+            showToast("Marking chores as important is not yet implemented in the backend API.", true);
+            closeModal();
         }
 
         function closeModal() {

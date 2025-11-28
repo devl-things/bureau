@@ -13,6 +13,18 @@ namespace Niles.Chores.Api
             builder.Services.AddControllers();
             builder.Services.AddSingleton<IHousekeepingService, HousekeepingService>();
             builder.Services.AddSingleton<IPrioritizedChoreService, PrioritizedChoreService>();
+            builder.Services.AddSingleton<IChoreService, ChoreService>();
+
+            // Add CORS support
+            builder.Services.AddCors(options =>
+            {
+                options.AddDefaultPolicy(policy =>
+                {
+                    policy.AllowAnyOrigin()
+                          .AllowAnyMethod()
+                          .AllowAnyHeader();
+                });
+            });
 
             var app = builder.Build();
 
@@ -20,6 +32,9 @@ namespace Niles.Chores.Api
             if (app.Environment.IsDevelopment())
             {
             }
+
+            // Use CORS before authorization
+            app.UseCors();
 
             app.UseAuthorization();
 

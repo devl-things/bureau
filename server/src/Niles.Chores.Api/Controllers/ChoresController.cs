@@ -13,12 +13,17 @@ namespace Niles.Chores.Api.Controllers
     {
         private readonly IPrioritizedChoreService _prioritizedChoreService;
         private readonly IHousekeepingService _housekeepingService;
+        private readonly IChoreService _choreService;
         private static readonly string[] AcceptedDateFormats = new[] { "yyyy-MM-dd", "yyyy/MM/dd" };
 
-        public ChoresController(IPrioritizedChoreService prioritizedChoreService, IHousekeepingService housekeepingService)
+        public ChoresController(
+            IPrioritizedChoreService prioritizedChoreService, 
+            IHousekeepingService housekeepingService,
+            IChoreService choreService)
         {
             _prioritizedChoreService = prioritizedChoreService;
             _housekeepingService = housekeepingService;
+            _choreService = choreService;
         }
 
         // GET: api/chores?date=2025-11-28
@@ -89,6 +94,155 @@ namespace Niles.Chores.Api.Controllers
             }
 
             return Ok(new { status = "stored" });
+        }
+
+        // GET: api/chores/all - Get all chores (for admin)
+        [HttpGet("all")]
+        public async Task<ActionResult<IEnumerable<ChoreDto>>> GetAllChores(CancellationToken cancellationToken = default)
+        {
+            IEnumerable<Chore> chores = await _choreService.ListChoresAsync(cancellationToken);
+            
+            var dtos = chores.Select(chore => new ChoreDto
+            {
+                Id = chore.Id,
+                Title = chore.Title,
+                Description = chore.Description ?? string.Empty,
+                Type = chore.Type.ToString(),
+                Priority = 0, // Regular chores don't have priority
+                IsCompleted = false,
+                WeeklyInterval = chore.WeeklyInterval
+            });
+
+            return Ok(dtos);
+        }
+
+        // GET: api/chores/{id} - Get single chore
+        [HttpGet("{id}")]
+        public async Task<ActionResult<ChoreDto>> GetChore(int id, CancellationToken cancellationToken = default)
+        {
+            Chore? chore = await _choreService.GetChoreAsync(id, cancellationToken);
+            if (chore == null)
+            {
+                return NotFound();
+            }
+
+            var dto = new ChoreDto
+            {
+                Id = chore.Id,
+                Title = chore.Title,
+                Description = chore.Description ?? string.Empty,
+                Type = chore.Type.ToString(),
+                Priority = 0,
+                IsCompleted = false,
+                WeeklyInterval = chore.WeeklyInterval
+            };
+
+            return Ok(dto);
+        }
+
+        // POST: api/chores - Create new chore
+        [HttpPost]
+        public async Task<ActionResult<ChoreDto>> CreateChore([FromBody] ChoreCreateDto dto, CancellationToken cancellationToken = default)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            if (!Enum.TryParse<ChoreType>(dto.Type, ignoreCase: true, out ChoreType choreType))
+            {
+                choreType = ChoreType.Maintenance; // Default
+            }
+
+            var chore = new Chore
+            {
+                Title = dto.Title,
+                Description = dto.Description,
+                Type = choreType,
+                WeeklyInterval = dto.WeeklyInterval ?? 1
+            };
+
+            try
+            {
+                Chore created = await _choreService.CreateChoreAsync(chore, cancellationToken);
+                
+                var responseDto = new ChoreDto
+                {
+                    Id = created.Id,
+                    Title = created.Title,
+                    Description = created.Description ?? string.Empty,
+                    Type = created.Type.ToString(),
+                    Priority = 0,
+                    IsCompleted = false,
+                    WeeklyInterval = created.WeeklyInterval
+                };
+
+                return CreatedAtAction(nameof(GetChore), new { id = created.Id }, responseDto);
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new { error = ex.Message });
+            }
+        }
+
+        // PATCH: api/chores/{id} - Update chore
+        [HttpPatch("{id}")]
+        public async Task<ActionResult<ChoreDto>> UpdateChore(int id, [FromBody] ChoreUpdateDto dto, CancellationToken cancellationToken = default)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            Chore? existing = await _choreService.GetChoreAsync(id, cancellationToken);
+            if (existing == null)
+            {
+                return NotFound();
+            }
+
+            if (!string.IsNullOrEmpty(dto.Type) && Enum.TryParse<ChoreType>(dto.Type, ignoreCase: true, out ChoreType choreType))
+            {
+                existing.Type = choreType;
+            }
+
+            existing.Title = dto.Title;
+            existing.Description = dto.Description;
+            if (dto.WeeklyInterval.HasValue)
+            {
+                existing.WeeklyInterval = dto.WeeklyInterval.Value;
+            }
+
+            Chore? updated = await _choreService.UpdateChoreAsync(existing, cancellationToken);
+            if (updated == null)
+            {
+                return NotFound();
+            }
+
+            var responseDto = new ChoreDto
+            {
+                Id = updated.Id,
+                Title = updated.Title,
+                Description = updated.Description ?? string.Empty,
+                Type = updated.Type.ToString(),
+                Priority = 0,
+                IsCompleted = false,
+                WeeklyInterval = updated.WeeklyInterval
+            };
+
+            return Ok(responseDto);
+        }
+
+        // DELETE: api/chores/{id} - Delete chore
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> DeleteChore(int id, CancellationToken cancellationToken = default)
+        {
+            bool deleted = await _choreService.DeleteChoreAsync(id, cancellationToken);
+            if (!deleted)
+            {
+                return NotFound();
+            }
+
+            return NoContent();
         }
     }
 }

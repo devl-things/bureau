@@ -16,6 +16,8 @@ namespace Niles.Chores.Api.Dtos
         public string Type { get; set; }
         [JsonPropertyName("completed")]
         public bool IsCompleted { get; set; }
+        [JsonPropertyName("repeatEveryWeeks")]
+        public int? WeeklyInterval { get; set; }
         [JsonIgnore]
         public DateOnly Date { get; set; }
     }

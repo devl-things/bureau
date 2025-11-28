@@ -280,7 +280,7 @@
     </div>
 
     <script>
-        const API_BASE = "/bureau/server/public/api/housekeeping";
+        const API_BASE = "http://localhost:5032/api/housekeeping";
         const state = {
             logs: [],
             filtered: [],
@@ -295,19 +295,35 @@
         async function fetchLogs() {
             setTableMessage("Loading logs…");
             try {
-                const response = await fetch(`${API_BASE}/index.json?t=${Date.now()}`);
+                const response = await fetch(`${API_BASE}?t=${Date.now()}`);
                 if (!response.ok) throw new Error("Failed to load housekeeping logs");
-                const payload = await response.json();
-                state.logs = Array.isArray(payload?.data)
-                    ? payload.data
-                    : Array.isArray(payload)
-                        ? payload
-                        : [];
+                const data = await response.json();
+                const logs = Array.isArray(data) ? data : [];
+                // Map backend DTO to frontend format
+                state.logs = logs.map(log => ({
+                    id: log.id,
+                    date: log.datetime,
+                    durationMinutes: parseDurationToMinutes(log.duration),
+                    notes: log.note,
+                    completedChoreIds: log.completedChoreIds || [],
+                    chores: (log.completedChoreIds || []).map(id => ({ id: String(id), title: `Chore #${id}` }))
+                }));
             } catch (err) {
                 console.error(err);
                 state.logs = fallbackLogs();
             }
             applyFilter();
+        }
+
+        function parseDurationToMinutes(durationStr) {
+            if (!durationStr) return 0;
+            // Parse TimeSpan format "hh:mm:ss" or "hh:mm:ss.fffffff"
+            const parts = durationStr.split(':');
+            if (parts.length < 2) return 0;
+            const hours = parseInt(parts[0]) || 0;
+            const minutes = parseInt(parts[1]) || 0;
+            const seconds = parts[2] ? parseFloat(parts[2]) : 0;
+            return Math.round(hours * 60 + minutes + seconds / 60);
         }
 
         function handleSearch(event) {
