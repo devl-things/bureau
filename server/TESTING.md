@@ -1,45 +1,45 @@
-# Kako testirati Niles Chores API
+# How to Test Niles Chores API
 
-## 1. Pokretanje Backend API-ja
+## 1. Starting the Backend API
 
 ```bash
 cd server/src/Niles.Chores.Api
 dotnet run
 ```
 
-API će se pokrenuti na **http://localhost:5032**
+The API will start on **http://localhost:5032**
 
-## 2. Testiranje API endpointova
+## 2. Testing API Endpoints
 
-### Opcija A: Korištenje test skripte
+### Option A: Using the Test Script
 
 ```bash
 cd server
 ./test-api.sh
 ```
 
-**Napomena:** Skripta zahtijeva `jq` za formatiranje JSON-a. Ako nemaš `jq`, instaliraj ga:
+**Note:** The script requires `jq` for JSON formatting. If you don't have `jq`, install it:
 - macOS: `brew install jq`
-- Linux: `sudo apt-get install jq` ili `sudo yum install jq`
+- Linux: `sudo apt-get install jq` or `sudo yum install jq`
 
-### Opcija B: Ručno testiranje s curl
+### Option B: Manual Testing with curl
 
 #### Health check
 ```bash
 curl http://localhost:5032/api/health
 ```
 
-#### Dohvati prioritizirane chores za danas
+#### Get prioritized chores for today
 ```bash
 curl "http://localhost:5032/api/chores?date=2025-11-28"
 ```
 
-#### Dohvati prioritizirane chores za specifičan datum
+#### Get prioritized chores for a specific date
 ```bash
 curl "http://localhost:5032/api/chores?date=2025-11-28"
 ```
 
-#### Pošalji completion chores
+#### Submit chore completion
 ```bash
 curl -X POST "http://localhost:5032/api/chores/submit" \
   -H "Content-Type: application/json" \
@@ -51,31 +51,31 @@ curl -X POST "http://localhost:5032/api/chores/submit" \
   }'
 ```
 
-#### Dohvati housekeeping logove
+#### Get housekeeping logs
 ```bash
 curl "http://localhost:5032/api/housekeeping"
 ```
 
-#### Dohvati housekeeping log po ID-u
+#### Get housekeeping log by ID
 ```bash
-# Prvo dohvati listu da vidiš ID-eve
+# First get the list to see IDs
 curl "http://localhost:5032/api/housekeeping"
-# Zatim koristi obfuscated ID
+# Then use the obfuscated ID
 curl "http://localhost:5032/api/housekeeping/{obfuscated-id}"
 ```
 
-### Opcija C: Korištenje HTTP fajla (Rider/VS Code)
+### Option C: Using HTTP File (Rider/VS Code)
 
-Otvori `server/src/Niles.Chores.Api/Niles.Chores.Api.http` u IDE-u i koristi built-in HTTP client.
+Open `server/src/Niles.Chores.Api/Niles.Chores.Api.http` in your IDE and use the built-in HTTP client.
 
-## 3. Testiranje Frontend stranica
+## 3. Testing Frontend Pages
 
-### Public Chores stranica
-1. Pokreni backend API (korak 1)
-2. Otvori `server/public/chores/index.html` u browseru
-3. Stranica će automatski pokušati spojiti se na `/api/chores` i `/api/chores/submit`
+### Public Chores Page
+1. Start the backend API (step 1)
+2. Open `server/public/chores/index.html` in a browser
+3. The page will automatically try to connect to `/api/chores` and `/api/chores/submit`
 
-**Napomena:** Ako koristiš file:// protokol, browser će blokirati CORS zahtjeve. Koristi lokalni web server:
+**Note:** If you use the file:// protocol, the browser will block CORS requests. Use a local web server:
 
 ```bash
 # Python 3
@@ -90,34 +90,34 @@ cd server/public/chores
 php -S localhost:8000
 ```
 
-Zatim otvori: http://localhost:8000/index.html
+Then open: http://localhost:8000/index.html
 
-### Admin Chores stranica
-1. Pokreni backend API
-2. Otvori `server/internal/admin/chores/index.html` u browseru
-3. Stranica će dohvatiti prioritizirane chores za danas
+### Admin Chores Page
+1. Start the backend API
+2. Open `server/internal/admin/chores/index.html` in a browser
+3. The page will fetch all chores for admin management
 
-**Napomena:** CRUD operacije (create/edit/delete) trenutno nisu implementirane u backend-u, pa će se prikazati poruka da nisu podržane.
+**Note:** CRUD operations (create/edit/delete) are now fully implemented in the backend.
 
-### Admin Housekeeping stranica
-1. Pokreni backend API
-2. Otvori `server/internal/admin/housekeeping/index.html` u browseru
-3. Stranica će dohvatiti housekeeping logove
+### Admin Housekeeping Page
+1. Start the backend API
+2. Open `server/internal/admin/housekeeping/index.html` in a browser
+3. The page will fetch housekeeping logs
 
 ## 4. Debugging
 
-### Provjeri da li API radi
+### Check if API is Running
 ```bash
 curl http://localhost:5032/api/health
 ```
 
-Očekivani odgovor:
+Expected response:
 ```json
 {"status":"ok"}
 ```
 
-### Provjeri CORS probleme
-Ako vidiš CORS greške u browser konzoli, dodaj CORS podršku u `Program.cs`:
+### Check CORS Issues
+If you see CORS errors in the browser console, CORS support is already added in `Program.cs`:
 
 ```csharp
 builder.Services.AddCors(options =>
@@ -135,17 +135,17 @@ builder.Services.AddCors(options =>
 app.UseCors();
 ```
 
-### Provjeri backend logove
-Backend će ispisivati logove u konzolu. Ako vidiš greške, provjeri:
-- Da li su svi servisi registrirani u DI
-- Da li su svi endpointi ispravno mapirani
-- Da li request body odgovara DTO strukturi
+### Check Backend Logs
+The backend will output logs to the console. If you see errors, check:
+- Whether all services are registered in DI
+- Whether all endpoints are correctly mapped
+- Whether the request body matches the DTO structure
 
-## 5. Test podaci
+## 5. Test Data
 
-Backend koristi in-memory storage, pa će se podaci resetirati pri svakom restartu.
+The backend uses in-memory storage, so data will reset on each restart.
 
-### Kreiranje test housekeeping loga
+### Creating a Test Housekeeping Log
 ```bash
 curl -X POST "http://localhost:5032/api/chores/submit" \
   -H "Content-Type: application/json" \
@@ -157,28 +157,49 @@ curl -X POST "http://localhost:5032/api/chores/submit" \
   }'
 ```
 
-Zatim provjeri:
+Then check:
 ```bash
 curl "http://localhost:5032/api/housekeeping"
 ```
 
+### Creating a Test Chore
+```bash
+curl -X POST "http://localhost:5032/api/chores" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "title": "Test Chore",
+    "description": "Test description",
+    "type": "Maintenance",
+    "repeatEveryWeeks": 2
+  }'
+```
+
+### Marking a Chore as Important
+```bash
+curl -X POST "http://localhost:5032/api/chores/{id}/important" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "date": "2025-12-15",
+    "description": "This is an important chore"
+  }'
+```
+
 ## 6. Troubleshooting
 
-### API se ne pokreće
-- Provjeri da li si u ispravnom direktoriju
-- Provjeri da li su svi NuGet paketi instalirani: `dotnet restore`
-- Provjeri da li build prolazi: `dotnet build`
+### API Won't Start
+- Check if you're in the correct directory
+- Check if all NuGet packages are installed: `dotnet restore`
+- Check if the build passes: `dotnet build`
 
-### 404 greške
-- Provjeri da li koristiš ispravan port (5032)
-- Provjeri da li endpoint path odgovara controller route-u
+### 404 Errors
+- Check if you're using the correct port (5032)
+- Check if the endpoint path matches the controller route
 
 ### 400 Bad Request
-- Provjeri da li request body odgovara DTO strukturi
-- Provjeri da li su svi required fieldovi prisutni
-- Provjeri format datuma (YYYY-MM-DD)
+- Check if the request body matches the DTO structure
+- Check if all required fields are present
+- Check the date format (YYYY-MM-DD)
 
-### CORS greške
-- Koristi lokalni web server umjesto file:// protokola
-- Ili dodaj CORS podršku u backend (vidi Debugging sekciju)
-
+### CORS Errors
+- Use a local web server instead of the file:// protocol
+- Or add CORS support to the backend (see Debugging section)
