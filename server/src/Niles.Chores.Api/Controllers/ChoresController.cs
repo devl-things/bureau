@@ -303,5 +303,42 @@ namespace Niles.Chores.Api.Controllers
 
             return Ok(responseDto);
         }
+
+        // DELETE: api/chores/{id}/important - Remove important flag from chore
+        [HttpDelete("{id}/important")]
+        public async Task<ActionResult<ChoreDto>> RemoveImportant(int id, CancellationToken cancellationToken = default)
+        {
+            Chore? chore = await _choreService.GetChoreAsync(id, cancellationToken);
+            if (chore == null)
+            {
+                return NotFound();
+            }
+
+            chore.IsImportant = false;
+            chore.ImportantReminderDate = null;
+            chore.ImportantNotes = null;
+
+            Chore? updated = await _choreService.UpdateChoreAsync(chore, cancellationToken);
+            if (updated == null)
+            {
+                return NotFound();
+            }
+
+            var responseDto = new ChoreDto
+            {
+                Id = updated.Id,
+                Title = updated.Title,
+                Description = updated.Description ?? string.Empty,
+                Type = updated.Type.ToString(),
+                Priority = 0,
+                IsCompleted = false,
+                WeeklyInterval = updated.WeeklyInterval,
+                IsImportant = updated.IsImportant,
+                ImportantReminderDate = updated.ImportantReminderDate,
+                ImportantNotes = updated.ImportantNotes
+            };
+
+            return Ok(responseDto);
+        }
     }
 }

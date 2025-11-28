@@ -442,7 +442,12 @@
                     : "";
 
                 const importantBadge = chore.important
-                    ? `<span class="badge" style="background: rgba(251, 191, 36, 0.2); border-color: rgba(251, 191, 36, 0.4); color: #fbbf24;">⚠ Important</span>`
+                    ? (() => {
+                        const dateStr = chore.importantReminderDate 
+                            ? new Date(chore.importantReminderDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+                            : '';
+                        return `<span class="badge" style="background: rgba(251, 191, 36, 0.2); border-color: rgba(251, 191, 36, 0.4); color: #fbbf24;">⚠ Important${dateStr ? ` (${dateStr})` : ''}</span>`;
+                    })()
                     : "";
                 titleCell.innerHTML = `<div>${sanitize(chore.title ?? "Untitled")}</div>
                     <div class="meta-line">
@@ -455,7 +460,11 @@
                 const actionsCell = document.createElement("td");
                 actionsCell.classList.add("actions");
                 actionsCell.appendChild(createActionButton("Edit", () => openFormModal("edit", chore)));
-                actionsCell.appendChild(createActionButton("Important", () => openImportantModal(chore)));
+                if (chore.important) {
+                    actionsCell.appendChild(createActionButton("Remove important", () => handleRemoveImportant(chore)));
+                } else {
+                    actionsCell.appendChild(createActionButton("Important", () => openImportantModal(chore)));
+                }
                 actionsCell.appendChild(createActionButton("Delete", () => openDeleteModal(chore), true));
 
                 row.appendChild(idCell);
@@ -661,6 +670,31 @@
             } catch (err) {
                 console.error(err);
                 showToast(err.message || "Could not mark chore as important");
+            }
+        }
+
+        async function handleRemoveImportant(chore) {
+            if (!confirm(`Remove important flag from "${chore.title}"?`)) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/${chore.id}/important`, {
+                    method: "DELETE"
+                });
+
+                if (!response.ok) {
+                    if (response.status === 404) {
+                        throw new Error("Chore not found");
+                    }
+                    throw new Error("Remove important failed");
+                }
+
+                showToast("Important flag removed", true);
+                await fetchChores(); // Refresh list
+            } catch (err) {
+                console.error(err);
+                showToast(err.message || "Could not remove important flag");
             }
         }
 
