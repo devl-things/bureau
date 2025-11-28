@@ -1,5 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Niles.Chores;
+using Niles.Chores.Abstractions.Models;
+using Niles.Chores.Abstractions.Services;
 using Niles.Chores.Contexts;
 using Niles.Chores.Models;
 
@@ -76,6 +78,63 @@ namespace Niles.Chores.Services
                 .ToListAsync(cancellationToken);
 
             return housekeepingsDb.Select(MapToHousekeeping);
+        }
+
+        public async Task<PagedResult<Housekeeping>> ListHousekeepingsPagedAsync(string? search, int page, int pageSize, CancellationToken cancellationToken = default)
+        {
+            // Build query with search filter
+            var query = _context.Housekeeping
+                .Include(h => h.CompletedChores)
+                .AsQueryable();
+
+            if (!string.IsNullOrWhiteSpace(search))
+            {
+                var searchLower = search.ToLowerInvariant();
+                
+                // Try to parse as date
+                DateOnly? searchDate = null;
+                if (DateOnly.TryParse(search, out var parsedDate))
+                {
+                    searchDate = parsedDate;
+                }
+                
+                // Try to parse as integer (for chore ID search)
+                int? searchChoreId = null;
+                if (int.TryParse(search, out var parsedChoreId))
+                {
+                    searchChoreId = parsedChoreId;
+                }
+                
+                query = query.Where(h =>
+                    (h.Note != null && h.Note.ToLower().Contains(searchLower)) ||
+                    (searchDate.HasValue && DateOnly.FromDateTime(h.Timestamp.Date) == searchDate.Value) ||
+                    (searchChoreId.HasValue && h.CompletedChores.Any(cc => cc.ChoreId == searchChoreId.Value))
+                );
+            }
+
+            // Get total count (before pagination)
+            var total = await query.CountAsync(cancellationToken);
+
+            // Apply pagination and ordering at database level
+            var housekeepingsDb = await query
+                .OrderByDescending(h => h.Timestamp) // Most recent first
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync(cancellationToken);
+
+            var items = housekeepingsDb.Select(MapToHousekeeping);
+            var totalPages = (int)Math.Ceiling(total / (double)pageSize);
+
+            return new PagedResult<Housekeeping>
+            {
+                Items = items,
+                Page = page,
+                PageSize = pageSize,
+                Total = total,
+                TotalPages = totalPages,
+                HasNext = page < totalPages,
+                HasPrevious = page > 1
+            };
         }
 
         public async Task<bool> UpdateHousekeepingAsync(Housekeeping housekeeping, CancellationToken cancellationToken = default)

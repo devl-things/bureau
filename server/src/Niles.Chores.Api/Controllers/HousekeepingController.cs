@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Niles.Chores.Api.Dtos;
 using Niles.Chores;
+using Niles.Chores.Abstractions.Services;
 using Niles.Chores.Api.Utilities;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
@@ -32,51 +33,30 @@ namespace Niles.Chores.Api.Controllers
             if (pageSize < 1) pageSize = 20;
             if (pageSize > 100) pageSize = 100;
 
-            // Get all housekeeping records
-            IEnumerable<Housekeeping> allItems = await _housekeepingService.ListHousekeepingsAsync(cancellationToken);
+            // Get paged housekeeping records from database (with search and pagination at DB level)
+            var pagedResult = await _housekeepingService.ListHousekeepingsPagedAsync(search, page, pageSize, cancellationToken);
 
-            // Apply search filter if provided
-            if (!string.IsNullOrWhiteSpace(search))
+            // Map to DTOs
+            var pagedItems = pagedResult.Items.Select(m => new HousekeepingDto
             {
-                var searchLower = search.ToLowerInvariant();
-                allItems = allItems.Where(h =>
-                    (h.Note?.ToLowerInvariant().Contains(searchLower) ?? false) ||
-                    h.DateTime.ToString("yyyy-MM-dd").Contains(searchLower) ||
-                    h.CompletedChoreIds.Any(id => id.ToString().Contains(searchLower))
-                );
-            }
-
-            // Order by date descending (most recent first)
-            allItems = allItems.OrderByDescending(h => h.DateTime);
-
-            var itemsList = allItems.ToList();
-            var total = itemsList.Count;
-            var totalPages = (int)Math.Ceiling(total / (double)pageSize);
-
-            // Apply pagination
-            var pagedItems = itemsList
-                .Skip((page - 1) * pageSize)
-                .Take(pageSize)
-                .Select(m => new HousekeepingDto
-                {
-                    Id = m.Id.HasValue ? IdObfuscator.Encode(m.Id.Value) : null,
-                    DateTime = m.DateTime.UtcDateTime,
-                    Duration = m.Duration.ToString(),
-                    Note = m.Note,
-                    CompletedChoreIds = m.CompletedChoreIds ?? new List<int>()
-                });
+                Id = m.Id.HasValue ? IdObfuscator.Encode(m.Id.Value) : null,
+                DateTime = m.DateTime.UtcDateTime,
+                Duration = m.Duration.ToString(),
+                Note = m.Note,
+                CompletedChoreIds = m.CompletedChoreIds ?? new List<int>()
+            });
 
             var result = new PagedResult<HousekeepingDto>
             {
                 Data = pagedItems,
                 Meta = new PagedMeta
                 {
-                    Page = page,
-                    PageSize = pageSize,
-                    Total = total,
-                    TotalPages = totalPages,
-                    HasNext = page < totalPages,
-                    HasPrevious = page > 1
+                    Page = pagedResult.Page,
+                    PageSize = pagedResult.PageSize,
+                    Total = pagedResult.Total,
+                    TotalPages = pagedResult.TotalPages,
+                    HasNext = pagedResult.HasNext,
+                    HasPrevious = pagedResult.HasPrevious
                 }
             };
 

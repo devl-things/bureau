@@ -70,36 +70,18 @@ namespace Niles.Chores.Api.Controllers
             if (pageSize < 1) pageSize = 20;
             if (pageSize > 100) pageSize = 100;
 
-            // Get all chores
-            IEnumerable<Chore> allItems = await _choreService.ListChoresAsync(cancellationToken);
-
-            // Apply search filter if provided
-            if (!string.IsNullOrWhiteSpace(search))
-            {
-                var searchLower = search.ToLowerInvariant();
-                allItems = allItems.Where(c =>
-                    (c.Title?.ToLowerInvariant().Contains(searchLower) ?? false) ||
-                    (c.Description?.ToLowerInvariant().Contains(searchLower) ?? false) ||
-                    c.Type.ToString().ToLowerInvariant().Contains(searchLower)
-                );
-            }
-
-            var itemsList = allItems.ToList();
-            var total = itemsList.Count;
-            var totalPages = (int)Math.Ceiling(total / (double)pageSize);
-
-            // Get paged items
-            var pagedChores = itemsList.Skip((page - 1) * pageSize).Take(pageSize).ToList();
+            // Get paged chores from database (with search and pagination at DB level)
+            var pagedResult = await _choreService.ListChoresPagedAsync(search, page, pageSize, cancellationToken);
             
             // Get all chore IDs for this page
-            var choreIds = pagedChores.Select(c => c.Id).ToList();
+            var choreIds = pagedResult.Items.Select(c => c.Id).ToList();
             
             // Get all open critical chores for these chore IDs in one query
             var openCriticalChoreIds = await _criticalChoreService.GetOpenCriticalChoreIdsAsync(choreIds, cancellationToken);
             var criticalChoreIds = new HashSet<int>(openCriticalChoreIds);
 
             // Map to DTOs with critical flag
-            var pagedItems = pagedChores.Select(m => new ChoreDto
+            var pagedItems = pagedResult.Items.Select(m => new ChoreDto
             {
                 Id = IdObfuscator.Encode(m.Id),
                 Title = m.Title,
@@ -114,12 +96,12 @@ namespace Niles.Chores.Api.Controllers
                 Data = pagedItems,
                 Meta = new PagedMeta
                 {
-                    Page = page,
-                    PageSize = pageSize,
-                    Total = total,
-                    TotalPages = totalPages,
-                    HasNext = page < totalPages,
-                    HasPrevious = page > 1
+                    Page = pagedResult.Page,
+                    PageSize = pagedResult.PageSize,
+                    Total = pagedResult.Total,
+                    TotalPages = pagedResult.TotalPages,
+                    HasNext = pagedResult.HasNext,
+                    HasPrevious = pagedResult.HasPrevious
                 }
             };
 

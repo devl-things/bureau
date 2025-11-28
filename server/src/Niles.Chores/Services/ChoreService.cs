@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Niles.Chores;
+using Niles.Chores.Abstractions.Models;
 using Niles.Chores.Abstractions.Services;
 using Niles.Chores.Contexts;
 using Niles.Chores.Models;
@@ -48,6 +49,54 @@ namespace Niles.Chores.Services
         {
             var choresDb = await _context.Chores.ToListAsync(cancellationToken);
             return choresDb.Select(MapToChore);
+        }
+
+        public async Task<PagedResult<Chore>> ListChoresPagedAsync(string? search, int page, int pageSize, CancellationToken cancellationToken = default)
+        {
+            // Build query with search filter
+            var query = _context.Chores.AsQueryable();
+
+            if (!string.IsNullOrWhiteSpace(search))
+            {
+                var searchLower = search.ToLowerInvariant();
+                
+                // Try to parse search term as ChoreType enum
+                ChoreType? searchType = null;
+                if (Enum.TryParse<ChoreType>(search, true, out var parsedType))
+                {
+                    searchType = parsedType;
+                }
+
+                query = query.Where(c =>
+                    (c.Title != null && c.Title.ToLower().Contains(searchLower)) ||
+                    (c.Description != null && c.Description.ToLower().Contains(searchLower)) ||
+                    (searchType.HasValue && c.Type == searchType.Value)
+                );
+            }
+
+            // Get total count (before pagination)
+            var total = await query.CountAsync(cancellationToken);
+
+            // Apply pagination at database level
+            var choresDb = await query
+                .OrderBy(c => c.Id) // Consistent ordering
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync(cancellationToken);
+
+            var items = choresDb.Select(MapToChore);
+            var totalPages = (int)Math.Ceiling(total / (double)pageSize);
+
+            return new PagedResult<Chore>
+            {
+                Items = items,
+                Page = page,
+                PageSize = pageSize,
+                Total = total,
+                TotalPages = totalPages,
+                HasNext = page < totalPages,
+                HasPrevious = page > 1
+            };
         }
 
         public async Task<bool> UpdateChoreAsync(Chore chore, CancellationToken cancellationToken = default)
