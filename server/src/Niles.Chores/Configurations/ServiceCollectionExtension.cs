@@ -1,0 +1,29 @@
+﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
+using Niles.Chores.Abstractions.Services;
+using Niles.Chores.Contexts;
+using Niles.Chores.Services;
+
+namespace Niles.Chores.Configurations
+{
+    public static class ServiceCollectionExtension
+    {
+        public static IServiceCollection AddChores(this IServiceCollection services, string connectionString)
+        {
+            if (string.IsNullOrWhiteSpace(connectionString))
+            {
+                throw new ArgumentNullException(nameof(connectionString), "Connection string not defined correctly.");
+            }
+            services.AddDbContext<ChoresContext>(options => options.UseSqlServer(connectionString));
+
+            services.AddMemoryCache();
+
+            services.TryAddSingleton(TimeProvider.System);
+            services.AddScoped<IHouseKeepingService, HouseKeepingService>();
+            services.AddScoped<IChoreService, ChoreService>();
+            services.AddScoped<IPrioritizedChoreService, PrioritizedChoreService>();
+            return services;
+        }
+    }
+}

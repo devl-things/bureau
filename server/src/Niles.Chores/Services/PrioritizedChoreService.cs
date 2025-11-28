@@ -1,26 +1,123 @@
-﻿namespace Niles.Chores.Services
+﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Logging;
+using Niles.Chores.Contexts;
+using Niles.Chores.Models;
+
+namespace Niles.Chores.Services
 {
     internal class PrioritizedChoreService : IPrioritizedChoreService
     {
-        //private static DateOnly today = DateOnly.FromDateTime(DateTime.Today);
-
-        //private static readonly Dictionary<int, ChoreDto> _chores = new Dictionary<int, ChoreDto>()
-        //{
-        //    { 1, new ChoreDto { Id = 1, Title = "Cleaning of small bathroom", Description = "Clean the water closet, sink, vacuum the floor,Clean the water closet, sink, vacuum the floor,Clean the water closet, sink, vacuum the floor,Clean the water closet, sink, vacuum the floor,Clean the water closet, sink, vacuum the floor,Clean the water closet, sink, vacuum the floor", IsCompleted = false, Date = today, Priority = 2, Type = "Maintenance" } },
-        //    { 2, new ChoreDto { Id = 2, Title = "Cleaning of big bathroom", Description = "Clean the big bathroom", IsCompleted = false, Date = today, Priority = 1, Type = "Maintenance" } },
-        //    { 3, new ChoreDto { Id = 3, Title = "Dusting of the whole flat", Description = "Dust the entire flat", IsCompleted = false, Date = today, Priority = 3, Type = "Maintenance" } },
-        //    { 4, new ChoreDto { Id = 4, Title = "Vacuuming the whole flat", Description = "Vacuum the entire flat", IsCompleted = false, Date = today, Priority = 2, Type = "Maintenance" } },
-        //    { 5, new ChoreDto { Id = 5, Title = "Mopping the whole flat", Description = "Mop the entire flat", IsCompleted = false, Date = today, Priority = 3, Type = "Maintenance" } },
-        //    { 6, new ChoreDto { Id = 6, Title = "Cleaning of the kitchen", Description = "Includes cleaning pans, stove, counters, and tidying up", IsCompleted = false, Date = today, Priority = 4, Type = "Maintenance" } },
-        //    { 7, new ChoreDto { Id = 7, Title = "Cleaning the microwave", Description = "Clean the microwave", IsCompleted = false, Date = today, Priority = 3, Type = "Extra" } },
-        //    { 8, new ChoreDto { Id = 8, Title = "Cleaning the coffee machine", Description = "Maintain the coffee machine", IsCompleted = false, Date = today, Priority = 5, Type = "Maintenance" } },
-        //    { 9, new ChoreDto { Id = 9, Title = "Cleaning the robot vacuum", Description = "Clean the robotic vacuum", IsCompleted = false, Date = today, Priority = 3, Type = "Maintenance" } },
-        //    { 10, new ChoreDto { Id = 10, Title = "Changing the bed sheets", Description = "Change the bed sheets", IsCompleted = false, Date = today, Priority = 3, Type = "Maintenance" } }
-        //};
-
-        public Task<List<PrioritizedChore>> GetPrioritizedChoresAsync(DateOnly date, CancellationToken cancellationToken = default)
+        const int CRITICAL_PRIORITY = 1;
+        const int HIGH_PRIORITY_FACTOR = 2;
+        const int MEDIUM_PRIORITY_FACTOR = 3;
+        const int LOW_PRIORITY_FACTOR = 4;
+        private readonly ChoresContext _context;
+        private readonly IMemoryCache _cache;
+        private readonly ILogger<PrioritizedChoreService> _logger;
+        private readonly TimeProvider _timeProvider;
+        public PrioritizedChoreService(TimeProvider timeProvider, ILogger<PrioritizedChoreService> logger, ChoresContext context, IMemoryCache cache)
         {
-            throw new NotImplementedException();
+            _timeProvider = timeProvider;
+            _logger = logger;
+            _context = context;
+            _cache = cache;
+        }
+
+        public async Task<List<PrioritizedChore>> GetPrioritizedChoresAsync(DateOnly requestedDate, CancellationToken cancellationToken = default)
+        {
+            DateTime today = _timeProvider.GetUtcNow().UtcDateTime;
+            if (requestedDate == default || requestedDate < DateOnly.FromDateTime(today))
+            {
+                _logger.LogError("Requested date ({requestedDate}) is either default or in the past from today ({today})", requestedDate, today);
+                return [];
+            }
+            YearsWeek requestedYearWeek = new YearsWeek(requestedDate);
+            if (_cache.TryGetValue<List<PrioritizedChore>>(requestedYearWeek, out List<PrioritizedChore>? list))
+            {
+                if (list is not null)
+                {
+                    return list;
+                }
+            }
+
+            IAsyncEnumerable<ChoreDetail> chores = _context.Chores
+                .Select(chore => new ChoreDetail
+                {
+                    Chore = chore,
+                    CompletedAt = chore.CompletedChores
+                        .OrderByDescending(cc => cc.Housekeeping.Timestamp)
+                        .Select(cc => cc.Housekeeping.Timestamp)
+                        .FirstOrDefault(),
+                    OpenCritical = chore.CriticalChores
+                        .Where(c => c.CompletedChoreId == null)
+                        .OrderByDescending(c => c.CreatedAt)
+                        .Select(c => new CriticalChoreDetail
+                        {
+                            CreatedAt = c.CreatedAt,
+                            Note = c.Note
+                        })
+                        .FirstOrDefault()
+                })
+                .AsAsyncEnumerable();
+
+            List<PrioritizedChore> prioritizedChores = [];
+            await foreach (ChoreDetail chore in chores)
+            {
+                int priority = CalculatePriority(requestedYearWeek, chore);
+
+                if (priority <= 0)
+                {
+                    // something went wrong in priority calculation
+                    continue;
+                }
+                prioritizedChores.Add(new PrioritizedChore
+                {
+                    Id = chore.Chore.Id,
+                    Title = chore.Chore.Title,
+                    Description = chore.Chore.Description,
+                    Priority = priority,
+                    Type = chore.Chore.Type,
+                    Note = chore.OpenCritical?.Note
+                });
+            }
+            return prioritizedChores;
+        }
+
+        internal int CalculatePriority(YearsWeek currentYearWeek, ChoreDetail chore)
+        {
+            if (chore.OpenCritical is not null)
+            {
+                return CRITICAL_PRIORITY;
+            }
+            if (chore.CompletedAt is null)
+            {
+                return HIGH_PRIORITY_FACTOR * chore.ChoreImportanceScore;
+            }
+
+            // Calculate time difference between the provided date and the last completed date in weeks
+            YearsWeek completedYearsWeek = new YearsWeek(chore.CompletedAt.Value);
+            int weekDiff = currentYearWeek - completedYearsWeek;
+
+            if (weekDiff < 0)
+            {
+                _logger.LogError("Week diff ({weekDiff}) is negative. currentYearWeek = {currentYearWeek} | completedYearsWeek = {completedYearsWeek})", weekDiff, currentYearWeek, completedYearsWeek);
+                return -1;
+            }
+            else if (weekDiff < chore.Chore.WeeklyInterval)
+            {
+                return LOW_PRIORITY_FACTOR * chore.ChoreImportanceScore;
+            }
+            else if (weekDiff <= (chore.Chore.WeeklyInterval * 2))
+            {
+                return MEDIUM_PRIORITY_FACTOR * chore.ChoreImportanceScore;
+            }
+            else if (weekDiff > (chore.Chore.WeeklyInterval * 2))
+            {
+                return HIGH_PRIORITY_FACTOR * chore.ChoreImportanceScore;
+            }
+            _logger.LogCritical("This is argmagedon or I didn't see something.");
+            return -1;
         }
     }
 }
