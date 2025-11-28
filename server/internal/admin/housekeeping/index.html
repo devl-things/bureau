@@ -304,7 +304,7 @@
             meta: null,
             search: "",
             currentPage: 1,
-            pageSize: 20,
+            pageSize: 5,
             searchTimeout: null
         };
 
@@ -325,11 +325,11 @@
                 if (state.search) {
                     params.append("search", state.search);
                 }
-                
+
                 const response = await fetch(`${API_BASE}?${params.toString()}`);
                 if (!response.ok) throw new Error("Failed to load housekeeping logs");
                 const payload = await response.json();
-                
+
                 if (payload.data && payload.meta) {
                     // Paginated response
                     state.logs = Array.isArray(payload.data) ? payload.data : [];
@@ -355,7 +355,7 @@
             const searchValue = event.target.value.trim();
             state.search = searchValue;
             state.currentPage = 1; // Reset to first page on search
-            
+
             // Debounce search
             clearTimeout(state.searchTimeout);
             state.searchTimeout = setTimeout(() => {

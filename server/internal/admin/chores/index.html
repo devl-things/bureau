@@ -372,7 +372,7 @@
             activeChore: null,
             search: "",
             currentPage: 1,
-            pageSize: 20,
+            pageSize: 5,
             searchTimeout: null
         };
 
@@ -394,11 +394,11 @@
                 if (state.search) {
                     params.append("search", state.search);
                 }
-                
+
                 const response = await fetch(`${API_BASE}?${params.toString()}`);
                 if (!response.ok) throw new Error("Failed to load chores");
                 const payload = await response.json();
-                
+
                 if (payload.data && payload.meta) {
                     // Paginated response
                     state.chores = Array.isArray(payload.data) ? payload.data : [];
@@ -424,7 +424,7 @@
             const searchValue = event.target.value.trim();
             state.search = searchValue;
             state.currentPage = 1; // Reset to first page on search
-            
+
             // Debounce search
             clearTimeout(state.searchTimeout);
             state.searchTimeout = setTimeout(() => {
@@ -460,8 +460,8 @@
 
                 const titleCell = document.createElement("td");
                 const type = chore.type ? `<span class="badge">${sanitize(chore.type)}</span>` : "";
-                const criticalBadge = chore.isCritical 
-                    ? `<span class="badge" style="background: rgba(159, 18, 57, 0.16); border-color: rgba(159, 18, 57, 0.25); color: #f87171;">Critical</span>` 
+                const criticalBadge = chore.isCritical
+                    ? `<span class="badge" style="background: rgba(159, 18, 57, 0.16); border-color: rgba(159, 18, 57, 0.25); color: #f87171;">Critical</span>`
                     : "";
                 const repeatLabel =
                     chore.weeklyInterval
@@ -482,13 +482,13 @@
                 const actionsCell = document.createElement("td");
                 actionsCell.classList.add("actions");
                 actionsCell.appendChild(createActionButton("Edit", () => openFormModal("edit", chore)));
-                
+
                 if (chore.isCritical) {
                     actionsCell.appendChild(createActionButton("Remove Critical", () => handleRemoveCritical(chore), false));
                 } else {
                     actionsCell.appendChild(createActionButton("Critical", () => openCriticalModal(chore)));
                 }
-                
+
                 actionsCell.appendChild(createActionButton("Delete", () => openDeleteModal(chore), true));
 
                 row.appendChild(idCell);
