@@ -1,4 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Niles.Chores;
+using Niles.Chores.Abstractions.Services;
 using Niles.Chores.Api.Dtos;
 
 namespace Niles.Chores.Api.Controllers
@@ -7,7 +9,7 @@ namespace Niles.Chores.Api.Controllers
     [ApiController]
     public class PrioritizedChoresController : ControllerBase
     {
-        IPrioritizedChoreService _prioritizedChoreService;
+        private readonly IPrioritizedChoreService _prioritizedChoreService;
 
         public PrioritizedChoresController(IPrioritizedChoreService prioritizedChoreService)
         {
@@ -18,7 +20,7 @@ namespace Niles.Chores.Api.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<ChoreDto>>> GetChoresAsync([FromQuery] DateOnly? date, CancellationToken cancellationToken = default)
         {
-            DateOnly dateOnly = date ?? DateOnly.FromDateTime(DateTime.Now);
+            DateOnly dateOnly = date ?? DateOnly.FromDateTime(DateTime.UtcNow);
 
             List<PrioritizedChore> pChores = await _prioritizedChoreService.GetPrioritizedChoresAsync(dateOnly, cancellationToken);
 

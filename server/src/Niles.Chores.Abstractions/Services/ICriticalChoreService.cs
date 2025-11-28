@@ -1,4 +1,4 @@
-﻿namespace Niles.Chores
+﻿namespace Niles.Chores.Abstractions.Services
 {
     public interface ICriticalChoreService
     {

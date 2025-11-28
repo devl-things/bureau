@@ -1,3 +1,5 @@
+using Niles.Chores.Abstractions.Services;
+using Niles.Chores.Services;
 
 namespace Niles.Chores.Api
 {
@@ -8,8 +10,9 @@ namespace Niles.Chores.Api
             var builder = WebApplication.CreateBuilder(args);
 
             // Add services to the container.
-
             builder.Services.AddControllers();
+            builder.Services.AddSingleton<IHousekeepingService, HousekeepingService>();
+            builder.Services.AddSingleton<IPrioritizedChoreService, PrioritizedChoreService>();
 
             var app = builder.Build();
 
@@ -19,7 +22,6 @@ namespace Niles.Chores.Api
             }
 
             app.UseAuthorization();
-
 
             app.MapControllers();
             app.MapGet("/api/health", () => Results.Ok(new { status = "ok" }));

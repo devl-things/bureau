@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Niles.Chores.Api.Dtos;
 using Niles.Chores;
+using Niles.Chores.Abstractions.Services;
 using Niles.Chores.Api.Utilities;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
@@ -11,9 +12,9 @@ namespace Niles.Chores.Api.Controllers
     [ApiController]
     public class HousekeepingController : ControllerBase
     {
-        private readonly IHouseKeepingService _housekeepingService;
+        private readonly IHousekeepingService _housekeepingService;
 
-        public HousekeepingController(IHouseKeepingService housekeepingService)
+        public HousekeepingController(IHousekeepingService housekeepingService)
         {
             _housekeepingService = housekeepingService;
         }

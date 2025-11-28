@@ -1,26 +1,77 @@
-﻿namespace Niles.Chores.Services
-{
-    internal class PrioritizedChoreService : IPrioritizedChoreService
-    {
-        //private static DateOnly today = DateOnly.FromDateTime(DateTime.Today);
+﻿using Niles.Chores.Abstractions.Services;
 
-        //private static readonly Dictionary<int, ChoreDto> _chores = new Dictionary<int, ChoreDto>()
-        //{
-        //    { 1, new ChoreDto { Id = 1, Title = "Cleaning of small bathroom", Description = "Clean the water closet, sink, vacuum the floor,Clean the water closet, sink, vacuum the floor,Clean the water closet, sink, vacuum the floor,Clean the water closet, sink, vacuum the floor,Clean the water closet, sink, vacuum the floor,Clean the water closet, sink, vacuum the floor", IsCompleted = false, Date = today, Priority = 2, Type = "Maintenance" } },
-        //    { 2, new ChoreDto { Id = 2, Title = "Cleaning of big bathroom", Description = "Clean the big bathroom", IsCompleted = false, Date = today, Priority = 1, Type = "Maintenance" } },
-        //    { 3, new ChoreDto { Id = 3, Title = "Dusting of the whole flat", Description = "Dust the entire flat", IsCompleted = false, Date = today, Priority = 3, Type = "Maintenance" } },
-        //    { 4, new ChoreDto { Id = 4, Title = "Vacuuming the whole flat", Description = "Vacuum the entire flat", IsCompleted = false, Date = today, Priority = 2, Type = "Maintenance" } },
-        //    { 5, new ChoreDto { Id = 5, Title = "Mopping the whole flat", Description = "Mop the entire flat", IsCompleted = false, Date = today, Priority = 3, Type = "Maintenance" } },
-        //    { 6, new ChoreDto { Id = 6, Title = "Cleaning of the kitchen", Description = "Includes cleaning pans, stove, counters, and tidying up", IsCompleted = false, Date = today, Priority = 4, Type = "Maintenance" } },
-        //    { 7, new ChoreDto { Id = 7, Title = "Cleaning the microwave", Description = "Clean the microwave", IsCompleted = false, Date = today, Priority = 3, Type = "Extra" } },
-        //    { 8, new ChoreDto { Id = 8, Title = "Cleaning the coffee machine", Description = "Maintain the coffee machine", IsCompleted = false, Date = today, Priority = 5, Type = "Maintenance" } },
-        //    { 9, new ChoreDto { Id = 9, Title = "Cleaning the robot vacuum", Description = "Clean the robotic vacuum", IsCompleted = false, Date = today, Priority = 3, Type = "Maintenance" } },
-        //    { 10, new ChoreDto { Id = 10, Title = "Changing the bed sheets", Description = "Change the bed sheets", IsCompleted = false, Date = today, Priority = 3, Type = "Maintenance" } }
-        //};
+namespace Niles.Chores.Services
+{
+    public sealed class PrioritizedChoreService : IPrioritizedChoreService
+    {
+        private static readonly DateOnly ReferenceWeek = new(2024, 1, 1);
+
+        private static readonly IReadOnlyList<ChoreTemplate> Templates = new List<ChoreTemplate>
+        {
+            new(101, "Kitchen deep clean", "Counters, stove, fridge exterior", ChoreType.Maintenance, WeeklyInterval: 2, Priority: 1),
+            new(102, "Bathroom reset", "Scrub tiles, replace towels", ChoreType.Maintenance, 1, 2),
+            new(103, "Dust + vacuum lounge", "Dust shelves, vacuum rug", ChoreType.Maintenance, 1, 3),
+            new(104, "Laundry rotation", "Whites and delicates", ChoreType.Maintenance, 1, 4),
+            new(105, "Plants & garden check", "Water and trim herbs", ChoreType.Extra, 2, 3),
+            new(106, "Pantry tidy-up", "Re-stack pantry, check expiry dates", ChoreType.Extra, 4, 4),
+            new(107, "Robot vacuum maintenance", "Empty bin, clean sensors", ChoreType.Maintenance, 3, 3),
+            new(108, "Guest room reset", "Change bedding, dust side tables", ChoreType.Maintenance, 4, 2)
+        };
 
         public Task<List<PrioritizedChore>> GetPrioritizedChoresAsync(DateOnly date, CancellationToken cancellationToken = default)
         {
-            throw new NotImplementedException();
+            IEnumerable<PrioritizedChore> result = Templates
+                .Where(template => ShouldSchedule(template, date))
+                .Select(template => template.ToInstance());
+
+            List<PrioritizedChore> chores = result
+                .OrderBy(chore => chore.Priority)
+                .ThenBy(chore => chore.Id)
+                .ToList();
+
+            if (!chores.Any())
+            {
+                chores = Templates
+                    .OrderBy(t => t.Priority)
+                    .Take(5)
+                    .Select(t => t.ToInstance())
+                    .ToList();
+            }
+
+            return Task.FromResult(chores);
+        }
+
+        private static bool ShouldSchedule(ChoreTemplate template, DateOnly date)
+        {
+            if (template.WeeklyInterval <= 1)
+            {
+                return true;
+            }
+
+            int weeksSinceReference = Math.Max(0, (date.DayNumber - ReferenceWeek.DayNumber) / 7);
+            return weeksSinceReference % template.WeeklyInterval == 0;
+        }
+
+        private sealed record ChoreTemplate(
+            int Id,
+            string Title,
+            string Description,
+            ChoreType Type,
+            int WeeklyInterval,
+            int Priority)
+        {
+            public PrioritizedChore ToInstance()
+            {
+                return new PrioritizedChore
+                {
+                    Id = Id,
+                    Title = Title,
+                    Description = Description,
+                    Type = Type,
+                    WeeklyInterval = WeeklyInterval,
+                    Priority = Priority
+                };
+            }
         }
     }
 }

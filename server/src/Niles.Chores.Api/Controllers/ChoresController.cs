@@ -1,7 +1,9 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using System.Globalization;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
+using Niles.Chores;
 using Niles.Chores.Abstractions.Services;
-
-// For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
+using Niles.Chores.Api.Dtos;
 
 namespace Niles.Chores.Api.Controllers
 {
@@ -9,41 +11,84 @@ namespace Niles.Chores.Api.Controllers
     [ApiController]
     public class ChoresController : ControllerBase
     {
-        private IChoreService _choreService;
-        public ChoresController(IChoreService choreService)
+        private readonly IPrioritizedChoreService _prioritizedChoreService;
+        private readonly IHousekeepingService _housekeepingService;
+        private static readonly string[] AcceptedDateFormats = new[] { "yyyy-MM-dd", "yyyy/MM/dd" };
+
+        public ChoresController(IPrioritizedChoreService prioritizedChoreService, IHousekeepingService housekeepingService)
         {
-            _choreService = choreService;
+            _prioritizedChoreService = prioritizedChoreService;
+            _housekeepingService = housekeepingService;
         }
-        // GET: api/chores
+
+        // GET: api/chores?date=2025-11-28
         [HttpGet]
-        public IEnumerable<string> Get()
+        public async Task<ActionResult<IEnumerable<ChoreDto>>> Get([FromQuery] DateOnly? date, CancellationToken cancellationToken = default)
         {
-            return new string[] { "value1", "value2" };
+            DateOnly targetDate = date ?? DateOnly.FromDateTime(DateTime.UtcNow);
+            List<PrioritizedChore> chores = await _prioritizedChoreService.GetPrioritizedChoresAsync(targetDate, cancellationToken);
+
+            IEnumerable<ChoreDto> response = chores.Select(chore => new ChoreDto
+            {
+                Id = chore.Id,
+                Title = chore.Title,
+                Description = chore.Description ?? string.Empty,
+                Priority = chore.Priority,
+                Type = chore.Type.ToString(),
+                IsCompleted = false,
+                Date = targetDate
+            });
+
+            return Ok(response);
         }
 
-        // GET api/<ChoresController>/5
-        [HttpGet("{id}")]
-        public string Get(int id)
+        // POST: api/chores/submit
+        [HttpPost("submit")]
+        public async Task<IActionResult> SubmitAsync([FromBody] ChoreSubmissionDto dto, CancellationToken cancellationToken = default)
         {
-            return "value";
-        }
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
 
-        // POST api/<ChoresController>
-        [HttpPost]
-        public void Post([FromBody] string value)
-        {
-        }
+            if (!DateOnly.TryParseExact(dto.Date, AcceptedDateFormats, CultureInfo.InvariantCulture, DateTimeStyles.None, out DateOnly dateOnly))
+            {
+                return BadRequest(new { error = "Invalid date format." });
+            }
 
-        // PUT api/<ChoresController>/5
-        [HttpPut("{id}")]
-        public void Put(int id, [FromBody] string value)
-        {
-        }
+            List<int> completedIds = dto.CompletedChoreIds?
+                .Select(id => int.TryParse(id, out int parsed) ? parsed : (int?)null)
+                .Where(id => id.HasValue)
+                .Select(id => id!.Value)
+                .Distinct()
+                .ToList() ?? new List<int>();
 
-        // DELETE api/<ChoresController>/5
-        [HttpDelete("{id}")]
-        public void Delete(int id)
-        {
+            if (completedIds.Count == 0)
+            {
+                return BadRequest(new { error = "At least one valid chore id is required." });
+            }
+
+            TimeSpan duration = dto.DurationMinutes.HasValue && dto.DurationMinutes > 0
+                ? TimeSpan.FromMinutes(dto.DurationMinutes.Value)
+                : TimeSpan.Zero;
+
+            DateTime completedDate = DateTime.SpecifyKind(dateOnly.ToDateTime(TimeOnly.MinValue), DateTimeKind.Utc);
+
+            var model = new Housekeeping
+            {
+                DateTime = new DateTimeOffset(completedDate),
+                Duration = duration,
+                Note = string.IsNullOrWhiteSpace(dto.Note) ? null : dto.Note.Trim(),
+                CompletedChoreIds = completedIds
+            };
+
+            bool stored = await _housekeepingService.CreateHousekeepingAsync(model, cancellationToken);
+            if (!stored)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, new { error = "Failed to persist housekeeping entry." });
+            }
+
+            return Ok(new { status = "stored" });
         }
     }
 }

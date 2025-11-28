@@ -1,4 +1,6 @@
-﻿namespace Niles.Chores
+﻿using Niles.Chores;
+
+namespace Niles.Chores.Abstractions.Services
 {
     public interface IPrioritizedChoreService
     {
