@@ -92,6 +92,14 @@ namespace Niles.Chores.Services
                     Note = chore.OpenCritical?.Note
                 });
             }
+            
+            // Order by priority (lower number = higher priority: 1=critical, then 2-4 factors, then higher numbers)
+            // Within same priority level, order by title for consistency
+            prioritizedChores = prioritizedChores
+                .OrderBy(c => c.Priority)
+                .ThenBy(c => c.Title)
+                .ToList();
+            
             return prioritizedChores;
         }
 

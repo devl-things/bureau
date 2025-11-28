@@ -933,7 +933,10 @@
             }
 
             return data.map((item, index) => {
-                const normalizedPriority = normalizePriority(item.priority);
+                // Use isCritical flag if available, otherwise normalize the calculated priority
+                const normalizedPriority = item.isCritical 
+                    ? PRIORITY.CRITICAL 
+                    : normalizePriority(item.priority);
                 return {
                     id: item.id ?? String(index),
                     title: item.title ?? "Untitled chore",
@@ -941,17 +944,59 @@
                     completed: !!item.completed,
                     priorityNumber: normalizedPriority,
                     priorityName: priorityNameFromNumber(normalizedPriority),
-                    type: normalizeType(item.type)
+                    type: normalizeType(item.type),
+                    isCritical: !!item.isCritical
                 };
             });
         }
 
         function normalizePriority(value) {
             const num = Number(value);
+            
+            // If it's exactly 1, it's critical (but should be handled by isCritical flag)
             if (num === PRIORITY.CRITICAL) return PRIORITY.CRITICAL;
-            if (num === PRIORITY.HIGH) return PRIORITY.HIGH;
-            if (num === PRIORITY.LOW) return PRIORITY.LOW;
-            return PRIORITY.MEDIUM;
+            
+            // The PrioritizedChoreService calculates priority as:
+            // - CRITICAL = 1 (handled by isCritical flag)
+            // - HIGH = 2 * importance_score (e.g., 2, 4, 6, 8, 10, 12, 14, 16...)
+            // - MEDIUM = 3 * importance_score (e.g., 3, 6, 9, 12, 15, 18, 21...)
+            // - LOW = 4 * importance_score (e.g., 4, 8, 12, 16, 20, 24, 28...)
+            //
+            // To determine which factor was used, we check divisibility in priority order:
+            // Higher priority factors are checked first (2 > 3 > 4)
+            // This handles overlaps correctly (e.g., 12 could be 2*6, 3*4, or 4*3, but 2*6 takes precedence)
+            
+            // Check if it's a HIGH priority (divisible by 2)
+            // Numbers like 2, 4, 6, 8, 10, 12, 14, 16, 18, 20...
+            if (num % 2 === 0) {
+                // For numbers divisible by 2, check if it's also divisible by 4
+                // If divisible by 4, it could be LOW (4*score) or HIGH (2*score where score is even)
+                // We prioritize HIGH for numbers that are clean multiples of 2 but not 4
+                // For numbers divisible by both 2 and 4, we need to check if it's a clean 4 multiple
+                if (num % 4 === 0) {
+                    // Divisible by 4 - could be LOW (4*score) or HIGH (2*score where score is even)
+                    // Check if it's a clean multiple of 4 without being a multiple of 3
+                    // If it's also divisible by 3, it's ambiguous (could be 2*6, 3*4, or 4*3)
+                    // In this case, we'll treat it as LOW since 4 is the lowest priority factor
+                    if (num % 3 === 0) {
+                        // Divisible by 2, 3, and 4 (e.g., 12, 24, 36) - treat as LOW (lowest priority)
+                        return PRIORITY.LOW;
+                    } else {
+                        // Divisible by 4 but not 3 (e.g., 4, 8, 16, 20) - treat as LOW
+                        return PRIORITY.LOW;
+                    }
+                } else {
+                    // Divisible by 2 but not 4 (e.g., 2, 6, 10, 14, 18) - treat as HIGH
+                    return PRIORITY.HIGH;
+                }
+            } else if (num % 3 === 0) {
+                // Divisible by 3 but not 2 (e.g., 3, 9, 15, 21, 27) - treat as MEDIUM
+                return PRIORITY.MEDIUM;
+            } else {
+                // Not divisible by 2 or 3 - this shouldn't happen with the current calculation
+                // But if it does, default to MEDIUM
+                return PRIORITY.MEDIUM;
+            }
         }
 
         function priorityNameFromNumber(num) {
@@ -1010,6 +1055,9 @@
                 li.dataset.choreId = chore.id;
                 li.dataset.priorityNumber = String(chore.priorityNumber);
                 li.dataset.originalIndex = String(index);
+                if (chore.isCritical) {
+                    li.dataset.isCritical = "true";
+                }
 
                 const leftDiv = document.createElement("div");
                 leftDiv.className = "chore-left";
@@ -1107,7 +1155,7 @@
             // No per-toggle API call anymore
         }
 
-        // Sort: unchecked first, completed last, then by priority (1=critical → 4=low), then by original index
+        // Sort: unchecked first, completed last, then by priority (1=critical → 4=low) within each group, then by original index
         function reorderList() {
             const listEl = document.getElementById("chores-list");
             const items = Array.from(listEl.children);
@@ -1116,17 +1164,20 @@
                 const aChecked = a.querySelector('input[name="chore"]').checked;
                 const bChecked = b.querySelector('input[name="chore"]').checked;
 
+                // Group by completion status: unchecked first, completed last
                 if (aChecked !== bChecked) {
                     return aChecked ? 1 : -1; // unchecked first
                 }
 
+                // Within the same completion group, sort by priority (lower number = higher priority)
                 const aPriority = Number(a.dataset.priorityNumber || PRIORITY.MEDIUM);
                 const bPriority = Number(b.dataset.priorityNumber || PRIORITY.MEDIUM);
 
                 if (aPriority !== bPriority) {
-                    return aPriority - bPriority; // lower number = higher priority
+                    return aPriority - bPriority; // lower number = higher priority (1=critical, 2=high, 3=medium, 4=low)
                 }
 
+                // If same priority, maintain original order
                 const aIndex = Number(a.dataset.originalIndex || 0);
                 const bIndex = Number(b.dataset.originalIndex || 0);
                 return aIndex - bIndex;
