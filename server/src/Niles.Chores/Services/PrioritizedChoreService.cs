@@ -100,6 +100,9 @@ namespace Niles.Chores.Services
                 .ThenBy(c => c.Title)
                 .ToList();
             
+            // Cache the result
+            _cache.Set(requestedYearWeek, prioritizedChores, TimeSpan.FromMinutes(5));
+            
             return prioritizedChores;
         }
 
