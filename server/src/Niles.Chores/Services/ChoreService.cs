@@ -61,13 +61,7 @@ namespace Niles.Chores.Services
 
             return choreDb.ToChore();
         }
-
-        public async Task<IEnumerable<Chore>> ListChoresAsync(CancellationToken cancellationToken = default)
-        {
-            var choresDb = await _context.Chores.ToListAsync(cancellationToken);
-            return choresDb.Select(c => c.ToChore());
-        }
-
+        
         public async Task<PagedResult<Chore>> ListChoresPagedAsync(string? search, int page, int pageSize, CancellationToken cancellationToken = default)
         {
             // Build query with search filter
