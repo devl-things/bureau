@@ -68,7 +68,14 @@ namespace Niles.Chores.Services
             }
 
             housekeeping.Id = housekeepingDb.Id;
-            var createdHousekeeping = housekeepingDb.ToHousekeeping();
+            
+            // Reload housekeeping with completed chores and their chore navigation properties
+            var housekeepingDbWithChores = await _context.Housekeeping
+                .Include(h => h.CompletedChores)
+                    .ThenInclude(cc => cc.Chore)
+                .FirstOrDefaultAsync(h => h.Id == housekeepingDb.Id, cancellationToken);
+            
+            var createdHousekeeping = housekeepingDbWithChores!.ToHousekeeping();
             return new Result<Housekeeping>
             {
                 Value = createdHousekeeping,
