@@ -64,6 +64,7 @@ namespace Niles.Chores.Services
         {
             var housekeepingDb = await _context.Housekeeping
                 .Include(h => h.CompletedChores)
+                    .ThenInclude(cc => cc.Chore)
                 .FirstOrDefaultAsync(h => h.Id == id, cancellationToken);
 
             if (housekeepingDb == null) return null;
@@ -75,6 +76,7 @@ namespace Niles.Chores.Services
         {
             var housekeepingsDb = await _context.Housekeeping
                 .Include(h => h.CompletedChores)
+                    .ThenInclude(cc => cc.Chore)
                 .ToListAsync(cancellationToken);
 
             return housekeepingsDb.Select(MapToHousekeeping);
@@ -85,6 +87,7 @@ namespace Niles.Chores.Services
             // Build query with search filter
             var query = _context.Housekeeping
                 .Include(h => h.CompletedChores)
+                    .ThenInclude(cc => cc.Chore)
                 .AsQueryable();
 
             if (!string.IsNullOrWhiteSpace(search))
@@ -143,6 +146,7 @@ namespace Niles.Chores.Services
 
             var housekeepingDb = await _context.Housekeeping
                 .Include(h => h.CompletedChores)
+                    .ThenInclude(cc => cc.Chore)
                 .FirstOrDefaultAsync(h => h.Id == housekeeping.Id.Value, cancellationToken);
 
             if (housekeepingDb == null) return false;
@@ -183,6 +187,7 @@ namespace Niles.Chores.Services
         {
             var housekeepingDb = await _context.Housekeeping
                 .Include(h => h.CompletedChores)
+                    .ThenInclude(cc => cc.Chore)
                 .FirstOrDefaultAsync(h => h.Id == id, cancellationToken);
 
             if (housekeepingDb == null) return false;
@@ -202,7 +207,17 @@ namespace Niles.Chores.Services
                 DateTime = housekeepingDb.Timestamp,
                 Duration = housekeepingDb.Duration,
                 Note = housekeepingDb.Note,
-                CompletedChoreIds = housekeepingDb.CompletedChores.Select(c => c.ChoreId).ToList()
+                CompletedChoreIds = housekeepingDb.CompletedChores.Select(c => c.ChoreId).ToList(),
+                CompletedChores = housekeepingDb.CompletedChores
+                    .Select(cc => new Chore
+                    {
+                        Id = cc.Chore.Id,
+                        Title = cc.Chore.Title,
+                        Description = cc.Chore.Description,
+                        Type = cc.Chore.Type,
+                        WeeklyInterval = cc.Chore.WeeklyInterval
+                    })
+                    .ToList()
             };
         }
     }

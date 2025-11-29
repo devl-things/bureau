@@ -400,7 +400,7 @@
                     : `<span class="notes">—</span>`;
 
                 const countCell = document.createElement("td");
-                const count = log.completedChoreIds?.length ?? 0;
+                const count = log.completedChores?.length ?? log.completedChoreIds?.length ?? 0;
                 countCell.innerHTML = `<span class="count-pill">${count}</span>`;
 
                 row.appendChild(dateCell);
@@ -442,7 +442,8 @@
 
         function openLogModal(log) {
             const modal = document.getElementById("modal");
-            const choreIds = log.completedChoreIds ?? [];
+            const completedChores = log.completedChores ?? [];
+            const count = completedChores.length;
 
             modal.innerHTML = `
                 <header>
@@ -456,20 +457,20 @@
                     </li>
                     <li>
                         <span class="detail-label">Chores completed</span>
-                        <span>${choreIds.length}</span>
+                        <span>${count}</span>
                     </li>
                 </ul>
                 <section>
-                    <h3 style="margin:0;">Completed chore IDs</h3>
-                    <p class="notes" style="margin:4px 0 8px;">${choreIds.length ? "List of completed chore IDs." : "No chore data available."}</p>
+                    <h3 style="margin:0;">Completed chores</h3>
+                    <p class="notes" style="margin:4px 0 8px;">${count ? "List of completed chores." : "No chore data available."}</p>
                     <ul class="chores-list">
                         ${
-                            choreIds.length
-                                ? choreIds
+                            count
+                                ? completedChores
                                       .map(
-                                          (id) =>
+                                          (chore) =>
                                               `<li>
-                                                  <strong>Chore ID: ${sanitize(id.toString())}</strong>
+                                                  <strong>${sanitize(chore.title || `Chore ${chore.id || ""}`)}</strong>
                                               </li>`
                                       )
                                       .join("")

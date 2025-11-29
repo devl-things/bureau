@@ -43,7 +43,18 @@ namespace Niles.Chores.Api.Controllers
                 DateTime = m.DateTime.UtcDateTime,
                 Duration = m.Duration.ToString(),
                 Note = m.Note,
-                CompletedChoreIds = m.CompletedChoreIds ?? new List<int>()
+                CompletedChoreIds = m.CompletedChoreIds ?? new List<int>(),
+                CompletedChores = m.CompletedChores?.Select(c => new ChoreDto
+                {
+                    Id = IdObfuscator.Encode(c.Id),
+                    Title = c.Title,
+                    Description = c.Description ?? string.Empty,
+                    Type = c.Type.ToString(),
+                    WeeklyInterval = c.WeeklyInterval,
+                    Priority = 0,
+                    Completed = false,
+                    IsCritical = false
+                }).ToList() ?? new List<ChoreDto>()
             });
 
             var result = new PagedResult<HousekeepingDto>
@@ -83,7 +94,18 @@ namespace Niles.Chores.Api.Controllers
                 DateTime = result.DateTime.UtcDateTime,
                 Duration = result.Duration.ToString(),
                 Note = result.Note,
-                CompletedChoreIds = result.CompletedChoreIds ?? new List<int>()
+                CompletedChoreIds = result.CompletedChoreIds ?? new List<int>(),
+                CompletedChores = result.CompletedChores?.Select(c => new ChoreDto
+                {
+                    Id = IdObfuscator.Encode(c.Id),
+                    Title = c.Title,
+                    Description = c.Description ?? string.Empty,
+                    Type = c.Type.ToString(),
+                    WeeklyInterval = c.WeeklyInterval,
+                    Priority = 0,
+                    Completed = false,
+                    IsCritical = false
+                }).ToList() ?? new List<ChoreDto>()
             };
             return Ok(dto);
         }

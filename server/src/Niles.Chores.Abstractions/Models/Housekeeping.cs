@@ -7,5 +7,6 @@
         public TimeSpan Duration { get; set; }
         public string? Note { get; set; }
         public List<int> CompletedChoreIds { get; set; } = new List<int>();
+        public List<Chore> CompletedChores { get; set; } = new List<Chore>();
     }
 }
