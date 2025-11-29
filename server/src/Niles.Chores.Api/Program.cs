@@ -29,6 +29,8 @@ namespace Niles.Chores.Api
 
             var app = builder.Build();
 
+            app.Services.MigrateChores();
+
             // Configure the HTTP request pipeline.
             if (app.Environment.IsDevelopment())
             {

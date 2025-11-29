@@ -7,7 +7,7 @@ using Niles.Chores.Services;
 
 namespace Niles.Chores.Configurations
 {
-    public static class ServiceCollectionExtension
+    public static class IServiceCollectionExtension
     {
         public static IServiceCollection AddChores(this IServiceCollection services, string connectionString)
         {
