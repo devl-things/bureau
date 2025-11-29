@@ -211,55 +211,6 @@ namespace Niles.Chores.Api.Controllers
             return NoContent();
         }
 
-        // POST api/chores/submit
-        [HttpPost("submit")]
-        public async Task<IActionResult> Submit([FromBody] ChoreSubmitDto dto, CancellationToken cancellationToken)
-        {
-            if (!ModelState.IsValid)
-            {
-                return BadRequest(ModelState);
-            }
-
-            // Parse date
-            if (!DateOnly.TryParse(dto.Date, out DateOnly dateOnly))
-            {
-                return BadRequest(new { error = "Invalid date format. Expected YYYY-MM-DD." });
-            }
-
-            // Decode completed chore IDs
-            var completedChoreIds = new List<int>();
-            foreach (var id in dto.CompletedChoreIds)
-            {
-                if (IdObfuscator.TryDecode(id, out int intId))
-                {
-                    completedChoreIds.Add(intId);
-                }
-                else
-                {
-                    return BadRequest(new { error = $"Invalid chore id format: {id}" });
-                }
-            }
-
-            // Create housekeeping record
-            var housekeeping = new Housekeeping
-            {
-                DateTime = new DateTimeOffset(dateOnly.ToDateTime(TimeOnly.MinValue), TimeSpan.Zero),
-                Duration = dto.Duration.HasValue ? TimeSpan.FromMinutes(dto.Duration.Value) : TimeSpan.Zero,
-                Note = dto.Note,
-                CompletedChoreIds = completedChoreIds
-            };
-
-            bool created = await _housekeepingService.CreateHousekeepingAsync(housekeeping, cancellationToken);
-            if (!created)
-            {
-                return StatusCode(StatusCodes.Status500InternalServerError, new { error = "Failed to submit chores." });
-            }
-
-            // Note: Critical chores are automatically marked as completed in HouseKeepingService.CreateHousekeepingAsync
-
-            return Ok(new { message = "Chores submitted successfully", id = housekeeping.Id.HasValue ? IdObfuscator.Encode(housekeeping.Id.Value) : null });
-        }
-
         // POST api/chores/{id}/critical
         [HttpPost("{id}/critical")]
         public async Task<IActionResult> MarkCritical(string id, [FromBody] CriticalChoreDto dto, CancellationToken cancellationToken)
