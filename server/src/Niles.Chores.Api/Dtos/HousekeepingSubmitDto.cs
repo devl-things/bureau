@@ -2,7 +2,7 @@ using System.Text.Json.Serialization;
 
 namespace Niles.Chores.Api.Dtos
 {
-    public class ChoreSubmitDto
+    public class HousekeepingSubmitDto
     {
         [JsonPropertyName("date")]
         public string Date { get; set; } = string.Empty;
