@@ -8,10 +8,7 @@ namespace Niles.Chores.Services
 {
     internal class PrioritizedChoreService : IPrioritizedChoreService
     {
-        const int CRITICAL_PRIORITY = 1;
-        const int HIGH_PRIORITY_FACTOR = 2;
-        const int MEDIUM_PRIORITY_FACTOR = 3;
-        const int LOW_PRIORITY_FACTOR = 4;
+        const int THRESHOLD_FACTOR = 2;
         private readonly ChoresContext _context;
         private readonly IMemoryCache _cache;
         private readonly ILogger<PrioritizedChoreService> _logger;
@@ -26,29 +23,16 @@ namespace Niles.Chores.Services
 
         public async Task<List<PrioritizedChore>> GetPrioritizedChoresAsync(DateOnly requestedDate, CancellationToken cancellationToken = default)
         {
-            // Allow today and future dates, reject past dates
-            if (requestedDate == default)
+            DateTime today = _timeProvider.GetUtcNow().UtcDateTime;
+            if (requestedDate == default || requestedDate < DateOnly.FromDateTime(today))
             {
-                _logger.LogWarning("Requested date is default");
-                return [];
-            }
-            
-            DateTime utcNow = _timeProvider.GetUtcNow().UtcDateTime;
-            DateOnly today = DateOnly.FromDateTime(utcNow);
-            
-            // Allow today and future dates
-            if (requestedDate < today)
-            {
-                _logger.LogWarning("Requested date ({requestedDate}) is in the past from today ({today})", requestedDate, today);
+                _logger.LogError("Requested date ({requestedDate}) is either default or in the past from today ({today})", requestedDate, today);
                 return [];
             }
             YearsWeek requestedYearWeek = new YearsWeek(requestedDate);
-            if (_cache.TryGetValue<List<PrioritizedChore>>(requestedYearWeek, out List<PrioritizedChore>? list))
+            if (_cache.TryGetPriotizedChores(requestedYearWeek, out List<PrioritizedChore> list))
             {
-                if (list is not null)
-                {
-                    return list;
-                }
+                return list;
             }
 
             IAsyncEnumerable<ChoreDetail> chores = _context.Chores
@@ -74,9 +58,9 @@ namespace Niles.Chores.Services
             List<PrioritizedChore> prioritizedChores = [];
             await foreach (ChoreDetail chore in chores)
             {
-                int priority = CalculatePriority(requestedYearWeek, chore);
+                ChoreImportance importance = CalculateImportance(requestedYearWeek, chore);
 
-                if (priority <= 0)
+                if (importance.Criticality == ChoreCriticality.None)
                 {
                     // something went wrong in priority calculation
                     continue;
@@ -86,35 +70,30 @@ namespace Niles.Chores.Services
                     Id = chore.Chore.Id,
                     Title = chore.Chore.Title,
                     Description = chore.Chore.Description,
-                    Priority = priority,
+                    Criticality = importance.Criticality,
+                    Priority = importance.Priority,
                     Type = chore.Chore.Type,
-                    WeeklyInterval = chore.Chore.WeeklyInterval,
                     Note = chore.OpenCritical?.Note
                 });
             }
-            
-            // Order by priority (lower number = higher priority: 1=critical, then 2-4 factors, then higher numbers)
-            // Within same priority level, order by title for consistency
-            prioritizedChores = prioritizedChores
-                .OrderBy(c => c.Priority)
-                .ThenBy(c => c.Title)
-                .ToList();
-            
-            // Cache the result
-            _cache.Set(requestedYearWeek, prioritizedChores, TimeSpan.FromMinutes(5));
-            
+            prioritizedChores = [.. prioritizedChores
+                .OrderBy(pc => pc.Criticality)
+                .ThenBy(pc => pc.Priority)];
+
+            _cache.SetPriotizedChores(requestedYearWeek, prioritizedChores);
+
             return prioritizedChores;
         }
 
-        internal int CalculatePriority(YearsWeek currentYearWeek, ChoreDetail chore)
+        internal ChoreImportance CalculateImportance(YearsWeek currentYearWeek, ChoreDetail chore)
         {
             if (chore.OpenCritical is not null)
             {
-                return CRITICAL_PRIORITY;
+                return new ChoreImportance() { Criticality = ChoreCriticality.Critical };
             }
             if (chore.CompletedAt is null)
             {
-                return HIGH_PRIORITY_FACTOR * chore.ChoreImportanceScore;
+                return new ChoreImportance() { Criticality = ChoreCriticality.High, Priority = chore.Score };
             }
 
             // Calculate time difference between the provided date and the last completed date in weeks
@@ -124,22 +103,27 @@ namespace Niles.Chores.Services
             if (weekDiff < 0)
             {
                 _logger.LogError("Week diff ({weekDiff}) is negative. currentYearWeek = {currentYearWeek} | completedYearsWeek = {completedYearsWeek})", weekDiff, currentYearWeek, completedYearsWeek);
-                return -1;
+                return new ChoreImportance() { Criticality = ChoreCriticality.None };
             }
             else if (weekDiff < chore.Chore.WeeklyInterval)
             {
-                return LOW_PRIORITY_FACTOR * chore.ChoreImportanceScore;
+                return new ChoreImportance() { Criticality = ChoreCriticality.Low, Priority = chore.Score };
             }
-            else if (weekDiff <= (chore.Chore.WeeklyInterval * 2))
+            else if (weekDiff <= (chore.Chore.WeeklyInterval * THRESHOLD_FACTOR))
             {
-                return MEDIUM_PRIORITY_FACTOR * chore.ChoreImportanceScore;
+                return new ChoreImportance() { Criticality = ChoreCriticality.Medium, Priority = chore.Score };
             }
-            else if (weekDiff > (chore.Chore.WeeklyInterval * 2))
+            else if (weekDiff > (chore.Chore.WeeklyInterval * THRESHOLD_FACTOR))
             {
-                return HIGH_PRIORITY_FACTOR * chore.ChoreImportanceScore;
+                return new ChoreImportance() { Criticality = ChoreCriticality.High, Priority = chore.Score };
             }
             _logger.LogCritical("This is argmagedon or I didn't see something.");
-            return -1;
+            return new ChoreImportance() { Criticality = ChoreCriticality.None };
+        }
+        internal struct ChoreImportance
+        {
+            public ChoreCriticality Criticality { get; set; }
+            public int Priority { get; set; }
         }
     }
 }
