@@ -25,7 +25,7 @@ namespace Niles.Chores.Api.Controllers
                 using var scope = _serviceProvider.CreateScope();
                 
                 // Get ChoresContext using reflection since it's internal
-                var choresContextType = typeof(Niles.Chores.Configurations.ServiceCollectionExtension)
+                var choresContextType = typeof(Niles.Chores.Configurations.IServiceCollectionExtension)
                     .Assembly
                     .GetType("Niles.Chores.Contexts.ChoresContext");
                 
@@ -60,7 +60,7 @@ namespace Niles.Chores.Api.Controllers
                 using var scope = _serviceProvider.CreateScope();
                 
                 // Get ChoresContext using reflection since it's internal
-                var choresContextType = typeof(Niles.Chores.Configurations.ServiceCollectionExtension)
+                var choresContextType = typeof(Niles.Chores.Configurations.IServiceCollectionExtension)
                     .Assembly
                     .GetType("Niles.Chores.Contexts.ChoresContext");
                 
