@@ -32,8 +32,8 @@ namespace Niles.Chores.Services
                 };
             }
 
-            var now = _timeProvider.GetUtcNow();
-            var choreDb = new ChoreDb
+            DateTimeOffset now = _timeProvider.GetUtcNow();
+            ChoreDb choreDb = new ChoreDb
             {
                 Title = chore.Title,
                 Description = chore.Description,
@@ -56,7 +56,7 @@ namespace Niles.Chores.Services
 
         public async Task<Chore?> GetChoreAsync(int id, CancellationToken cancellationToken = default)
         {
-            var choreDb = await _context.Chores.FindAsync(new object[] { id }, cancellationToken);
+            ChoreDb? choreDb = await _context.Chores.FindAsync(new object[] { id }, cancellationToken);
             if (choreDb == null) return null;
 
             return choreDb.ToChore();
@@ -65,15 +65,15 @@ namespace Niles.Chores.Services
         public async Task<PagedResult<Chore>> ListChoresPagedAsync(string? search, int page, int pageSize, CancellationToken cancellationToken = default)
         {
             // Build query with search filter
-            var query = _context.Chores.AsQueryable();
+            IQueryable<ChoreDb> query = _context.Chores.AsQueryable();
 
             if (!string.IsNullOrWhiteSpace(search))
             {
-                var searchLower = search.ToLowerInvariant();
+                string searchLower = search.ToLowerInvariant();
                 
                 // Try to parse search term as ChoreType enum
                 ChoreType? searchType = null;
-                if (Enum.TryParse<ChoreType>(search, true, out var parsedType))
+                if (Enum.TryParse<ChoreType>(search, true, out ChoreType parsedType))
                 {
                     searchType = parsedType;
                 }
@@ -86,17 +86,17 @@ namespace Niles.Chores.Services
             }
 
             // Get total count (before pagination)
-            var total = await query.CountAsync(cancellationToken);
+            int total = await query.CountAsync(cancellationToken);
 
             // Apply pagination at database level
-            var choresDb = await query
+            List<ChoreDb> choresDb = await query
                 .OrderBy(c => c.Id) // Consistent ordering
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
                 .ToListAsync(cancellationToken);
 
-            var items = choresDb.Select(c => c.ToChore());
-            var totalPages = (int)Math.Ceiling(total / (double)pageSize);
+            IEnumerable<Chore> items = choresDb.Select(c => c.ToChore());
+            int totalPages = (int)Math.Ceiling(total / (double)pageSize);
 
             return new PagedResult<Chore>
             {
@@ -121,7 +121,7 @@ namespace Niles.Chores.Services
                 };
             }
 
-            var choreDb = await _context.Chores.FindAsync(new object[] { chore.Id }, cancellationToken);
+            ChoreDb? choreDb = await _context.Chores.FindAsync(new object[] { chore.Id }, cancellationToken);
             if (choreDb == null)
             {
                 return new Result<Chore>
@@ -139,7 +139,7 @@ namespace Niles.Chores.Services
 
             await _context.SaveChangesAsync(cancellationToken);
 
-            var updatedChore = choreDb.ToChore();
+            Chore updatedChore = choreDb.ToChore();
             return new Result<Chore>
             {
                 Value = updatedChore,
@@ -149,7 +149,7 @@ namespace Niles.Chores.Services
 
         public async Task<Result> DeleteChoreAsync(int id, CancellationToken cancellationToken = default)
         {
-            var rowsAffected = await _context.Chores
+            int rowsAffected = await _context.Chores
                 .Where(x => x.Id == id)
                 .ExecuteDeleteAsync();
 
@@ -171,23 +171,23 @@ namespace Niles.Chores.Services
 
         public async Task<PagedResult<Chore>> ListChoresPagedWithCriticalAsync(string? search, int page, int pageSize, CancellationToken cancellationToken = default)
         {
-            var pagedResult = await ListChoresPagedAsync(search, page, pageSize, cancellationToken);
+            PagedResult<Chore> pagedResult = await ListChoresPagedAsync(search, page, pageSize, cancellationToken);
             
             // Get all chore IDs for this page
-            var choreIds = pagedResult.Items.Select(c => c.Id).ToList();
+            List<int> choreIds = pagedResult.Items.Select(c => c.Id).ToList();
             
             // Get all open critical chores for these chore IDs in one query
-            var openCriticalChoreIds = await _criticalChoreService.GetOpenCriticalChoreIdsAsync(choreIds, cancellationToken);
+            List<int> openCriticalChoreIds = await _criticalChoreService.GetOpenCriticalChoreIdsAsync(choreIds, cancellationToken);
             
             return pagedResult;
         }
 
         public async Task<(Chore Chore, bool IsCritical)?> GetChoreWithCriticalAsync(int id, CancellationToken cancellationToken = default)
         {
-            var chore = await GetChoreAsync(id, cancellationToken);
+            Chore? chore = await GetChoreAsync(id, cancellationToken);
             if (chore == null) return null;
 
-            var isCritical = await _criticalChoreService.HasOpenCriticalChoreAsync(id, cancellationToken);
+            bool isCritical = await _criticalChoreService.HasOpenCriticalChoreAsync(id, cancellationToken);
             return (chore, isCritical);
         }
     }

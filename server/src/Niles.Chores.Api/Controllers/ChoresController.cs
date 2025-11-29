@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Niles.Chores;
+using Niles.Chores.Abstractions.Models;
 using Niles.Chores.Abstractions.Services;
 using Niles.Chores.Api.Dtos;
 using Niles.Chores.Api.Mappers;
@@ -42,12 +43,12 @@ namespace Niles.Chores.Api.Controllers
             {
                 if (DateOnly.TryParse(date, out DateOnly dateOnly))
                 {
-                    var prioritizedChores = await _prioritizedChoreService.GetPrioritizedChoresAsync(dateOnly, cancellationToken);
-                    var prioritizedChoreIds = prioritizedChores.Select(c => c.Id).ToList();
-                    var criticalPrioritizedIds = await _criticalChoreService.GetOpenCriticalChoreIdsAsync(prioritizedChoreIds, cancellationToken);
-                    var criticalSet = new HashSet<int>(criticalPrioritizedIds);
+                    IEnumerable<PrioritizedChore> prioritizedChores = await _prioritizedChoreService.GetPrioritizedChoresAsync(dateOnly, cancellationToken);
+                    List<int> prioritizedChoreIds = prioritizedChores.Select(c => c.Id).ToList();
+                    List<int> criticalPrioritizedIds = await _criticalChoreService.GetOpenCriticalChoreIdsAsync(prioritizedChoreIds, cancellationToken);
+                    HashSet<int> criticalSet = new HashSet<int>(criticalPrioritizedIds);
                     
-                    var dtos = prioritizedChores.Select(c => c.ToDto(
+                    IEnumerable<ChoreDto> dtos = prioritizedChores.Select(c => c.ToDto(
                         isCritical: criticalSet.Contains(c.Id),
                         priority: c.Priority,
                         completed: false
@@ -66,19 +67,18 @@ namespace Niles.Chores.Api.Controllers
             if (pageSize > 100) pageSize = 100;
 
             // Get paged chores from database (with search and pagination at DB level)
-            var pagedResult = await _choreService.ListChoresPagedWithCriticalAsync(search, page, pageSize, cancellationToken);
+            Niles.Chores.Abstractions.Models.PagedResult<Chore> pagedResult = await _choreService.ListChoresPagedWithCriticalAsync(search, page, pageSize, cancellationToken);
             
             // Get all chore IDs for this page
-            var choreIds = pagedResult.Items.Select(c => c.Id).ToList();
+            List<int> choreIds = pagedResult.Items.Select(c => c.Id).ToList();
             
             // Get all open critical chores for these chore IDs in one query
-            var openCriticalChoreIds = await _criticalChoreService.GetOpenCriticalChoreIdsAsync(choreIds, cancellationToken);
-            var criticalChoreIds = new HashSet<int>(openCriticalChoreIds);
+            List<int> openCriticalChoreIds = await _criticalChoreService.GetOpenCriticalChoreIdsAsync(choreIds, cancellationToken);
+            HashSet<int> criticalChoreIds = new HashSet<int>(openCriticalChoreIds);
 
             // Map to DTOs with critical flag
-            var pagedItems = pagedResult.Items.Select(m => m.ToDto(isCritical: criticalChoreIds.Contains(m.Id)));
-
-            var result = new PagedResult<ChoreDto>
+            IEnumerable<ChoreDto> pagedItems = pagedResult.Items.Select(m => m.ToDto(isCritical: criticalChoreIds.Contains(m.Id)));
+            Dtos.PagedResult<ChoreDto> result = new Dtos.PagedResult<ChoreDto>
             {
                 Data = pagedItems,
                 Meta = new PagedMeta
@@ -104,12 +104,12 @@ namespace Niles.Chores.Api.Controllers
                 return BadRequest(new { error = "Invalid id format." });
             }
 
-            var result = await _choreService.GetChoreWithCriticalAsync(intId, cancellationToken);
+            (Chore Chore, bool IsCritical)? result = await _choreService.GetChoreWithCriticalAsync(intId, cancellationToken);
             if (result == null)
             {
                 return NotFound();
             }
-            var (chore, isCritical) = result.Value;
+            (Chore chore, bool isCritical) = result.Value;
             return Ok(chore.ToDto(isCritical: isCritical));
         }
 
@@ -127,7 +127,7 @@ namespace Niles.Chores.Api.Controllers
                 return BadRequest(new { error });
             }
 
-            var result = await _choreService.CreateChoreAsync(model, cancellationToken);
+            Result<Chore> result = await _choreService.CreateChoreAsync(model, cancellationToken);
             if (!result.IsSuccess)
             {
                 return StatusCode(StatusCodes.Status500InternalServerError, new { error = result.ErrorMessage ?? "Failed to create chore." });
@@ -164,7 +164,7 @@ namespace Niles.Chores.Api.Controllers
 
             model.Id = intId;
 
-            var result = await _choreService.UpdateChoreAsync(model, cancellationToken);
+            Result<Chore> result = await _choreService.UpdateChoreAsync(model, cancellationToken);
             if (!result.IsSuccess)
             {
                 if (result.ErrorMessage?.Contains("not found") == true)
@@ -185,7 +185,7 @@ namespace Niles.Chores.Api.Controllers
                 return BadRequest(new { error = "Invalid id format." });
             }
 
-            var result = await _choreService.DeleteChoreAsync(intId, cancellationToken);
+            Result result = await _choreService.DeleteChoreAsync(intId, cancellationToken);
             if (!result.IsSuccess)
             {
                 if (result.ErrorMessage?.Contains("not found") == true)
@@ -213,7 +213,7 @@ namespace Niles.Chores.Api.Controllers
             }
 
             // Create critical chore
-            var result = await _criticalChoreService.CreateCriticalChoreAsync(choreId, dto.Description, cancellationToken);
+            Result result = await _criticalChoreService.CreateCriticalChoreAsync(choreId, dto.Description, cancellationToken);
             if (!result.IsSuccess)
             {
                 if (result.ErrorMessage?.Contains("not found") == true)
@@ -241,7 +241,7 @@ namespace Niles.Chores.Api.Controllers
             }
 
             // Delete critical chore
-            var result = await _criticalChoreService.DeleteCriticalChoreAsync(choreId, cancellationToken);
+            Result result = await _criticalChoreService.DeleteCriticalChoreAsync(choreId, cancellationToken);
             if (!result.IsSuccess)
             {
                 if (result.ErrorMessage?.Contains("No open critical status") == true)

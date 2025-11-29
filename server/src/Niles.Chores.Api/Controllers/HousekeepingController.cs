@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Niles.Chores.Api.Dtos;
 using Niles.Chores;
+using Niles.Chores.Abstractions.Models;
 using Niles.Chores.Abstractions.Services;
 using Niles.Chores.Api.Mappers;
 using Niles.Chores.Api.Utilities;
@@ -35,10 +36,10 @@ namespace Niles.Chores.Api.Controllers
             if (pageSize > 100) pageSize = 100;
 
             // Get paged housekeeping records from database (with search and pagination at DB level)
-            var pagedResult = await _housekeepingService.ListHousekeepingsPagedAsync(search, page, pageSize, cancellationToken);
+            Niles.Chores.Abstractions.Models.PagedResult<Housekeeping> pagedResult = await _housekeepingService.ListHousekeepingsPagedAsync(search, page, pageSize, cancellationToken);
 
             // Map to DTOs
-            var pagedItems = pagedResult.Items.Select(m => new HousekeepingDto
+            IEnumerable<HousekeepingDto> pagedItems = pagedResult.Items.Select(m => new HousekeepingDto
             {
                 Id = m.Id.HasValue ? IdObfuscator.Encode(m.Id.Value) : null,
                 DateTime = m.DateTime.UtcDateTime,
@@ -48,7 +49,7 @@ namespace Niles.Chores.Api.Controllers
                 CompletedChores = m.CompletedChores?.Select(c => c.ToDto()).ToList() ?? new List<ChoreDto>()
             });
 
-            var result = new PagedResult<HousekeepingDto>
+            Dtos.PagedResult<HousekeepingDto> result = new Dtos.PagedResult<HousekeepingDto>
             {
                 Data = pagedItems,
                 Meta = new PagedMeta
@@ -79,7 +80,7 @@ namespace Niles.Chores.Api.Controllers
             {
                 return NotFound();
             }
-            var dto = new HousekeepingDto
+            HousekeepingDto dto = new HousekeepingDto
             {
                 Id = result.Id.HasValue ? IdObfuscator.Encode(result.Id.Value) : null,
                 DateTime = result.DateTime.UtcDateTime,
@@ -107,8 +108,8 @@ namespace Niles.Chores.Api.Controllers
             }
 
             // Decode completed chore IDs
-            var completedChoreIds = new List<int>();
-            foreach (var id in dto.CompletedChoreIds)
+            List<int> completedChoreIds = new List<int>();
+            foreach (string id in dto.CompletedChoreIds)
             {
                 if (IdObfuscator.TryDecode(id, out int intId))
                 {
@@ -121,7 +122,7 @@ namespace Niles.Chores.Api.Controllers
             }
 
             // Create housekeeping record
-            var housekeeping = new Housekeeping
+            Housekeeping housekeeping = new Housekeeping
             {
                 DateTime = new DateTimeOffset(dateOnly.ToDateTime(TimeOnly.MinValue), TimeSpan.Zero),
                 Duration = dto.Duration.HasValue ? TimeSpan.FromMinutes(dto.Duration.Value) : TimeSpan.Zero,
@@ -129,7 +130,7 @@ namespace Niles.Chores.Api.Controllers
                 CompletedChoreIds = completedChoreIds
             };
 
-            var result = await _housekeepingService.CreateHousekeepingAsync(housekeeping, cancellationToken);
+            Result<Housekeeping> result = await _housekeepingService.CreateHousekeepingAsync(housekeeping, cancellationToken);
             if (!result.IsSuccess)
             {
                 return StatusCode(StatusCodes.Status500InternalServerError, new { error = result.ErrorMessage ?? "Failed to submit chores." });
@@ -154,7 +155,7 @@ namespace Niles.Chores.Api.Controllers
                 return BadRequest(new { error });
             }
 
-            var result = await _housekeepingService.CreateHousekeepingAsync(model, cancellationToken);
+            Result<Housekeeping> result = await _housekeepingService.CreateHousekeepingAsync(model, cancellationToken);
             if (!result.IsSuccess)
             {
                 return StatusCode(StatusCodes.Status500InternalServerError, new { error = result.ErrorMessage ?? "Failed to create housekeeping." });
@@ -190,7 +191,7 @@ namespace Niles.Chores.Api.Controllers
 
             model.Id = intId;
 
-            var result = await _housekeepingService.UpdateHousekeepingAsync(model, cancellationToken);
+            Result<Housekeeping> result = await _housekeepingService.UpdateHousekeepingAsync(model, cancellationToken);
             if (!result.IsSuccess)
             {
                 if (result.ErrorMessage?.Contains("not found") == true)
@@ -211,7 +212,7 @@ namespace Niles.Chores.Api.Controllers
                 return BadRequest(new { error = "Invalid id format." });
             }
 
-            var result = await _housekeepingService.DeleteHousekeepingAsync(intId, cancellationToken);
+            Result result = await _housekeepingService.DeleteHousekeepingAsync(intId, cancellationToken);
             if (!result.IsSuccess)
             {
                 if (result.ErrorMessage?.Contains("not found") == true)

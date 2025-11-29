@@ -9,18 +9,18 @@ namespace Niles.Chores.Data
         public static async Task SeedAsync(DbContext context)
         {
             // Check if data already exists
-            var choresContext = (ChoresContext)context;
+            ChoresContext choresContext = (ChoresContext)context;
             if (await choresContext.Chores.AnyAsync())
             {
                 Console.WriteLine("Database already contains data. Skipping seed.");
                 return;
             }
 
-            var now = DateTimeOffset.UtcNow;
-            var utcNow = now.UtcDateTime;
+            DateTimeOffset now = DateTimeOffset.UtcNow;
+            DateTime utcNow = now.UtcDateTime;
 
             // Create sample chores
-            var chores = new List<ChoreDb>
+            List<ChoreDb> chores = new List<ChoreDb>
             {
                 // 🧹 GENERAL
                 new ChoreDb
@@ -711,15 +711,15 @@ namespace Niles.Chores.Data
             Console.WriteLine($"Created {chores.Count} chores.");
 
             // Create some housekeeping records with completed chores
-            var today = DateOnly.FromDateTime(utcNow);
-            var lastWeek = today.AddDays(-7);
-            var twoWeeksAgo = today.AddDays(-14);
-            var threeWeeksAgo = today.AddDays(-21);
+            DateOnly today = DateOnly.FromDateTime(utcNow);
+            DateOnly lastWeek = today.AddDays(-7);
+            DateOnly twoWeeksAgo = today.AddDays(-14);
+            DateOnly threeWeeksAgo = today.AddDays(-21);
 
-            var housekeepingRecords = new List<HousekeepingDb>();
+            List<HousekeepingDb> housekeepingRecords = new List<HousekeepingDb>();
 
             // Today's housekeeping
-            var todayHousekeeping = new HousekeepingDb
+            HousekeepingDb todayHousekeeping = new HousekeepingDb
             {
                 Timestamp = new DateTimeOffset(today.ToDateTime(TimeOnly.FromTimeSpan(TimeSpan.FromHours(10))), TimeSpan.Zero),
                 Duration = TimeSpan.FromMinutes(45),
@@ -732,7 +732,7 @@ namespace Niles.Chores.Data
             housekeepingRecords.Add(todayHousekeeping);
 
             // Last week's housekeeping
-            var lastWeekHousekeeping = new HousekeepingDb
+            HousekeepingDb lastWeekHousekeeping = new HousekeepingDb
             {
                 Timestamp = new DateTimeOffset(lastWeek.ToDateTime(TimeOnly.FromTimeSpan(TimeSpan.FromHours(14))), TimeSpan.Zero),
                 Duration = TimeSpan.FromMinutes(60),
@@ -745,7 +745,7 @@ namespace Niles.Chores.Data
             housekeepingRecords.Add(lastWeekHousekeeping);
 
             // Two weeks ago
-            var twoWeeksAgoHousekeeping = new HousekeepingDb
+            HousekeepingDb twoWeeksAgoHousekeeping = new HousekeepingDb
             {
                 Timestamp = new DateTimeOffset(twoWeeksAgo.ToDateTime(TimeOnly.FromTimeSpan(TimeSpan.FromHours(11))), TimeSpan.Zero),
                 Duration = TimeSpan.FromMinutes(50),
@@ -763,7 +763,7 @@ namespace Niles.Chores.Data
             Console.WriteLine($"Created {housekeepingRecords.Count} housekeeping records.");
 
             // Create completed chores
-            var completedChores = new List<CompletedChoreDb>
+            List<CompletedChoreDb> completedChores = new List<CompletedChoreDb>
             {
                 // Today's completed chores
                 new CompletedChoreDb { ChoreId = chores[0].Id, HousekeepingId = todayHousekeeping.Id },
@@ -790,7 +790,7 @@ namespace Niles.Chores.Data
             Console.WriteLine($"Created {completedChores.Count} completed chore records.");
 
             // Create some critical chores (for chores that haven't been completed recently)
-            var criticalChores = new List<CriticalChoreDb>
+            List<CriticalChoreDb> criticalChores = new List<CriticalChoreDb>
             {
                 new CriticalChoreDb
                 {
@@ -825,7 +825,7 @@ namespace Niles.Chores.Data
         {
             Console.WriteLine("Clearing existing data...");
             
-            var choresContext = (ChoresContext)context;
+            ChoresContext choresContext = (ChoresContext)context;
             choresContext.CriticalChores.RemoveRange(await choresContext.CriticalChores.ToListAsync());
             choresContext.CompletedChores.RemoveRange(await choresContext.CompletedChores.ToListAsync());
             choresContext.Housekeeping.RemoveRange(await choresContext.Housekeeping.ToListAsync());

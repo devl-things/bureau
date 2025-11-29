@@ -22,10 +22,10 @@ namespace Niles.Chores.Api.Controllers
         {
             try
             {
-                using var scope = _serviceProvider.CreateScope();
+                using IServiceScope scope = _serviceProvider.CreateScope();
                 
                 // Get ChoresContext using reflection since it's internal
-                var choresContextType = typeof(Niles.Chores.Configurations.IServiceCollectionExtension)
+                Type? choresContextType = typeof(Niles.Chores.Configurations.IServiceCollectionExtension)
                     .Assembly
                     .GetType("Niles.Chores.Contexts.ChoresContext");
                 
@@ -34,7 +34,7 @@ namespace Niles.Chores.Api.Controllers
                     return StatusCode(500, new { error = "Could not find ChoresContext type." });
                 }
 
-                var context = scope.ServiceProvider.GetRequiredService(choresContextType) as DbContext;
+                DbContext? context = scope.ServiceProvider.GetRequiredService(choresContextType) as DbContext;
                 if (context == null)
                 {
                     return StatusCode(500, new { error = "Could not resolve ChoresContext from service provider." });
@@ -57,10 +57,10 @@ namespace Niles.Chores.Api.Controllers
         {
             try
             {
-                using var scope = _serviceProvider.CreateScope();
+                using IServiceScope scope = _serviceProvider.CreateScope();
                 
                 // Get ChoresContext using reflection since it's internal
-                var choresContextType = typeof(Niles.Chores.Configurations.IServiceCollectionExtension)
+                Type? choresContextType = typeof(Niles.Chores.Configurations.IServiceCollectionExtension)
                     .Assembly
                     .GetType("Niles.Chores.Contexts.ChoresContext");
                 
@@ -69,7 +69,7 @@ namespace Niles.Chores.Api.Controllers
                     return StatusCode(500, new { error = "Could not find ChoresContext type." });
                 }
 
-                var context = scope.ServiceProvider.GetRequiredService(choresContextType) as DbContext;
+                DbContext? context = scope.ServiceProvider.GetRequiredService(choresContextType) as DbContext;
                 if (context == null)
                 {
                     return StatusCode(500, new { error = "Could not resolve ChoresContext from service provider." });

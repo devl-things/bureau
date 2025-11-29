@@ -20,7 +20,7 @@ namespace Niles.Chores.Services
         public async Task<Result> CreateCriticalChoreAsync(int choreId, string note, CancellationToken cancellationToken = default)
         {
             // Verify chore exists
-            var choreExists = await _context.Chores.AnyAsync(c => c.Id == choreId, cancellationToken);
+            bool choreExists = await _context.Chores.AnyAsync(c => c.Id == choreId, cancellationToken);
             if (!choreExists)
             {
                 return new Result
@@ -31,7 +31,7 @@ namespace Niles.Chores.Services
             }
 
             // Check if there's already an open critical chore for this chore
-            var existingOpen = await HasOpenCriticalChoreAsync(choreId, cancellationToken);
+            bool existingOpen = await HasOpenCriticalChoreAsync(choreId, cancellationToken);
             if (existingOpen)
             {
                 return new Result
@@ -41,8 +41,8 @@ namespace Niles.Chores.Services
                 };
             }
 
-            var now = _timeProvider.GetUtcNow();
-            var criticalChore = new CriticalChoreDb
+            DateTimeOffset now = _timeProvider.GetUtcNow();
+            CriticalChoreDb criticalChore = new CriticalChoreDb
             {
                 ChoreId = choreId,
                 Note = note,
@@ -63,7 +63,7 @@ namespace Niles.Chores.Services
         public async Task<Result> DeleteCriticalChoreAsync(int choreId, CancellationToken cancellationToken = default)
         {
             // Find all open critical chores for this chore
-            var openCriticalChores = await _context.CriticalChores
+            List<CriticalChoreDb> openCriticalChores = await _context.CriticalChores
                 .Where(c => c.ChoreId == choreId && c.CompletedChoreId == null)
                 .ToListAsync(cancellationToken);
 
@@ -112,15 +112,15 @@ namespace Niles.Chores.Services
                 return;
             }
 
-            var choreIds = choreIdToCompletedChoreIdMap.Keys.ToList();
+            List<int> choreIds = choreIdToCompletedChoreIdMap.Keys.ToList();
 
             // Find all open critical chores for these chore IDs
-            var openCriticalChores = await _context.CriticalChores
+            List<CriticalChoreDb> openCriticalChores = await _context.CriticalChores
                 .Where(c => choreIds.Contains(c.ChoreId) && c.CompletedChoreId == null)
                 .ToListAsync(cancellationToken);
 
             // Update each critical chore to link it to the completed chore
-            foreach (var criticalChore in openCriticalChores)
+            foreach (CriticalChoreDb criticalChore in openCriticalChores)
             {
                 if (choreIdToCompletedChoreIdMap.TryGetValue(criticalChore.ChoreId, out int completedChoreId))
                 {

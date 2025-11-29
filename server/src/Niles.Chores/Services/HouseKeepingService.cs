@@ -32,8 +32,8 @@ namespace Niles.Chores.Services
                 };
             }
 
-            var now = _timeProvider.GetUtcNow();
-            var housekeepingDb = new HousekeepingDb
+            DateTimeOffset now = _timeProvider.GetUtcNow();
+            HousekeepingDb housekeepingDb = new HousekeepingDb
             {
                 Timestamp = housekeeping.DateTime,
                 Duration = housekeeping.Duration,
@@ -48,10 +48,10 @@ namespace Niles.Chores.Services
             // Add completed chores
             if (housekeeping.CompletedChoreIds != null && housekeeping.CompletedChoreIds.Count > 0)
             {
-                var completedChores = new List<CompletedChoreDb>();
-                foreach (var choreId in housekeeping.CompletedChoreIds)
+                List<CompletedChoreDb> completedChores = new List<CompletedChoreDb>();
+                foreach (int choreId in housekeeping.CompletedChoreIds)
                 {
-                    var completedChore = new CompletedChoreDb
+                    CompletedChoreDb completedChore = new CompletedChoreDb
                     {
                         ChoreId = choreId,
                         HousekeepingId = housekeepingDb.Id
@@ -62,7 +62,7 @@ namespace Niles.Chores.Services
                 await _context.SaveChangesAsync(cancellationToken);
 
                 // Mark critical chores as completed if they exist
-                var choreIdToCompletedChoreIdMap = completedChores
+                Dictionary<int, int> choreIdToCompletedChoreIdMap = completedChores
                     .ToDictionary(cc => cc.ChoreId, cc => cc.Id);
                 await _criticalChoreService.MarkCriticalChoresAsCompletedAsync(choreIdToCompletedChoreIdMap, cancellationToken);
             }
@@ -70,12 +70,12 @@ namespace Niles.Chores.Services
             housekeeping.Id = housekeepingDb.Id;
             
             // Reload housekeeping with completed chores and their chore navigation properties
-            var housekeepingDbWithChores = await _context.Housekeeping
+            HousekeepingDb? housekeepingDbWithChores = await _context.Housekeeping
                 .Include(h => h.CompletedChores)
                     .ThenInclude(cc => cc.Chore)
                 .FirstOrDefaultAsync(h => h.Id == housekeepingDb.Id, cancellationToken);
             
-            var createdHousekeeping = housekeepingDbWithChores!.ToHousekeeping();
+            Housekeeping createdHousekeeping = housekeepingDbWithChores!.ToHousekeeping();
             return new Result<Housekeeping>
             {
                 Value = createdHousekeeping,
@@ -85,7 +85,7 @@ namespace Niles.Chores.Services
 
         public async Task<Housekeeping?> GetHousekeepingAsync(int id, CancellationToken cancellationToken = default)
         {
-            var housekeepingDb = await _context.Housekeeping
+            HousekeepingDb? housekeepingDb = await _context.Housekeeping
                 .Include(h => h.CompletedChores)
                     .ThenInclude(cc => cc.Chore)
                 .FirstOrDefaultAsync(h => h.Id == id, cancellationToken);
@@ -97,7 +97,7 @@ namespace Niles.Chores.Services
 
         public async Task<IEnumerable<Housekeeping>> ListHousekeepingsAsync(CancellationToken cancellationToken = default)
         {
-            var housekeepingsDb = await _context.Housekeeping
+            List<HousekeepingDb> housekeepingsDb = await _context.Housekeeping
                 .Include(h => h.CompletedChores)
                     .ThenInclude(cc => cc.Chore)
                 .ToListAsync(cancellationToken);
@@ -108,25 +108,25 @@ namespace Niles.Chores.Services
         public async Task<PagedResult<Housekeeping>> ListHousekeepingsPagedAsync(string? search, int page, int pageSize, CancellationToken cancellationToken = default)
         {
             // Build query with search filter
-            var query = _context.Housekeeping
+            IQueryable<HousekeepingDb> query = _context.Housekeeping
                 .Include(h => h.CompletedChores)
                     .ThenInclude(cc => cc.Chore)
                 .AsQueryable();
 
             if (!string.IsNullOrWhiteSpace(search))
             {
-                var searchLower = search.ToLowerInvariant();
+                string searchLower = search.ToLowerInvariant();
                 
                 // Try to parse as date
                 DateOnly? searchDate = null;
-                if (DateOnly.TryParse(search, out var parsedDate))
+                if (DateOnly.TryParse(search, out DateOnly parsedDate))
                 {
                     searchDate = parsedDate;
                 }
                 
                 // Try to parse as integer (for chore ID search)
                 int? searchChoreId = null;
-                if (int.TryParse(search, out var parsedChoreId))
+                if (int.TryParse(search, out int parsedChoreId))
                 {
                     searchChoreId = parsedChoreId;
                 }
@@ -139,17 +139,17 @@ namespace Niles.Chores.Services
             }
 
             // Get total count (before pagination)
-            var total = await query.CountAsync(cancellationToken);
+            int total = await query.CountAsync(cancellationToken);
 
             // Apply pagination and ordering at database level
-            var housekeepingsDb = await query
+            List<HousekeepingDb> housekeepingsDb = await query
                 .OrderByDescending(h => h.Timestamp) // Most recent first
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
                 .ToListAsync(cancellationToken);
 
-            var items = housekeepingsDb.Select(h => h.ToHousekeeping());
-            var totalPages = (int)Math.Ceiling(total / (double)pageSize);
+            IEnumerable<Housekeeping> items = housekeepingsDb.Select(h => h.ToHousekeeping());
+            int totalPages = (int)Math.Ceiling(total / (double)pageSize);
 
             return new PagedResult<Housekeeping>
             {
@@ -174,7 +174,7 @@ namespace Niles.Chores.Services
                 };
             }
 
-            var housekeepingDb = await _context.Housekeeping
+            HousekeepingDb? housekeepingDb = await _context.Housekeeping
                 .Include(h => h.CompletedChores)
                     .ThenInclude(cc => cc.Chore)
                 .FirstOrDefaultAsync(h => h.Id == housekeeping.Id.Value, cancellationToken);
@@ -194,20 +194,20 @@ namespace Niles.Chores.Services
             housekeepingDb.UpdatedAt = _timeProvider.GetUtcNow();
 
             // Update completed chores
-            var existingChoreIds = housekeepingDb.CompletedChores.Select(c => c.ChoreId).ToList();
-            var newChoreIds = housekeeping.CompletedChoreIds ?? new List<int>();
+            List<int> existingChoreIds = housekeepingDb.CompletedChores.Select(c => c.ChoreId).ToList();
+            List<int> newChoreIds = housekeeping.CompletedChoreIds ?? new List<int>();
 
             // Remove completed chores that are no longer in the list
-            var toRemove = housekeepingDb.CompletedChores
+            List<CompletedChoreDb> toRemove = housekeepingDb.CompletedChores
                 .Where(c => !newChoreIds.Contains(c.ChoreId))
                 .ToList();
-            foreach (var completedChore in toRemove)
+            foreach (CompletedChoreDb completedChore in toRemove)
             {
                 _context.CompletedChores.Remove(completedChore);
             }
 
             // Add new completed chores
-            var toAdd = newChoreIds
+            IEnumerable<CompletedChoreDb> toAdd = newChoreIds
                 .Where(id => !existingChoreIds.Contains(id))
                 .Select(choreId => new CompletedChoreDb
                 {
@@ -218,7 +218,7 @@ namespace Niles.Chores.Services
 
             await _context.SaveChangesAsync(cancellationToken);
 
-            var updatedHousekeeping = housekeepingDb.ToHousekeeping();
+            Housekeeping updatedHousekeeping = housekeepingDb.ToHousekeeping();
             return new Result<Housekeeping>
             {
                 Value = updatedHousekeeping,
@@ -228,7 +228,7 @@ namespace Niles.Chores.Services
 
         public async Task<Result> DeleteHousekeepingAsync(int id, CancellationToken cancellationToken = default)
         {
-            var housekeepingDb = await _context.Housekeeping
+            HousekeepingDb? housekeepingDb = await _context.Housekeeping
                 .Include(h => h.CompletedChores)
                     .ThenInclude(cc => cc.Chore)
                 .FirstOrDefaultAsync(h => h.Id == id, cancellationToken);
