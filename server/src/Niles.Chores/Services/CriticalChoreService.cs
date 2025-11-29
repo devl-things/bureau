@@ -9,10 +9,12 @@ namespace Niles.Chores.Services
     internal class CriticalChoreService : ICriticalChoreService
     {
         private readonly ChoresContext _context;
+        private readonly TimeProvider _timeProvider;
 
-        public CriticalChoreService(ChoresContext context)
+        public CriticalChoreService(ChoresContext context, TimeProvider timeProvider)
         {
             _context = context;
+            _timeProvider = timeProvider;
         }
 
         public async Task<Result> CreateCriticalChoreAsync(int choreId, string note, CancellationToken cancellationToken = default)
@@ -39,13 +41,14 @@ namespace Niles.Chores.Services
                 };
             }
 
+            var now = _timeProvider.GetUtcNow();
             var criticalChore = new CriticalChoreDb
             {
                 ChoreId = choreId,
                 Note = note,
                 CompletedChoreId = null, // Not completed yet
-                CreatedAt = DateTimeOffset.UtcNow,
-                UpdatedAt = DateTimeOffset.UtcNow
+                CreatedAt = now,
+                UpdatedAt = now
             };
 
             _context.CriticalChores.Add(criticalChore);
@@ -122,7 +125,7 @@ namespace Niles.Chores.Services
                 if (choreIdToCompletedChoreIdMap.TryGetValue(criticalChore.ChoreId, out int completedChoreId))
                 {
                     criticalChore.CompletedChoreId = completedChoreId;
-                    criticalChore.UpdatedAt = DateTimeOffset.UtcNow;
+                    criticalChore.UpdatedAt = _timeProvider.GetUtcNow();
                 }
             }
 

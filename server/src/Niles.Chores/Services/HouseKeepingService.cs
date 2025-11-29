@@ -12,11 +12,13 @@ namespace Niles.Chores.Services
     {
         private readonly ChoresContext _context;
         private readonly ICriticalChoreService _criticalChoreService;
+        private readonly TimeProvider _timeProvider;
 
-        public HouseKeepingService(ChoresContext context, ICriticalChoreService criticalChoreService)
+        public HouseKeepingService(ChoresContext context, ICriticalChoreService criticalChoreService, TimeProvider timeProvider)
         {
             _context = context;
             _criticalChoreService = criticalChoreService;
+            _timeProvider = timeProvider;
         }
 
         public async Task<Result<Housekeeping>> CreateHousekeepingAsync(Housekeeping housekeeping, CancellationToken cancellationToken = default)
@@ -30,13 +32,14 @@ namespace Niles.Chores.Services
                 };
             }
 
+            var now = _timeProvider.GetUtcNow();
             var housekeepingDb = new HousekeepingDb
             {
                 Timestamp = housekeeping.DateTime,
                 Duration = housekeeping.Duration,
                 Note = housekeeping.Note,
-                CreatedAt = DateTimeOffset.UtcNow,
-                UpdatedAt = DateTimeOffset.UtcNow
+                CreatedAt = now,
+                UpdatedAt = now
             };
 
             _context.Housekeeping.Add(housekeepingDb);
@@ -181,7 +184,7 @@ namespace Niles.Chores.Services
             housekeepingDb.Timestamp = housekeeping.DateTime;
             housekeepingDb.Duration = housekeeping.Duration;
             housekeepingDb.Note = housekeeping.Note;
-            housekeepingDb.UpdatedAt = DateTimeOffset.UtcNow;
+            housekeepingDb.UpdatedAt = _timeProvider.GetUtcNow();
 
             // Update completed chores
             var existingChoreIds = housekeepingDb.CompletedChores.Select(c => c.ChoreId).ToList();

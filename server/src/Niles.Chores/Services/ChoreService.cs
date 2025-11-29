@@ -12,11 +12,13 @@ namespace Niles.Chores.Services
     {
         private readonly ChoresContext _context;
         private readonly ICriticalChoreService _criticalChoreService;
+        private readonly TimeProvider _timeProvider;
 
-        public ChoreService(ChoresContext context, ICriticalChoreService criticalChoreService)
+        public ChoreService(ChoresContext context, ICriticalChoreService criticalChoreService, TimeProvider timeProvider)
         {
             _context = context;
             _criticalChoreService = criticalChoreService;
+            _timeProvider = timeProvider;
         }
 
         public async Task<Result<Chore>> CreateChoreAsync(Chore chore, CancellationToken cancellationToken = default)
@@ -30,14 +32,15 @@ namespace Niles.Chores.Services
                 };
             }
 
+            var now = _timeProvider.GetUtcNow();
             var choreDb = new ChoreDb
             {
                 Title = chore.Title,
                 Description = chore.Description,
                 Type = chore.Type,
                 WeeklyInterval = chore.WeeklyInterval,
-                CreatedAt = DateTimeOffset.UtcNow,
-                UpdatedAt = DateTimeOffset.UtcNow
+                CreatedAt = now,
+                UpdatedAt = now
             };
 
             _context.Chores.Add(choreDb);
@@ -138,7 +141,7 @@ namespace Niles.Chores.Services
             choreDb.Description = chore.Description;
             choreDb.Type = chore.Type;
             choreDb.WeeklyInterval = chore.WeeklyInterval;
-            choreDb.UpdatedAt = DateTimeOffset.UtcNow;
+            choreDb.UpdatedAt = _timeProvider.GetUtcNow();
 
             await _context.SaveChangesAsync(cancellationToken);
 
