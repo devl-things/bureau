@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Niles.Chores;
+using Niles.Chores.Abstractions.Models;
 using Niles.Chores.Contexts;
 using Niles.Chores.Models;
 
@@ -14,20 +15,28 @@ namespace Niles.Chores.Services
             _context = context;
         }
 
-        public async Task<bool> CreateCriticalChoreAsync(int choreId, string note, CancellationToken cancellationToken = default)
+        public async Task<Result> CreateCriticalChoreAsync(int choreId, string note, CancellationToken cancellationToken = default)
         {
             // Verify chore exists
             var choreExists = await _context.Chores.AnyAsync(c => c.Id == choreId, cancellationToken);
             if (!choreExists)
             {
-                return false;
+                return new Result
+                {
+                    IsSuccess = false,
+                    ErrorMessage = $"Chore with Id {choreId} not found"
+                };
             }
 
             // Check if there's already an open critical chore for this chore
             var existingOpen = await HasOpenCriticalChoreAsync(choreId, cancellationToken);
             if (existingOpen)
             {
-                return false; // Already has an open critical chore
+                return new Result
+                {
+                    IsSuccess = false,
+                    ErrorMessage = "This chore already has an open critical status. Please remove it first."
+                };
             }
 
             var criticalChore = new CriticalChoreDb
@@ -42,10 +51,13 @@ namespace Niles.Chores.Services
             _context.CriticalChores.Add(criticalChore);
             await _context.SaveChangesAsync(cancellationToken);
 
-            return true;
+            return new Result
+            {
+                IsSuccess = true
+            };
         }
 
-        public async Task<bool> DeleteCriticalChoreAsync(int choreId, CancellationToken cancellationToken = default)
+        public async Task<Result> DeleteCriticalChoreAsync(int choreId, CancellationToken cancellationToken = default)
         {
             // Find all open critical chores for this chore
             var openCriticalChores = await _context.CriticalChores
@@ -54,13 +66,20 @@ namespace Niles.Chores.Services
 
             if (!openCriticalChores.Any())
             {
-                return false; // No open critical chores to delete
+                return new Result
+                {
+                    IsSuccess = false,
+                    ErrorMessage = "No open critical status found for this chore."
+                };
             }
 
             _context.CriticalChores.RemoveRange(openCriticalChores);
             await _context.SaveChangesAsync(cancellationToken);
 
-            return true;
+            return new Result
+            {
+                IsSuccess = true
+            };
         }
 
         public async Task<bool> HasOpenCriticalChoreAsync(int choreId, CancellationToken cancellationToken = default)

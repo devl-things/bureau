@@ -11,5 +11,7 @@ namespace Niles.Chores.Abstractions.Services
         Task<PagedResult<Chore>> ListChoresPagedAsync(string? search, int page, int pageSize, CancellationToken cancellationToken = default);
         Task<Result<Chore>> UpdateChoreAsync(Chore chore, CancellationToken cancellationToken = default);
         Task<Result> DeleteChoreAsync(int id, CancellationToken cancellationToken = default);
+        Task<PagedResult<Chore>> ListChoresPagedWithCriticalAsync(string? search, int page, int pageSize, CancellationToken cancellationToken = default);
+        Task<(Chore Chore, bool IsCritical)?> GetChoreWithCriticalAsync(int id, CancellationToken cancellationToken = default);
     }
 }

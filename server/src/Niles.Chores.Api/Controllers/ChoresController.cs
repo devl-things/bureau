@@ -2,6 +2,7 @@
 using Niles.Chores;
 using Niles.Chores.Abstractions.Services;
 using Niles.Chores.Api.Dtos;
+using Niles.Chores.Api.Mappers;
 using Niles.Chores.Api.Utilities;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
@@ -46,17 +47,11 @@ namespace Niles.Chores.Api.Controllers
                     var criticalPrioritizedIds = await _criticalChoreService.GetOpenCriticalChoreIdsAsync(prioritizedChoreIds, cancellationToken);
                     var criticalSet = new HashSet<int>(criticalPrioritizedIds);
                     
-                    var dtos = prioritizedChores.Select(c => new ChoreDto
-                    {
-                        Id = IdObfuscator.Encode(c.Id),
-                        Title = c.Title,
-                        Description = c.Description ?? string.Empty,
-                        Priority = c.Priority,
-                        Type = c.Type.ToString(),
-                        WeeklyInterval = c.WeeklyInterval,
-                        Completed = false, // Prioritized chores are not completed by default
-                        IsCritical = criticalSet.Contains(c.Id)
-                    });
+                    var dtos = prioritizedChores.Select(c => c.ToDto(
+                        isCritical: criticalSet.Contains(c.Id),
+                        priority: c.Priority,
+                        completed: false
+                    ));
                     return Ok(dtos);
                 }
                 else
@@ -71,7 +66,7 @@ namespace Niles.Chores.Api.Controllers
             if (pageSize > 100) pageSize = 100;
 
             // Get paged chores from database (with search and pagination at DB level)
-            var pagedResult = await _choreService.ListChoresPagedAsync(search, page, pageSize, cancellationToken);
+            var pagedResult = await _choreService.ListChoresPagedWithCriticalAsync(search, page, pageSize, cancellationToken);
             
             // Get all chore IDs for this page
             var choreIds = pagedResult.Items.Select(c => c.Id).ToList();
@@ -81,15 +76,7 @@ namespace Niles.Chores.Api.Controllers
             var criticalChoreIds = new HashSet<int>(openCriticalChoreIds);
 
             // Map to DTOs with critical flag
-            var pagedItems = pagedResult.Items.Select(m => new ChoreDto
-            {
-                Id = IdObfuscator.Encode(m.Id),
-                Title = m.Title,
-                Description = m.Description,
-                Type = m.Type.ToString(),
-                WeeklyInterval = m.WeeklyInterval,
-                IsCritical = criticalChoreIds.Contains(m.Id)
-            });
+            var pagedItems = pagedResult.Items.Select(m => m.ToDto(isCritical: criticalChoreIds.Contains(m.Id)));
 
             var result = new PagedResult<ChoreDto>
             {
@@ -117,22 +104,13 @@ namespace Niles.Chores.Api.Controllers
                 return BadRequest(new { error = "Invalid id format." });
             }
 
-            Chore? result = await _choreService.GetChoreAsync(intId, cancellationToken);
+            var result = await _choreService.GetChoreWithCriticalAsync(intId, cancellationToken);
             if (result == null)
             {
                 return NotFound();
             }
-            var isCritical = await _criticalChoreService.HasOpenCriticalChoreAsync(intId, cancellationToken);
-            var dto = new ChoreDto
-            {
-                Id = IdObfuscator.Encode(result.Id),
-                Title = result.Title,
-                Description = result.Description,
-                Type = result.Type.ToString(),
-                WeeklyInterval = result.WeeklyInterval,
-                IsCritical = isCritical
-            };
-            return Ok(dto);
+            var (chore, isCritical) = result.Value;
+            return Ok(chore.ToDto(isCritical: isCritical));
         }
 
         // POST api/chores
@@ -234,25 +212,19 @@ namespace Niles.Chores.Api.Controllers
                 return BadRequest(new { error = "Invalid id format." });
             }
 
-            // Verify chore exists
-            var chore = await _choreService.GetChoreAsync(choreId, cancellationToken);
-            if (chore == null)
-            {
-                return NotFound(new { error = "Chore not found." });
-            }
-
-            // Check if already has an open critical chore
-            var hasOpen = await _criticalChoreService.HasOpenCriticalChoreAsync(choreId, cancellationToken);
-            if (hasOpen)
-            {
-                return BadRequest(new { error = "This chore already has an open critical status. Please remove it first." });
-            }
-
             // Create critical chore
-            bool created = await _criticalChoreService.CreateCriticalChoreAsync(choreId, dto.Description, cancellationToken);
-            if (!created)
+            var result = await _criticalChoreService.CreateCriticalChoreAsync(choreId, dto.Description, cancellationToken);
+            if (!result.IsSuccess)
             {
-                return StatusCode(StatusCodes.Status500InternalServerError, new { error = "Failed to mark chore as critical." });
+                if (result.ErrorMessage?.Contains("not found") == true)
+                {
+                    return NotFound(new { error = result.ErrorMessage });
+                }
+                if (result.ErrorMessage?.Contains("already has an open critical status") == true)
+                {
+                    return BadRequest(new { error = result.ErrorMessage });
+                }
+                return StatusCode(StatusCodes.Status500InternalServerError, new { error = result.ErrorMessage ?? "Failed to mark chore as critical." });
             }
 
             return Ok(new { message = "Chore marked as critical successfully" });
@@ -268,18 +240,15 @@ namespace Niles.Chores.Api.Controllers
                 return BadRequest(new { error = "Invalid id format." });
             }
 
-            // Verify chore exists
-            var chore = await _choreService.GetChoreAsync(choreId, cancellationToken);
-            if (chore == null)
-            {
-                return NotFound(new { error = "Chore not found." });
-            }
-
             // Delete critical chore
-            bool deleted = await _criticalChoreService.DeleteCriticalChoreAsync(choreId, cancellationToken);
-            if (!deleted)
+            var result = await _criticalChoreService.DeleteCriticalChoreAsync(choreId, cancellationToken);
+            if (!result.IsSuccess)
             {
-                return BadRequest(new { error = "No open critical status found for this chore." });
+                if (result.ErrorMessage?.Contains("No open critical status") == true)
+                {
+                    return BadRequest(new { error = result.ErrorMessage });
+                }
+                return StatusCode(StatusCodes.Status500InternalServerError, new { error = result.ErrorMessage ?? "Failed to remove critical status." });
             }
 
             return Ok(new { message = "Critical status removed successfully" });

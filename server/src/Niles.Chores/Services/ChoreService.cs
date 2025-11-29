@@ -11,10 +11,12 @@ namespace Niles.Chores.Services
     internal class ChoreService : IChoreService
     {
         private readonly ChoresContext _context;
+        private readonly ICriticalChoreService _criticalChoreService;
 
-        public ChoreService(ChoresContext context)
+        public ChoreService(ChoresContext context, ICriticalChoreService criticalChoreService)
         {
             _context = context;
+            _criticalChoreService = criticalChoreService;
         }
 
         public async Task<Result<Chore>> CreateChoreAsync(Chore chore, CancellationToken cancellationToken = default)
@@ -166,6 +168,28 @@ namespace Niles.Chores.Services
             {
                 IsSuccess = true
             };
+        }
+
+        public async Task<PagedResult<Chore>> ListChoresPagedWithCriticalAsync(string? search, int page, int pageSize, CancellationToken cancellationToken = default)
+        {
+            var pagedResult = await ListChoresPagedAsync(search, page, pageSize, cancellationToken);
+            
+            // Get all chore IDs for this page
+            var choreIds = pagedResult.Items.Select(c => c.Id).ToList();
+            
+            // Get all open critical chores for these chore IDs in one query
+            var openCriticalChoreIds = await _criticalChoreService.GetOpenCriticalChoreIdsAsync(choreIds, cancellationToken);
+            
+            return pagedResult;
+        }
+
+        public async Task<(Chore Chore, bool IsCritical)?> GetChoreWithCriticalAsync(int id, CancellationToken cancellationToken = default)
+        {
+            var chore = await GetChoreAsync(id, cancellationToken);
+            if (chore == null) return null;
+
+            var isCritical = await _criticalChoreService.HasOpenCriticalChoreAsync(id, cancellationToken);
+            return (chore, isCritical);
         }
     }
 }
