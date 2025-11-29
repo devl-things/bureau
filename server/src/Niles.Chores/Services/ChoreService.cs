@@ -149,8 +149,11 @@ namespace Niles.Chores.Services
 
         public async Task<Result> DeleteChoreAsync(int id, CancellationToken cancellationToken = default)
         {
-            var choreDb = await _context.Chores.FindAsync(new object[] { id }, cancellationToken);
-            if (choreDb == null)
+            var rowsAffected = await _context.Chores
+                .Where(x => x.Id == id)
+                .ExecuteDeleteAsync();
+
+            if (rowsAffected == 0)
             {
                 return new Result
                 {
@@ -158,13 +161,12 @@ namespace Niles.Chores.Services
                     ErrorMessage = $"Chore with Id {id} not found"
                 };
             }
-
-            _context.Chores.Remove(choreDb);
-            await _context.SaveChangesAsync(cancellationToken);
+           
             return new Result
             {
                 IsSuccess = true
             };
+            
         }
 
         public async Task<PagedResult<Chore>> ListChoresPagedWithCriticalAsync(string? search, int page, int pageSize, CancellationToken cancellationToken = default)
