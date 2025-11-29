@@ -25,18 +25,18 @@ namespace Niles.Chores.Api.Controllers
         // GET: api/housekeeping (returns all housekeeping records)
         [HttpGet]
         public async Task<IActionResult> Get(
-            [FromQuery] string? search,
-            [FromQuery] int page = 1,
-            [FromQuery] int pageSize = 20,
+            [FromQuery] HousekeepingQueryParams queryParams,
             CancellationToken cancellationToken = default)
         {
             // Validate pagination parameters
-            if (page < 1) page = 1;
-            if (pageSize < 1) pageSize = 20;
+            int page = queryParams.Page < 1 ? 1 : queryParams.Page;
+            int pageSize = queryParams.PageSize < 1 ? 20 : queryParams.PageSize;
             if (pageSize > 100) pageSize = 100;
 
+            PaginationParams pagination = new PaginationParams(queryParams.Search, page, pageSize);
+
             // Get paged housekeeping records from database (with search and pagination at DB level)
-            Niles.Chores.Abstractions.Models.PagedResult<Housekeeping> pagedResult = await _housekeepingService.ListHousekeepingsPagedAsync(search, page, pageSize, cancellationToken);
+            Niles.Chores.Abstractions.Models.PagedResult<Housekeeping> pagedResult = await _housekeepingService.ListHousekeepingsPagedAsync(pagination, cancellationToken);
 
             // Map to DTOs
             IEnumerable<HousekeepingDto> pagedItems = pagedResult.Items.Select(m => new HousekeepingDto

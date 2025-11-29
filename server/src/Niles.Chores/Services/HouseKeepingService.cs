@@ -105,7 +105,7 @@ namespace Niles.Chores.Services
             return housekeepingsDb.Select(h => h.ToHousekeeping());
         }
 
-        public async Task<PagedResult<Housekeeping>> ListHousekeepingsPagedAsync(string? search, int page, int pageSize, CancellationToken cancellationToken = default)
+        public async Task<PagedResult<Housekeeping>> ListHousekeepingsPagedAsync(PaginationParams pagination, CancellationToken cancellationToken = default)
         {
             // Build query with search filter
             IQueryable<HousekeepingDb> query = _context.Housekeeping
@@ -113,20 +113,20 @@ namespace Niles.Chores.Services
                     .ThenInclude(cc => cc.Chore)
                 .AsQueryable();
 
-            if (!string.IsNullOrWhiteSpace(search))
+            if (!string.IsNullOrWhiteSpace(pagination.Search))
             {
-                string searchLower = search.ToLowerInvariant();
+                string searchLower = pagination.Search.ToLowerInvariant();
                 
                 // Try to parse as date
                 DateOnly? searchDate = null;
-                if (DateOnly.TryParse(search, out DateOnly parsedDate))
+                if (DateOnly.TryParse(pagination.Search, out DateOnly parsedDate))
                 {
                     searchDate = parsedDate;
                 }
                 
                 // Try to parse as integer (for chore ID search)
                 int? searchChoreId = null;
-                if (int.TryParse(search, out int parsedChoreId))
+                if (int.TryParse(pagination.Search, out int parsedChoreId))
                 {
                     searchChoreId = parsedChoreId;
                 }
@@ -144,22 +144,22 @@ namespace Niles.Chores.Services
             // Apply pagination and ordering at database level
             List<HousekeepingDb> housekeepingsDb = await query
                 .OrderByDescending(h => h.Timestamp) // Most recent first
-                .Skip((page - 1) * pageSize)
-                .Take(pageSize)
+                .Skip((pagination.Page - 1) * pagination.PageSize)
+                .Take(pagination.PageSize)
                 .ToListAsync(cancellationToken);
 
             IEnumerable<Housekeeping> items = housekeepingsDb.Select(h => h.ToHousekeeping());
-            int totalPages = (int)Math.Ceiling(total / (double)pageSize);
+            int totalPages = (int)Math.Ceiling(total / (double)pagination.PageSize);
 
             return new PagedResult<Housekeeping>
             {
                 Items = items,
-                Page = page,
-                PageSize = pageSize,
+                Page = pagination.Page,
+                PageSize = pagination.PageSize,
                 Total = total,
                 TotalPages = totalPages,
-                HasNext = page < totalPages,
-                HasPrevious = page > 1
+                HasNext = pagination.Page < totalPages,
+                HasPrevious = pagination.Page > 1
             };
         }
 

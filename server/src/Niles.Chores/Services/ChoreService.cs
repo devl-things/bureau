@@ -62,18 +62,18 @@ namespace Niles.Chores.Services
             return choreDb.ToChore();
         }
         
-        public async Task<PagedResult<Chore>> ListChoresPagedAsync(string? search, int page, int pageSize, CancellationToken cancellationToken = default)
+        public async Task<PagedResult<Chore>> ListChoresPagedAsync(PaginationParams pagination, CancellationToken cancellationToken = default)
         {
             // Build query with search filter
             IQueryable<ChoreDb> query = _context.Chores.AsQueryable();
 
-            if (!string.IsNullOrWhiteSpace(search))
+            if (!string.IsNullOrWhiteSpace(pagination.Search))
             {
-                string searchLower = search.ToLowerInvariant();
+                string searchLower = pagination.Search.ToLowerInvariant();
                 
                 // Try to parse search term as ChoreType enum
                 ChoreType? searchType = null;
-                if (Enum.TryParse<ChoreType>(search, true, out ChoreType parsedType))
+                if (Enum.TryParse<ChoreType>(pagination.Search, true, out ChoreType parsedType))
                 {
                     searchType = parsedType;
                 }
@@ -91,22 +91,22 @@ namespace Niles.Chores.Services
             // Apply pagination at database level
             List<ChoreDb> choresDb = await query
                 .OrderBy(c => c.Id) // Consistent ordering
-                .Skip((page - 1) * pageSize)
-                .Take(pageSize)
+                .Skip((pagination.Page - 1) * pagination.PageSize)
+                .Take(pagination.PageSize)
                 .ToListAsync(cancellationToken);
 
             IEnumerable<Chore> items = choresDb.Select(c => c.ToChore());
-            int totalPages = (int)Math.Ceiling(total / (double)pageSize);
+            int totalPages = (int)Math.Ceiling(total / (double)pagination.PageSize);
 
             return new PagedResult<Chore>
             {
                 Items = items,
-                Page = page,
-                PageSize = pageSize,
+                Page = pagination.Page,
+                PageSize = pagination.PageSize,
                 Total = total,
                 TotalPages = totalPages,
-                HasNext = page < totalPages,
-                HasPrevious = page > 1
+                HasNext = pagination.Page < totalPages,
+                HasPrevious = pagination.Page > 1
             };
         }
 
@@ -169,9 +169,9 @@ namespace Niles.Chores.Services
             
         }
 
-        public async Task<PagedResult<Chore>> ListChoresPagedWithCriticalAsync(string? search, int page, int pageSize, CancellationToken cancellationToken = default)
+        public async Task<PagedResult<Chore>> ListChoresPagedWithCriticalAsync(PaginationParams pagination, CancellationToken cancellationToken = default)
         {
-            PagedResult<Chore> pagedResult = await ListChoresPagedAsync(search, page, pageSize, cancellationToken);
+            PagedResult<Chore> pagedResult = await ListChoresPagedAsync(pagination, cancellationToken);
             
             // Get all chore IDs for this page
             List<int> choreIds = pagedResult.Items.Select(c => c.Id).ToList();

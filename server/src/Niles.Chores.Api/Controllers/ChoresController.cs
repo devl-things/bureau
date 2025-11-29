@@ -32,16 +32,13 @@ namespace Niles.Chores.Api.Controllers
         // GET: api/chores (returns all chores)
         [HttpGet]
         public async Task<IActionResult> Get(
-            [FromQuery] string? date,
-            [FromQuery] string? search,
-            [FromQuery] int page = 1,
-            [FromQuery] int pageSize = 20,
+            [FromQuery] ChoresQueryParams queryParams,
             CancellationToken cancellationToken = default)
         {
             // If date parameter is provided, return prioritized chores for that date (no pagination for prioritized)
-            if (!string.IsNullOrEmpty(date))
+            if (!string.IsNullOrEmpty(queryParams.Date))
             {
-                if (DateOnly.TryParse(date, out DateOnly dateOnly))
+                if (DateOnly.TryParse(queryParams.Date, out DateOnly dateOnly))
                 {
                     IEnumerable<PrioritizedChore> prioritizedChores = await _prioritizedChoreService.GetPrioritizedChoresAsync(dateOnly, cancellationToken);
                     List<int> prioritizedChoreIds = prioritizedChores.Select(c => c.Id).ToList();
@@ -62,12 +59,14 @@ namespace Niles.Chores.Api.Controllers
             }
 
             // Validate pagination parameters
-            if (page < 1) page = 1;
-            if (pageSize < 1) pageSize = 20;
+            int page = queryParams.Page < 1 ? 1 : queryParams.Page;
+            int pageSize = queryParams.PageSize < 1 ? 20 : queryParams.PageSize;
             if (pageSize > 100) pageSize = 100;
 
+            PaginationParams pagination = new PaginationParams(queryParams.Search, page, pageSize);
+
             // Get paged chores from database (with search and pagination at DB level)
-            Niles.Chores.Abstractions.Models.PagedResult<Chore> pagedResult = await _choreService.ListChoresPagedWithCriticalAsync(search, page, pageSize, cancellationToken);
+            Niles.Chores.Abstractions.Models.PagedResult<Chore> pagedResult = await _choreService.ListChoresPagedWithCriticalAsync(pagination, cancellationToken);
             
             // Get all chore IDs for this page
             List<int> choreIds = pagedResult.Items.Select(c => c.Id).ToList();
