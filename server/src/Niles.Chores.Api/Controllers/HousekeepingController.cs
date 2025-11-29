@@ -148,15 +148,15 @@ namespace Niles.Chores.Api.Controllers
                 CompletedChoreIds = completedChoreIds
             };
 
-            bool created = await _housekeepingService.CreateHousekeepingAsync(housekeeping, cancellationToken);
-            if (!created)
+            var result = await _housekeepingService.CreateHousekeepingAsync(housekeeping, cancellationToken);
+            if (!result.IsSuccess)
             {
-                return StatusCode(StatusCodes.Status500InternalServerError, new { error = "Failed to submit chores." });
+                return StatusCode(StatusCodes.Status500InternalServerError, new { error = result.ErrorMessage ?? "Failed to submit chores." });
             }
 
             // Note: Critical chores are automatically marked as completed in HouseKeepingService.CreateHousekeepingAsync
 
-            return Ok(new { message = "Chores submitted successfully", id = housekeeping.Id.HasValue ? IdObfuscator.Encode(housekeeping.Id.Value) : null });
+            return Ok(new { message = "Chores submitted successfully", id = result.Value!.Id.HasValue ? IdObfuscator.Encode(result.Value.Id.Value) : null });
         }
 
         // POST api/housekeeping
@@ -173,13 +173,13 @@ namespace Niles.Chores.Api.Controllers
                 return BadRequest(new { error });
             }
 
-            bool created = await _housekeepingService.CreateHousekeepingAsync(model, cancellationToken);
-            if (!created)
+            var result = await _housekeepingService.CreateHousekeepingAsync(model, cancellationToken);
+            if (!result.IsSuccess)
             {
-                return StatusCode(StatusCodes.Status500InternalServerError, new { error = "Failed to create housekeeping." });
+                return StatusCode(StatusCodes.Status500InternalServerError, new { error = result.ErrorMessage ?? "Failed to create housekeeping." });
             }
 
-            string encodedId = model.Id.HasValue ? IdObfuscator.Encode(model.Id.Value) : string.Empty;
+            string encodedId = result.Value!.Id.HasValue ? IdObfuscator.Encode(result.Value.Id.Value) : string.Empty;
             return CreatedAtAction(nameof(Get), new { id = encodedId }, dto);
         }
 
@@ -209,10 +209,14 @@ namespace Niles.Chores.Api.Controllers
 
             model.Id = intId;
 
-            bool updated = await _housekeepingService.UpdateHousekeepingAsync(model, cancellationToken);
-            if (!updated)
+            var result = await _housekeepingService.UpdateHousekeepingAsync(model, cancellationToken);
+            if (!result.IsSuccess)
             {
-                return NotFound();
+                if (result.ErrorMessage?.Contains("not found") == true)
+                {
+                    return NotFound();
+                }
+                return StatusCode(StatusCodes.Status500InternalServerError, new { error = result.ErrorMessage ?? "Failed to update housekeeping." });
             }
             return NoContent();
         }
@@ -226,10 +230,14 @@ namespace Niles.Chores.Api.Controllers
                 return BadRequest(new { error = "Invalid id format." });
             }
 
-            bool deleted = await _housekeepingService.DeleteHousekeepingAsync(intId, cancellationToken);
-            if (!deleted)
+            var result = await _housekeepingService.DeleteHousekeepingAsync(intId, cancellationToken);
+            if (!result.IsSuccess)
             {
-                return NotFound();
+                if (result.ErrorMessage?.Contains("not found") == true)
+                {
+                    return NotFound();
+                }
+                return StatusCode(StatusCodes.Status500InternalServerError, new { error = result.ErrorMessage ?? "Failed to delete housekeeping." });
             }
             return NoContent();
         }

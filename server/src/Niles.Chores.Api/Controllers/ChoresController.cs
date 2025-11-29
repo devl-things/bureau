@@ -149,13 +149,13 @@ namespace Niles.Chores.Api.Controllers
                 return BadRequest(new { error });
             }
 
-            bool created = await _choreService.CreateChoreAsync(model, cancellationToken);
-            if (!created)
+            var result = await _choreService.CreateChoreAsync(model, cancellationToken);
+            if (!result.IsSuccess)
             {
-                return StatusCode(StatusCodes.Status500InternalServerError, new { error = "Failed to create chore." });
+                return StatusCode(StatusCodes.Status500InternalServerError, new { error = result.ErrorMessage ?? "Failed to create chore." });
             }
 
-            string encodedId = IdObfuscator.Encode(model.Id);
+            string encodedId = IdObfuscator.Encode(result.Value!.Id);
             dto.Id = encodedId;
             return CreatedAtAction(nameof(Get), new { id = encodedId }, dto);
         }
@@ -186,10 +186,14 @@ namespace Niles.Chores.Api.Controllers
 
             model.Id = intId;
 
-            bool updated = await _choreService.UpdateChoreAsync(model, cancellationToken);
-            if (!updated)
+            var result = await _choreService.UpdateChoreAsync(model, cancellationToken);
+            if (!result.IsSuccess)
             {
-                return NotFound();
+                if (result.ErrorMessage?.Contains("not found") == true)
+                {
+                    return NotFound();
+                }
+                return StatusCode(StatusCodes.Status500InternalServerError, new { error = result.ErrorMessage ?? "Failed to update chore." });
             }
             return NoContent();
         }
@@ -203,10 +207,14 @@ namespace Niles.Chores.Api.Controllers
                 return BadRequest(new { error = "Invalid id format." });
             }
 
-            bool deleted = await _choreService.DeleteChoreAsync(intId, cancellationToken);
-            if (!deleted)
+            var result = await _choreService.DeleteChoreAsync(intId, cancellationToken);
+            if (!result.IsSuccess)
             {
-                return NotFound();
+                if (result.ErrorMessage?.Contains("not found") == true)
+                {
+                    return NotFound();
+                }
+                return StatusCode(StatusCodes.Status500InternalServerError, new { error = result.ErrorMessage ?? "Failed to delete chore." });
             }
             return NoContent();
         }

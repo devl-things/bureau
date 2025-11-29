@@ -17,9 +17,16 @@ namespace Niles.Chores.Services
             _context = context;
         }
 
-        public async Task<bool> CreateChoreAsync(Chore chore, CancellationToken cancellationToken = default)
+        public async Task<Result<Chore>> CreateChoreAsync(Chore chore, CancellationToken cancellationToken = default)
         {
-            if (chore == null) return false;
+            if (chore == null)
+            {
+                return new Result<Chore>
+                {
+                    IsSuccess = false,
+                    ErrorMessage = "Chore cannot be null"
+                };
+            }
 
             var choreDb = new ChoreDb
             {
@@ -35,7 +42,11 @@ namespace Niles.Chores.Services
             await _context.SaveChangesAsync(cancellationToken);
 
             chore.Id = choreDb.Id;
-            return true;
+            return new Result<Chore>
+            {
+                Value = chore,
+                IsSuccess = true
+            };
         }
 
         public async Task<Chore?> GetChoreAsync(int id, CancellationToken cancellationToken = default)
@@ -100,12 +111,26 @@ namespace Niles.Chores.Services
             };
         }
 
-        public async Task<bool> UpdateChoreAsync(Chore chore, CancellationToken cancellationToken = default)
+        public async Task<Result<Chore>> UpdateChoreAsync(Chore chore, CancellationToken cancellationToken = default)
         {
-            if (chore == null || chore.Id == 0) return false;
+            if (chore == null || chore.Id == 0)
+            {
+                return new Result<Chore>
+                {
+                    IsSuccess = false,
+                    ErrorMessage = "Chore cannot be null and must have a valid Id"
+                };
+            }
 
             var choreDb = await _context.Chores.FindAsync(new object[] { chore.Id }, cancellationToken);
-            if (choreDb == null) return false;
+            if (choreDb == null)
+            {
+                return new Result<Chore>
+                {
+                    IsSuccess = false,
+                    ErrorMessage = $"Chore with Id {chore.Id} not found"
+                };
+            }
 
             choreDb.Title = chore.Title;
             choreDb.Description = chore.Description;
@@ -114,17 +139,33 @@ namespace Niles.Chores.Services
             choreDb.UpdatedAt = DateTimeOffset.UtcNow;
 
             await _context.SaveChangesAsync(cancellationToken);
-            return true;
+
+            var updatedChore = choreDb.ToChore();
+            return new Result<Chore>
+            {
+                Value = updatedChore,
+                IsSuccess = true
+            };
         }
 
-        public async Task<bool> DeleteChoreAsync(int id, CancellationToken cancellationToken = default)
+        public async Task<Result> DeleteChoreAsync(int id, CancellationToken cancellationToken = default)
         {
             var choreDb = await _context.Chores.FindAsync(new object[] { id }, cancellationToken);
-            if (choreDb == null) return false;
+            if (choreDb == null)
+            {
+                return new Result
+                {
+                    IsSuccess = false,
+                    ErrorMessage = $"Chore with Id {id} not found"
+                };
+            }
 
             _context.Chores.Remove(choreDb);
             await _context.SaveChangesAsync(cancellationToken);
-            return true;
+            return new Result
+            {
+                IsSuccess = true
+            };
         }
     }
 }

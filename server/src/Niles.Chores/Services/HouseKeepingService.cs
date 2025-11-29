@@ -19,9 +19,16 @@ namespace Niles.Chores.Services
             _criticalChoreService = criticalChoreService;
         }
 
-        public async Task<bool> CreateHousekeepingAsync(Housekeeping housekeeping, CancellationToken cancellationToken = default)
+        public async Task<Result<Housekeeping>> CreateHousekeepingAsync(Housekeeping housekeeping, CancellationToken cancellationToken = default)
         {
-            if (housekeeping == null) return false;
+            if (housekeeping == null)
+            {
+                return new Result<Housekeeping>
+                {
+                    IsSuccess = false,
+                    ErrorMessage = "Housekeeping cannot be null"
+                };
+            }
 
             var housekeepingDb = new HousekeepingDb
             {
@@ -58,7 +65,12 @@ namespace Niles.Chores.Services
             }
 
             housekeeping.Id = housekeepingDb.Id;
-            return true;
+            var createdHousekeeping = housekeepingDb.ToHousekeeping();
+            return new Result<Housekeeping>
+            {
+                Value = createdHousekeeping,
+                IsSuccess = true
+            };
         }
 
         public async Task<Housekeeping?> GetHousekeepingAsync(int id, CancellationToken cancellationToken = default)
@@ -141,16 +153,30 @@ namespace Niles.Chores.Services
             };
         }
 
-        public async Task<bool> UpdateHousekeepingAsync(Housekeeping housekeeping, CancellationToken cancellationToken = default)
+        public async Task<Result<Housekeeping>> UpdateHousekeepingAsync(Housekeeping housekeeping, CancellationToken cancellationToken = default)
         {
-            if (housekeeping == null || !housekeeping.Id.HasValue) return false;
+            if (housekeeping == null || !housekeeping.Id.HasValue)
+            {
+                return new Result<Housekeeping>
+                {
+                    IsSuccess = false,
+                    ErrorMessage = "Housekeeping cannot be null and must have a valid Id"
+                };
+            }
 
             var housekeepingDb = await _context.Housekeeping
                 .Include(h => h.CompletedChores)
                     .ThenInclude(cc => cc.Chore)
                 .FirstOrDefaultAsync(h => h.Id == housekeeping.Id.Value, cancellationToken);
 
-            if (housekeepingDb == null) return false;
+            if (housekeepingDb == null)
+            {
+                return new Result<Housekeeping>
+                {
+                    IsSuccess = false,
+                    ErrorMessage = $"Housekeeping with Id {housekeeping.Id.Value} not found"
+                };
+            }
 
             housekeepingDb.Timestamp = housekeeping.DateTime;
             housekeepingDb.Duration = housekeeping.Duration;
@@ -181,23 +207,39 @@ namespace Niles.Chores.Services
             await _context.CompletedChores.AddRangeAsync(toAdd, cancellationToken);
 
             await _context.SaveChangesAsync(cancellationToken);
-            return true;
+
+            var updatedHousekeeping = housekeepingDb.ToHousekeeping();
+            return new Result<Housekeeping>
+            {
+                Value = updatedHousekeeping,
+                IsSuccess = true
+            };
         }
 
-        public async Task<bool> DeleteHousekeepingAsync(int id, CancellationToken cancellationToken = default)
+        public async Task<Result> DeleteHousekeepingAsync(int id, CancellationToken cancellationToken = default)
         {
             var housekeepingDb = await _context.Housekeeping
                 .Include(h => h.CompletedChores)
                     .ThenInclude(cc => cc.Chore)
                 .FirstOrDefaultAsync(h => h.Id == id, cancellationToken);
 
-            if (housekeepingDb == null) return false;
+            if (housekeepingDb == null)
+            {
+                return new Result
+                {
+                    IsSuccess = false,
+                    ErrorMessage = $"Housekeeping with Id {id} not found"
+                };
+            }
 
             // Remove completed chores first
             _context.CompletedChores.RemoveRange(housekeepingDb.CompletedChores);
             _context.Housekeeping.Remove(housekeepingDb);
             await _context.SaveChangesAsync(cancellationToken);
-            return true;
+            return new Result
+            {
+                IsSuccess = true
+            };
         }
     }
 }
