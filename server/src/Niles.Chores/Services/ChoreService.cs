@@ -3,6 +3,7 @@ using Niles.Chores;
 using Niles.Chores.Abstractions.Models;
 using Niles.Chores.Abstractions.Services;
 using Niles.Chores.Contexts;
+using Niles.Chores.Mappers;
 using Niles.Chores.Models;
 
 namespace Niles.Chores.Services
@@ -42,13 +43,13 @@ namespace Niles.Chores.Services
             var choreDb = await _context.Chores.FindAsync(new object[] { id }, cancellationToken);
             if (choreDb == null) return null;
 
-            return MapToChore(choreDb);
+            return choreDb.ToChore();
         }
 
         public async Task<IEnumerable<Chore>> ListChoresAsync(CancellationToken cancellationToken = default)
         {
             var choresDb = await _context.Chores.ToListAsync(cancellationToken);
-            return choresDb.Select(MapToChore);
+            return choresDb.Select(c => c.ToChore());
         }
 
         public async Task<PagedResult<Chore>> ListChoresPagedAsync(string? search, int page, int pageSize, CancellationToken cancellationToken = default)
@@ -84,7 +85,7 @@ namespace Niles.Chores.Services
                 .Take(pageSize)
                 .ToListAsync(cancellationToken);
 
-            var items = choresDb.Select(MapToChore);
+            var items = choresDb.Select(c => c.ToChore());
             var totalPages = (int)Math.Ceiling(total / (double)pageSize);
 
             return new PagedResult<Chore>
@@ -124,18 +125,6 @@ namespace Niles.Chores.Services
             _context.Chores.Remove(choreDb);
             await _context.SaveChangesAsync(cancellationToken);
             return true;
-        }
-
-        private static Chore MapToChore(ChoreDb choreDb)
-        {
-            return new Chore
-            {
-                Id = choreDb.Id,
-                Title = choreDb.Title,
-                Description = choreDb.Description,
-                Type = choreDb.Type,
-                WeeklyInterval = choreDb.WeeklyInterval
-            };
         }
     }
 }
