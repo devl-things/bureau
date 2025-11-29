@@ -2,7 +2,7 @@
 
 namespace Niles.Chores.Api.Dtos
 {
-    public class ChoreDto
+    public class PrioritizedChoreDto
     {
         [JsonPropertyName("id")]
         public int Id { get; set; }
@@ -10,6 +10,8 @@ namespace Niles.Chores.Api.Dtos
         public string Title { get; set; } = string.Empty;
         [JsonPropertyName("description")]
         public string Description { get; set; } = string.Empty;
+        [JsonPropertyName("criticality")]
+        public int Criticality { get; set; }
         [JsonPropertyName("priority")]
         public int Priority { get; set; }
         [JsonPropertyName("type")]

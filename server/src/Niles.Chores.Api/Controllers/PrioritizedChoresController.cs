@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Niles.Chores.Api.Dtos;
+using Niles.Chores.Api.Mappers;
 
 namespace Niles.Chores.Api.Controllers
 {
@@ -16,21 +17,13 @@ namespace Niles.Chores.Api.Controllers
 
         // GET /api/housekeeping/prioritized-chores?date=2025-11-27
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<ChoreDto>>> GetChoresAsync([FromQuery] DateOnly? date, CancellationToken cancellationToken = default)
+        public async Task<ActionResult<IEnumerable<PrioritizedChoreDto>>> GetChoresAsync([FromQuery] DateOnly? date, CancellationToken cancellationToken = default)
         {
             DateOnly dateOnly = date ?? DateOnly.FromDateTime(DateTime.Now);
 
             List<PrioritizedChore> pChores = await _prioritizedChoreService.GetPrioritizedChoresAsync(dateOnly, cancellationToken);
 
-            return Ok(pChores.Select(c => new ChoreDto
-            {
-                Id = c.Id,
-                Title = c.Title,
-                Description = c.Description ?? string.Empty,
-                Priority = c.Priority,
-                Type = c.Type.ToString(),
-                IsCompleted = false
-            }));
+            return Ok(pChores.Select(c => c.ToDto()));
         }
     }
 }
