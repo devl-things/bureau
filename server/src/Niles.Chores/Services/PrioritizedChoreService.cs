@@ -33,12 +33,9 @@ namespace Niles.Chores.Services
                 return [];
             }
             YearsWeek requestedYearWeek = new YearsWeek(requestedDate);
-            if (_cache.TryGetValue<List<PrioritizedChore>>(requestedYearWeek, out List<PrioritizedChore>? list))
+            if (_cache.TryGetPriotizedChores(requestedYearWeek, out List<PrioritizedChore> list))
             {
-                if (list is not null)
-                {
-                    return list;
-                }
+                return list;
             }
 
             IAsyncEnumerable<ChoreDetail> chores = _context.Chores

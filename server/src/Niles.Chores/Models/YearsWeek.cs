@@ -2,7 +2,7 @@
 
 namespace Niles.Chores.Models
 {
-    internal class YearsWeek
+    internal struct YearsWeek
     {
         public int Year { get; set; }
         public int Week { get; set; }
