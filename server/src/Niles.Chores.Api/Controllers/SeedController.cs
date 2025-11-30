@@ -1,5 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
+using Niles.Chores.Data;
 
 namespace Niles.Chores.Api.Controllers
 {
@@ -7,41 +7,21 @@ namespace Niles.Chores.Api.Controllers
     [ApiController]
     public class SeedController : ControllerBase
     {
-        private readonly IServiceProvider _serviceProvider;
         private readonly ILogger<SeedController> _logger;
-
-        public SeedController(IServiceProvider serviceProvider, ILogger<SeedController> logger)
+        private readonly IChoresSeeder _seeder;
+        public SeedController(ILogger<SeedController> logger, IChoresSeeder seeder)
         {
-            _serviceProvider = serviceProvider;
             _logger = logger;
+            _seeder = seeder;
         }
 
         // POST api/seed
         [HttpPost]
-        public async Task<IActionResult> Seed()
+        public async Task<IActionResult> SeedAsync(CancellationToken cancellationToken)
         {
             try
             {
-                using IServiceScope scope = _serviceProvider.CreateScope();
-                
-                // Get ChoresContext using reflection since it's internal
-                Type? choresContextType = typeof(Niles.Chores.Configurations.IServiceCollectionExtension)
-                    .Assembly
-                    .GetType("Niles.Chores.Contexts.ChoresContext");
-                
-                if (choresContextType == null)
-                {
-                    return StatusCode(500, new { error = "Could not find ChoresContext type." });
-                }
-
-                DbContext? context = scope.ServiceProvider.GetRequiredService(choresContextType) as DbContext;
-                if (context == null)
-                {
-                    return StatusCode(500, new { error = "Could not resolve ChoresContext from service provider." });
-                }
-
-                await Niles.Chores.Data.ChoresSeeder.SeedAsync(context);
-                
+                await _seeder.SeedAsync(cancellationToken);
                 return Ok(new { message = "Database seeded successfully!" });
             }
             catch (Exception ex)
@@ -53,30 +33,11 @@ namespace Niles.Chores.Api.Controllers
 
         // POST api/seed/clear
         [HttpPost("clear")]
-        public async Task<IActionResult> ClearAndSeed()
+        public async Task<IActionResult> ClearAndSeedAsync(CancellationToken cancellationToken)
         {
             try
             {
-                using IServiceScope scope = _serviceProvider.CreateScope();
-                
-                // Get ChoresContext using reflection since it's internal
-                Type? choresContextType = typeof(Niles.Chores.Configurations.IServiceCollectionExtension)
-                    .Assembly
-                    .GetType("Niles.Chores.Contexts.ChoresContext");
-                
-                if (choresContextType == null)
-                {
-                    return StatusCode(500, new { error = "Could not find ChoresContext type." });
-                }
-
-                DbContext? context = scope.ServiceProvider.GetRequiredService(choresContextType) as DbContext;
-                if (context == null)
-                {
-                    return StatusCode(500, new { error = "Could not resolve ChoresContext from service provider." });
-                }
-
-                await Niles.Chores.Data.ChoresSeeder.ClearAndSeedAsync(context);
-                
+                await _seeder.ClearAndSeedAsync(cancellationToken);
                 return Ok(new { message = "Database cleared and seeded successfully!" });
             }
             catch (Exception ex)

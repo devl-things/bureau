@@ -3,6 +3,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Niles.Chores.Abstractions.Services;
 using Niles.Chores.Contexts;
+using Niles.Chores.Data;
 using Niles.Chores.Services;
 
 namespace Niles.Chores.Configurations
@@ -17,6 +18,7 @@ namespace Niles.Chores.Configurations
             }
             services.AddDbContext<ChoresContext>(options => options.UseSqlServer(connectionString));
             services.AddScoped<IChoresHealthService, ChoresHealthService>();
+            services.AddScoped<IChoresSeeder, ChoresSeeder>();
 
             services.AddMemoryCache();
 

@@ -1,5 +1,4 @@
 ﻿using Microsoft.Extensions.Diagnostics.HealthChecks;
-using Niles.Chores.Abstractions.Services;
 
 namespace Niles.Chores.Api.Utilities
 {

@@ -5,8 +5,18 @@ services:
   niles-chores-api:
     build:
       context: ..
-      dockerfile: deploy/Dockerfile.chores
-    container_name: chores-api
+      dockerfile: deploy/Dockerfile.chores.api
+    container_name: niles-chores-api
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+    networks:
+      - nuc-network
+
+  niles-chores-web:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile.chores.web
+    container_name: niles-chores-web
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
     networks:

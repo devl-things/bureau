@@ -14,16 +14,19 @@ namespace Niles.Chores.Api
             // Add services to the container.
             builder.Services.AddChores(builder.Configuration.GetConnectionString("NilesDb")!);
 
-            // Configure CORS
-            builder.Services.AddCors(options =>
+            // Only register the CORS policy in development
+            if (builder.Environment.IsDevelopment())
             {
-                options.AddDefaultPolicy(policy =>
+                builder.Services.AddCors(options =>
                 {
-                    policy.AllowAnyOrigin()
-                          .AllowAnyHeader()
-                          .AllowAnyMethod();
+                    options.AddDefaultPolicy(policy =>
+                    {
+                        policy.AllowAnyOrigin()
+                              .AllowAnyHeader()
+                              .AllowAnyMethod();
+                    });
                 });
-            });
+            }
 
             builder.Services.AddControllers();
             builder.Services.AddEndpointsApiExplorer();
@@ -45,41 +48,20 @@ namespace Niles.Chores.Api
                     options.SwaggerEndpoint("/swagger/v1/swagger.json", "Housekeeping API v1");
                     options.RoutePrefix = "swagger";
                 });
+
+                app.UseCors();
             }
 
-            app.UseCors();
             app.UseAuthorization();
 
             // Seed database in development
             if (app.Environment.IsDevelopment())
             {
-                using (IServiceScope scope = app.Services.CreateScope())
-                {
-                    try
-                    {
-                        // Get ChoresContext using reflection since it's internal
-                        Type? choresContextType = typeof(Niles.Chores.Configurations.IServiceCollectionExtension)
-                            .Assembly
-                            .GetType("Niles.Chores.Contexts.ChoresContext");
-
-                        if (choresContextType != null)
-                        {
-                            Microsoft.EntityFrameworkCore.DbContext? context = scope.ServiceProvider.GetRequiredService(choresContextType) as Microsoft.EntityFrameworkCore.DbContext;
-                            if (context != null)
-                            {
-                                await Niles.Chores.Data.ChoresSeeder.SeedAsync(context);
-                            }
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        ILogger<Program> logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
-                        logger.LogError(ex, "An error occurred while seeding the database.");
-                    }
-                }
+                app.Services.SeedChores();
             }
 
             app.MapControllers();
+            // TODO why are health checks not visible in swagger?
             app.MapHealthChecks("api/health",
                 new HealthCheckOptions
                 {

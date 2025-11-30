@@ -6,6 +6,8 @@ docs/test-coverage.md
 
 # ignore local settings
 appsettings.Development.json
+appsettings.Production.json
+.env
 
 ## file used to sync with perplexity
 docs/perplexity-data

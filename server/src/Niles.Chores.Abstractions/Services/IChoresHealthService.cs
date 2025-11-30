@@ -1,4 +1,4 @@
-﻿namespace Niles.Chores.Abstractions.Services
+﻿namespace Niles.Chores
 {
     public interface IChoresHealthService
     {

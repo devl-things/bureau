@@ -1,16 +1,72 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using Niles.Chores.Contexts;
 using Niles.Chores.Models;
 
 namespace Niles.Chores.Data
 {
-    public static class ChoresSeeder
+    internal class ChoresSeeder : IChoresSeeder
     {
-        public static async Task SeedAsync(DbContext context)
+        private readonly ILogger<ChoresSeeder> _logger;
+        private readonly ChoresContext _context;
+
+        public ChoresSeeder(ILogger<ChoresSeeder> logger, ChoresContext context)
+        {
+            _logger = logger;
+            _context = context;
+        }
+        //TODO need to remove static ones
+        public async Task ClearAndSeedAsync(CancellationToken cancellationToken = default)
+        {
+            Console.WriteLine("Clearing existing data...");
+
+            // TODO this should be done more effieciently with TRUNCATE or similar
+            _context.CriticalChores.RemoveRange(await _context.CriticalChores.ToListAsync());
+            _context.CompletedChores.RemoveRange(await _context.CompletedChores.ToListAsync());
+            _context.Housekeeping.RemoveRange(await _context.Housekeeping.ToListAsync());
+            _context.Chores.RemoveRange(await _context.Chores.ToListAsync());
+
+            await _context.SaveChangesAsync(cancellationToken);
+
+            Console.WriteLine("Existing data cleared.");
+
+            await SeedAsync(cancellationToken);
+        }
+
+        public void Seed()
+        {
+            try
+            {
+                _logger.LogInformation("Seeding database...");
+                SeedAsync(_context).GetAwaiter().GetResult();
+                _logger.LogInformation("Database seeded successfully.");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error seeding database.");
+                throw;
+            }
+        }
+
+        public async Task SeedAsync(CancellationToken cancellationToken = default)
+        {
+            try
+            {
+                _logger.LogInformation("Seeding database...");
+                await SeedAsync(_context, cancellationToken);
+                _logger.LogInformation("Database seeded successfully.");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error seeding database.");
+                throw;
+            }
+        }
+
+        internal static async Task SeedAsync(ChoresContext context, CancellationToken cancellationToken = default)
         {
             // Check if data already exists
-            ChoresContext choresContext = (ChoresContext)context;
-            if (await choresContext.Chores.AnyAsync())
+            if (await context.Chores.AnyAsync(cancellationToken))
             {
                 Console.WriteLine("Database already contains data. Skipping seed.");
                 return;
@@ -705,8 +761,8 @@ namespace Niles.Chores.Data
                 }
             };
 
-            choresContext.Chores.AddRange(chores);
-            await choresContext.SaveChangesAsync();
+            context.Chores.AddRange(chores);
+            await context.SaveChangesAsync(cancellationToken);
 
             Console.WriteLine($"Created {chores.Count} chores.");
 
@@ -757,8 +813,8 @@ namespace Niles.Chores.Data
             };
             housekeepingRecords.Add(twoWeeksAgoHousekeeping);
 
-            choresContext.Housekeeping.AddRange(housekeepingRecords);
-            await choresContext.SaveChangesAsync();
+            context.Housekeeping.AddRange(housekeepingRecords);
+            await context.SaveChangesAsync(cancellationToken);
 
             Console.WriteLine($"Created {housekeepingRecords.Count} housekeeping records.");
 
@@ -784,8 +840,8 @@ namespace Niles.Chores.Data
                 new CompletedChoreDb { ChoreId = chores[9].Id, HousekeepingId = twoWeeksAgoHousekeeping.Id }
             };
 
-            choresContext.CompletedChores.AddRange(completedChores);
-            await choresContext.SaveChangesAsync();
+            context.CompletedChores.AddRange(completedChores);
+            await context.SaveChangesAsync(cancellationToken);
 
             Console.WriteLine($"Created {completedChores.Count} completed chore records.");
 
@@ -814,28 +870,11 @@ namespace Niles.Chores.Data
                 }
             };
 
-            choresContext.CriticalChores.AddRange(criticalChores);
-            await choresContext.SaveChangesAsync();
+            context.CriticalChores.AddRange(criticalChores);
+            await context.SaveChangesAsync(cancellationToken);
 
             Console.WriteLine($"Created {criticalChores.Count} critical chore records.");
             Console.WriteLine("Database seeding completed successfully!");
-        }
-
-        public static async Task ClearAndSeedAsync(DbContext context)
-        {
-            Console.WriteLine("Clearing existing data...");
-            
-            ChoresContext choresContext = (ChoresContext)context;
-            choresContext.CriticalChores.RemoveRange(await choresContext.CriticalChores.ToListAsync());
-            choresContext.CompletedChores.RemoveRange(await choresContext.CompletedChores.ToListAsync());
-            choresContext.Housekeeping.RemoveRange(await choresContext.Housekeeping.ToListAsync());
-            choresContext.Chores.RemoveRange(await choresContext.Chores.ToListAsync());
-            
-            await choresContext.SaveChangesAsync();
-            
-            Console.WriteLine("Existing data cleared.");
-            
-            await SeedAsync(context);
         }
     }
 }
