@@ -33,7 +33,7 @@ namespace Niles.Chores.Api.Controllers
             int pageSize = queryParams.PageSize < 1 ? 20 : queryParams.PageSize;
             if (pageSize > 100) pageSize = 100;
 
-            PaginationParams pagination = new PaginationParams(queryParams.Search, page, pageSize);
+            SearchRequest pagination = new SearchRequest(queryParams.Search, page, pageSize);
 
             // Get paged housekeeping records from database (with search and pagination at DB level)
             Niles.Chores.Abstractions.Models.PagedResult<Housekeeping> pagedResult = await _housekeepingService.ListHousekeepingsPagedAsync(pagination, cancellationToken);

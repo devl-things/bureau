@@ -105,7 +105,7 @@ namespace Niles.Chores.Services
             return housekeepingsDb.Select(h => h.ToHousekeeping());
         }
 
-        public async Task<PagedResult<Housekeeping>> ListHousekeepingsPagedAsync(PaginationParams pagination, CancellationToken cancellationToken = default)
+        public async Task<PagedResult<Housekeeping>> ListHousekeepingsPagedAsync(SearchRequest pagination, CancellationToken cancellationToken = default)
         {
             // Build query with search filter
             IQueryable<HousekeepingDb> query = _context.Housekeeping

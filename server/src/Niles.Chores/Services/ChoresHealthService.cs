@@ -1,5 +1,4 @@
-﻿using Niles.Chores.Abstractions.Services;
-using Niles.Chores.Contexts;
+﻿using Niles.Chores.Contexts;
 
 namespace Niles.Chores.Services
 {
@@ -12,7 +11,7 @@ namespace Niles.Chores.Services
             _context = context;
         }
 
-        public async Task<Boolean> IsHealthyAsync(CancellationToken cancellationToken)
+        public async Task<bool> IsHealthyAsync(CancellationToken cancellationToken)
         {
             // keep it super cheap
             return await _context.Database.CanConnectAsync(cancellationToken);

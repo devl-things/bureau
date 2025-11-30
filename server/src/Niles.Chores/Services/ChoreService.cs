@@ -1,5 +1,4 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using Niles.Chores;
 using Niles.Chores.Abstractions.Models;
 using Niles.Chores.Abstractions.Services;
 using Niles.Chores.Contexts;
@@ -54,15 +53,29 @@ namespace Niles.Chores.Services
             };
         }
 
+        //TODO REFACTOR This method should return Result
         public async Task<Chore?> GetChoreAsync(int id, CancellationToken cancellationToken = default)
         {
-            ChoreDb? choreDb = await _context.Chores.FindAsync(new object[] { id }, cancellationToken);
-            if (choreDb == null) return null;
-
-            return choreDb.ToChore();
+            ChoreDetail? chore = await _context.Chores.Where(c => c.Id == id)
+                .Select(chore => new ChoreDetail
+                {
+                    Chore = chore,
+                    OpenCritical = chore.CriticalChores
+                        .Where(c => c.CompletedChoreId == null)
+                        .OrderByDescending(c => c.CreatedAt)
+                        .Select(c => new CriticalChoreDetail
+                        {
+                            CreatedAt = c.CreatedAt,
+                            Note = c.Note
+                        })
+                        .FirstOrDefault()
+                })
+                .FirstOrDefaultAsync(cancellationToken);
+            if (chore == null) return null;
+            return chore.ToChore();
         }
-        
-        public async Task<PagedResult<Chore>> ListChoresPagedAsync(PaginationParams pagination, CancellationToken cancellationToken = default)
+
+        public async Task<PagedResult<Chore>> ListChoresPagedAsync(SearchRequest pagination, CancellationToken cancellationToken = default)
         {
             // Build query with search filter
             IQueryable<ChoreDb> query = _context.Chores.AsQueryable();
@@ -70,7 +83,7 @@ namespace Niles.Chores.Services
             if (!string.IsNullOrWhiteSpace(pagination.Search))
             {
                 string searchLower = pagination.Search.ToLowerInvariant();
-                
+
                 // Try to parse search term as ChoreType enum
                 ChoreType? searchType = null;
                 if (Enum.TryParse<ChoreType>(pagination.Search, true, out ChoreType parsedType))
@@ -161,34 +174,27 @@ namespace Niles.Chores.Services
                     ErrorMessage = $"Chore with Id {id} not found"
                 };
             }
-           
+
             return new Result
             {
                 IsSuccess = true
             };
-            
+
         }
 
-        public async Task<PagedResult<Chore>> ListChoresPagedWithCriticalAsync(PaginationParams pagination, CancellationToken cancellationToken = default)
+        //TODO REFACTOR This method is not filling the IsCritical property on the Chore objects
+        //TODO REFACTOR Consider renaming to GetChoresAsync and have only this method and delete ListChoresPagedAsync or move here the logic
+        public async Task<PagedResult<Chore>> ListChoresPagedWithCriticalAsync(SearchRequest pagination, CancellationToken cancellationToken = default)
         {
             PagedResult<Chore> pagedResult = await ListChoresPagedAsync(pagination, cancellationToken);
-            
+
             // Get all chore IDs for this page
             List<int> choreIds = pagedResult.Items.Select(c => c.Id).ToList();
-            
+
             // Get all open critical chores for these chore IDs in one query
             List<int> openCriticalChoreIds = await _criticalChoreService.GetOpenCriticalChoreIdsAsync(choreIds, cancellationToken);
-            
+
             return pagedResult;
-        }
-
-        public async Task<(Chore Chore, bool IsCritical)?> GetChoreWithCriticalAsync(int id, CancellationToken cancellationToken = default)
-        {
-            Chore? chore = await GetChoreAsync(id, cancellationToken);
-            if (chore == null) return null;
-
-            bool isCritical = await _criticalChoreService.HasOpenCriticalChoreAsync(id, cancellationToken);
-            return (chore, isCritical);
         }
     }
 }

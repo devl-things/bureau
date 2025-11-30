@@ -1,4 +1,3 @@
-using Niles.Chores;
 using Niles.Chores.Models;
 
 namespace Niles.Chores.Mappers
@@ -14,6 +13,18 @@ namespace Niles.Chores.Mappers
                 Description = choreDb.Description,
                 Type = choreDb.Type,
                 WeeklyInterval = choreDb.WeeklyInterval
+            };
+        }
+        internal static Chore ToChore(this ChoreDetail choreDetail)
+        {
+            return new Chore
+            {
+                Id = choreDetail.Chore.Id,
+                Title = choreDetail.Chore.Title,
+                Description = choreDetail.Chore.Description,
+                Type = choreDetail.Chore.Type,
+                WeeklyInterval = choreDetail.Chore.WeeklyInterval,
+                IsCrititical = choreDetail.OpenCritical is not null
             };
         }
     }
