@@ -1,8 +1,194 @@
-﻿using Niles.Chores.Abstractions.Services;
+﻿using Microsoft.EntityFrameworkCore;
+using Niles.Chores;
+using Niles.Chores.Abstractions.Models;
+using Niles.Chores.Abstractions.Services;
+using Niles.Chores.Contexts;
+using Niles.Chores.Mappers;
+using Niles.Chores.Models;
 
 namespace Niles.Chores.Services
 {
     internal class ChoreService : IChoreService
     {
+        private readonly ChoresContext _context;
+        private readonly ICriticalChoreService _criticalChoreService;
+        private readonly TimeProvider _timeProvider;
+
+        public ChoreService(ChoresContext context, ICriticalChoreService criticalChoreService, TimeProvider timeProvider)
+        {
+            _context = context;
+            _criticalChoreService = criticalChoreService;
+            _timeProvider = timeProvider;
+        }
+
+        public async Task<Result<Chore>> CreateChoreAsync(Chore chore, CancellationToken cancellationToken = default)
+        {
+            if (chore == null)
+            {
+                return new Result<Chore>
+                {
+                    IsSuccess = false,
+                    ErrorMessage = "Chore cannot be null"
+                };
+            }
+
+            DateTimeOffset now = _timeProvider.GetUtcNow();
+            ChoreDb choreDb = new ChoreDb
+            {
+                Title = chore.Title,
+                Description = chore.Description,
+                Type = chore.Type,
+                WeeklyInterval = chore.WeeklyInterval,
+                CreatedAt = now,
+                UpdatedAt = now
+            };
+
+            _context.Chores.Add(choreDb);
+            await _context.SaveChangesAsync(cancellationToken);
+
+            chore.Id = choreDb.Id;
+            return new Result<Chore>
+            {
+                Value = chore,
+                IsSuccess = true
+            };
+        }
+
+        public async Task<Chore?> GetChoreAsync(int id, CancellationToken cancellationToken = default)
+        {
+            ChoreDb? choreDb = await _context.Chores.FindAsync(new object[] { id }, cancellationToken);
+            if (choreDb == null) return null;
+
+            return choreDb.ToChore();
+        }
+        
+        public async Task<PagedResult<Chore>> ListChoresPagedAsync(PaginationParams pagination, CancellationToken cancellationToken = default)
+        {
+            // Build query with search filter
+            IQueryable<ChoreDb> query = _context.Chores.AsQueryable();
+
+            if (!string.IsNullOrWhiteSpace(pagination.Search))
+            {
+                string searchLower = pagination.Search.ToLowerInvariant();
+                
+                // Try to parse search term as ChoreType enum
+                ChoreType? searchType = null;
+                if (Enum.TryParse<ChoreType>(pagination.Search, true, out ChoreType parsedType))
+                {
+                    searchType = parsedType;
+                }
+
+                query = query.Where(c =>
+                    (c.Title != null && c.Title.ToLower().Contains(searchLower)) ||
+                    (c.Description != null && c.Description.ToLower().Contains(searchLower)) ||
+                    (searchType.HasValue && c.Type == searchType.Value)
+                );
+            }
+
+            // Get total count (before pagination)
+            int total = await query.CountAsync(cancellationToken);
+
+            // Apply pagination at database level
+            List<ChoreDb> choresDb = await query
+                .OrderBy(c => c.Id) // Consistent ordering
+                .Skip((pagination.Page - 1) * pagination.PageSize)
+                .Take(pagination.PageSize)
+                .ToListAsync(cancellationToken);
+
+            IEnumerable<Chore> items = choresDb.Select(c => c.ToChore());
+            int totalPages = (int)Math.Ceiling(total / (double)pagination.PageSize);
+
+            return new PagedResult<Chore>
+            {
+                Items = items,
+                Page = pagination.Page,
+                PageSize = pagination.PageSize,
+                Total = total,
+                TotalPages = totalPages,
+                HasNext = pagination.Page < totalPages,
+                HasPrevious = pagination.Page > 1
+            };
+        }
+
+        public async Task<Result<Chore>> UpdateChoreAsync(Chore chore, CancellationToken cancellationToken = default)
+        {
+            if (chore == null || chore.Id == 0)
+            {
+                return new Result<Chore>
+                {
+                    IsSuccess = false,
+                    ErrorMessage = "Chore cannot be null and must have a valid Id"
+                };
+            }
+
+            ChoreDb? choreDb = await _context.Chores.FindAsync(new object[] { chore.Id }, cancellationToken);
+            if (choreDb == null)
+            {
+                return new Result<Chore>
+                {
+                    IsSuccess = false,
+                    ErrorMessage = $"Chore with Id {chore.Id} not found"
+                };
+            }
+
+            choreDb.Title = chore.Title;
+            choreDb.Description = chore.Description;
+            choreDb.Type = chore.Type;
+            choreDb.WeeklyInterval = chore.WeeklyInterval;
+            choreDb.UpdatedAt = _timeProvider.GetUtcNow();
+
+            await _context.SaveChangesAsync(cancellationToken);
+
+            Chore updatedChore = choreDb.ToChore();
+            return new Result<Chore>
+            {
+                Value = updatedChore,
+                IsSuccess = true
+            };
+        }
+
+        public async Task<Result> DeleteChoreAsync(int id, CancellationToken cancellationToken = default)
+        {
+            int rowsAffected = await _context.Chores
+                .Where(x => x.Id == id)
+                .ExecuteDeleteAsync();
+
+            if (rowsAffected == 0)
+            {
+                return new Result
+                {
+                    IsSuccess = false,
+                    ErrorMessage = $"Chore with Id {id} not found"
+                };
+            }
+           
+            return new Result
+            {
+                IsSuccess = true
+            };
+            
+        }
+
+        public async Task<PagedResult<Chore>> ListChoresPagedWithCriticalAsync(PaginationParams pagination, CancellationToken cancellationToken = default)
+        {
+            PagedResult<Chore> pagedResult = await ListChoresPagedAsync(pagination, cancellationToken);
+            
+            // Get all chore IDs for this page
+            List<int> choreIds = pagedResult.Items.Select(c => c.Id).ToList();
+            
+            // Get all open critical chores for these chore IDs in one query
+            List<int> openCriticalChoreIds = await _criticalChoreService.GetOpenCriticalChoreIdsAsync(choreIds, cancellationToken);
+            
+            return pagedResult;
+        }
+
+        public async Task<(Chore Chore, bool IsCritical)?> GetChoreWithCriticalAsync(int id, CancellationToken cancellationToken = default)
+        {
+            Chore? chore = await GetChoreAsync(id, cancellationToken);
+            if (chore == null) return null;
+
+            bool isCritical = await _criticalChoreService.HasOpenCriticalChoreAsync(id, cancellationToken);
+            return (chore, isCritical);
+        }
     }
 }

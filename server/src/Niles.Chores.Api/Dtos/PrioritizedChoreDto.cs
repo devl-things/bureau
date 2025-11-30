@@ -15,7 +15,7 @@ namespace Niles.Chores.Api.Dtos
         [JsonPropertyName("priority")]
         public int Priority { get; set; }
         [JsonPropertyName("type")]
-        public string Type { get; set; }
+        public string Type { get; set; } = string.Empty;
         [JsonPropertyName("completed")]
         public bool IsCompleted { get; set; }
         [JsonIgnore]

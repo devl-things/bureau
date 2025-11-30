@@ -296,6 +296,12 @@
             text-decoration: underline;
         }
 
+        #pagination {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
         @media (max-width: 640px) {
             .actions {
                 flex-direction: column;
@@ -334,6 +340,18 @@
                     </tr>
                 </tbody>
             </table>
+            <div id="pagination" style="display: none; padding: 16px 20px; border-top: 1px solid var(--border);">
+                <div style="color: var(--muted); font-size: 0.85rem;">
+                    <span id="pagination-info">Showing 0-0 of 0</span>
+                </div>
+                <div style="display: flex; gap: 8px; align-items: center;">
+                    <button id="prev-page" class="btn ghost" disabled>Previous</button>
+                    <span style="color: var(--muted); font-size: 0.85rem;">
+                        Page <span id="current-page">1</span> of <span id="total-pages">1</span>
+                    </span>
+                    <button id="next-page" class="btn ghost" disabled>Next</button>
+                </div>
+            </div>
         </section>
     </div>
 
@@ -346,81 +364,95 @@
     <div class="toast" id="toast"></div>
 
     <script>
-        const API_BASE = "/bureau/server/public/api/chores";
-        const FAKE_ENDPOINTS = {
-            list: `${API_BASE}/index.json`,
-            create: `${API_BASE}/create.json`,
-            update: `${API_BASE}/update.json`,
-            delete: `${API_BASE}/delete.json`,
-            important: `${API_BASE}/important.json`
-        };
+        const API_BASE = "http://localhost:5032/api/chores";
         const state = {
             chores: [],
-            filtered: [],
             meta: null,
             activeModal: null,
             activeChore: null,
-            search: ""
+            search: "",
+            currentPage: 1,
+            pageSize: 5,
+            searchTimeout: null
         };
 
         document.addEventListener("DOMContentLoaded", () => {
             document.getElementById("search-input").addEventListener("input", handleSearch);
             document.getElementById("create-button").addEventListener("click", () => openFormModal("create"));
+            document.getElementById("prev-page").addEventListener("click", () => changePage(state.currentPage - 1));
+            document.getElementById("next-page").addEventListener("click", () => changePage(state.currentPage + 1));
             fetchChores();
         });
 
         async function fetchChores() {
             setTableMessage("Loading chores…");
             try {
-                const response = await fetch(`${FAKE_ENDPOINTS.list}?t=${Date.now()}`);
+                const params = new URLSearchParams({
+                    page: state.currentPage.toString(),
+                    pageSize: state.pageSize.toString()
+                });
+                if (state.search) {
+                    params.append("search", state.search);
+                }
+
+                const response = await fetch(`${API_BASE}?${params.toString()}`);
                 if (!response.ok) throw new Error("Failed to load chores");
                 const payload = await response.json();
-                state.meta = payload?.meta ?? null;
-                state.chores = Array.isArray(payload?.data)
-                    ? payload.data
-                    : Array.isArray(payload)
-                        ? payload
-                        : [];
+
+                if (payload.data && payload.meta) {
+                    // Paginated response
+                    state.chores = Array.isArray(payload.data) ? payload.data : [];
+                    state.meta = payload.meta;
+                } else if (Array.isArray(payload)) {
+                    // Fallback: array response
+                    state.chores = payload;
+                    state.meta = null;
+                } else {
+                    state.chores = [];
+                    state.meta = null;
+                }
             } catch (err) {
                 console.error(err);
                 state.meta = null;
                 state.chores = sampleChores();
                 showToast("Using fallback data because API failed");
             }
-            applyFilter();
+            renderTable();
         }
 
         function handleSearch(event) {
-            state.search = event.target.value.trim().toLowerCase();
-            applyFilter();
+            const searchValue = event.target.value.trim();
+            state.search = searchValue;
+            state.currentPage = 1; // Reset to first page on search
+
+            // Debounce search
+            clearTimeout(state.searchTimeout);
+            state.searchTimeout = setTimeout(() => {
+                fetchChores();
+            }, 300);
         }
 
-        function applyFilter() {
-            if (!state.chores.length) {
-                setTableMessage("No chores found.");
-                return;
-            }
-
-            state.filtered = state.chores.filter((chore) => {
-                if (!state.search) return true;
-                const needle = state.search;
-                const haystack = `${chore.id ?? ""} ${(chore.title ?? "")} ${(chore.type ?? "")}`.toLowerCase();
-                return haystack.includes(needle);
-            });
-
-            if (!state.filtered.length) {
-                setTableMessage("No chores match that search.");
-                return;
-            }
-
-            renderTable(state.filtered);
+        function changePage(page) {
+            if (page < 1 || (state.meta && page > state.meta.totalPages)) return;
+            state.currentPage = page;
+            fetchChores();
         }
 
-        function renderTable(chores) {
+        function renderTable() {
             const tbody = document.getElementById("chores-table-body");
+            const pagination = document.getElementById("pagination");
             tbody.innerHTML = "";
 
-            chores.forEach((chore) => {
+            if (!state.chores || state.chores.length === 0) {
+                setTableMessage(state.search ? "No chores match that search." : "No chores found.");
+                pagination.style.display = "none";
+                return;
+            }
+
+            pagination.style.display = "flex";
+            updatePagination();
+
+            state.chores.forEach((chore) => {
                 const row = document.createElement("tr");
 
                 const idCell = document.createElement("td");
@@ -428,11 +460,12 @@
 
                 const titleCell = document.createElement("td");
                 const type = chore.type ? `<span class="badge">${sanitize(chore.type)}</span>` : "";
+                const criticalBadge = chore.isCritical
+                    ? `<span class="badge" style="background: rgba(159, 18, 57, 0.16); border-color: rgba(159, 18, 57, 0.25); color: #f87171;">Critical</span>`
+                    : "";
                 const repeatLabel =
-                    chore.repeatEveryWeeks || chore.weeklyInterval
-                        ? `<small class="muted-label">Every ${sanitize(
-                              (chore.repeatEveryWeeks ?? chore.weeklyInterval).toString()
-                          )} wk(s)</small>`
+                    chore.weeklyInterval
+                        ? `<small class="muted-label">Every ${sanitize(chore.weeklyInterval.toString())} wk(s)</small>`
                         : "";
                 const descriptionBadge = chore.description
                     ? `<small class="badge subtle">${sanitize(chore.description)}</small>`
@@ -441,6 +474,7 @@
                 titleCell.innerHTML = `<div>${sanitize(chore.title ?? "Untitled")}</div>
                     <div class="meta-line">
                         ${type}
+                        ${criticalBadge}
                         ${repeatLabel}
                     </div>
                     ${descriptionBadge}`;
@@ -448,7 +482,13 @@
                 const actionsCell = document.createElement("td");
                 actionsCell.classList.add("actions");
                 actionsCell.appendChild(createActionButton("Edit", () => openFormModal("edit", chore)));
-                actionsCell.appendChild(createActionButton("Important", () => openImportantModal(chore)));
+
+                if (chore.isCritical) {
+                    actionsCell.appendChild(createActionButton("Remove Critical", () => handleRemoveCritical(chore), false));
+                } else {
+                    actionsCell.appendChild(createActionButton("Critical", () => openCriticalModal(chore)));
+                }
+
                 actionsCell.appendChild(createActionButton("Delete", () => openDeleteModal(chore), true));
 
                 row.appendChild(idCell);
@@ -470,6 +510,30 @@
         function setTableMessage(message) {
             const tbody = document.getElementById("chores-table-body");
             tbody.innerHTML = `<tr><td colspan="3" class="empty">${message}</td></tr>`;
+        }
+
+        function updatePagination() {
+            const prevBtn = document.getElementById("prev-page");
+            const nextBtn = document.getElementById("next-page");
+            const currentPageEl = document.getElementById("current-page");
+            const totalPagesEl = document.getElementById("total-pages");
+            const paginationInfo = document.getElementById("pagination-info");
+
+            if (state.meta) {
+                const start = (state.meta.page - 1) * state.meta.pageSize + 1;
+                const end = Math.min(state.meta.page * state.meta.pageSize, state.meta.total);
+                paginationInfo.textContent = `Showing ${start}-${end} of ${state.meta.total}`;
+                currentPageEl.textContent = state.meta.page;
+                totalPagesEl.textContent = state.meta.totalPages;
+                prevBtn.disabled = !state.meta.hasPrevious;
+                nextBtn.disabled = !state.meta.hasNext;
+            } else {
+                paginationInfo.textContent = `Showing ${state.chores.length} items`;
+                currentPageEl.textContent = "1";
+                totalPagesEl.textContent = "1";
+                prevBtn.disabled = true;
+                nextBtn.disabled = true;
+            }
         }
 
         function openFormModal(mode, chore = null) {
@@ -497,7 +561,7 @@
                     </label>
                     <label>
                         Repeat every (weeks)
-                        <input name="repeatEveryWeeks" type="number" min="1" step="1" placeholder="1" value="${sanitize(chore?.repeatEveryWeeks?.toString?.() ?? chore?.weeklyInterval?.toString?.() ?? "")}" />
+                        <input name="repeatEveryWeeks" type="number" min="1" step="1" placeholder="1" value="${sanitize(chore?.weeklyInterval?.toString?.() ?? "")}" />
                     </label>
                     <div class="modal-actions">
                         <button type="button" class="btn ghost" id="cancel-modal">Cancel</button>
@@ -515,32 +579,35 @@
             const formData = new FormData(event.target);
             const payload = {
                 title: formData.get("title"),
-                description: formData.get("description"),
-                type: formData.get("type") || null,
-                repeatEveryWeeks: numberOrNull(formData.get("repeatEveryWeeks"))
+                description: formData.get("description") || null,
+                type: formData.get("type") || "Maintenance",
+                weeklyInterval: numberOrNull(formData.get("repeatEveryWeeks")) || 1
             };
             try {
                 const isEdit = state.activeModal === "edit";
-                const endpoint = isEdit ? FAKE_ENDPOINTS.update : FAKE_ENDPOINTS.create;
-                const response = await fetch(`${endpoint}?t=${Date.now()}`);
-                if (!response.ok) throw new Error("Request failed");
-                const result = await response.json().catch(() => ({}));
-                if (isEdit) {
-                    state.chores = state.chores.map((chore) =>
-                        chore.id === state.activeChore.id ? { ...chore, ...payload } : chore
-                    );
-                } else {
-                    const newChore = result?.chore
-                        ? normalizeNewChore(result.chore, payload)
-                        : { id: generateChoreId(), ...payload };
-                    state.chores = [newChore, ...state.chores];
+                const url = isEdit ? `${API_BASE}/${state.activeChore.id}` : API_BASE;
+                const method = isEdit ? "PUT" : "POST";
+
+                const response = await fetch(url, {
+                    method: method,
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!response.ok) {
+                    const error = await response.json().catch(() => ({}));
+                    throw new Error(error.error || "Request failed");
                 }
-                applyFilter();
+
+                // Refresh from server
+                await fetchChores();
                 showToast(isEdit ? "Chore updated" : "Chore created", true);
                 closeModal();
             } catch (err) {
                 console.error(err);
-                showToast("Could not save chore");
+                showToast(err.message || "Could not save chore");
             }
         }
 
@@ -565,35 +632,41 @@
 
         async function handleDelete() {
             try {
-                const response = await fetch(`${FAKE_ENDPOINTS.delete}?t=${Date.now()}`);
-                if (!response.ok) throw new Error("Delete failed");
-                state.chores = state.chores.filter((chore) => chore.id !== state.activeChore.id);
-                applyFilter();
+                const response = await fetch(`${API_BASE}/${state.activeChore.id}`, {
+                    method: "DELETE"
+                });
+                if (!response.ok) {
+                    if (response.status === 404) {
+                        throw new Error("Chore not found");
+                    }
+                    throw new Error("Delete failed");
+                }
+                await fetchChores();
                 showToast("Chore deleted", true);
                 closeModal();
             } catch (err) {
                 console.error(err);
-                showToast("Could not delete chore");
+                showToast(err.message || "Could not delete chore");
             }
         }
 
-        function openImportantModal(chore) {
-            state.activeModal = "important";
+        function openCriticalModal(chore) {
+            state.activeModal = "critical";
             state.activeChore = chore;
             const modal = document.getElementById("modal");
             modal.innerHTML = `
                 <header>
-                    <h2>Mark important</h2>
-                    <p>Provide context for why "${sanitize(chore?.title)}" matters.</p>
+                    <h2>Mark critical</h2>
+                    <p>Provide context for why "${sanitize(chore?.title)}" is critical.</p>
                 </header>
-                <form id="important-form">
+                <form id="critical-form">
                     <label>
                         Reminder date
                         <input type="date" name="date" required />
                     </label>
                     <label>
                         Notes
-                        <textarea name="description" required placeholder="Describe why this is important"></textarea>
+                        <textarea name="description" required placeholder="Describe why this is critical"></textarea>
                     </label>
                     <div class="modal-actions">
                         <button type="button" class="btn ghost" id="cancel-modal">Cancel</button>
@@ -603,35 +676,70 @@
             `;
             document.getElementById("modal-backdrop").classList.add("visible");
             document.getElementById("cancel-modal").addEventListener("click", closeModal);
-            document.getElementById("important-form").addEventListener("submit", handleImportantSubmit);
+            document.getElementById("critical-form").addEventListener("submit", handleCriticalSubmit);
         }
 
-        async function handleImportantSubmit(event) {
+        async function handleCriticalSubmit(event) {
             event.preventDefault();
             const formData = new FormData(event.target);
-            const payload = {
-                date: formData.get("date"),
-                description: formData.get("description")
-            };
+            const date = formData.get("date");
+            const description = formData.get("description");
+
+            if (!date || !description) {
+                showToast("Please fill in all required fields", false);
+                return;
+            }
+
             try {
-                const response = await fetch(`${FAKE_ENDPOINTS.important}?t=${Date.now()}`);
-                if (!response.ok) throw new Error("Important flag failed");
-                const result = await response.json().catch(() => ({}));
-                state.chores = state.chores.map((chore) =>
-                    chore.id === state.activeChore.id
-                        ? {
-                              ...chore,
-                              important: true,
-                              reminder: result?.reminder ?? payload
-                          }
-                        : chore
-                );
-                applyFilter();
-                showToast("Chore marked important", true);
+                const payload = {
+                    date: date,
+                    description: description.trim()
+                };
+
+                const response = await fetch(`${API_BASE}/${state.activeChore.id}/critical`, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!response.ok) {
+                    const error = await response.json().catch(() => ({}));
+                    throw new Error(error.error || "Failed to mark chore as critical");
+                }
+
+                showToast("Chore marked as critical", true);
                 closeModal();
+                // Refresh to show updated state
+                await fetchChores();
             } catch (err) {
                 console.error(err);
-                showToast("Could not mark chore important");
+                showToast(err.message || "Could not mark chore as critical");
+            }
+        }
+
+        async function handleRemoveCritical(chore) {
+            if (!confirm(`Remove critical status from "${sanitize(chore.title)}"?`)) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/${chore.id}/critical`, {
+                    method: "DELETE"
+                });
+
+                if (!response.ok) {
+                    const error = await response.json().catch(() => ({}));
+                    throw new Error(error.error || "Failed to remove critical status");
+                }
+
+                showToast("Critical status removed", true);
+                // Refresh to show updated state
+                await fetchChores();
+            } catch (err) {
+                console.error(err);
+                showToast(err.message || "Could not remove critical status");
             }
         }
 
@@ -688,14 +796,13 @@
             return `C-${Math.floor(100 + Math.random() * 900)}`;
         }
 
-        function normalizeNewChore(responseChore, payload) {
+        function normalizeChore(chore) {
             return {
-                id: responseChore.id ?? generateChoreId(),
-                title: responseChore.title ?? payload.title,
-                description: responseChore.description ?? payload.description,
-                type: responseChore.type ?? payload.type,
-                repeatEveryWeeks: responseChore.repeatEveryWeeks ?? payload.repeatEveryWeeks,
-                important: Boolean(responseChore.important)
+                id: chore.id,
+                title: chore.title,
+                description: chore.description,
+                type: chore.type,
+                weeklyInterval: chore.weeklyInterval
             };
         }
     </script>

@@ -16,5 +16,7 @@ namespace Niles.Chores.Api.Dtos
         public string? Note { get; set; }
         [JsonPropertyName("completedChoreIds")]
         public List<int> CompletedChoreIds { get; set; } = new List<int>();
+        [JsonPropertyName("completedChores")]
+        public List<ChoreDto> CompletedChores { get; set; } = new List<ChoreDto>();
     }
 }

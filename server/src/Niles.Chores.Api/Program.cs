@@ -7,12 +7,23 @@ namespace Niles.Chores.Api
 {
     public class Program
     {
-        public static void Main(string[] args)
+        public static async Task Main(string[] args)
         {
-            var builder = WebApplication.CreateBuilder(args);
+            WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
             // Add services to the container.
             builder.Services.AddChores(builder.Configuration.GetConnectionString("NilesDb")!);
+
+            // Configure CORS
+            builder.Services.AddCors(options =>
+            {
+                options.AddDefaultPolicy(policy =>
+                {
+                    policy.AllowAnyOrigin()
+                          .AllowAnyHeader()
+                          .AllowAnyMethod();
+                });
+            });
 
             builder.Services.AddControllers();
             builder.Services.AddEndpointsApiExplorer();
@@ -36,8 +47,37 @@ namespace Niles.Chores.Api
                 });
             }
 
+            app.UseCors();
             app.UseAuthorization();
 
+            // Seed database in development
+            if (app.Environment.IsDevelopment())
+            {
+                using (IServiceScope scope = app.Services.CreateScope())
+                {
+                    try
+                    {
+                        // Get ChoresContext using reflection since it's internal
+                        Type? choresContextType = typeof(Niles.Chores.Configurations.IServiceCollectionExtension)
+                            .Assembly
+                            .GetType("Niles.Chores.Contexts.ChoresContext");
+                        
+                        if (choresContextType != null)
+                        {
+                            Microsoft.EntityFrameworkCore.DbContext? context = scope.ServiceProvider.GetRequiredService(choresContextType) as Microsoft.EntityFrameworkCore.DbContext;
+                            if (context != null)
+                            {
+                                await Niles.Chores.Data.ChoresSeeder.SeedAsync(context);
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        ILogger<Program> logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+                        logger.LogError(ex, "An error occurred while seeding the database.");
+                    }
+                }
+            }
 
             app.MapControllers();
             app.MapHealthChecks("api/health",

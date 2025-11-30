@@ -33,8 +33,8 @@ namespace Niles.Chores.Models
 
         public static int operator -(YearsWeek a, YearsWeek b)
         {
-            var da = ISOWeek.ToDateTime(a.Year, a.Week, DayOfWeek.Monday);
-            var db = ISOWeek.ToDateTime(b.Year, b.Week, DayOfWeek.Monday);
+            DateTime da = ISOWeek.ToDateTime(a.Year, a.Week, DayOfWeek.Monday);
+            DateTime db = ISOWeek.ToDateTime(b.Year, b.Week, DayOfWeek.Monday);
 
             return (int)((da - db).TotalDays / 7);
         }

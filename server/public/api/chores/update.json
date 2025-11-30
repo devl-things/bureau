@@ -1,6 +1,0 @@
-{
-  "status": "success",
-  "message": "Chore updated successfully",
-  "updatedFields": ["title", "description", "type", "repeatEveryWeeks"]
-}
-
