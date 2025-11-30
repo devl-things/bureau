@@ -1,4 +1,6 @@
-
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
+using Microsoft.Extensions.Diagnostics.HealthChecks;
+using Niles.Chores.Api.Utilities;
 using Niles.Chores.Configurations;
 
 namespace Niles.Chores.Api
@@ -27,7 +29,10 @@ namespace Niles.Chores.Api
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
 
-            WebApplication app = builder.Build();
+            builder.Services.AddHealthChecks()
+                .AddCheck<ChoresHealthCheck>("chores", failureStatus: HealthStatus.Unhealthy, tags: new[] { "ready" });
+
+            var app = builder.Build();
 
             app.Services.MigrateChores();
 
@@ -75,7 +80,27 @@ namespace Niles.Chores.Api
             }
 
             app.MapControllers();
-            app.MapGet("/api/health", () => Results.Ok(new { status = "ok" }));
+            app.MapHealthChecks("api/health",
+                new HealthCheckOptions
+                {
+                    ResponseWriter = async (context, report) =>
+                    {
+                        context.Response.ContentType = "application/json";
+
+                        var response = new
+                        {
+                            status = report.Status.ToString(),
+                            entries = report.Entries.Select(x => new
+                            {
+                                key = x.Key,
+                                status = x.Value.Status.ToString(),
+                                description = x.Value.Description
+                            })
+                        };
+
+                        await context.Response.WriteAsJsonAsync(response);
+                    }
+                });
 
             app.Run();
         }

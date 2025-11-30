@@ -16,6 +16,7 @@ namespace Niles.Chores.Configurations
                 throw new ArgumentNullException(nameof(connectionString), "Connection string not defined correctly.");
             }
             services.AddDbContext<ChoresContext>(options => options.UseSqlServer(connectionString));
+            services.AddScoped<IChoresHealthService, ChoresHealthService>();
 
             services.AddMemoryCache();
 
