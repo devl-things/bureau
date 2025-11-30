@@ -12,7 +12,7 @@ services:
       # chores api settings
       ConnectionStrings__NilesDb: "${ConnectionStrings__NilesDb}"
       Logging__LogLevel__Default: "${Logging__LogLevel__Default}"
-      Logging__LogLevel__Microsoft.AspNetCore: "${Logging__LogLevel__Microsoft.AspNetCore}"
+      Logging__LogLevel__Microsoft.AspNetCore: "${Logging__LogLevel__Microsoft_AspNetCore}"
     networks:
       - nuc-network
 
