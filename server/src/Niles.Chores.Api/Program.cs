@@ -32,7 +32,7 @@ namespace Niles.Chores.Api
             builder.Services.AddHealthChecks()
                 .AddCheck<ChoresHealthCheck>("chores", failureStatus: HealthStatus.Unhealthy, tags: new[] { "ready" });
 
-            var app = builder.Build();
+            WebApplication app = builder.Build();
 
             app.Services.MigrateChores();
 
@@ -61,7 +61,7 @@ namespace Niles.Chores.Api
                         Type? choresContextType = typeof(Niles.Chores.Configurations.IServiceCollectionExtension)
                             .Assembly
                             .GetType("Niles.Chores.Contexts.ChoresContext");
-                        
+
                         if (choresContextType != null)
                         {
                             Microsoft.EntityFrameworkCore.DbContext? context = scope.ServiceProvider.GetRequiredService(choresContextType) as Microsoft.EntityFrameworkCore.DbContext;

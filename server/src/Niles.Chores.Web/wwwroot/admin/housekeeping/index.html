@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Housekeeping Logs</title>
+    <style>
+        :root {
+            --bg: #0f172a;
+            --panel: #111c36;
+            --panel-light: #152344;
+            --border: #243459;
+            --text: #f8fafc;
+            --muted: #93a8d4;
+            --accent: #38bdf8;
+            --info: #60a5fa;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            background: radial-gradient(circle at top, rgba(56, 189, 248, 0.2), transparent 45%), var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+        }
+
+        .shell {
+            max-width: 1080px;
+            margin: 0 auto;
+            padding: 32px 20px 60px;
+        }
+
+        header {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-bottom: 28px;
+        }
+
+        .title {
+            font-size: 1.6rem;
+            font-weight: 600;
+        }
+
+        .subtitle {
+            color: var(--muted);
+            font-size: 0.96rem;
+        }
+
+        .controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .controls input[type="search"] {
+            flex: 1;
+            min-width: 220px;
+            padding: 12px 14px;
+            border-radius: 10px;
+            border: 1px solid var(--border);
+            background: var(--panel-light);
+            color: var(--text);
+            font-size: 0.94rem;
+            outline: none;
+        }
+
+        .controls input::placeholder {
+            color: var(--muted);
+        }
+
+        .panel {
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: 18px;
+            padding: 18px 0 8px;
+            box-shadow: 0 25px 60px rgba(2, 6, 23, 0.55);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        thead th {
+            text-align: left;
+            padding: 0 20px 12px;
+            font-size: 0.82rem;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+            color: var(--muted);
+            font-weight: 600;
+        }
+
+        tbody tr {
+            border-top: 1px solid var(--border);
+            cursor: pointer;
+            transition: background 0.15s ease;
+        }
+
+        tbody tr:hover,
+        tbody tr:focus-within {
+            background: rgba(56, 189, 248, 0.08);
+        }
+
+        tbody td {
+            padding: 16px 20px;
+            font-size: 0.95rem;
+        }
+
+        .notes {
+            color: var(--muted);
+            font-size: 0.9rem;
+        }
+
+        .count-pill {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 32px;
+            padding: 4px 10px;
+            border-radius: 999px;
+            background: rgba(96, 165, 250, 0.15);
+            color: var(--info);
+            font-weight: 600;
+            border: 1px solid rgba(96, 165, 250, 0.3);
+        }
+
+        .empty {
+            text-align: center;
+            padding: 30px 10px;
+            color: var(--muted);
+            font-size: 0.95rem;
+        }
+
+        .modal-backdrop {
+            position: fixed;
+            inset: 0;
+            background: rgba(2, 6, 23, 0.7);
+            backdrop-filter: blur(6px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 20;
+            padding: 20px;
+        }
+
+        .modal-backdrop.visible {
+            display: flex;
+        }
+
+        .modal {
+            width: min(460px, 100%);
+            background: #0b1226;
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 24px;
+        }
+
+        .modal header {
+            margin: 0 0 10px;
+        }
+
+        .modal header h2 {
+            margin: 0;
+            font-size: 1.2rem;
+        }
+
+        .modal header p {
+            margin: 4px 0 0;
+            color: var(--muted);
+        }
+
+        .detail-list {
+            list-style: none;
+            padding: 0;
+            margin: 12px 0 20px;
+            display: grid;
+            gap: 10px;
+        }
+
+        .detail-list li {
+            display: flex;
+            justify-content: space-between;
+            gap: 10px;
+            font-size: 0.95rem;
+        }
+
+        .detail-label {
+            color: var(--muted);
+        }
+
+        .chores-list {
+            list-style: none;
+            padding: 0;
+            margin: 10px 0 0;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .chores-list li {
+            padding: 10px 12px;
+            border-radius: 10px;
+            background: rgba(148, 163, 184, 0.12);
+            border: 1px solid var(--border);
+        }
+
+        .modal-actions {
+            display: flex;
+            justify-content: flex-end;
+            margin-top: 20px;
+        }
+
+        .btn {
+            border: none;
+            border-radius: 10px;
+            padding: 10px 16px;
+            background: rgba(148, 163, 184, 0.16);
+            color: var(--text);
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .breadcrumbs a {
+            color: var(--accent);
+            text-decoration: none;
+            font-size: 0.9rem;
+        }
+
+        .breadcrumbs a:hover {
+            text-decoration: underline;
+        }
+
+        #pagination {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        @media (max-width: 640px) {
+            tbody td {
+                font-size: 0.9rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="shell">
+        <header>
+            <div class="title">Housekeeping logs</div>
+            <div class="subtitle">Review completed housekeeping sessions and their chore breakdowns.</div>
+            <div class="breadcrumbs">
+                <a href="/bureau/server/internal/admin/chores">Chores</a>
+            </div>
+            <div class="controls">
+                <input id="search-input" type="search" placeholder="Search by date, notes or chore…" autocomplete="off" />
+            </div>
+        </header>
+
+        <section class="panel">
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width:150px;">Date</th>
+                        <th style="width:120px;">Duration</th>
+                        <th>Notes</th>
+                        <th style="width:140px;">Chores done</th>
+                    </tr>
+                </thead>
+                <tbody id="logs-table-body">
+                    <tr>
+                        <td colspan="4" class="empty">Loading logs…</td>
+                    </tr>
+                </tbody>
+            </table>
+            <div id="pagination" style="display: none; padding: 16px 20px; border-top: 1px solid var(--border);">
+                <div style="color: var(--muted); font-size: 0.85rem;">
+                    <span id="pagination-info">Showing 0-0 of 0</span>
+                </div>
+                <div style="display: flex; gap: 8px; align-items: center;">
+                    <button id="prev-page" class="btn" style="padding: 6px 12px; font-size: 0.85rem;" disabled>Previous</button>
+                    <span style="color: var(--muted); font-size: 0.85rem;">
+                        Page <span id="current-page">1</span> of <span id="total-pages">1</span>
+                    </span>
+                    <button id="next-page" class="btn" style="padding: 6px 12px; font-size: 0.85rem;" disabled>Next</button>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <div class="modal-backdrop" id="modal-backdrop" aria-hidden="true">
+        <div class="modal" id="modal"></div>
+    </div>
+
+    <script>
+
+        let API_BASE;
+        const state = {
+            logs: [],
+            meta: null,
+            search: "",
+            currentPage: 1,
+            pageSize: 5,
+            searchTimeout: null
+        };
+
+        document.addEventListener("DOMContentLoaded", () => {
+            (async () => {
+                // 1) WAIT for config
+                await loadConfig();
+                document.getElementById("search-input").addEventListener("input", handleSearch);
+                document.getElementById("prev-page").addEventListener("click", () => changePage(state.currentPage - 1));
+                document.getElementById("next-page").addEventListener("click", () => changePage(state.currentPage + 1));
+                fetchLogs();
+            })();
+        });
+
+        async function loadConfig() {
+            const cfg = await fetch('/config').then(r => r.json());
+            window.APP_CONFIG = cfg;
+
+            API_BASE = window.APP_CONFIG.api.housekeepingEndpoint;
+
+            console.log("Loaded backend config:", cfg);
+
+        }
+
+        async function fetchLogs() {
+            setTableMessage("Loading logs…");
+            try {
+                const params = new URLSearchParams({
+                    page: state.currentPage.toString(),
+                    pageSize: state.pageSize.toString()
+                });
+                if (state.search) {
+                    params.append("search", state.search);
+                }
+
+                const response = await fetch(`${API_BASE}?${params.toString()}`);
+                if (!response.ok) throw new Error("Failed to load housekeeping logs");
+                const payload = await response.json();
+
+                if (payload.data && payload.meta) {
+                    // Paginated response
+                    state.logs = Array.isArray(payload.data) ? payload.data : [];
+                    state.meta = payload.meta;
+                } else if (Array.isArray(payload)) {
+                    // Fallback: array response
+                    state.logs = payload;
+                    state.meta = null;
+                } else {
+                    state.logs = [];
+                    state.meta = null;
+                }
+            } catch (err) {
+                console.error(err);
+                state.logs = fallbackLogs();
+                state.meta = null;
+                showToast("Using fallback data because API failed");
+            }
+            renderTable();
+        }
+
+        function handleSearch(event) {
+            const searchValue = event.target.value.trim();
+            state.search = searchValue;
+            state.currentPage = 1; // Reset to first page on search
+
+            // Debounce search
+            clearTimeout(state.searchTimeout);
+            state.searchTimeout = setTimeout(() => {
+                fetchLogs();
+            }, 300);
+        }
+
+        function changePage(page) {
+            if (page < 1 || (state.meta && page > state.meta.totalPages)) return;
+            state.currentPage = page;
+            fetchLogs();
+        }
+
+        function renderTable() {
+            const tbody = document.getElementById("logs-table-body");
+            const pagination = document.getElementById("pagination");
+            tbody.innerHTML = "";
+
+            if (!state.logs || state.logs.length === 0) {
+                setTableMessage(state.search ? "No logs match that search." : "No housekeeping logs available.");
+                pagination.style.display = "none";
+                return;
+            }
+
+            pagination.style.display = "flex";
+            updatePagination();
+
+            state.logs.forEach((log) => {
+                const row = document.createElement("tr");
+                row.tabIndex = 0;
+                row.addEventListener("click", () => openLogModal(log));
+
+                const dateCell = document.createElement("td");
+                dateCell.textContent = formatDate(log.datetime);
+
+                const durationCell = document.createElement("td");
+                durationCell.textContent = formatDuration(log.duration);
+
+                const notesCell = document.createElement("td");
+                notesCell.innerHTML = log.note
+                    ? `<span class="notes">${sanitize(log.note)}</span>`
+                    : `<span class="notes">—</span>`;
+
+                const countCell = document.createElement("td");
+                const count = log.completedChores?.length ?? log.completedChoreIds?.length ?? 0;
+                countCell.innerHTML = `<span class="count-pill">${count}</span>`;
+
+                row.appendChild(dateCell);
+                row.appendChild(durationCell);
+                row.appendChild(notesCell);
+                row.appendChild(countCell);
+                tbody.appendChild(row);
+            });
+        }
+
+        function updatePagination() {
+            const prevBtn = document.getElementById("prev-page");
+            const nextBtn = document.getElementById("next-page");
+            const currentPageEl = document.getElementById("current-page");
+            const totalPagesEl = document.getElementById("total-pages");
+            const paginationInfo = document.getElementById("pagination-info");
+
+            if (state.meta) {
+                const start = (state.meta.page - 1) * state.meta.pageSize + 1;
+                const end = Math.min(state.meta.page * state.meta.pageSize, state.meta.total);
+                paginationInfo.textContent = `Showing ${start}-${end} of ${state.meta.total}`;
+                currentPageEl.textContent = state.meta.page;
+                totalPagesEl.textContent = state.meta.totalPages;
+                prevBtn.disabled = !state.meta.hasPrevious;
+                nextBtn.disabled = !state.meta.hasNext;
+            } else {
+                paginationInfo.textContent = `Showing ${state.logs.length} items`;
+                currentPageEl.textContent = "1";
+                totalPagesEl.textContent = "1";
+                prevBtn.disabled = true;
+                nextBtn.disabled = true;
+            }
+        }
+
+        function setTableMessage(message) {
+            const tbody = document.getElementById("logs-table-body");
+            tbody.innerHTML = `<tr><td colspan="4" class="empty">${message}</td></tr>`;
+        }
+
+        function openLogModal(log) {
+            const modal = document.getElementById("modal");
+            const completedChores = log.completedChores ?? [];
+            const count = completedChores.length;
+
+            modal.innerHTML = `
+                <header>
+                    <h2>${formatDate(log.datetime)}</h2>
+                    <p>${sanitize(log.note || "No notes provided")}</p>
+                </header>
+                <ul class="detail-list">
+                    <li>
+                        <span class="detail-label">Duration</span>
+                        <span>${formatDuration(log.duration)}</span>
+                    </li>
+                    <li>
+                        <span class="detail-label">Chores completed</span>
+                        <span>${count}</span>
+                    </li>
+                </ul>
+                <section>
+                    <h3 style="margin:0;">Completed chores</h3>
+                    <p class="notes" style="margin:4px 0 8px;">${count ? "List of completed chores." : "No chore data available."}</p>
+                    <ul class="chores-list">
+                        ${
+                            count
+                                ? completedChores
+                                      .map(
+                                          (chore) =>
+                                              `<li>
+                                                  <strong>${sanitize(chore.title || `Chore ${chore.id || ""}`)}</strong>
+                                              </li>`
+                                      )
+                                      .join("")
+                                : `<li class="notes" style="list-style:none;border:none;background:transparent;padding:0;">No chores recorded.</li>`
+                        }
+                    </ul>
+                </section>
+                <div class="modal-actions">
+                    <button type="button" class="btn" id="close-modal">Close</button>
+                </div>
+            `;
+            document.getElementById("modal-backdrop").classList.add("visible");
+            document.getElementById("close-modal").addEventListener("click", closeModal);
+            document.getElementById("modal-backdrop").addEventListener("click", backdropHandler, { once: true });
+        }
+
+        function closeModal() {
+            document.getElementById("modal-backdrop").classList.remove("visible");
+            document.getElementById("modal-backdrop").removeEventListener("click", backdropHandler);
+        }
+
+        function backdropHandler(event) {
+            if (event.target.id === "modal-backdrop") {
+                closeModal();
+            }
+        }
+
+        function formatDate(value) {
+            if (!value) return "—";
+            const date = new Date(value);
+            if (Number.isNaN(date.getTime())) return value;
+            return new Intl.DateTimeFormat("en-US", {
+                weekday: "short",
+                month: "short",
+                day: "numeric",
+                year: "numeric"
+            }).format(date);
+        }
+
+        function formatDuration(duration) {
+            if (!duration) return "—";
+            // Parse TimeSpan string format (hh:mm:ss or h:mm:ss)
+            const parts = duration.toString().split(":").map(Number);
+            if (parts.length < 2) return duration;
+            const hrs = parts[0] || 0;
+            const mins = parts[1] || 0;
+            if (!hrs && !mins) return "—";
+            if (!hrs) return `${mins} min`;
+            if (!mins) return `${hrs} hr${hrs > 1 ? "s" : ""}`;
+            return `${hrs} hr${hrs > 1 ? "s" : ""} ${mins} min`;
+        }
+
+        function showToast(message, positive = false) {
+            // Simple toast notification (you can enhance this if needed)
+            console.log(message);
+        }
+
+        function sanitize(str = "") {
+            return str.replace(/[&<>"']/g, (char) =>
+                ({
+                    "&": "&amp;",
+                    "<": "&lt;",
+                    ">": "&gt;",
+                    '"': "&quot;",
+                    "'": "&#39;"
+                }[char] || char)
+            );
+        }
+
+        function fallbackLogs() {
+            return [
+                {
+                    id: "HK-201",
+                    datetime: "2025-11-20T09:00:00Z",
+                    duration: "01:35:00",
+                    note: "Weekly reset of shared spaces.",
+                    completedChoreIds: [1, 5]
+                },
+                {
+                    id: "HK-202",
+                    datetime: "2025-11-25T14:00:00Z",
+                    duration: "01:00:00",
+                    note: "Quick tidy before guests arrived.",
+                    completedChoreIds: [2, 3]
+                }
+            ];
+        }
+    </script>
+</body>
+</html>
+
