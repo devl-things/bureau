@@ -9,6 +9,9 @@ namespace Niles.Chores.Api
     {
         public static async Task Main(string[] args)
         {
+            // TODO SEEDER_USAGE.md should be updated because that was changed
+            // TODO how can VS launch settings be included in git so that developers don't have to set them up manually and can I use that setting in rider 
+
             WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
             // Add services to the container.

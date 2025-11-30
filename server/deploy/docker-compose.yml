@@ -8,7 +8,11 @@ services:
       dockerfile: deploy/Dockerfile.chores.api
     container_name: niles-chores-api
     environment:
-      - ASPNETCORE_ENVIRONMENT=Production
+      ASPNETCORE_ENVIRONMENT: "${ASPNETCORE_ENVIRONMENT}"
+      # chores api settings
+      ConnectionStrings__NilesDb: "${ConnectionStrings__NilesDb}"
+      Logging__LogLevel__Default: "${Logging__LogLevel__Default}"
+      Logging__LogLevel__Microsoft.AspNetCore: "${Logging__LogLevel__Microsoft.AspNetCore}"
     networks:
       - nuc-network
 
@@ -18,7 +22,13 @@ services:
       dockerfile: deploy/Dockerfile.chores.web
     container_name: niles-chores-web
     environment:
-      - ASPNETCORE_ENVIRONMENT=Production
+      ASPNETCORE_ENVIRONMENT: "${ASPNETCORE_ENVIRONMENT}"
+      # chores web settings
+      Api__BaseUrl: "${Api__BaseUrl}"
+      Api__ChoresUrl: "${Api__ChoresUrl}"
+      Api__HealthUrl: "${Api__HealthUrl}"
+      Api__HousekeepingUrl: "${Api__HousekeepingUrl}"
+      Api__HousekeepingSubmitSegment: "${Api__HousekeepingSubmitSegment}"
     networks:
       - nuc-network
 
