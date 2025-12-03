@@ -5,4 +5,5 @@
   <Folder Name="/Infrastructure/" />
   <Folder Name="/Presentation/" />
   <Folder Name="/Tests/" />
+  <Project Path="src/Niles.Chores.Abstractions/Niles.Chores.Abstractions.csproj" />
 </Solution>
