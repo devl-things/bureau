@@ -7,6 +7,7 @@ namespace Niles.Chores.Web
     {
         public static void Main(string[] args)
         {
+            //TODO BUG link na /admin/chores prema /admin/housekeeing ne radi kako treba
             WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
             builder.Services.Configure<AppConfiguration>(builder.Configuration);
