@@ -27,27 +27,26 @@
 
         public bool HasNext { get { return Page < TotalPages; } }
 
-        internal PagedResult(IReadOnlyList<T> value, bool isSuccess, ResultError resultError)
+        internal PagedResult(IReadOnlyList<T> values, bool isSuccess, ResultError resultError)
         {
-            Values = value;
+            Values = values;
             IsSuccess = isSuccess;
             Error = resultError;
         }
-        public PagedResult(IReadOnlyList<T>? value, bool isSuccess)
+        public PagedResult(IReadOnlyList<T> values) : this(values, true, default)
         {
-            if (isSuccess && value != null)
-            {
-                Values = value;
-                IsSuccess = isSuccess;
-            }
-            else
-            {
-                Values = default!;
-                IsSuccess = false;
-                Error = new ResultError("No value");
-            }
+            Page = 1;
+            PageSize = values.Count;
+            Count = values.Count;
         }
-        public PagedResult(IReadOnlyList<T> value) : this(value, true, default) { }
+
+        public PagedResult(IReadOnlyList<T> values, PagingParameters paging, int totalCount) : this(values, true, default)
+        {
+            Page = paging.Page;
+            PageSize = paging.PageSize;
+            Count = totalCount;
+        }
+
         public PagedResult(ResultError error) : this(default!, false, error) { }
 
         public static implicit operator PagedResult<T>(ResultError error) { return new PagedResult<T>(error); }
