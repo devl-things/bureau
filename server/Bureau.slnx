@@ -1,9 +1,10 @@
 <Solution>
   <Folder Name="/Core/">
     <Project Path="src/Bureau.Primitives/Bureau.Primitives.csproj" Id="9797915e-e401-4e8b-9151-4fbe6f8383a7" />
+    <Project Path="src/Niles.Chores.Abstractions/Niles.Chores.Abstractions.csproj" />
+    <Project Path="src/Niles.Chores/Niles.Chores.csproj" />
   </Folder>
   <Folder Name="/Infrastructure/" />
   <Folder Name="/Presentation/" />
   <Folder Name="/Tests/" />
-  <Project Path="src/Niles.Chores.Abstractions/Niles.Chores.Abstractions.csproj" />
 </Solution>
