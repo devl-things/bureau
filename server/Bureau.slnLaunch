@@ -1,0 +1,15 @@
+[
+  {
+    "Name": "Niles.Chores",
+    "Projects": [
+      {
+        "Path": "src\\Niles.Chores.Api\\Niles.Chores.Api.csproj",
+        "Action": "Start"
+      },
+      {
+        "Path": "src\\Niles.Chores.Web\\Niles.Chores.Web.csproj",
+        "Action": "Start"
+      }
+    ]
+  }
+]
