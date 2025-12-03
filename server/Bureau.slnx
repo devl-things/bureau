@@ -1,7 +1,8 @@
 <Solution>
-  <Folder Name="/Core/" />
+  <Folder Name="/Core/">
+    <Project Path="src/Bureau.Primitives/Bureau.Primitives.csproj" Id="9797915e-e401-4e8b-9151-4fbe6f8383a7" />
+  </Folder>
   <Folder Name="/Infrastructure/" />
   <Folder Name="/Presentation/" />
   <Folder Name="/Tests/" />
-  <Project Path="src/Bureau.Primitives/Bureau.Primitives.csproj" Id="9797915e-e401-4e8b-9151-4fbe6f8383a7" />
 </Solution>
