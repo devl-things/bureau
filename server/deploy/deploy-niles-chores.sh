@@ -81,7 +81,7 @@ git -C "$TEMP_DIR" checkout "$TAG"
 ########################################
 
 # New path (under server/deploy)
-CANDIDATE_CONF1="$TEMP_DIR/server/deploy/nginx/https/niles-chores.conf"
+CANDIDATE_CONF1="$TEMP_DIR/server/deploy/nginx/servers/niles-chores.conf"
 # Old path (under server/deploy/nginx)
 CANDIDATE_CONF2="$TEMP_DIR/server/deploy/nginx/niles-chores.conf"
 
@@ -128,14 +128,14 @@ cp "$CANONICAL_ENV_FILE" "$TEMP_ENV_FILE"
 # 5) Copy nginx conf into nuc env      #
 ########################################
 
-NGINX_HTTPS_DIR="$NUC_ROOT/nginx/conf/https"
-TARGET_CONF="$NGINX_HTTPS_DIR/niles-chores.conf"
+NGINX_SERVERS_DIR="$NUC_ROOT/nginx/conf/servers"
+TARGET_CONF="$NGINX_SERVERS_DIR/niles-chores.conf"
 
 echo "==> Copying nginx config into nuc environment:"
 echo "    $SOURCE_CONF"
 echo " -> $TARGET_CONF"
 
-mkdir -p "$NGINX_HTTPS_DIR"
+mkdir -p "$NGINX_SERVERS_DIR"
 cp "$SOURCE_CONF" "$TARGET_CONF"
 
 ########################################
