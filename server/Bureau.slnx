@@ -5,6 +5,9 @@
     <Project Path="src/Niles.Chores/Niles.Chores.csproj" />
   </Folder>
   <Folder Name="/Infrastructure/" />
-  <Folder Name="/Presentation/" />
+  <Folder Name="/Presentation/">
+    <Project Path="src/Niles.Chores.Api/Niles.Chores.Api.csproj" />
+    <Project Path="src/Niles.Chores.Web/Niles.Chores.Web.csproj" />
+  </Folder>
   <Folder Name="/Tests/" />
 </Solution>
