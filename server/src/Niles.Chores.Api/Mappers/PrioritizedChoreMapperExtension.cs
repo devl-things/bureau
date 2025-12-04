@@ -1,5 +1,4 @@
-﻿using Niles.Chores;
-using Niles.Chores.Api.Dtos;
+﻿using Niles.Chores.Api.Dtos;
 
 namespace Niles.Chores.Api.Mappers
 {
