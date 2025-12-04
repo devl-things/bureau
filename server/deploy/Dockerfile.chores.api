@@ -1,0 +1,39 @@
+# deploy/Dockerfile.chores.api
+FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+ARG BUILD_CONFIGURATION=Release 
+WORKDIR /src
+
+COPY ["src/Bureau.Primitives/Bureau.Primitives.csproj", "src/Bureau.Primitives/"]
+COPY ["src/Niles.Chores.Abstractions/Niles.Chores.Abstractions.csproj", "src/Niles.Chores.Abstractions/"]
+COPY ["src/Niles.Chores/Niles.Chores.csproj", "src/Niles.Chores/"]
+COPY ["src/Niles.Chores.Api/Niles.Chores.Api.csproj", "src/Niles.Chores.Api/"]
+RUN dotnet restore "./src/Niles.Chores.Api/Niles.Chores.Api.csproj"
+
+COPY ["src/Bureau.Primitives/", "src/Bureau.Primitives/"]
+COPY ["src/Niles.Chores.Abstractions/", "src/Niles.Chores.Abstractions/"]
+COPY ["src/Niles.Chores/", "src/Niles.Chores/"]
+COPY ["src/Niles.Chores.Api/", "src/Niles.Chores.Api/"]
+
+
+WORKDIR "/src/src/Niles.Chores.Api"
+RUN dotnet build "./Niles.Chores.Api.csproj" -c $BUILD_CONFIGURATION -o /app/build  
+
+FROM build AS publish
+ARG BUILD_CONFIGURATION=Release
+WORKDIR "/src/src/Niles.Chores.Api"
+RUN dotnet publish "./Niles.Chores.Api.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false
+
+# runtime
+FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS runtime
+
+RUN adduser --disabled-password --home /app appuser
+
+USER appuser
+
+WORKDIR /app
+COPY --from=publish /app/publish ./
+
+ENV ASPNETCORE_URLS=http://0.0.0.0:5000
+EXPOSE 5000
+
+ENTRYPOINT ["dotnet", "Niles.Chores.Api.dll"]

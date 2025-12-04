@@ -1,0 +1,33 @@
+FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+ARG BUILD_CONFIGURATION=Release
+WORKDIR /src
+
+# copy project + restore
+COPY ["src/Niles.Chores.Web/Niles.Chores.Web.csproj", "src/Niles.Chores.Web/"]
+RUN dotnet restore "src/Niles.Chores.Web/Niles.Chores.Web.csproj"
+
+# copy source + build
+COPY src/Niles.Chores.Web/ src/Niles.Chores.Web/
+WORKDIR "/src/src/Niles.Chores.Web"
+RUN dotnet build "Niles.Chores.Web.csproj" -c $BUILD_CONFIGURATION -o /app/build
+
+FROM build AS publish
+ARG BUILD_CONFIGURATION=Release
+WORKDIR "/src/src/Niles.Chores.Web"
+RUN dotnet publish "Niles.Chores.Web.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false
+
+# runtime
+FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS runtime
+
+RUN adduser --disabled-password --home /app appuser
+
+USER appuser
+
+WORKDIR /app
+COPY --from=publish /app/publish ./
+
+# Kestrel port for the web frontend
+ENV ASPNETCORE_URLS=http://0.0.0.0:5000
+EXPOSE 5000
+
+ENTRYPOINT ["dotnet", "Niles.Chores.Web.dll"]

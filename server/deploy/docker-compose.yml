@@ -1,0 +1,37 @@
+name: niles
+version: "3.9"
+
+services:
+  niles-chores-api:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile.chores.api
+    container_name: niles-chores-api
+    environment:
+      ASPNETCORE_ENVIRONMENT: "${ASPNETCORE_ENVIRONMENT}"
+      # chores api settings
+      ConnectionStrings__NilesDb: "${ConnectionStrings__NilesDb}"
+      Logging__LogLevel__Default: "${Logging__LogLevel__Default}"
+      Logging__LogLevel__Microsoft.AspNetCore: "${Logging__LogLevel__Microsoft_AspNetCore}"
+    networks:
+      - nuc-network
+
+  niles-chores-web:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile.chores.web
+    container_name: niles-chores-web
+    environment:
+      ASPNETCORE_ENVIRONMENT: "${ASPNETCORE_ENVIRONMENT}"
+      # chores web settings
+      Api__BaseUrl: "${Api__BaseUrl}"
+      Api__ChoresUrl: "${Api__ChoresUrl}"
+      Api__HealthUrl: "${Api__HealthUrl}"
+      Api__HousekeepingUrl: "${Api__HousekeepingUrl}"
+      Api__HousekeepingSubmitSegment: "${Api__HousekeepingSubmitSegment}"
+    networks:
+      - nuc-network
+
+networks:
+  nuc-network:
+    external: true
