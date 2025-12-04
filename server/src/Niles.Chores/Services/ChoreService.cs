@@ -44,8 +44,7 @@ namespace Niles.Chores.Services
             return chore;
         }
 
-        //TODO REFACTOR This method should return Result
-        public async Task<Chore?> GetChoreAsync(int id, CancellationToken cancellationToken = default)
+        public async Task<Result<Chore>> GetChoreAsync(int id, CancellationToken cancellationToken)
         {
             ChoreDetail? chore = await _context.Chores.Where(c => c.Id == id)
                 .Select(chore => new ChoreDetail
@@ -62,7 +61,7 @@ namespace Niles.Chores.Services
                         .FirstOrDefault()
                 })
                 .FirstOrDefaultAsync(cancellationToken);
-            if (chore == null) return null;
+            if (chore == null) return "Not found";
             return chore.ToChore();
         }
 

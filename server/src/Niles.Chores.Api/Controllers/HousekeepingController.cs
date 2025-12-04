@@ -49,12 +49,12 @@ namespace Niles.Chores.Api.Controllers
                 return BadRequest(new { error = "Invalid id format." });
             }
 
-            Housekeeping? result = await _housekeepingService.GetHousekeepingAsync(intId, cancellationToken);
-            if (result == null)
+            Result<Housekeeping> result = await _housekeepingService.GetHousekeepingAsync(intId, cancellationToken);
+            if (result.IsError)
             {
                 return NotFound();
             }
-            HousekeepingDto dto = result.ToDto();
+            HousekeepingDto dto = result.Value.ToDto();
             return Ok(dto);
         }
 

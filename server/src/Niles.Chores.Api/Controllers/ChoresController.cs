@@ -100,12 +100,12 @@ namespace Niles.Chores.Api.Controllers
             {
                 return BadRequest(new { error = "Invalid id format." });
             }
-            Chore? chore = await _choreService.GetChoreAsync(intId, cancellationToken);
-            if (chore == null)
+            Result<Chore> result = await _choreService.GetChoreAsync(intId, cancellationToken);
+            if (result.IsError)
             {
                 return NotFound();
             }
-            return Ok(chore.ToDto());
+            return Ok(result.Value.ToDto());
         }
 
         // POST api/chores

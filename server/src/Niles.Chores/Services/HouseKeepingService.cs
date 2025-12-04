@@ -73,14 +73,14 @@ namespace Niles.Chores.Services
             return createdHousekeeping;
         }
 
-        public async Task<Housekeeping?> GetHousekeepingAsync(int id, CancellationToken cancellationToken = default)
+        public async Task<Result<Housekeeping>> GetHousekeepingAsync(int id, CancellationToken cancellationToken)
         {
             HousekeepingDb? housekeepingDb = await _context.Housekeeping
                 .Include(h => h.CompletedChores)
                     .ThenInclude(cc => cc.Chore)
                 .FirstOrDefaultAsync(h => h.Id == id, cancellationToken);
 
-            if (housekeepingDb == null) return null;
+            if (housekeepingDb == null) return "Not found";
 
             return housekeepingDb.ToHousekeeping();
         }
