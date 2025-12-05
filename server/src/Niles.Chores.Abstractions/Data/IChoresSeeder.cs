@@ -1,9 +1,10 @@
-﻿namespace Niles.Chores.Data
+﻿using Bureau;
+namespace Niles.Chores.Data
 {
     public interface IChoresSeeder
     {
         public void Seed();
-        public Task SeedAsync(CancellationToken cancellationToken = default);
-        public Task ClearAndSeedAsync(CancellationToken cancellationToken = default);
+        public Task<Result> SeedAsync(CancellationToken cancellationToken = default);
+        public Task<Result> ClearAndSeedAsync(CancellationToken cancellationToken = default);
     }
 }

@@ -1,3 +1,4 @@
+using Bureau;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Niles.Chores.Contexts;
@@ -7,6 +8,7 @@ namespace Niles.Chores.Data
 {
     internal class ChoresSeeder : IChoresSeeder
     {
+        private const string SEEDER = "seeder";
         private readonly ILogger<ChoresSeeder> _logger;
         private readonly ChoresContext _context;
 
@@ -16,21 +18,27 @@ namespace Niles.Chores.Data
             _context = context;
         }
 
-        public async Task ClearAndSeedAsync(CancellationToken cancellationToken = default)
+        public async Task<Result> ClearAndSeedAsync(CancellationToken cancellationToken = default)
         {
-            Console.WriteLine("Clearing existing data...");
+            try
+            {
+                // this should be done more effieciently with TRUNCATE or similar
+                // but since this is for test purposes, it's acceptable for now
+                _context.CriticalChores.RemoveRange(await _context.CriticalChores.ToListAsync(cancellationToken));
+                _context.CompletedChores.RemoveRange(await _context.CompletedChores.ToListAsync(cancellationToken));
+                _context.Housekeeping.RemoveRange(await _context.Housekeeping.ToListAsync(cancellationToken));
+                _context.Chores.RemoveRange(await _context.Chores.ToListAsync(cancellationToken));
 
-            // TODO this should be done more effieciently with TRUNCATE or similar
-            _context.CriticalChores.RemoveRange(await _context.CriticalChores.ToListAsync());
-            _context.CompletedChores.RemoveRange(await _context.CompletedChores.ToListAsync());
-            _context.Housekeeping.RemoveRange(await _context.Housekeeping.ToListAsync());
-            _context.Chores.RemoveRange(await _context.Chores.ToListAsync());
+                await _context.SaveChangesAsync(cancellationToken);
+                _logger.LogInformation("Existing data cleared.");
 
-            await _context.SaveChangesAsync(cancellationToken);
-
-            Console.WriteLine("Existing data cleared.");
-
-            await SeedAsync(cancellationToken);
+                return await SeedAsync(cancellationToken);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error seeding database.");
+                return ex;
+            }
         }
 
         public void Seed()
@@ -38,16 +46,15 @@ namespace Niles.Chores.Data
             SeedAsync().GetAwaiter().GetResult();
         }
 
-        public async Task SeedAsync(CancellationToken cancellationToken = default)
+        public async Task<Result> SeedAsync(CancellationToken cancellationToken = default)
         {
             try
             {
-                _logger.LogInformation("Seeding database...");
                 // Check if data already exists
                 if (await _context.Chores.AnyAsync(cancellationToken))
                 {
-                    _logger.LogInformation("Database already contains data. Skipping seed.");
-                    return;
+                    _logger.LogWarning("Database already contains data. Skipping seed.");
+                    return "Database already contains data. Skipping seed.";
                 }
 
                 DateTimeOffset now = DateTimeOffset.UtcNow;
@@ -65,8 +72,8 @@ namespace Niles.Chores.Data
                         WeeklyInterval = 1,
                         CreatedAt = now,
                         UpdatedAt = now,
-                        CreatedBy = "seeder",
-                        UpdatedBy = "seeder"
+                        CreatedBy = SEEDER,
+                        UpdatedBy = SEEDER
                     },
                     new ChoreDb
                     {
@@ -76,8 +83,8 @@ namespace Niles.Chores.Data
                         WeeklyInterval = 1,
                         CreatedAt = now,
                         UpdatedAt = now,
-                        CreatedBy = "seeder",
-                        UpdatedBy = "seeder"
+                        CreatedBy = SEEDER,
+                        UpdatedBy = SEEDER
                     },
                     new ChoreDb
                     {
@@ -87,8 +94,8 @@ namespace Niles.Chores.Data
                         WeeklyInterval = 1,
                         CreatedAt = now,
                         UpdatedAt = now,
-                        CreatedBy = "seeder",
-                        UpdatedBy = "seeder"
+                        CreatedBy = SEEDER,
+                        UpdatedBy = SEEDER
                     },
                     new ChoreDb
                     {
@@ -98,8 +105,8 @@ namespace Niles.Chores.Data
                         WeeklyInterval = 1,
                         CreatedAt = now,
                         UpdatedAt = now,
-                        CreatedBy = "seeder",
-                        UpdatedBy = "seeder"
+                        CreatedBy = SEEDER,
+                        UpdatedBy = SEEDER
                     },
                     new ChoreDb
                     {
@@ -109,8 +116,8 @@ namespace Niles.Chores.Data
                         WeeklyInterval = 1,
                         CreatedAt = now,
                         UpdatedAt = now,
-                        CreatedBy = "seeder",
-                        UpdatedBy = "seeder"
+                        CreatedBy = SEEDER,
+                        UpdatedBy = SEEDER
                     },
                     new ChoreDb
                     {
@@ -120,8 +127,8 @@ namespace Niles.Chores.Data
                         WeeklyInterval = 4,
                         CreatedAt = now,
                         UpdatedAt = now,
-                        CreatedBy = "seeder",
-                        UpdatedBy = "seeder"
+                        CreatedBy = SEEDER,
+                        UpdatedBy = SEEDER
                     },
                     new ChoreDb
                     {
@@ -131,8 +138,8 @@ namespace Niles.Chores.Data
                         WeeklyInterval = 4,
                         CreatedAt = now,
                         UpdatedAt = now,
-                        CreatedBy = "seeder",
-                        UpdatedBy = "seeder"
+                        CreatedBy = SEEDER,
+                        UpdatedBy = SEEDER
                     },
                     new ChoreDb
                     {
@@ -142,8 +149,8 @@ namespace Niles.Chores.Data
                         WeeklyInterval = 8,
                         CreatedAt = now,
                         UpdatedAt = now,
-                        CreatedBy = "seeder",
-                        UpdatedBy = "seeder"
+                        CreatedBy = SEEDER,
+                        UpdatedBy = SEEDER
                     },
                     // 🌿 BALCONY
                     new ChoreDb
@@ -154,8 +161,8 @@ namespace Niles.Chores.Data
                         WeeklyInterval = 1,
                         CreatedAt = now,
                         UpdatedAt = now,
-                        CreatedBy = "seeder",
-                        UpdatedBy = "seeder"
+                        CreatedBy = SEEDER,
+                        UpdatedBy = SEEDER
                     },
                     new ChoreDb
                     {
@@ -165,8 +172,8 @@ namespace Niles.Chores.Data
                         WeeklyInterval = 2,
                         CreatedAt = now,
                         UpdatedAt = now,
-                        CreatedBy = "seeder",
-                        UpdatedBy = "seeder"
+                        CreatedBy = SEEDER,
+                        UpdatedBy = SEEDER
                     },
                     new ChoreDb
                     {
@@ -176,8 +183,8 @@ namespace Niles.Chores.Data
                         WeeklyInterval = 1,
                         CreatedAt = now,
                         UpdatedAt = now,
-                        CreatedBy = "seeder",
-                        UpdatedBy = "seeder"
+                        CreatedBy = SEEDER,
+                        UpdatedBy = SEEDER
                     },
                     // 🍳 KITCHEN
                     new ChoreDb
@@ -188,8 +195,8 @@ namespace Niles.Chores.Data
                         WeeklyInterval = 1,
                         CreatedAt = now,
                         UpdatedAt = now,
-                        CreatedBy = "seeder",
-                        UpdatedBy = "seeder"
+                        CreatedBy = SEEDER,
+                        UpdatedBy = SEEDER
                     },
                     new ChoreDb
                     {
@@ -199,8 +206,8 @@ namespace Niles.Chores.Data
                         WeeklyInterval = 1,
                         CreatedAt = now,
                         UpdatedAt = now,
-                        CreatedBy = "seeder",
-                        UpdatedBy = "seeder"
+                        CreatedBy = SEEDER,
+                        UpdatedBy = SEEDER
                     },
                     new ChoreDb
                     {
@@ -210,8 +217,8 @@ namespace Niles.Chores.Data
                         WeeklyInterval = 1,
                         CreatedAt = now,
                         UpdatedAt = now,
-                        CreatedBy = "seeder",
-                        UpdatedBy = "seeder"
+                        CreatedBy = SEEDER,
+                        UpdatedBy = SEEDER
                     },
                     new ChoreDb
                     {
@@ -221,8 +228,8 @@ namespace Niles.Chores.Data
                         WeeklyInterval = 1,
                         CreatedAt = now,
                         UpdatedAt = now,
-                        CreatedBy = "seeder",
-                        UpdatedBy = "seeder"
+                        CreatedBy = SEEDER,
+                        UpdatedBy = SEEDER
                     },
                     new ChoreDb
                     {
@@ -232,8 +239,8 @@ namespace Niles.Chores.Data
                         WeeklyInterval = 2,
                         CreatedAt = now,
                         UpdatedAt = now,
-                        CreatedBy = "seeder",
-                        UpdatedBy = "seeder"
+                        CreatedBy = SEEDER,
+                        UpdatedBy = SEEDER
                     },
                     new ChoreDb
                     {
@@ -243,8 +250,8 @@ namespace Niles.Chores.Data
                         WeeklyInterval = 8,
                         CreatedAt = now,
                         UpdatedAt = now,
-                        CreatedBy = "seeder",
-                        UpdatedBy = "seeder"
+                        CreatedBy = SEEDER,
+                        UpdatedBy = SEEDER
                     },
                     new ChoreDb
                     {
@@ -254,8 +261,8 @@ namespace Niles.Chores.Data
                         WeeklyInterval = 4,
                         CreatedAt = now,
                         UpdatedAt = now,
-                        CreatedBy = "seeder",
-                        UpdatedBy = "seeder"
+                        CreatedBy = SEEDER,
+                        UpdatedBy = SEEDER
                     },
                     new ChoreDb
                     {
@@ -265,8 +272,8 @@ namespace Niles.Chores.Data
                         WeeklyInterval = 6,
                         CreatedAt = now,
                         UpdatedAt = now,
-                        CreatedBy = "seeder",
-                        UpdatedBy = "seeder"
+                        CreatedBy = SEEDER,
+                        UpdatedBy = SEEDER
                     },
                     new ChoreDb
                     {
@@ -276,8 +283,8 @@ namespace Niles.Chores.Data
                         WeeklyInterval = 14,
                         CreatedAt = now,
                         UpdatedAt = now,
-                        CreatedBy = "seeder",
-                        UpdatedBy = "seeder"
+                        CreatedBy = SEEDER,
+                        UpdatedBy = SEEDER
                     },
                     new ChoreDb
                     {
@@ -287,8 +294,8 @@ namespace Niles.Chores.Data
                         WeeklyInterval = 1,
                         CreatedAt = now,
                         UpdatedAt = now,
-                        CreatedBy = "seeder",
-                        UpdatedBy = "seeder"
+                        CreatedBy = SEEDER,
+                        UpdatedBy = SEEDER
                     },
                     new ChoreDb
                     {
@@ -298,8 +305,8 @@ namespace Niles.Chores.Data
                         WeeklyInterval = 5,
                         CreatedAt = now,
                         UpdatedAt = now,
-                        CreatedBy = "seeder",
-                        UpdatedBy = "seeder"
+                        CreatedBy = SEEDER,
+                        UpdatedBy = SEEDER
                     },
                     new ChoreDb
                     {
@@ -309,8 +316,8 @@ namespace Niles.Chores.Data
                         WeeklyInterval = 4,
                         CreatedAt = now,
                         UpdatedAt = now,
-                        CreatedBy = "seeder",
-                        UpdatedBy = "seeder"
+                        CreatedBy = SEEDER,
+                        UpdatedBy = SEEDER
                     },
                     new ChoreDb
                     {
@@ -320,8 +327,8 @@ namespace Niles.Chores.Data
                         WeeklyInterval = 4,
                         CreatedAt = now,
                         UpdatedAt = now,
-                        CreatedBy = "seeder",
-                        UpdatedBy = "seeder"
+                        CreatedBy = SEEDER,
+                        UpdatedBy = SEEDER
                     },
                     new ChoreDb
                     {
@@ -331,8 +338,8 @@ namespace Niles.Chores.Data
                         WeeklyInterval = 4,
                         CreatedAt = now,
                         UpdatedAt = now,
-                        CreatedBy = "seeder",
-                        UpdatedBy = "seeder"
+                        CreatedBy = SEEDER,
+                        UpdatedBy = SEEDER
                     },
                     new ChoreDb
                     {
@@ -342,8 +349,8 @@ namespace Niles.Chores.Data
                         WeeklyInterval = 12,
                         CreatedAt = now,
                         UpdatedAt = now,
-                        CreatedBy = "seeder",
-                        UpdatedBy = "seeder"
+                        CreatedBy = SEEDER,
+                        UpdatedBy = SEEDER
                     },
                     // 🛋️ LIVING ROOM
                     new ChoreDb
@@ -354,8 +361,8 @@ namespace Niles.Chores.Data
                         WeeklyInterval = 1,
                         CreatedAt = now,
                         UpdatedAt = now,
-                        CreatedBy = "seeder",
-                        UpdatedBy = "seeder"
+                        CreatedBy = SEEDER,
+                        UpdatedBy = SEEDER
                     },
                     new ChoreDb
                     {
@@ -365,8 +372,8 @@ namespace Niles.Chores.Data
                         WeeklyInterval = 1,
                         CreatedAt = now,
                         UpdatedAt = now,
-                        CreatedBy = "seeder",
-                        UpdatedBy = "seeder"
+                        CreatedBy = SEEDER,
+                        UpdatedBy = SEEDER
                     },
                     new ChoreDb
                     {
@@ -376,8 +383,8 @@ namespace Niles.Chores.Data
                         WeeklyInterval = 4,
                         CreatedAt = now,
                         UpdatedAt = now,
-                        CreatedBy = "seeder",
-                        UpdatedBy = "seeder"
+                        CreatedBy = SEEDER,
+                        UpdatedBy = SEEDER
                     },
                     new ChoreDb
                     {
@@ -387,8 +394,8 @@ namespace Niles.Chores.Data
                         WeeklyInterval = 2,
                         CreatedAt = now,
                         UpdatedAt = now,
-                        CreatedBy = "seeder",
-                        UpdatedBy = "seeder"
+                        CreatedBy = SEEDER,
+                        UpdatedBy = SEEDER
                     },
                     new ChoreDb
                     {
@@ -398,8 +405,8 @@ namespace Niles.Chores.Data
                         WeeklyInterval = 14,
                         CreatedAt = now,
                         UpdatedAt = now,
-                        CreatedBy = "seeder",
-                        UpdatedBy = "seeder"
+                        CreatedBy = SEEDER,
+                        UpdatedBy = SEEDER
                     },
                     new ChoreDb
                     {
@@ -409,8 +416,8 @@ namespace Niles.Chores.Data
                         WeeklyInterval = 4,
                         CreatedAt = now,
                         UpdatedAt = now,
-                        CreatedBy = "seeder",
-                        UpdatedBy = "seeder"
+                        CreatedBy = SEEDER,
+                        UpdatedBy = SEEDER
                     },
                     new ChoreDb
                     {
@@ -420,8 +427,8 @@ namespace Niles.Chores.Data
                         WeeklyInterval = 16,
                         CreatedAt = now,
                         UpdatedAt = now,
-                        CreatedBy = "seeder",
-                        UpdatedBy = "seeder"
+                        CreatedBy = SEEDER,
+                        UpdatedBy = SEEDER
                     },
                     // 🍽️ DINING ROOM
                     new ChoreDb
@@ -432,8 +439,8 @@ namespace Niles.Chores.Data
                         WeeklyInterval = 1,
                         CreatedAt = now,
                         UpdatedAt = now,
-                        CreatedBy = "seeder",
-                        UpdatedBy = "seeder"
+                        CreatedBy = SEEDER,
+                        UpdatedBy = SEEDER
                     },
                     new ChoreDb
                     {
@@ -443,8 +450,8 @@ namespace Niles.Chores.Data
                         WeeklyInterval = 2,
                         CreatedAt = now,
                         UpdatedAt = now,
-                        CreatedBy = "seeder",
-                        UpdatedBy = "seeder"
+                        CreatedBy = SEEDER,
+                        UpdatedBy = SEEDER
                     },
                     new ChoreDb
                     {
@@ -454,8 +461,8 @@ namespace Niles.Chores.Data
                         WeeklyInterval = 8,
                         CreatedAt = now,
                         UpdatedAt = now,
-                        CreatedBy = "seeder",
-                        UpdatedBy = "seeder"
+                        CreatedBy = SEEDER,
+                        UpdatedBy = SEEDER
                     },
                     // 🚪 HALLWAY
                     new ChoreDb
@@ -466,8 +473,8 @@ namespace Niles.Chores.Data
                         WeeklyInterval = 2,
                         CreatedAt = now,
                         UpdatedAt = now,
-                        CreatedBy = "seeder",
-                        UpdatedBy = "seeder"
+                        CreatedBy = SEEDER,
+                        UpdatedBy = SEEDER
                     },
                     new ChoreDb
                     {
@@ -477,8 +484,8 @@ namespace Niles.Chores.Data
                         WeeklyInterval = 2,
                         CreatedAt = now,
                         UpdatedAt = now,
-                        CreatedBy = "seeder",
-                        UpdatedBy = "seeder"
+                        CreatedBy = SEEDER,
+                        UpdatedBy = SEEDER
                     },
                     new ChoreDb
                     {
@@ -488,8 +495,8 @@ namespace Niles.Chores.Data
                         WeeklyInterval = 8,
                         CreatedAt = now,
                         UpdatedAt = now,
-                        CreatedBy = "seeder",
-                        UpdatedBy = "seeder"
+                        CreatedBy = SEEDER,
+                        UpdatedBy = SEEDER
                     },
                     // 🛁 BATHROOM
                     new ChoreDb
@@ -500,8 +507,8 @@ namespace Niles.Chores.Data
                         WeeklyInterval = 1,
                         CreatedAt = now,
                         UpdatedAt = now,
-                        CreatedBy = "seeder",
-                        UpdatedBy = "seeder"
+                        CreatedBy = SEEDER,
+                        UpdatedBy = SEEDER
                     },
                     new ChoreDb
                     {
@@ -511,8 +518,8 @@ namespace Niles.Chores.Data
                         WeeklyInterval = 1,
                         CreatedAt = now,
                         UpdatedAt = now,
-                        CreatedBy = "seeder",
-                        UpdatedBy = "seeder"
+                        CreatedBy = SEEDER,
+                        UpdatedBy = SEEDER
                     },
                     new ChoreDb
                     {
@@ -522,8 +529,8 @@ namespace Niles.Chores.Data
                         WeeklyInterval = 1,
                         CreatedAt = now,
                         UpdatedAt = now,
-                        CreatedBy = "seeder",
-                        UpdatedBy = "seeder"
+                        CreatedBy = SEEDER,
+                        UpdatedBy = SEEDER
                     },
                     new ChoreDb
                     {
@@ -533,8 +540,8 @@ namespace Niles.Chores.Data
                         WeeklyInterval = 2,
                         CreatedAt = now,
                         UpdatedAt = now,
-                        CreatedBy = "seeder",
-                        UpdatedBy = "seeder"
+                        CreatedBy = SEEDER,
+                        UpdatedBy = SEEDER
                     },
                     new ChoreDb
                     {
@@ -544,8 +551,8 @@ namespace Niles.Chores.Data
                         WeeklyInterval = 1,
                         CreatedAt = now,
                         UpdatedAt = now,
-                        CreatedBy = "seeder",
-                        UpdatedBy = "seeder"
+                        CreatedBy = SEEDER,
+                        UpdatedBy = SEEDER
                     },
                     new ChoreDb
                     {
@@ -555,8 +562,8 @@ namespace Niles.Chores.Data
                         WeeklyInterval = 5,
                         CreatedAt = now,
                         UpdatedAt = now,
-                        CreatedBy = "seeder",
-                        UpdatedBy = "seeder"
+                        CreatedBy = SEEDER,
+                        UpdatedBy = SEEDER
                     },
                     new ChoreDb
                     {
@@ -566,8 +573,8 @@ namespace Niles.Chores.Data
                         WeeklyInterval = 8,
                         CreatedAt = now,
                         UpdatedAt = now,
-                        CreatedBy = "seeder",
-                        UpdatedBy = "seeder"
+                        CreatedBy = SEEDER,
+                        UpdatedBy = SEEDER
                     },
                     new ChoreDb
                     {
@@ -577,8 +584,8 @@ namespace Niles.Chores.Data
                         WeeklyInterval = 4,
                         CreatedAt = now,
                         UpdatedAt = now,
-                        CreatedBy = "seeder",
-                        UpdatedBy = "seeder"
+                        CreatedBy = SEEDER,
+                        UpdatedBy = SEEDER
                     },
                     // 🧺 WASHING MACHINE / DRYER
                     new ChoreDb
@@ -589,8 +596,8 @@ namespace Niles.Chores.Data
                         WeeklyInterval = 4,
                         CreatedAt = now,
                         UpdatedAt = now,
-                        CreatedBy = "seeder",
-                        UpdatedBy = "seeder"
+                        CreatedBy = SEEDER,
+                        UpdatedBy = SEEDER
                     },
                     new ChoreDb
                     {
@@ -600,8 +607,8 @@ namespace Niles.Chores.Data
                         WeeklyInterval = 1,
                         CreatedAt = now,
                         UpdatedAt = now,
-                        CreatedBy = "seeder",
-                        UpdatedBy = "seeder"
+                        CreatedBy = SEEDER,
+                        UpdatedBy = SEEDER
                     },
                     new ChoreDb
                     {
@@ -611,8 +618,8 @@ namespace Niles.Chores.Data
                         WeeklyInterval = 4,
                         CreatedAt = now,
                         UpdatedAt = now,
-                        CreatedBy = "seeder",
-                        UpdatedBy = "seeder"
+                        CreatedBy = SEEDER,
+                        UpdatedBy = SEEDER
                     },
                     // 🛏️ BEDROOM
                     new ChoreDb
@@ -623,8 +630,8 @@ namespace Niles.Chores.Data
                         WeeklyInterval = 1,
                         CreatedAt = now,
                         UpdatedAt = now,
-                        CreatedBy = "seeder",
-                        UpdatedBy = "seeder"
+                        CreatedBy = SEEDER,
+                        UpdatedBy = SEEDER
                     },
                     new ChoreDb
                     {
@@ -634,8 +641,8 @@ namespace Niles.Chores.Data
                         WeeklyInterval = 1,
                         CreatedAt = now,
                         UpdatedAt = now,
-                        CreatedBy = "seeder",
-                        UpdatedBy = "seeder"
+                        CreatedBy = SEEDER,
+                        UpdatedBy = SEEDER
                     },
                     new ChoreDb
                     {
@@ -645,8 +652,8 @@ namespace Niles.Chores.Data
                         WeeklyInterval = 1,
                         CreatedAt = now,
                         UpdatedAt = now,
-                        CreatedBy = "seeder",
-                        UpdatedBy = "seeder"
+                        CreatedBy = SEEDER,
+                        UpdatedBy = SEEDER
                     },
                     new ChoreDb
                     {
@@ -656,8 +663,8 @@ namespace Niles.Chores.Data
                         WeeklyInterval = 8,
                         CreatedAt = now,
                         UpdatedAt = now,
-                        CreatedBy = "seeder",
-                        UpdatedBy = "seeder"
+                        CreatedBy = SEEDER,
+                        UpdatedBy = SEEDER
                     },
                     new ChoreDb
                     {
@@ -667,8 +674,8 @@ namespace Niles.Chores.Data
                         WeeklyInterval = 4,
                         CreatedAt = now,
                         UpdatedAt = now,
-                        CreatedBy = "seeder",
-                        UpdatedBy = "seeder"
+                        CreatedBy = SEEDER,
+                        UpdatedBy = SEEDER
                     },
                     new ChoreDb
                     {
@@ -678,8 +685,8 @@ namespace Niles.Chores.Data
                         WeeklyInterval = 16,
                         CreatedAt = now,
                         UpdatedAt = now,
-                        CreatedBy = "seeder",
-                        UpdatedBy = "seeder"
+                        CreatedBy = SEEDER,
+                        UpdatedBy = SEEDER
                     },
                     // 🖥️ OFFICE
                     new ChoreDb
@@ -690,8 +697,8 @@ namespace Niles.Chores.Data
                         WeeklyInterval = 1,
                         CreatedAt = now,
                         UpdatedAt = now,
-                        CreatedBy = "seeder",
-                        UpdatedBy = "seeder"
+                        CreatedBy = SEEDER,
+                        UpdatedBy = SEEDER
                     },
                     new ChoreDb
                     {
@@ -701,8 +708,8 @@ namespace Niles.Chores.Data
                         WeeklyInterval = 2,
                         CreatedAt = now,
                         UpdatedAt = now,
-                        CreatedBy = "seeder",
-                        UpdatedBy = "seeder"
+                        CreatedBy = SEEDER,
+                        UpdatedBy = SEEDER
                     },
                     new ChoreDb
                     {
@@ -712,8 +719,8 @@ namespace Niles.Chores.Data
                         WeeklyInterval = 4,
                         CreatedAt = now,
                         UpdatedAt = now,
-                        CreatedBy = "seeder",
-                        UpdatedBy = "seeder"
+                        CreatedBy = SEEDER,
+                        UpdatedBy = SEEDER
                     },
                     new ChoreDb
                     {
@@ -723,8 +730,8 @@ namespace Niles.Chores.Data
                         WeeklyInterval = 8,
                         CreatedAt = now,
                         UpdatedAt = now,
-                        CreatedBy = "seeder",
-                        UpdatedBy = "seeder"
+                        CreatedBy = SEEDER,
+                        UpdatedBy = SEEDER
                     },
                     new ChoreDb
                     {
@@ -734,21 +741,18 @@ namespace Niles.Chores.Data
                         WeeklyInterval = 10,
                         CreatedAt = now,
                         UpdatedAt = now,
-                        CreatedBy = "seeder",
-                        UpdatedBy = "seeder"
+                        CreatedBy = SEEDER,
+                        UpdatedBy = SEEDER
                     }
                 };
 
                 _context.Chores.AddRange(chores);
                 await _context.SaveChangesAsync(cancellationToken);
 
-                _logger.LogInformation($"Created {chores.Count} chores.");
-
                 // Create some housekeeping records with completed chores
                 DateOnly today = DateOnly.FromDateTime(utcNow);
                 DateOnly lastWeek = today.AddDays(-7);
                 DateOnly twoWeeksAgo = today.AddDays(-14);
-                DateOnly threeWeeksAgo = today.AddDays(-21);
 
                 List<HousekeepingDb> housekeepingRecords = new List<HousekeepingDb>();
 
@@ -794,8 +798,6 @@ namespace Niles.Chores.Data
                 _context.Housekeeping.AddRange(housekeepingRecords);
                 await _context.SaveChangesAsync(cancellationToken);
 
-                _logger.LogInformation($"Created {housekeepingRecords.Count} housekeeping records.");
-
                 // Create completed chores
                 List<CompletedChoreDb> completedChores = new List<CompletedChoreDb>
                 {
@@ -820,8 +822,6 @@ namespace Niles.Chores.Data
 
                 _context.CompletedChores.AddRange(completedChores);
                 await _context.SaveChangesAsync(cancellationToken);
-
-                _logger.LogInformation($"Created {completedChores.Count} completed chore records.");
 
                 // Create some critical chores (for chores that haven't been completed recently)
                 List<CriticalChoreDb> criticalChores = new List<CriticalChoreDb>
@@ -851,14 +851,15 @@ namespace Niles.Chores.Data
                 _context.CriticalChores.AddRange(criticalChores);
                 await _context.SaveChangesAsync(cancellationToken);
 
-                _logger.LogInformation($"Created {criticalChores.Count} critical chore records.");
-                _logger.LogInformation("Database seeded successfully.");
+                _logger.LogInformation("Created: {0} chores; {1} housekeeping records; {2} completed chore records; {3} critical chore records.",
+                    chores.Count, housekeepingRecords.Count, completedChores.Count, criticalChores.Count);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error seeding database.");
-                throw;
+                return ex;
             }
+            return true;
         }
     }
 }
