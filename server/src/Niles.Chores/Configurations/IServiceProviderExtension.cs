@@ -23,7 +23,6 @@ namespace Niles.Chores.Configurations
                 catch (Exception ex)
                 {
                     logger.LogCritical(ex, "Error applying database migrations.");
-                    throw;
                 }
             }
         }
