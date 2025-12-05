@@ -8,11 +8,9 @@ namespace Niles.Chores.Api.Controllers
     [ApiController]
     public class SeedController : ControllerBase
     {
-        private readonly ILogger<SeedController> _logger;
         private readonly IChoresSeeder _seeder;
-        public SeedController(ILogger<SeedController> logger, IChoresSeeder seeder)
+        public SeedController(IChoresSeeder seeder)
         {
-            _logger = logger;
             _seeder = seeder;
         }
 

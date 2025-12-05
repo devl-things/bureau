@@ -764,8 +764,8 @@ namespace Niles.Chores.Data
                     Note = "Quick morning cleanup",
                     CreatedAt = now,
                     UpdatedAt = now,
-                    CreatedBy = "seeder",
-                    UpdatedBy = "seeder"
+                    CreatedBy = SEEDER,
+                    UpdatedBy = SEEDER
                 };
                 housekeepingRecords.Add(todayHousekeeping);
 
@@ -777,8 +777,8 @@ namespace Niles.Chores.Data
                     Note = "Weekly deep clean",
                     CreatedAt = now,
                     UpdatedAt = now,
-                    CreatedBy = "seeder",
-                    UpdatedBy = "seeder"
+                    CreatedBy = SEEDER,
+                    UpdatedBy = SEEDER
                 };
                 housekeepingRecords.Add(lastWeekHousekeeping);
 
@@ -790,8 +790,8 @@ namespace Niles.Chores.Data
                     Note = "Regular maintenance",
                     CreatedAt = now,
                     UpdatedAt = now,
-                    CreatedBy = "seeder",
-                    UpdatedBy = "seeder"
+                    CreatedBy = SEEDER,
+                    UpdatedBy = SEEDER
                 };
                 housekeepingRecords.Add(twoWeeksAgoHousekeeping);
 
@@ -833,8 +833,8 @@ namespace Niles.Chores.Data
                         CompletedChoreId = null,
                         CreatedAt = now.AddDays(-3),
                         UpdatedAt = now.AddDays(-3),
-                        CreatedBy = "seeder",
-                        UpdatedBy = "seeder"
+                        CreatedBy = SEEDER,
+                        UpdatedBy = SEEDER
                     },
                     new CriticalChoreDb
                     {
@@ -843,8 +843,8 @@ namespace Niles.Chores.Data
                         CompletedChoreId = null,
                         CreatedAt = now.AddDays(-5),
                         UpdatedAt = now.AddDays(-5),
-                        CreatedBy = "seeder",
-                        UpdatedBy = "seeder"
+                        CreatedBy = SEEDER,
+                        UpdatedBy = SEEDER
                     }
                 };
 
