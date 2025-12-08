@@ -42,7 +42,7 @@ namespace Niles.Chores.Api.Controllers
                     List<int> criticalPrioritizedIds = await _criticalChoreService.GetOpenCriticalChoreIdsAsync(prioritizedChoreIds, cancellationToken);
                     HashSet<int> criticalSet = new HashSet<int>(criticalPrioritizedIds);
 
-                    // TODO [backend] REFACTOR set IsCritical in ToDto mapper
+                    // TODO #74 [backend] REFACTOR set IsCritical in ToDto mapper
                     IEnumerable<ChoreDto> dtos = prioritizedChores.Select(c => c.ToDto(
                         priority: c.Priority,
                         completed: false
@@ -73,7 +73,7 @@ namespace Niles.Chores.Api.Controllers
             HashSet<int> criticalChoreIds = new HashSet<int>(openCriticalChoreIds);
 
             // Map to DTOs with critical flag
-            // TODO REFACTOR set IsCritical in ToDto mapper
+            // TODO #74 REFACTOR set IsCritical in ToDto mapper
             IEnumerable<ChoreDto> pagedItems = pagedResult.Values.Select(m => m.ToDto());
             Dtos.PagedResponse<ChoreDto> result = new Dtos.PagedResponse<ChoreDto>
             {

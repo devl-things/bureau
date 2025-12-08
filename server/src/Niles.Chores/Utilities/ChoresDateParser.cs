@@ -13,6 +13,21 @@ namespace Niles.Chores
         // Centralized culture for all date/time parsing and formatting
         public static readonly CultureInfo Culture = CultureInfo.InvariantCulture;
 
+        /// <summary>
+        /// Attempts to parse a date string into a <see cref="DateOnly"/> using the standardized
+        /// application date format (<c>yyyy-MM-dd</c>).
+        /// <para>
+        /// Parsing is performed using <see cref="CultureInfo.InvariantCulture"/> and requires an
+        /// exact match with the defined format. No time or timezone information is allowed.
+        /// </para>
+        /// </summary>
+        /// <param name="value">The input string containing the date to parse.</param>
+        /// <param name="dateOnly">
+        /// When successful, receives the parsed <see cref="DateOnly"/> value.
+        /// </param>
+        /// <returns>
+        /// <c>true</c> if the input matches the expected date format; otherwise <c>false</c>.
+        /// </returns>
         public static bool TryParseDate(string? value, out DateOnly dateOnly)
         {
             return DateOnly.TryParseExact(value, DateFormat, Culture, DateTimeStyles.None, out dateOnly);

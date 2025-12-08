@@ -63,7 +63,7 @@ namespace Niles.Chores.Api
             }
 
             app.MapControllers();
-            // TODO why are health checks not visible in swagger?
+            // health checks not visible in swagger, and that is for the best   
             app.MapHealthChecks("api/health",
                 new HealthCheckOptions
                 {

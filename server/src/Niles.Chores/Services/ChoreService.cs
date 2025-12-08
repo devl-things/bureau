@@ -142,7 +142,7 @@ namespace Niles.Chores.Services
 
         }
 
-        //TODO REFACTOR This method is not filling the IsCritical property on the Chore objects
+        //TODO #74 REFACTOR This method is not filling the IsCritical property on the Chore objects
         //TODO REFACTOR Consider renaming to GetChoresAsync and have only this method and delete ListChoresPagedAsync or move here the logic
         public async Task<PagedResult<Chore>> ListChoresPagedWithCriticalAsync(SearchParameters pagination, CancellationToken cancellationToken = default)
         {
