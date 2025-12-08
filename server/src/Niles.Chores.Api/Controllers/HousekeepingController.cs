@@ -1,6 +1,7 @@
 ﻿using Bureau;
 using Microsoft.AspNetCore.Mvc;
 using Niles.Chores.Api.Dtos;
+using Niles.Chores.Api.Factories;
 using Niles.Chores.Api.Mappers;
 using Niles.Chores.Api.Utilities;
 using Niles.Chores.Services;
@@ -23,26 +24,18 @@ namespace Niles.Chores.Api.Controllers
         // GET: api/housekeeping?search=term&page=1&pageSize=10
         // GET: api/housekeeping (returns all housekeeping records)
         [HttpGet]
-        public async Task<IActionResult> Get(
-            [FromQuery] HousekeepingQueryParams queryParams,
-            CancellationToken cancellationToken = default)
+        public async Task<IActionResult> GetAsync([FromQuery] SearchQueryDto queryParams, CancellationToken cancellationToken = default)
         {
-            // Validate pagination parameters
-            int page = queryParams.Page < 1 ? 1 : queryParams.Page;
-            int pageSize = queryParams.PageSize < 1 ? 20 : queryParams.PageSize;
-            if (pageSize > 100) pageSize = 100;
+            SearchParameters searchParameters = SearchParametersFactory.Create(queryParams);
 
-            SearchParameters pagination = new SearchParameters(queryParams.Search, page, pageSize);
-
-            // Get paged housekeeping records from database (with search and pagination at DB level)
-            PagedResult<Housekeeping> pagedResult = await _housekeepingService.ListHousekeepingsPagedAsync(pagination, cancellationToken);
+            PagedResult<Housekeeping> pagedResult = await _housekeepingService.GetHousekeepingsAsync(searchParameters, cancellationToken);
 
             return Ok(pagedResult.ToPagedResponse(x => x.ToDto()));
         }
 
         // GET api/housekeeping/{id}
         [HttpGet("{id}")]
-        public async Task<IActionResult> Get(string id, CancellationToken cancellationToken)
+        public async Task<IActionResult> GetAsync(string id, CancellationToken cancellationToken)
         {
             if (!IdObfuscator.TryDecode(id, out int intId))
             {
@@ -67,11 +60,13 @@ namespace Niles.Chores.Api.Controllers
                 return BadRequest(ModelState);
             }
 
-            // Parse date
-            if (!DateOnly.TryParse(dto.Date, out DateOnly dateOnly))
+            // TODO [frontend] this should be a datatimeoffset from frontend
+            if (!ChoresDateParser.TryParseDateTime(dto.Date, out DateTimeOffset dateTime))
             {
-                return BadRequest(new { error = "Invalid date format. Expected YYYY-MM-DD." });
+                return BadRequest(new { error = "Invalid date format." });
             }
+            // TODO [frontend] this should come in format hh:mm from frontend or h:mm
+            ChoresDateParser.TryParseDuration(dto.Duration.HasValue ? dto.Duration.Value.ToString() : null, out TimeSpan duration);
 
             // Decode completed chore IDs
             List<int> completedChoreIds = new List<int>();
@@ -87,11 +82,10 @@ namespace Niles.Chores.Api.Controllers
                 }
             }
 
-            // Create housekeeping record
             Housekeeping housekeeping = new Housekeeping
             {
-                DateTime = new DateTimeOffset(dateOnly.ToDateTime(TimeOnly.MinValue), TimeSpan.Zero),
-                Duration = dto.Duration.HasValue ? TimeSpan.FromMinutes(dto.Duration.Value) : TimeSpan.Zero,
+                DateTime = dateTime,
+                Duration = duration,
                 Note = dto.Note,
                 CompletedChoreIds = completedChoreIds
             };
@@ -128,7 +122,7 @@ namespace Niles.Chores.Api.Controllers
             }
 
             string encodedId = result.Value!.Id.HasValue ? IdObfuscator.Encode(result.Value.Id.Value) : string.Empty;
-            return CreatedAtAction(nameof(Get), new { id = encodedId }, dto);
+            return CreatedAtAction(nameof(GetAsync), new { id = encodedId }, dto);
         }
 
         // PUT api/housekeeping/{id}
@@ -207,7 +201,7 @@ namespace Niles.Chores.Api.Controllers
             }
 
             // parse duration
-            if (!TimeSpan.TryParse(dto.Duration, out TimeSpan duration))
+            if (!ChoresDateParser.TryParseDuration(dto.Duration, out TimeSpan duration))
             {
                 error = "Invalid duration format. Expected a TimeSpan parsable string like 'hh:mm:ss'.";
                 return false;

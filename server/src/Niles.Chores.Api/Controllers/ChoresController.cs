@@ -24,8 +24,8 @@ namespace Niles.Chores.Api.Controllers
             _criticalChoreService = criticalChoreService;
         }
 
-        // TODO REFACTOR remove api/chores?date=YYYY-MM-DD (returns prioritized chores for date) for that you have a endpoint in HouseKeepingController
-        // TODO REFACTOR remove date parameter from this controller and use SearchRequest only for pagination and search
+        // TODO [frontend] REFACTOR remove api/chores?date=YYYY-MM-DD (returns prioritized chores for date) for that you have a endpoint in HouseKeepingController
+        // TODO [frontend] REFACTOR remove date parameter from this controller and use SearchRequest only for pagination and search
         // GET: api/chores?date=YYYY-MM-DD (returns prioritized chores for date)
         // GET: api/chores?search=term&page=1&pageSize=10 (returns paginated chores with search)
         // GET: api/chores (returns all chores)
@@ -42,7 +42,7 @@ namespace Niles.Chores.Api.Controllers
                     List<int> criticalPrioritizedIds = await _criticalChoreService.GetOpenCriticalChoreIdsAsync(prioritizedChoreIds, cancellationToken);
                     HashSet<int> criticalSet = new HashSet<int>(criticalPrioritizedIds);
 
-                    // TODO REFACTOR set IsCritical in ToDto mapper
+                    // TODO [backend] REFACTOR set IsCritical in ToDto mapper
                     IEnumerable<ChoreDto> dtos = prioritizedChores.Select(c => c.ToDto(
                         priority: c.Priority,
                         completed: false

@@ -9,7 +9,7 @@ namespace Niles.Chores.Api.Controllers
     [ApiController]
     public class PrioritizedChoresController : ControllerBase
     {
-        IPrioritizedChoreService _prioritizedChoreService;
+        private readonly IPrioritizedChoreService _prioritizedChoreService;
 
         public PrioritizedChoresController(IPrioritizedChoreService prioritizedChoreService)
         {

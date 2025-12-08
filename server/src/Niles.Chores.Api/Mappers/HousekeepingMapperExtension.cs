@@ -9,7 +9,7 @@ namespace Niles.Chores.Api.Mappers
         {
             return new HousekeepingDto
             {
-                //TODO change so this obfuscator is passed as formating option
+                //TODO [backend] change so this obfuscator is passed as formating option
                 Id = housekeeping.Id.HasValue ? IdObfuscator.Encode(housekeeping.Id.Value) : null,
                 DateTime = housekeeping.DateTime.UtcDateTime,
                 Duration = housekeeping.Duration.ToString(),

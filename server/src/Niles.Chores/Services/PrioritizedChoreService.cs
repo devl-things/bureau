@@ -21,15 +21,15 @@ namespace Niles.Chores.Services
             _cache = cache;
         }
 
-        public async Task<List<PrioritizedChore>> GetPrioritizedChoresAsync(DateOnly requestedDate, CancellationToken cancellationToken = default)
+        public async Task<List<PrioritizedChore>> GetPrioritizedChoresAsync(DateOnly date, CancellationToken cancellationToken = default)
         {
             DateTime today = _timeProvider.GetUtcNow().UtcDateTime;
-            if (requestedDate == default || requestedDate < DateOnly.FromDateTime(today))
+            if (date == default || date < DateOnly.FromDateTime(today))
             {
-                _logger.LogError("Requested date ({requestedDate}) is either default or in the past from today ({today})", requestedDate, today);
+                _logger.LogError("Requested date ({Date}) is either default or in the past from today ({Today})", date, today);
                 return [];
             }
-            YearsWeek requestedYearWeek = new YearsWeek(requestedDate);
+            YearsWeek requestedYearWeek = new(date);
             if (_cache.TryGetPriotizedChores(requestedYearWeek, out List<PrioritizedChore> list))
             {
                 return list;
@@ -97,12 +97,12 @@ namespace Niles.Chores.Services
             }
 
             // Calculate time difference between the provided date and the last completed date in weeks
-            YearsWeek completedYearsWeek = new YearsWeek(chore.CompletedAt.Value);
+            YearsWeek completedYearsWeek = new(chore.CompletedAt.Value);
             int weekDiff = currentYearWeek - completedYearsWeek;
 
             if (weekDiff < 0)
             {
-                _logger.LogError("Week diff ({weekDiff}) is negative. currentYearWeek = {currentYearWeek} | completedYearsWeek = {completedYearsWeek})", weekDiff, currentYearWeek, completedYearsWeek);
+                _logger.LogError("Week diff ({WeekDiff}) is negative. currentYearWeek = {CurrentYearWeek} | completedYearsWeek = {CompletedYearsWeek})", weekDiff, currentYearWeek, completedYearsWeek);
                 return new ChoreImportance() { Criticality = ChoreCriticality.None };
             }
             else if (weekDiff < chore.Chore.WeeklyInterval)

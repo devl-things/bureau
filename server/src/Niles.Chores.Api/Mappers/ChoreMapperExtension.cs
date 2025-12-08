@@ -6,6 +6,8 @@ namespace Niles.Chores.Api.Mappers
 {
     public static class ChoreMapperExtension
     {
+        //TODO [backend] change so this obfuscator is passed as formating option
+        //TODO [backend] set priority from chore
         public static ChoreDto ToDto(this Chore chore, int priority = 0, bool completed = false)
         {
             return new ChoreDto

@@ -73,7 +73,7 @@ namespace Niles.Chores.Services
             return createdHousekeeping;
         }
 
-        public async Task<Result<Housekeeping>> GetHousekeepingAsync(int id, CancellationToken cancellationToken)
+        public async Task<Result<Housekeeping>> GetHousekeepingAsync(int id, CancellationToken cancellationToken = default)
         {
             HousekeepingDb? housekeepingDb = await _context.Housekeeping
                 .Include(h => h.CompletedChores)
@@ -95,7 +95,7 @@ namespace Niles.Chores.Services
             return housekeepingsDb.Select(h => h.ToHousekeeping());
         }
 
-        public async Task<PagedResult<Housekeeping>> ListHousekeepingsPagedAsync(SearchParameters pagination, CancellationToken cancellationToken = default)
+        public async Task<PagedResult<Housekeeping>> GetHousekeepingsAsync(SearchParameters searchParameters, CancellationToken cancellationToken = default)
         {
             // Build query with search filter
             IQueryable<HousekeepingDb> query = _context.Housekeeping
@@ -103,28 +103,19 @@ namespace Niles.Chores.Services
                     .ThenInclude(cc => cc.Chore)
                 .AsQueryable();
 
-            if (!string.IsNullOrWhiteSpace(pagination.Search))
+            if (!string.IsNullOrWhiteSpace(searchParameters.Search))
             {
-                string searchLower = pagination.Search.ToLowerInvariant();
-
-                // Try to parse as date
                 DateOnly? searchDate = null;
-                if (DateOnly.TryParse(pagination.Search, out DateOnly parsedDate))
+                if (!ChoresDateParser.TryParseDate(searchParameters.Search, out DateOnly parsedDate))
                 {
                     searchDate = parsedDate;
                 }
 
-                // Try to parse as integer (for chore ID search)
-                int? searchChoreId = null;
-                if (int.TryParse(pagination.Search, out int parsedChoreId))
-                {
-                    searchChoreId = parsedChoreId;
-                }
-
-                query = query.Where(h =>
-                    (h.Note != null && h.Note.ToLower().Contains(searchLower)) ||
-                    (searchDate.HasValue && DateOnly.FromDateTime(h.Timestamp.Date) == searchDate.Value) ||
-                    (searchChoreId.HasValue && h.CompletedChores.Any(cc => cc.ChoreId == searchChoreId.Value))
+                query = query.Where(x =>
+                    (x.Note != null && x.Note.Contains(searchParameters.Search, StringComparison.OrdinalIgnoreCase)) ||
+                    (searchDate.HasValue && DateOnly.FromDateTime(x.Timestamp.Date) == searchDate.Value) ||
+                    (x.CompletedChores.Any(cc => cc.Chore.Title.Contains(searchParameters.Search, StringComparison.OrdinalIgnoreCase) ||
+                        (cc.Chore.Description != null && cc.Chore.Description.Contains(searchParameters.Search, StringComparison.OrdinalIgnoreCase))))
                 );
             }
 
@@ -134,12 +125,12 @@ namespace Niles.Chores.Services
             // Apply pagination and ordering at database level
             List<Housekeeping> housekeepings = await query
                 .OrderByDescending(h => h.Timestamp) // Most recent first
-                .Skip((pagination.Page - 1) * pagination.PageSize)
-                .Take(pagination.PageSize)
+                .Skip((searchParameters.Page - 1) * searchParameters.PageSize)
+                .Take(searchParameters.PageSize)
                 .Select(x => x.ToHousekeeping())
                 .ToListAsync(cancellationToken);
 
-            return new PagedResult<Housekeeping>(housekeepings, pagination, total);
+            return new PagedResult<Housekeeping>(housekeepings, searchParameters, total);
         }
 
         public async Task<Result<Housekeeping>> UpdateHousekeepingAsync(Housekeeping housekeeping, CancellationToken cancellationToken = default)
