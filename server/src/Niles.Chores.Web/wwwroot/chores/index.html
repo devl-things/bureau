@@ -802,12 +802,8 @@
         <span class="toast-text" id="toast-text">Saved</span>
     </div>
 
+    <script src="/js/app-config.js"></script>
     <script>
-
-        let API_BASE; // GET chores
-        let API_HEALTH; // health check
-        let API_SUBMIT; // summary submit endpoint
-
         // Priority numbers: 1=critical, 2=high, 3=medium, 4=low
         const PRIORITY = {
             CRITICAL: 1,
@@ -818,48 +814,36 @@
 
         let todayIso = null; // YYYY-MM-DD
 
-        document.addEventListener("DOMContentLoaded", () => {
-            (async () => {
-                // 1) WAIT for config
-                await loadConfig();
-                renderTodayDate();
+        document.addEventListener("DOMContentLoaded",async () => {
+            const apiConfig = await loadApiConfig();
+                
+            renderTodayDate();
 
-                const refreshBtn = document.getElementById("refresh-btn");
-                refreshBtn.addEventListener("click", () => {
-                    checkApiHealthAndLoad();
-                });
+            const refreshBtn = document.getElementById("refresh-btn");
+            refreshBtn.addEventListener("click", () => {
+                checkApiHealthAndLoad(apiConfig);
+            });
 
-                const submitBtn = document.getElementById("submit-btn");
-                submitBtn.addEventListener("click", openSummaryModal);
+            const submitBtn = document.getElementById("submit-btn");
+            submitBtn.addEventListener("click", openSummaryModal);
 
-                const modalCancelBtn = document.getElementById("modal-cancel-btn");
-                modalCancelBtn.addEventListener("click", closeSummaryModal);
+            const modalCancelBtn = document.getElementById("modal-cancel-btn");
+            modalCancelBtn.addEventListener("click", closeSummaryModal);
 
-                const modalConfirmBtn = document.getElementById("modal-confirm-btn");
-                modalConfirmBtn.addEventListener("click", handleConfirmSubmit);
+            const modalConfirmBtn = document.getElementById("modal-confirm-btn");
+            modalConfirmBtn.addEventListener("click", () => {
+                handleConfirmSubmit(apiConfig);
+            });
 
-                const modalBackdrop = document.getElementById("summary-modal");
-                modalBackdrop.addEventListener("click", (e) => {
-                    if (e.target === modalBackdrop) {
-                        closeSummaryModal();
-                    }
-                });
+            const modalBackdrop = document.getElementById("summary-modal");
+            modalBackdrop.addEventListener("click", (e) => {
+                if (e.target === modalBackdrop) {
+                    closeSummaryModal();
+                }
+            });
 
-                checkApiHealthAndLoad();
-            })();
+            checkApiHealthAndLoad(apiConfig);
         });
-
-        async function loadConfig() {
-            const cfg = await fetch('/config').then(r => r.json());
-            window.APP_CONFIG = cfg;
-
-            API_BASE = window.APP_CONFIG.api.prioritizedChoresEndpoint;  // GET chores
-            API_HEALTH = window.APP_CONFIG.api.healthEndpoint;  // health check
-            API_SUBMIT = window.APP_CONFIG.api.housekeepingSubmitEndpoint;
-
-            console.log("Loaded backend config:", cfg);
-
-        }
 
         function renderTodayDate() {
             const dateEl = document.getElementById("today-date");
@@ -874,12 +858,14 @@
 
             todayIso = now.toISOString().slice(0, 10);;
         }
-
-        async function checkApiHealthAndLoad() {
+        /**
+         * @param {ApiConfig} apiConfig
+         */
+        async function checkApiHealthAndLoad(apiConfig) {
             setLoading(true);
             try {
                 setStatus("Checking connection…", "online");
-                const healthy = await checkHealth();
+                const healthy = await checkHealth(apiConfig);
                 if (!healthy) {
                     setStatus("API unreachable", "offline");
                     document.getElementById("offline-badge").style.display = "inline";
@@ -890,7 +876,7 @@
 
                 setStatus("Loading chores…", "online");
                 document.getElementById("offline-badge").style.display = "none";
-                await loadChores();
+                await loadChores(apiConfig);
                 setStatus("Chores loaded", "online");
             } catch (err) {
                 console.error("Health check / load failed:", err);
@@ -902,25 +888,30 @@
                 setLoading(false);
             }
         }
-
-        async function checkHealth() {
+        /**
+         * @param {ApiConfig} apiConfig
+         */
+        async function checkHealth(apiConfig) {
             const controller = new AbortController();
             const timeoutId = setTimeout(() => controller.abort(), 3000);
 
             try {
-                const resp = await fetch(API_HEALTH, { signal: controller.signal });
+                const resp = await fetch(apiConfig.health, { signal: controller.signal });
                 clearTimeout(timeoutId);
                 return resp.ok;
-            } catch (e) {
+            } catch (error) {
+                console.error("Failed to check health:", error);
                 clearTimeout(timeoutId);
                 return false;
             }
         }
-
-        async function loadChores() {
+        /**
+         * @param {ApiConfig} apiConfig
+         */
+        async function loadChores(apiConfig) {
             try {
                 setLoading(true);
-                const chores = await fetchChoresFromApi();
+                const chores = await fetchChoresFromApi(apiConfig);
                 renderChores(chores);
             } catch (error) {
                 console.error("Failed to load chores:", error);
@@ -931,12 +922,14 @@
                 setLoading(false);
             }
         }
-
-        async function fetchChoresFromApi() {
+        /**
+         * @param {ApiConfig} apiConfig
+         */
+        async function fetchChoresFromApi(apiConfig) {
             const controller = new AbortController();
             const timeoutId = setTimeout(() => controller.abort(), 5000);
 
-            const url = `${API_BASE}?date=${encodeURIComponent(todayIso)}`;
+            const url = `${apiConfig.prioritizedChores}?date=${encodeURIComponent(todayIso)}`;
             const response = await fetch(url, { signal: controller.signal });
             clearTimeout(timeoutId);
 
@@ -946,7 +939,7 @@
 
             const data = await response.json();
             if (!Array.isArray(data)) {
-                throw new Error("Unexpected API format (expected array)");
+                throw new TypeError("Unexpected API format (expected array)");
             }
 
             return data.map((item, index) => {
@@ -1129,8 +1122,8 @@
             // No per-toggle API call anymore
         }
 
-// Sort: unchecked first, completed last, then by criticality (1=critical → 4=low),
-// then by numeric priority (lower numbers first), then by original index
+        // Sort: unchecked first, completed last, then by criticality (1=critical → 4=low),
+        // then by numeric priority (lower numbers first), then by original index
         function reorderList() {
             const listEl = document.getElementById("chores-list");
             const items = Array.from(listEl.children);
@@ -1254,7 +1247,10 @@
                 .map((cb) => cb.value);
         }
 
-        async function handleConfirmSubmit() {
+        /**
+         * @param {ApiConfig} apiConfig
+         */
+        async function handleConfirmSubmit(apiConfig) {
             const confirmBtn = document.getElementById("modal-confirm-btn");
             const hoursInput = document.getElementById("modal-hours");
             const minutesInput = document.getElementById("modal-minutes");
@@ -1284,7 +1280,6 @@
                 // Format date as yyyy-MM-dd'T'HH:mm:ss.fffK
                 const now = new Date();
                 const isoWithOffset = now.toISOString();
-
                 // Format duration as hh:mm (pad hours to at least 1+ digits and minutes 2 digits)
                 const hh = String(Math.floor(totalMinutes / 60)).padStart(2, '0');
                 const mm = String(totalMinutes % 60).padStart(2, '0');
@@ -1297,7 +1292,7 @@
                     completedChoreIds: completedIds
                 };
 
-                const response = await fetch(API_SUBMIT, {
+                const response = await fetch(apiConfig.housekeepingSubmit, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify(payload)
@@ -1310,7 +1305,7 @@
 
                 showToast("Chores submitted ✔");
                 closeSummaryModal();
-                checkApiHealthAndLoad();
+                checkApiHealthAndLoad(apiConfig);
             } catch (error) {
                 console.error("Failed to submit chores summary:", error);
                 showToast("Couldn’t submit chores.", true);

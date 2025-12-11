@@ -297,9 +297,9 @@
         <div class="modal" id="modal"></div>
     </div>
 
-    <script>
+    <script src="/js/app-config.js"></script>
 
-        let API_BASE;
+    <script>
         const state = {
             logs: [],
             meta: null,
@@ -309,28 +309,28 @@
             searchTimeout: null
         };
 
-        document.addEventListener("DOMContentLoaded", () => {
-            (async () => {
-                // 1) WAIT for config
-                await loadConfig();
-                document.getElementById("search-input").addEventListener("input", handleSearch);
-                document.getElementById("prev-page").addEventListener("click", () => changePage(state.currentPage - 1));
-                document.getElementById("next-page").addEventListener("click", () => changePage(state.currentPage + 1));
-                fetchLogs();
-            })();
+        document.addEventListener("DOMContentLoaded", async () => {
+            // Load API config from app-config.js
+            const apiConfig = await loadApiConfig();
+
+            // Wire events that depend on API
+            document.getElementById("search-input")
+                .addEventListener("input", (e) => handleSearch(e, apiConfig));
+
+            document.getElementById("prev-page")
+                .addEventListener("click", () => changePage(state.currentPage - 1, apiConfig));
+
+            document.getElementById("next-page")
+                .addEventListener("click", () => changePage(state.currentPage + 1, apiConfig));
+
+            // Initial load
+            fetchLogs(apiConfig);
         });
 
-        async function loadConfig() {
-            const cfg = await fetch('/config').then(r => r.json());
-            window.APP_CONFIG = cfg;
-
-            API_BASE = window.APP_CONFIG.api.housekeepingEndpoint;
-
-            console.log("Loaded backend config:", cfg);
-
-        }
-
-        async function fetchLogs() {
+        /**
+         * @param {ApiConfig} apiConfig
+         */
+        async function fetchLogs(apiConfig) {
             setTableMessage("Loading logs…");
             try {
                 const params = new URLSearchParams({
@@ -341,7 +341,7 @@
                     params.append("search", state.search);
                 }
 
-                const response = await fetch(`${API_BASE}?${params.toString()}`);
+                const response = await fetch(`${apiConfig.housekeeping}?${params.toString()}`);
                 if (!response.ok) throw new Error("Failed to load housekeeping logs");
                 const payload = await response.json();
 
@@ -363,10 +363,11 @@
                 state.meta = null;
                 showToast("Using fallback data because API failed");
             }
+
             renderTable();
         }
 
-        function handleSearch(event) {
+        function handleSearch(event, apiConfig) {
             const searchValue = event.target.value.trim();
             state.search = searchValue;
             state.currentPage = 1; // Reset to first page on search
@@ -374,14 +375,14 @@
             // Debounce search
             clearTimeout(state.searchTimeout);
             state.searchTimeout = setTimeout(() => {
-                fetchLogs();
+                fetchLogs(apiConfig);
             }, 300);
         }
 
-        function changePage(page) {
+        function changePage(page, apiConfig) {
             if (page < 1 || (state.meta && page > state.meta.totalPages)) return;
             state.currentPage = page;
-            fetchLogs();
+            fetchLogs(apiConfig);
         }
 
         function renderTable() {
@@ -461,42 +462,41 @@
             const count = completedChores.length;
 
             modal.innerHTML = `
-                <header>
-                    <h2>${formatDate(log.datetime)}</h2>
-                    <p>${sanitize(log.note || "No notes provided")}</p>
-                </header>
-                <ul class="detail-list">
-                    <li>
-                        <span class="detail-label">Duration</span>
-                        <span>${formatDuration(log.duration)}</span>
-                    </li>
-                    <li>
-                        <span class="detail-label">Chores completed</span>
-                        <span>${count}</span>
-                    </li>
-                </ul>
-                <section>
-                    <h3 style="margin:0;">Completed chores</h3>
-                    <p class="notes" style="margin:4px 0 8px;">${count ? "List of completed chores." : "No chore data available."}</p>
-                    <ul class="chores-list">
-                        ${
-                            count
-                                ? completedChores
-                                      .map(
-                                          (chore) =>
-                                              `<li>
-                                                  <strong>${sanitize(chore.title || `Chore ${chore.id || ""}`)}</strong>
-                                              </li>`
-                                      )
-                                      .join("")
-                                : `<li class="notes" style="list-style:none;border:none;background:transparent;padding:0;">No chores recorded.</li>`
-                        }
+                    <header>
+                        <h2>${formatDate(log.datetime)}</h2>
+                        <p>${sanitize(log.note || "No notes provided")}</p>
+                    </header>
+                    <ul class="detail-list">
+                        <li>
+                            <span class="detail-label">Duration</span>
+                            <span>${formatDuration(log.duration)}</span>
+                        </li>
+                        <li>
+                            <span class="detail-label">Chores completed</span>
+                            <span>${count}</span>
+                        </li>
                     </ul>
-                </section>
-                <div class="modal-actions">
-                    <button type="button" class="btn" id="close-modal">Close</button>
-                </div>
-            `;
+                    <section>
+                        <h3 style="margin:0;">Completed chores</h3>
+                        <p class="notes" style="margin:4px 0 8px;">${count ? "List of completed chores." : "No chore data available."}</p>
+                        <ul class="chores-list">
+                            ${count
+                    ? completedChores
+                        .map(
+                            (chore) =>
+                                `<li>
+                                                      <strong>${sanitize(chore.title || `Chore ${chore.id || ""}`)}</strong>
+                                                  </li>`
+                        )
+                        .join("")
+                    : `<li class="notes" style="list-style:none;border:none;background:transparent;padding:0;">No chores recorded.</li>`
+                }
+                        </ul>
+                    </section>
+                    <div class="modal-actions">
+                        <button type="button" class="btn" id="close-modal">Close</button>
+                    </div>
+                `;
             document.getElementById("modal-backdrop").classList.add("visible");
             document.getElementById("close-modal").addEventListener("click", closeModal);
             document.getElementById("modal-backdrop").addEventListener("click", backdropHandler, { once: true });
@@ -527,7 +527,6 @@
 
         function formatDuration(duration) {
             if (!duration) return "—";
-            // Parse TimeSpan string format (hh:mm:ss or h:mm:ss)
             const parts = duration.toString().split(":").map(Number);
             if (parts.length < 2) return duration;
             const hrs = parts[0] || 0;
@@ -539,19 +538,19 @@
         }
 
         function showToast(message, positive = false) {
-            // Simple toast notification (you can enhance this if needed)
+            // For now just log; you can add a UI toast later
             console.log(message);
         }
 
         function sanitize(str = "") {
-            return str.replace(/[&<>"']/g, (char) =>
-                ({
-                    "&": "&amp;",
-                    "<": "&lt;",
-                    ">": "&gt;",
-                    '"': "&quot;",
-                    "'": "&#39;"
-                }[char] || char)
+            return str.replaceAll(/[&<>"']/g, (char) =>
+            ({
+                "&": "&amp;",
+                "<": "&lt;",
+                ">": "&gt;",
+                '"': "&quot;",
+                "'": "&#39;"
+            }[char] || char)
             );
         }
 
