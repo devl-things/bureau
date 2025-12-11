@@ -363,6 +363,7 @@
 
     <div class="toast" id="toast"></div>
 
+    <script src="https://unpkg.com/dompurify@3.1.6/dist/purify.min.js"></script>
     <script src="/js/app-config.js"></script>
     <script>
         const state = {
@@ -484,12 +485,12 @@
                     : "";
 
                 titleCell.innerHTML = `<div>${sanitize(chore.title ?? "Untitled")}</div>
-                        <div class="meta-line">
-                            ${type}
-                            ${criticalBadge}
-                            ${repeatLabel}
-                        </div>
-                        ${descriptionBadge}`;
+                            <div class="meta-line">
+                                ${type}
+                                ${criticalBadge}
+                                ${repeatLabel}
+                            </div>
+                            ${descriptionBadge}`;
 
                 const actionsCell = document.createElement("td");
                 actionsCell.classList.add("actions");
@@ -554,33 +555,33 @@
             const isEdit = mode === "edit";
             const modal = document.getElementById("modal");
             modal.innerHTML = `
-                    <header>
-                        <h2>${isEdit ? "Edit chore" : "Create chore"}</h2>
-                        <p>${isEdit ? "Update the selected chore." : "Add a brand new chore."}</p>
-                    </header>
-                    <form id="chore-form">
-                        <label>
-                            Title
-                            <input name="title" required value="${sanitize(chore?.title) || ""}" />
-                        </label>
-                        <label>
-                            Description
-                            <textarea name="description">${sanitize(chore?.description) || ""}</textarea>
-                        </label>
-                        <label>
-                            Type
-                            <input name="type" placeholder="e.g. Cleaning, Errand" value="${sanitize(chore?.type) || ""}" />
-                        </label>
-                        <label>
-                            Repeat every (weeks)
-                            <input name="repeatEveryWeeks" type="number" min="1" step="1" placeholder="1" value="${sanitize(chore?.weeklyInterval?.toString?.() ?? "")}" />
-                        </label>
-                        <div class="modal-actions">
-                            <button type="button" class="btn ghost" id="cancel-modal">Cancel</button>
-                            <button type="submit" class="btn">${isEdit ? "Save changes" : "Create"}</button>
-                        </div>
-                    </form>
-                `;
+                        <header>
+                            <h2>${isEdit ? "Edit chore" : "Create chore"}</h2>
+                            <p>${isEdit ? "Update the selected chore." : "Add a brand new chore."}</p>
+                        </header>
+                        <form id="chore-form">
+                            <label>
+                                Title
+                                <input name="title" required value="${sanitize(chore?.title) || ""}" />
+                            </label>
+                            <label>
+                                Description
+                                <textarea name="description">${sanitize(chore?.description) || ""}</textarea>
+                            </label>
+                            <label>
+                                Type
+                                <input name="type" placeholder="e.g. Cleaning, Errand" value="${sanitize(chore?.type) || ""}" />
+                            </label>
+                            <label>
+                                Repeat every (weeks)
+                                <input name="repeatEveryWeeks" type="number" min="1" step="1" placeholder="1" value="${sanitize(chore?.weeklyInterval?.toString?.() ?? "")}" />
+                            </label>
+                            <div class="modal-actions">
+                                <button type="button" class="btn ghost" id="cancel-modal">Cancel</button>
+                                <button type="submit" class="btn">${isEdit ? "Save changes" : "Create"}</button>
+                            </div>
+                        </form>
+                    `;
             document.getElementById("modal-backdrop").classList.add("visible");
             document.getElementById("cancel-modal").addEventListener("click", closeModal);
             document.getElementById("chore-form").addEventListener("submit", (e) => handleFormSubmit(e, apiConfig));
@@ -632,16 +633,17 @@
             state.activeModal = "delete";
             state.activeChore = chore;
             const modal = document.getElementById("modal");
+            const safeTitle = DOMPurify.sanitize(chore?.title);
             modal.innerHTML = `
-                    <header>
-                        <h2>Delete chore</h2>
-                        <p>Are you sure you want to delete "${sanitize(chore?.title)}"?</p>
-                    </header>
-                    <div class="modal-actions">
-                        <button type="button" class="btn ghost" id="cancel-modal">Cancel</button>
-                        <button type="button" class="btn btn-danger" id="confirm-delete">Delete</button>
-                    </div>
-                `;
+                        <header>
+                            <h2>Delete chore</h2>
+                            <p>Are you sure you want to delete "${safeTitle}"?</p>
+                        </header>
+                        <div class="modal-actions">
+                            <button type="button" class="btn ghost" id="cancel-modal">Cancel</button>
+                            <button type="button" class="btn btn-danger" id="confirm-delete">Delete</button>
+                        </div>
+                    `;
             document.getElementById("modal-backdrop").classList.add("visible");
             document.getElementById("cancel-modal").addEventListener("click", closeModal);
             document.getElementById("confirm-delete").addEventListener("click", () => handleDelete(apiConfig));
@@ -671,26 +673,27 @@
             state.activeModal = "critical";
             state.activeChore = chore;
             const modal = document.getElementById("modal");
+            const safeTitle = DOMPurify.sanitize(chore?.title);
             modal.innerHTML = `
-                    <header>
-                        <h2>Mark critical</h2>
-                        <p>Provide context for why "${sanitize(chore?.title)}" is critical.</p>
-                    </header>
-                    <form id="critical-form">
-                        <label>
-                            Reminder date
-                            <input type="date" name="date" required />
-                        </label>
-                        <label>
-                            Notes
-                            <textarea name="description" required placeholder="Describe why this is critical"></textarea>
-                        </label>
-                        <div class="modal-actions">
-                            <button type="button" class="btn ghost" id="cancel-modal">Cancel</button>
-                            <button type="submit" class="btn">Save</button>
-                        </div>
-                    </form>
-                `;
+                        <header>
+                            <h2>Mark critical</h2>
+                            <p>Provide context for why "${safeTitle}" is critical.</p>
+                        </header>
+                        <form id="critical-form">
+                            <label>
+                                Reminder date
+                                <input type="date" name="date" required />
+                            </label>
+                            <label>
+                                Notes
+                                <textarea name="description" required placeholder="Describe why this is critical"></textarea>
+                            </label>
+                            <div class="modal-actions">
+                                <button type="button" class="btn ghost" id="cancel-modal">Cancel</button>
+                                <button type="submit" class="btn">Save</button>
+                            </div>
+                        </form>
+                    `;
             document.getElementById("modal-backdrop").classList.add("visible");
             document.getElementById("cancel-modal").addEventListener("click", closeModal);
             document.getElementById("critical-form").addEventListener("submit", (e) => handleCriticalSubmit(e, apiConfig));
