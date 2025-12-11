@@ -7,7 +7,7 @@ namespace Niles.Chores.Api.Dtos
         [JsonPropertyName("date")]
         public string Date { get; set; } = string.Empty;
         [JsonPropertyName("duration")]
-        public int? Duration { get; set; }
+        public string? Duration { get; set; }
         [JsonPropertyName("note")]
         public string? Note { get; set; }
         [JsonPropertyName("completedChoreIds")]

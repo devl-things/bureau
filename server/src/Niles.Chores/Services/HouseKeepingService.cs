@@ -1,5 +1,6 @@
 ﻿using Bureau;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
 using Niles.Chores.Contexts;
 using Niles.Chores.Mappers;
 using Niles.Chores.Models;
@@ -11,12 +12,14 @@ namespace Niles.Chores.Services
         private readonly ChoresContext _context;
         private readonly ICriticalChoreService _criticalChoreService;
         private readonly TimeProvider _timeProvider;
+        private readonly IMemoryCache _cache;
 
-        public HouseKeepingService(ChoresContext context, ICriticalChoreService criticalChoreService, TimeProvider timeProvider)
+        public HouseKeepingService(ChoresContext context, ICriticalChoreService criticalChoreService, TimeProvider timeProvider, IMemoryCache cache)
         {
             _context = context;
             _criticalChoreService = criticalChoreService;
             _timeProvider = timeProvider;
+            _cache = cache;
         }
 
         public async Task<Result<Housekeeping>> CreateHousekeepingAsync(Housekeeping housekeeping, CancellationToken cancellationToken = default)
@@ -68,6 +71,8 @@ namespace Niles.Chores.Services
                 .Include(h => h.CompletedChores)
                     .ThenInclude(cc => cc.Chore)
                 .FirstOrDefaultAsync(h => h.Id == housekeepingDb.Id, cancellationToken);
+
+            _cache.RemovePriotizedChores();
 
             Housekeeping createdHousekeeping = housekeepingDbWithChores!.ToHousekeeping();
             return createdHousekeeping;

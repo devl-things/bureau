@@ -60,13 +60,15 @@ namespace Niles.Chores.Api.Controllers
                 return BadRequest(ModelState);
             }
 
-            // TODO [frontend] this should be a datatimeoffset from frontend
             if (!ChoresDateParser.TryParseDateTime(dto.Date, out DateTimeOffset dateTime))
             {
                 return BadRequest(new { error = "Invalid date format." });
             }
-            // TODO [frontend] this should come in format hh:mm from frontend or h:mm
-            ChoresDateParser.TryParseDuration(dto.Duration.HasValue ? dto.Duration.Value.ToString() : null, out TimeSpan duration);
+
+            if (!ChoresDateParser.TryParseDuration(dto.Duration, out TimeSpan duration) || duration == TimeSpan.Zero)
+            {
+                return BadRequest(new { error = "Duration should be set" });
+            }
 
             // Decode completed chore IDs
             List<int> completedChoreIds = new List<int>();

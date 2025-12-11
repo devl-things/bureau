@@ -774,8 +774,12 @@
             </div>
             <div class="modal-fields">
                 <div class="modal-field">
-                    <label for="modal-duration">Duration (minutes)</label>
-                    <input type="number" id="modal-duration" min="0" placeholder="e.g. 45" />
+                    <label for="modal-hours">Hours</label>
+                    <input type="number" id="modal-hours" min="0" placeholder="e.g. 1" />
+                </div>
+                <div class="modal-field">
+                    <label for="modal-minutes">Minutes</label>
+                    <input type="number" id="modal-minutes" min="0" max="59" placeholder="e.g. 35" />
                 </div>
                 <div class="modal-field">
                     <label for="modal-note">Note</label>
@@ -849,7 +853,7 @@
             const cfg = await fetch('/config').then(r => r.json());
             window.APP_CONFIG = cfg;
 
-            API_BASE = window.APP_CONFIG.api.choresEndpoint;  // GET chores
+            API_BASE = window.APP_CONFIG.api.prioritizedChoresEndpoint;  // GET chores
             API_HEALTH = window.APP_CONFIG.api.healthEndpoint;  // health check
             API_SUBMIT = window.APP_CONFIG.api.housekeepingSubmitEndpoint;
 
@@ -868,10 +872,7 @@
                 day: "numeric"
             });
 
-            const year = now.getFullYear();
-            const month = String(now.getMonth() + 1).padStart(2, "0");
-            const day = String(now.getDate()).padStart(2, "0");
-            todayIso = `${year}-${month}-${day}`;
+            todayIso = now.toISOString().slice(0, 10);;
         }
 
         async function checkApiHealthAndLoad() {
@@ -949,71 +950,28 @@
             }
 
             return data.map((item, index) => {
-                // Use isCritical flag if available, otherwise normalize the calculated priority
-                const normalizedPriority = item.isCritical
-                    ? PRIORITY.CRITICAL
-                    : normalizePriority(item.priority);
+                // The API now returns explicit `criticality` and `priority` fields.
+                // We use `criticality` to determine critical/high/medium/low and
+                // `priority` as a secondary numeric sort key. Do not infer
+                // criticality from the priority number.
+                const criticalityNum = Number(item.criticality) || PRIORITY.MEDIUM;
+                const priorityNum = Number(item.priority) || 0;
+
                 return {
                     id: item.id ?? String(index),
                     title: item.title ?? "Untitled chore",
                     description: item.description ?? "",
                     completed: !!item.completed,
-                    priorityNumber: normalizedPriority,
-                    priorityName: priorityNameFromNumber(normalizedPriority),
-                    type: normalizeType(item.type),
-                    isCritical: !!item.isCritical
+                    criticalityNumber: criticalityNum,
+                    criticalityName: priorityNameFromNumber(criticalityNum),
+                    priority: priorityNum,
+                    type: normalizeType(item.type)
                 };
             });
         }
 
-        function normalizePriority(value) {
-            const num = Number(value);
-
-            // If it's exactly 1, it's critical (but should be handled by isCritical flag)
-            if (num === PRIORITY.CRITICAL) return PRIORITY.CRITICAL;
-
-            // The PrioritizedChoreService calculates priority as:
-            // - CRITICAL = 1 (handled by isCritical flag)
-            // - HIGH = 2 * importance_score (e.g., 2, 4, 6, 8, 10, 12, 14, 16...)
-            // - MEDIUM = 3 * importance_score (e.g., 3, 6, 9, 12, 15, 18, 21...)
-            // - LOW = 4 * importance_score (e.g., 4, 8, 12, 16, 20, 24, 28...)
-            //
-            // To determine which factor was used, we check divisibility in priority order:
-            // Higher priority factors are checked first (2 > 3 > 4)
-            // This handles overlaps correctly (e.g., 12 could be 2*6, 3*4, or 4*3, but 2*6 takes precedence)
-
-            // Check if it's a HIGH priority (divisible by 2)
-            // Numbers like 2, 4, 6, 8, 10, 12, 14, 16, 18, 20...
-            if (num % 2 === 0) {
-                // For numbers divisible by 2, check if it's also divisible by 4
-                // If divisible by 4, it could be LOW (4*score) or HIGH (2*score where score is even)
-                // We prioritize HIGH for numbers that are clean multiples of 2 but not 4
-                // For numbers divisible by both 2 and 4, we need to check if it's a clean 4 multiple
-                if (num % 4 === 0) {
-                    // Divisible by 4 - could be LOW (4*score) or HIGH (2*score where score is even)
-                    // Check if it's a clean multiple of 4 without being a multiple of 3
-                    // If it's also divisible by 3, it's ambiguous (could be 2*6, 3*4, or 4*3)
-                    // In this case, we'll treat it as LOW since 4 is the lowest priority factor
-                    if (num % 3 === 0) {
-                        // Divisible by 2, 3, and 4 (e.g., 12, 24, 36) - treat as LOW (lowest priority)
-                        return PRIORITY.LOW;
-                    } else {
-                        // Divisible by 4 but not 3 (e.g., 4, 8, 16, 20) - treat as LOW
-                        return PRIORITY.LOW;
-                    }
-                } else {
-                    // Divisible by 2 but not 4 (e.g., 2, 6, 10, 14, 18) - treat as HIGH
-                    return PRIORITY.HIGH;
-                }
-            } else if (num % 3 === 0) {
-                // Divisible by 3 but not 2 (e.g., 3, 9, 15, 21, 27) - treat as MEDIUM
-                return PRIORITY.MEDIUM;
-            } else {
-                // Not divisible by 2 or 3 - this shouldn't happen with the current calculation
-                // But if it does, default to MEDIUM
-                return PRIORITY.MEDIUM;
-            }
-        }
+        // Note: criticality is now provided explicitly by the API, so we no
+        // longer attempt to infer it from the numeric priority value.
 
         function priorityNameFromNumber(num) {
             switch (num) {
@@ -1069,11 +1027,10 @@
                 const li = document.createElement("li");
                 li.className = "chore";
                 li.dataset.choreId = chore.id;
-                li.dataset.priorityNumber = String(chore.priorityNumber);
+                li.dataset.criticalityNumber = String(chore.criticalityNumber);
+                li.dataset.priority = String(chore.priority);
                 li.dataset.originalIndex = String(index);
-                if (chore.isCritical) {
-                    li.dataset.isCritical = "true";
-                }
+
 
                 const leftDiv = document.createElement("div");
                 leftDiv.className = "chore-left";
@@ -1098,9 +1055,10 @@
                 metaEl.className = "chore-meta";
 
                 const priorityPill = document.createElement("div");
-                const priorityName = chore.priorityName;
-                priorityPill.className = `priority-pill priority-${priorityName}`;
-                priorityPill.title = priorityTooltip(priorityName);
+                // Use the chore's criticality for the pill styling and label
+                const criticalityName = chore.criticalityName || priorityNameFromNumber(PRIORITY.MEDIUM);
+                priorityPill.className = `priority-pill priority-${criticalityName}`;
+                priorityPill.title = priorityTooltip(criticalityName);
 
                 const arrowSpan = document.createElement("span");
                 arrowSpan.className = "priority-arrow";
@@ -1108,7 +1066,7 @@
 
                 const shortLabel = document.createElement("span");
                 shortLabel.className = "priority-label-short";
-                shortLabel.textContent = priorityLabelShort(priorityName);
+                shortLabel.textContent = priorityLabelShort(criticalityName);
 
                 priorityPill.appendChild(arrowSpan);
                 priorityPill.appendChild(shortLabel);
@@ -1171,7 +1129,8 @@
             // No per-toggle API call anymore
         }
 
-        // Sort: unchecked first, completed last, then by priority (1=critical → 4=low) within each group, then by original index
+// Sort: unchecked first, completed last, then by criticality (1=critical → 4=low),
+// then by numeric priority (lower numbers first), then by original index
         function reorderList() {
             const listEl = document.getElementById("chores-list");
             const items = Array.from(listEl.children);
@@ -1185,12 +1144,18 @@
                     return aChecked ? 1 : -1; // unchecked first
                 }
 
-                // Within the same completion group, sort by priority (lower number = higher priority)
-                const aPriority = Number(a.dataset.priorityNumber || PRIORITY.MEDIUM);
-                const bPriority = Number(b.dataset.priorityNumber || PRIORITY.MEDIUM);
+                // Within the same completion group, sort by criticality first
+                const aCriticality = Number(a.dataset.criticalityNumber || PRIORITY.MEDIUM);
+                const bCriticality = Number(b.dataset.criticalityNumber || PRIORITY.MEDIUM);
+                if (aCriticality !== bCriticality) {
+                    return aCriticality - bCriticality; // lower number = higher criticality (1=critical)
+                }
 
+                // If same criticality, sort by the returned numeric priority
+                const aPriority = Number(a.dataset.priority || 0);
+                const bPriority = Number(b.dataset.priority || 0);
                 if (aPriority !== bPriority) {
-                    return aPriority - bPriority; // lower number = higher priority (1=critical, 2=high, 3=medium, 4=low)
+                    return aPriority - bPriority; // lower number = higher priority
                 }
 
                 // If same priority, maintain original order
@@ -1259,7 +1224,8 @@
 
         function openSummaryModal() {
             const modal = document.getElementById("summary-modal");
-            const durationInput = document.getElementById("modal-duration");
+            const hoursInput = document.getElementById("modal-hours");
+            const minutesInput = document.getElementById("modal-minutes");
             const noteInput = document.getElementById("modal-note");
 
             if (getCompletedChoreIds().length === 0) {
@@ -1268,9 +1234,10 @@
             }
 
             modal.classList.add("visible");
-            durationInput.value = "";
+            hoursInput.value = "";
+            minutesInput.value = "";
             noteInput.value = "";
-            durationInput.focus();
+            hoursInput.focus();
         }
 
         function closeSummaryModal() {
@@ -1289,7 +1256,8 @@
 
         async function handleConfirmSubmit() {
             const confirmBtn = document.getElementById("modal-confirm-btn");
-            const durationInput = document.getElementById("modal-duration");
+            const hoursInput = document.getElementById("modal-hours");
+            const minutesInput = document.getElementById("modal-minutes");
             const noteInput = document.getElementById("modal-note");
 
             const completedIds = getCompletedChoreIds();
@@ -1297,17 +1265,34 @@
                 showToast("No completed chores to submit.", true);
                 return;
             }
+            const hoursRaw = (hoursInput.value || "").trim();
+            const minutesRaw = (minutesInput.value || "").trim();
+            const hours = hoursRaw === "" ? 0 : Math.max(0, Number(hoursRaw));
+            const minutes = minutesRaw === "" ? 0 : Math.max(0, Number(minutesRaw));
 
-            const durationRaw = durationInput.value.trim();
-            const duration = durationRaw === "" ? null : Number(durationRaw);
+            // Must have a positive total duration > 0
+            const totalMinutes = (hours * 60) + minutes;
+            if (totalMinutes <= 0) {
+                showToast("Please enter a duration greater than 0.", true);
+                return;
+            }
             const note = noteInput.value.trim();
 
             confirmBtn.disabled = true;
 
             try {
+                // Format date as yyyy-MM-dd'T'HH:mm:ss.fffK
+                const now = new Date();
+                const isoWithOffset = now.toISOString();
+
+                // Format duration as hh:mm (pad hours to at least 1+ digits and minutes 2 digits)
+                const hh = String(Math.floor(totalMinutes / 60)).padStart(2, '0');
+                const mm = String(totalMinutes % 60).padStart(2, '0');
+                const durationFormatted = `${hh}:${mm}`;
+
                 const payload = {
-                    date: todayIso,
-                    duration: duration,
+                    date: isoWithOffset,
+                    duration: durationFormatted,
                     note: note,
                     completedChoreIds: completedIds
                 };
@@ -1319,11 +1304,13 @@
                 });
 
                 if (!response.ok) {
-                    throw new Error("Submit failed with status " + response.status);
+                    const error = await response.json();
+                    throw new Error(`Submit failed with status ${response.status}: ${JSON.stringify(error)}`);
                 }
 
                 showToast("Chores submitted ✔");
                 closeSummaryModal();
+                checkApiHealthAndLoad();
             } catch (error) {
                 console.error("Failed to submit chores summary:", error);
                 showToast("Couldn’t submit chores.", true);
