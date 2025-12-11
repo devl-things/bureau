@@ -24,7 +24,9 @@ namespace Niles.Chores.Mappers
                 Description = choreDetail.Chore.Description,
                 Type = choreDetail.Chore.Type,
                 WeeklyInterval = choreDetail.Chore.WeeklyInterval,
-                IsCrititical = choreDetail.OpenCritical is not null
+                IsCrititical = choreDetail.OpenCritical is not null,
+                Note = choreDetail.OpenCritical?.Note,
+                CriticalCreatedAt = choreDetail.OpenCritical?.CreatedAt,
             };
         }
     }

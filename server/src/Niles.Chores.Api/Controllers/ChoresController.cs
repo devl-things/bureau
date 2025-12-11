@@ -1,6 +1,7 @@
 ﻿using Bureau;
 using Microsoft.AspNetCore.Mvc;
 using Niles.Chores.Api.Dtos;
+using Niles.Chores.Api.Factories;
 using Niles.Chores.Api.Mappers;
 using Niles.Chores.Api.Utilities;
 using Niles.Chores.Services;
@@ -14,82 +15,24 @@ namespace Niles.Chores.Api.Controllers
     public class ChoresController : ControllerBase
     {
         private readonly IChoreService _choreService;
-        private readonly IPrioritizedChoreService _prioritizedChoreService;
         private readonly ICriticalChoreService _criticalChoreService;
 
-        public ChoresController(IChoreService choreService, IPrioritizedChoreService prioritizedChoreService, IHouseKeepingService housekeepingService, ICriticalChoreService criticalChoreService)
+        public ChoresController(IChoreService choreService, IHouseKeepingService housekeepingService, ICriticalChoreService criticalChoreService)
         {
             _choreService = choreService;
-            _prioritizedChoreService = prioritizedChoreService;
             _criticalChoreService = criticalChoreService;
         }
 
-        // TODO [frontend] REFACTOR remove api/chores?date=YYYY-MM-DD (returns prioritized chores for date) for that you have a endpoint in HouseKeepingController
-        // TODO [frontend] REFACTOR remove date parameter from this controller and use SearchRequest only for pagination and search
-        // GET: api/chores?date=YYYY-MM-DD (returns prioritized chores for date)
         // GET: api/chores?search=term&page=1&pageSize=10 (returns paginated chores with search)
-        // GET: api/chores (returns all chores)
+        // GET: api/chores (returns first page)
         [HttpGet]
-        public async Task<IActionResult> GetAsync([FromQuery] ChoresQueryParams queryParams, CancellationToken cancellationToken)
+        public async Task<IActionResult> GetAsync([FromQuery] SearchQueryDto queryParams, CancellationToken cancellationToken)
         {
-            // If date parameter is provided, return prioritized chores for that date (no pagination for prioritized)
-            if (!string.IsNullOrEmpty(queryParams.Date))
-            {
-                if (DateOnly.TryParse(queryParams.Date, out DateOnly dateOnly))
-                {
-                    IEnumerable<PrioritizedChore> prioritizedChores = await _prioritizedChoreService.GetPrioritizedChoresAsync(dateOnly, cancellationToken);
-                    List<int> prioritizedChoreIds = prioritizedChores.Select(c => c.Id).ToList();
-                    List<int> criticalPrioritizedIds = await _criticalChoreService.GetOpenCriticalChoreIdsAsync(prioritizedChoreIds, cancellationToken);
-                    HashSet<int> criticalSet = new HashSet<int>(criticalPrioritizedIds);
+            SearchParameters searchParameters = SearchParametersFactory.Create(queryParams);
 
-                    // TODO #74 [backend] REFACTOR set IsCritical in ToDto mapper
-                    IEnumerable<ChoreDto> dtos = prioritizedChores.Select(c => c.ToDto(
-                        priority: c.Priority,
-                        completed: false
-                    ));
-                    return Ok(dtos);
-                }
-                else
-                {
-                    return BadRequest(new { error = "Invalid date format. Expected YYYY-MM-DD." });
-                }
-            }
+            PagedResult<Chore> pagedResult = await _choreService.GetChoresAsync(searchParameters, cancellationToken);
 
-            // Validate pagination parameters
-            int page = queryParams.Page < 1 ? 1 : queryParams.Page;
-            int pageSize = queryParams.PageSize < 1 ? 20 : queryParams.PageSize;
-            if (pageSize > 100) pageSize = 100;
-
-            SearchParameters pagination = new SearchParameters(queryParams.Search, page, pageSize);
-
-            // Get paged chores from database (with search and pagination at DB level)
-            PagedResult<Chore> pagedResult = await _choreService.ListChoresPagedWithCriticalAsync(pagination, cancellationToken);
-
-            // Get all chore IDs for this page
-            List<int> choreIds = pagedResult.Values.Select(c => c.Id).ToList();
-
-            // Get all open critical chores for these chore IDs in one query
-            List<int> openCriticalChoreIds = await _criticalChoreService.GetOpenCriticalChoreIdsAsync(choreIds, cancellationToken);
-            HashSet<int> criticalChoreIds = new HashSet<int>(openCriticalChoreIds);
-
-            // Map to DTOs with critical flag
-            // TODO #74 REFACTOR set IsCritical in ToDto mapper
-            IEnumerable<ChoreDto> pagedItems = pagedResult.Values.Select(m => m.ToDto());
-            Dtos.PagedResponse<ChoreDto> result = new Dtos.PagedResponse<ChoreDto>
-            {
-                Data = pagedItems,
-                Meta = new PagedMeta
-                {
-                    Page = pagedResult.Page,
-                    PageSize = pagedResult.PageSize,
-                    Total = pagedResult.Count,
-                    TotalPages = pagedResult.TotalPages,
-                    HasNext = pagedResult.HasNext,
-                    HasPrevious = pagedResult.HasPrevious
-                }
-            };
-
-            return Ok(result);
+            return Ok(pagedResult.ToPagedResponse(x => x.ToDto()));
         }
 
         // GET api/chores/{id}

@@ -8,7 +8,7 @@ namespace Niles.Chores.Api.Mappers
     {
         //TODO #72 [backend] change so this obfuscator is passed as formating option
         //TODO #74 [backend] set priority from chore
-        public static ChoreDto ToDto(this Chore chore, int priority = 0, bool completed = false)
+        public static ChoreDto ToDto(this Chore chore)
         {
             return new ChoreDto
             {
@@ -17,9 +17,9 @@ namespace Niles.Chores.Api.Mappers
                 Description = chore.Description ?? string.Empty,
                 Type = chore.Type.ToString(),
                 WeeklyInterval = chore.WeeklyInterval,
-                Priority = priority,
-                Completed = completed,
-                IsCritical = chore.IsCrititical
+                IsCritical = chore.IsCrititical,
+                CriticalNote = chore.Note,
+                CriticalCreatedAt = chore.IsCrititical ? DateOnly.FromDateTime(chore.CriticalCreatedAt!.Value.DateTime) : null,
             };
         }
 

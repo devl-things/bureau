@@ -14,12 +14,14 @@ namespace Niles.Chores.Api.Dtos
         public string Type { get; set; } = string.Empty;
         [JsonPropertyName("weeklyInterval")]
         public int WeeklyInterval { get; set; }
-        [JsonPropertyName("priority")]
-        public int Priority { get; set; }
-        [JsonPropertyName("completed")]
-        public bool Completed { get; set; }
+
         [JsonPropertyName("isCritical")]
         public bool IsCritical { get; set; }
+        [JsonPropertyName("criticalNote")]
+        public string? CriticalNote { get; set; }
+        [JsonPropertyName("criticalCreatedAt")]
+        public DateOnly? CriticalCreatedAt { get; set; }
+
     }
 }
 

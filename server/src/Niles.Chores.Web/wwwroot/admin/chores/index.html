@@ -423,8 +423,8 @@
             } catch (err) {
                 console.error(err);
                 state.meta = null;
-                state.chores = sampleChores();
-                showToast("Using fallback data because API failed");
+                state.chores = [];
+                showToast("Fetching chores failed");
             }
             renderTable(apiConfig);
         }
@@ -794,14 +794,6 @@
 
         function varDanger() {
             return getComputedStyle(document.documentElement).getPropertyValue("--danger").trim();
-        }
-
-        function sampleChores() {
-            return [
-                { id: "C-101", title: "Kitchen deep clean", description: "Full wipe down", type: "Cleaning", repeatEveryWeeks: 2 },
-                { id: "C-102", title: "Laundry", description: "Whites + colors", type: "Laundry", repeatEveryWeeks: 1 },
-                { id: "C-103", title: "Garden check", description: "Water + trim", type: "Garden", repeatEveryWeeks: 3 }
-            ];
         }
 
         function numberOrNull(value) {

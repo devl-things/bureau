@@ -130,7 +130,7 @@ namespace Niles.Chores.Services
             // Apply pagination and ordering at database level
             List<Housekeeping> housekeepings = await query
                 .OrderByDescending(h => h.Timestamp) // Most recent first
-                .Skip((searchParameters.Page - 1) * searchParameters.PageSize)
+                .Skip(searchParameters.SkipRecords)
                 .Take(searchParameters.PageSize)
                 .Select(x => x.ToHousekeeping())
                 .ToListAsync(cancellationToken);
