@@ -1,18 +1,16 @@
 using Bureau;
 using Niles.Chores.Api.Dtos;
-using Niles.Chores.Api.Utilities;
 
 namespace Niles.Chores.Api.Mappers
 {
     public static class ChoreMapperExtension
     {
-        //TODO #72 [backend] change so this obfuscator is passed as formating option
         //TODO #74 [backend] set priority from chore
-        public static ChoreDto ToDto(this Chore chore)
+        public static ChoreDto ToDto(this Chore chore, Func<int, string> idFormatter)
         {
             return new ChoreDto
             {
-                Id = IdObfuscator.Encode(chore.Id),
+                Id = idFormatter(chore.Id),
                 Title = chore.Title,
                 Description = chore.Description ?? string.Empty,
                 Type = chore.Type.ToString(),

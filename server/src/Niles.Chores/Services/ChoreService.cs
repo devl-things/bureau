@@ -122,7 +122,7 @@ namespace Niles.Chores.Services
         {
             int rowsAffected = await _context.Chores
                 .Where(x => x.Id == id)
-                .ExecuteDeleteAsync();
+                .ExecuteDeleteAsync(cancellationToken);
 
             if (rowsAffected == 0)
             {

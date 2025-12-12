@@ -6,8 +6,6 @@ using Niles.Chores.Api.Mappers;
 using Niles.Chores.Api.Utilities;
 using Niles.Chores.Services;
 
-// For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
-
 namespace Niles.Chores.Api.Controllers
 {
     [Route("api/[controller]")]
@@ -15,12 +13,10 @@ namespace Niles.Chores.Api.Controllers
     public class ChoresController : ControllerBase
     {
         private readonly IChoreService _choreService;
-        private readonly ICriticalChoreService _criticalChoreService;
 
-        public ChoresController(IChoreService choreService, IHouseKeepingService housekeepingService, ICriticalChoreService criticalChoreService)
+        public ChoresController(IChoreService choreService)
         {
             _choreService = choreService;
-            _criticalChoreService = criticalChoreService;
         }
 
         // GET: api/chores?search=term&page=1&pageSize=10 (returns paginated chores with search)
@@ -32,7 +28,7 @@ namespace Niles.Chores.Api.Controllers
 
             PagedResult<Chore> pagedResult = await _choreService.GetChoresAsync(searchParameters, cancellationToken);
 
-            return Ok(pagedResult.ToPagedResponse(x => x.ToDto()));
+            return Ok(pagedResult.ToPagedResponse(x => x.ToDto(IdObfuscator.Encode)));
         }
 
         // GET api/chores/{id}
@@ -41,14 +37,14 @@ namespace Niles.Chores.Api.Controllers
         {
             if (!IdObfuscator.TryDecode(id, out int intId))
             {
-                return BadRequest(new { error = "Invalid id format." });
+                return BadRequest(new { error = ErrorMessages.InvalidIdFormat });
             }
             Result<Chore> result = await _choreService.GetChoreAsync(intId, cancellationToken);
             if (result.IsError)
             {
                 return NotFound();
             }
-            return Ok(result.Value.ToDto());
+            return Ok(result.Value.ToDto(IdObfuscator.Encode));
         }
 
         // POST api/chores
@@ -61,13 +57,13 @@ namespace Niles.Chores.Api.Controllers
             }
 
             Result<Chore> resultModel = dto.ToResultModel();
-            if (!resultModel.IsSuccess)
+            if (resultModel.IsError)
             {
                 return BadRequest(new { error = resultModel.Error.ErrorMessage });
             }
 
             Result<Chore> result = await _choreService.CreateChoreAsync(resultModel.Value!, cancellationToken);
-            if (!result.IsSuccess)
+            if (result.IsError)
             {
                 return StatusCode(StatusCodes.Status500InternalServerError, new { error = result.Error.ErrorMessage ?? "Failed to create chore." });
             }
@@ -92,18 +88,18 @@ namespace Niles.Chores.Api.Controllers
             }
             if (!IdObfuscator.TryDecode(id, out int intId))
             {
-                return BadRequest(new { error = "Invalid id format." });
+                return BadRequest(new { error = ErrorMessages.InvalidIdFormat });
             }
 
             Result<Chore> modelResult = dto.ToResultModel(intId);
 
-            if (!modelResult.IsSuccess)
+            if (modelResult.IsError)
             {
                 return BadRequest(new { error = modelResult.Error.ErrorMessage });
             }
 
             Result<Chore> result = await _choreService.UpdateChoreAsync(modelResult.Value!, cancellationToken);
-            if (!result.IsSuccess)
+            if (result.IsError)
             {
                 if (result.Error.ErrorMessage?.Contains("not found") == true)
                 {
@@ -120,76 +116,15 @@ namespace Niles.Chores.Api.Controllers
         {
             if (!IdObfuscator.TryDecode(id, out int intId))
             {
-                return BadRequest(new { error = "Invalid id format." });
+                return BadRequest(new { error = ErrorMessages.InvalidIdFormat });
             }
 
             Result result = await _choreService.DeleteChoreAsync(intId, cancellationToken);
-            if (!result.IsSuccess)
+            if (result.IsError)
             {
-                if (result.Error.ErrorMessage?.Contains("not found") == true)
-                {
-                    return NotFound();
-                }
-                return StatusCode(StatusCodes.Status500InternalServerError, new { error = result.Error.ErrorMessage ?? "Failed to delete chore." });
+                return NotFound();
             }
             return NoContent();
-        }
-
-        // POST api/chores/{id}/critical
-        [HttpPost("{id}/critical")]
-        public async Task<IActionResult> MarkCriticalAsync(string id, [FromBody] CriticalChoreDto dto, CancellationToken cancellationToken)
-        {
-            if (!ModelState.IsValid)
-            {
-                return BadRequest(ModelState);
-            }
-
-            // Decode chore ID
-            if (!IdObfuscator.TryDecode(id, out int choreId))
-            {
-                return BadRequest(new { error = "Invalid id format." });
-            }
-
-            // Create critical chore
-            Result result = await _criticalChoreService.CreateCriticalChoreAsync(choreId, dto.Description, cancellationToken);
-            if (!result.IsSuccess)
-            {
-                if (result.Error.ErrorMessage?.Contains("not found") == true)
-                {
-                    return NotFound(new { error = result.Error.ErrorMessage });
-                }
-                if (result.Error.ErrorMessage?.Contains("already has an open critical status") == true)
-                {
-                    return BadRequest(new { error = result.Error.ErrorMessage });
-                }
-                return StatusCode(StatusCodes.Status500InternalServerError, new { error = result.Error.ErrorMessage ?? "Failed to mark chore as critical." });
-            }
-
-            return Ok(new { message = "Chore marked as critical successfully" });
-        }
-
-        // DELETE api/chores/{id}/critical
-        [HttpDelete("{id}/critical")]
-        public async Task<IActionResult> RemoveCriticalAsync(string id, CancellationToken cancellationToken)
-        {
-            // Decode chore ID
-            if (!IdObfuscator.TryDecode(id, out int choreId))
-            {
-                return BadRequest(new { error = "Invalid id format." });
-            }
-
-            // Delete critical chore
-            Result result = await _criticalChoreService.DeleteCriticalChoreAsync(choreId, cancellationToken);
-            if (!result.IsSuccess)
-            {
-                if (result.Error.ErrorMessage?.Contains("No open critical status") == true)
-                {
-                    return BadRequest(new { error = result.Error.ErrorMessage });
-                }
-                return StatusCode(StatusCodes.Status500InternalServerError, new { error = result.Error.ErrorMessage ?? "Failed to remove critical status." });
-            }
-
-            return Ok(new { message = "Critical status removed successfully" });
         }
     }
 }
