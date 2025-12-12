@@ -33,7 +33,7 @@ namespace Niles.Chores.Configurations
             {
                 IChoresSeeder seeder = scope.ServiceProvider.GetRequiredService<IChoresSeeder>();
 
-                seeder.Seed();
+                seeder.SeedTest();
             }
         }
     }

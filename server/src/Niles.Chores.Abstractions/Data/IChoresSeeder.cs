@@ -3,8 +3,9 @@ namespace Niles.Chores.Data
 {
     public interface IChoresSeeder
     {
-        public void Seed();
-        public Task<Result> SeedAsync(CancellationToken cancellationToken = default);
-        public Task<Result> ClearAndSeedAsync(CancellationToken cancellationToken = default);
+        public void SeedTest();
+        public Task<Result> SeedChoresAsync(CancellationToken cancellationToken = default);
+        public Task<Result> SeedTestAsync(CancellationToken cancellationToken = default);
+        public Task<Result> ClearAndSeedTestAsync(CancellationToken cancellationToken = default);
     }
 }
