@@ -1,23 +1,23 @@
 using Bureau;
 using Niles.Chores.Api.Dtos;
-using Niles.Chores.Api.Utilities;
 
 namespace Niles.Chores.Api.Mappers
 {
     public static class ChoreMapperExtension
     {
-        public static ChoreDto ToDto(this Chore chore, int priority = 0, bool completed = false)
+        //TODO #84 [backend] set priority from chore
+        public static ChoreDto ToDto(this Chore chore, Func<int, string> idFormatter)
         {
             return new ChoreDto
             {
-                Id = IdObfuscator.Encode(chore.Id),
+                Id = idFormatter(chore.Id),
                 Title = chore.Title,
                 Description = chore.Description ?? string.Empty,
                 Type = chore.Type.ToString(),
                 WeeklyInterval = chore.WeeklyInterval,
-                Priority = priority,
-                Completed = completed,
-                IsCritical = chore.IsCrititical
+                IsCritical = chore.IsCrititical,
+                CriticalNote = chore.Note,
+                CriticalCreatedAt = chore.IsCrititical ? DateOnly.FromDateTime(chore.CriticalCreatedAt!.Value.DateTime) : null,
             };
         }
 

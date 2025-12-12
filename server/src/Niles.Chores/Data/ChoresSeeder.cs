@@ -1,3 +1,4 @@
+using Bureau;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Niles.Chores.Contexts;
@@ -7,73 +8,198 @@ namespace Niles.Chores.Data
 {
     internal class ChoresSeeder : IChoresSeeder
     {
+        private const string DatabaseAlreadyFullMessage = "Database already contains data. Skipping seed.";
+        private const string SEEDER = "seeder";
         private readonly ILogger<ChoresSeeder> _logger;
         private readonly ChoresContext _context;
+        private readonly TimeProvider _timeProvider;
 
-        public ChoresSeeder(ILogger<ChoresSeeder> logger, ChoresContext context)
+        public ChoresSeeder(ILogger<ChoresSeeder> logger, ChoresContext context, TimeProvider timeProvider)
         {
             _logger = logger;
             _context = context;
-        }
-        //TODO need to remove static ones
-        public async Task ClearAndSeedAsync(CancellationToken cancellationToken = default)
-        {
-            Console.WriteLine("Clearing existing data...");
-
-            // TODO this should be done more effieciently with TRUNCATE or similar
-            _context.CriticalChores.RemoveRange(await _context.CriticalChores.ToListAsync());
-            _context.CompletedChores.RemoveRange(await _context.CompletedChores.ToListAsync());
-            _context.Housekeeping.RemoveRange(await _context.Housekeeping.ToListAsync());
-            _context.Chores.RemoveRange(await _context.Chores.ToListAsync());
-
-            await _context.SaveChangesAsync(cancellationToken);
-
-            Console.WriteLine("Existing data cleared.");
-
-            await SeedAsync(cancellationToken);
+            _timeProvider = timeProvider;
         }
 
-        public void Seed()
+        public async Task<Result> ClearAndSeedTestAsync(CancellationToken cancellationToken = default)
         {
             try
             {
-                _logger.LogInformation("Seeding database...");
-                SeedAsync(_context).GetAwaiter().GetResult();
-                _logger.LogInformation("Database seeded successfully.");
+                // this should be done more effieciently with TRUNCATE or similar
+                // but since this is for test purposes, it's acceptable for now
+                _context.CriticalChores.RemoveRange(await _context.CriticalChores.ToListAsync(cancellationToken));
+                _context.CompletedChores.RemoveRange(await _context.CompletedChores.ToListAsync(cancellationToken));
+                _context.Housekeeping.RemoveRange(await _context.Housekeeping.ToListAsync(cancellationToken));
+                _context.Chores.RemoveRange(await _context.Chores.ToListAsync(cancellationToken));
+
+                await _context.SaveChangesAsync(cancellationToken);
+                _logger.LogInformation("Existing data cleared.");
+
+                return await SeedTestAsync(cancellationToken);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error seeding database.");
-                throw;
+                return ex;
             }
         }
 
-        public async Task SeedAsync(CancellationToken cancellationToken = default)
+        public void SeedTest()
+        {
+            SeedTestAsync().GetAwaiter().GetResult();
+        }
+
+        public async Task<Result> SeedChoresAsync(CancellationToken cancellationToken = default)
         {
             try
             {
-                _logger.LogInformation("Seeding database...");
-                await SeedAsync(_context, cancellationToken);
-                _logger.LogInformation("Database seeded successfully.");
+                // Check if data already exists
+                if (await _context.Chores.AnyAsync(cancellationToken))
+                {
+                    _logger.LogWarning(DatabaseAlreadyFullMessage);
+                    return DatabaseAlreadyFullMessage;
+                }
+                await CreateChoresAsync(cancellationToken);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error seeding database.");
-                throw;
+                return ex;
             }
+            return true;
         }
 
-        internal static async Task SeedAsync(ChoresContext context, CancellationToken cancellationToken = default)
+        public async Task<Result> SeedTestAsync(CancellationToken cancellationToken = default)
         {
-            // Check if data already exists
-            if (await context.Chores.AnyAsync(cancellationToken))
+            try
             {
-                Console.WriteLine("Database already contains data. Skipping seed.");
-                return;
-            }
+                // Check if data already exists
+                if (await _context.Chores.AnyAsync(cancellationToken))
+                {
+                    _logger.LogWarning(DatabaseAlreadyFullMessage);
+                    return DatabaseAlreadyFullMessage;
+                }
 
-            DateTimeOffset now = DateTimeOffset.UtcNow;
-            DateTime utcNow = now.UtcDateTime;
+                DateTimeOffset now = _timeProvider.GetUtcNow();
+                DateTime utcNow = now.UtcDateTime;
+
+                List<ChoreDb> chores = await CreateChoresAsync(cancellationToken);
+                // Create some housekeeping records with completed chores
+                DateOnly today = DateOnly.FromDateTime(utcNow);
+                DateOnly lastWeek = today.AddDays(-7);
+                DateOnly twoWeeksAgo = today.AddDays(-14);
+
+                List<HousekeepingDb> housekeepingRecords = new List<HousekeepingDb>();
+
+                // Today's housekeeping
+                HousekeepingDb todayHousekeeping = new HousekeepingDb
+                {
+                    Timestamp = new DateTimeOffset(today.ToDateTime(TimeOnly.FromTimeSpan(TimeSpan.FromHours(10))), TimeSpan.Zero),
+                    Duration = TimeSpan.FromMinutes(45),
+                    Note = "Quick morning cleanup",
+                    CreatedAt = now,
+                    UpdatedAt = now,
+                    CreatedBy = SEEDER,
+                    UpdatedBy = SEEDER
+                };
+                housekeepingRecords.Add(todayHousekeeping);
+
+                // Last week's housekeeping
+                HousekeepingDb lastWeekHousekeeping = new HousekeepingDb
+                {
+                    Timestamp = new DateTimeOffset(lastWeek.ToDateTime(TimeOnly.FromTimeSpan(TimeSpan.FromHours(14))), TimeSpan.Zero),
+                    Duration = TimeSpan.FromMinutes(60),
+                    Note = "Weekly deep clean",
+                    CreatedAt = now,
+                    UpdatedAt = now,
+                    CreatedBy = SEEDER,
+                    UpdatedBy = SEEDER
+                };
+                housekeepingRecords.Add(lastWeekHousekeeping);
+
+                // Two weeks ago
+                HousekeepingDb twoWeeksAgoHousekeeping = new HousekeepingDb
+                {
+                    Timestamp = new DateTimeOffset(twoWeeksAgo.ToDateTime(TimeOnly.FromTimeSpan(TimeSpan.FromHours(11))), TimeSpan.Zero),
+                    Duration = TimeSpan.FromMinutes(50),
+                    Note = "Regular maintenance",
+                    CreatedAt = now,
+                    UpdatedAt = now,
+                    CreatedBy = SEEDER,
+                    UpdatedBy = SEEDER
+                };
+                housekeepingRecords.Add(twoWeeksAgoHousekeeping);
+
+                _context.Housekeeping.AddRange(housekeepingRecords);
+                await _context.SaveChangesAsync(cancellationToken);
+
+                // Create completed chores
+                List<CompletedChoreDb> completedChores = new List<CompletedChoreDb>
+                {
+                    // Today's completed chores
+                    new CompletedChoreDb { ChoreId = chores[0].Id, HousekeepingId = todayHousekeeping.Id },
+                    new CompletedChoreDb { ChoreId = chores[1].Id, HousekeepingId = todayHousekeeping.Id },
+                    new CompletedChoreDb { ChoreId = chores[2].Id, HousekeepingId = todayHousekeeping.Id },
+
+                    // Last week's completed chores
+                    new CompletedChoreDb { ChoreId = chores[0].Id, HousekeepingId = lastWeekHousekeeping.Id },
+                    new CompletedChoreDb { ChoreId = chores[1].Id, HousekeepingId = lastWeekHousekeeping.Id },
+                    new CompletedChoreDb { ChoreId = chores[2].Id, HousekeepingId = lastWeekHousekeeping.Id },
+                    new CompletedChoreDb { ChoreId = chores[3].Id, HousekeepingId = lastWeekHousekeeping.Id },
+                    new CompletedChoreDb { ChoreId = chores[7].Id, HousekeepingId = lastWeekHousekeeping.Id },
+
+                    // Two weeks ago completed chores
+                    new CompletedChoreDb { ChoreId = chores[0].Id, HousekeepingId = twoWeeksAgoHousekeeping.Id },
+                    new CompletedChoreDb { ChoreId = chores[1].Id, HousekeepingId = twoWeeksAgoHousekeeping.Id },
+                    new CompletedChoreDb { ChoreId = chores[2].Id, HousekeepingId = twoWeeksAgoHousekeeping.Id },
+                    new CompletedChoreDb { ChoreId = chores[9].Id, HousekeepingId = twoWeeksAgoHousekeeping.Id }
+                };
+
+                _context.CompletedChores.AddRange(completedChores);
+                await _context.SaveChangesAsync(cancellationToken);
+
+                // Create some critical chores (for chores that haven't been completed recently)
+                List<CriticalChoreDb> criticalChores = new List<CriticalChoreDb>
+                {
+                    new CriticalChoreDb
+                    {
+                        ChoreId = chores[6].Id, // Apartment — Clean Glass on Doors and Cabinets
+                        Note = "Glass on doors and cabinets is cloudy, needs cleaning",
+                        CompletedChoreId = null,
+                        CreatedAt = now.AddDays(-3),
+                        UpdatedAt = now.AddDays(-3),
+                        CreatedBy = SEEDER,
+                        UpdatedBy = SEEDER
+                    },
+                    new CriticalChoreDb
+                    {
+                        ChoreId = chores[38].Id, // Hallway — Wipe Closet Interior
+                        Note = "Hallway closet is dusty, needs interior cleaning",
+                        CompletedChoreId = null,
+                        CreatedAt = now.AddDays(-5),
+                        UpdatedAt = now.AddDays(-5),
+                        CreatedBy = SEEDER,
+                        UpdatedBy = SEEDER
+                    }
+                };
+
+                _context.CriticalChores.AddRange(criticalChores);
+                await _context.SaveChangesAsync(cancellationToken);
+
+                _logger.LogInformation("Created: {0} chores; {1} housekeeping records; {2} completed chore records; {3} critical chore records.",
+                    chores.Count, housekeepingRecords.Count, completedChores.Count, criticalChores.Count);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error seeding database.");
+                return ex;
+            }
+            return true;
+        }
+
+        private async Task<List<ChoreDb>> CreateChoresAsync(CancellationToken cancellationToken = default)
+        {
+            DateTimeOffset now = _timeProvider.GetUtcNow();
 
             // Create sample chores
             List<ChoreDb> chores = new List<ChoreDb>
@@ -87,19 +213,8 @@ namespace Niles.Chores.Data
                     WeeklyInterval = 1,
                     CreatedAt = now,
                     UpdatedAt = now,
-                    CreatedBy = "seeder",
-                    UpdatedBy = "seeder"
-                },
-                new ChoreDb
-                {
-                    Title = "Living Room — Robot Vacuum: Empty Container",
-                    Description = "Remove and empty the robot vacuum container and check the brushes.",
-                    Type = ChoreType.Maintenance,
-                    WeeklyInterval = 1,
-                    CreatedAt = now,
-                    UpdatedAt = now,
-                    CreatedBy = "seeder",
-                    UpdatedBy = "seeder"
+                    CreatedBy = SEEDER,
+                    UpdatedBy = SEEDER
                 },
                 new ChoreDb
                 {
@@ -109,8 +224,8 @@ namespace Niles.Chores.Data
                     WeeklyInterval = 1,
                     CreatedAt = now,
                     UpdatedAt = now,
-                    CreatedBy = "seeder",
-                    UpdatedBy = "seeder"
+                    CreatedBy = SEEDER,
+                    UpdatedBy = SEEDER
                 },
                 new ChoreDb
                 {
@@ -120,8 +235,8 @@ namespace Niles.Chores.Data
                     WeeklyInterval = 1,
                     CreatedAt = now,
                     UpdatedAt = now,
-                    CreatedBy = "seeder",
-                    UpdatedBy = "seeder"
+                    CreatedBy = SEEDER,
+                    UpdatedBy = SEEDER
                 },
                 new ChoreDb
                 {
@@ -131,41 +246,52 @@ namespace Niles.Chores.Data
                     WeeklyInterval = 1,
                     CreatedAt = now,
                     UpdatedAt = now,
-                    CreatedBy = "seeder",
-                    UpdatedBy = "seeder"
+                    CreatedBy = SEEDER,
+                    UpdatedBy = SEEDER
+                },
+                new ChoreDb
+                {
+                    Title = "Apartment — Plant Maintenance",
+                    Description = "Water plants, remove dry leaves, check plant condition.",
+                    Type = ChoreType.Maintenance,
+                    WeeklyInterval = 1,
+                    CreatedAt = now,
+                    UpdatedAt = now,
+                    CreatedBy = SEEDER,
+                    UpdatedBy = SEEDER
                 },
                 new ChoreDb
                 {
                     Title = "Apartment — Clean Glass on Doors and Cabinets",
                     Description = "Clean glass surfaces and mirrors with glass cleaner or microfiber cloth.",
-                    Type = ChoreType.Extra,
+                    Type = ChoreType.Maintenance,
                     WeeklyInterval = 4,
                     CreatedAt = now,
                     UpdatedAt = now,
-                    CreatedBy = "seeder",
-                    UpdatedBy = "seeder"
+                    CreatedBy = SEEDER,
+                    UpdatedBy = SEEDER
                 },
                 new ChoreDb
                 {
                     Title = "Apartment — Clean Windows (Interior)",
                     Description = "Clean interior glass in all rooms.",
-                    Type = ChoreType.Extra,
-                    WeeklyInterval = 4,
-                    CreatedAt = now,
-                    UpdatedAt = now,
-                    CreatedBy = "seeder",
-                    UpdatedBy = "seeder"
-                },
-                new ChoreDb
-                {
-                    Title = "Apartment — Clean Light Fixtures",
-                    Description = "Remove shades/lamps and remove dust from inside and outside.",
-                    Type = ChoreType.Extra,
+                    Type = ChoreType.Maintenance,
                     WeeklyInterval = 8,
                     CreatedAt = now,
                     UpdatedAt = now,
-                    CreatedBy = "seeder",
-                    UpdatedBy = "seeder"
+                    CreatedBy = SEEDER,
+                    UpdatedBy = SEEDER
+                },
+                new ChoreDb
+                {
+                    Title = "[Q] Apartment — Clean Light Fixtures",
+                    Description = "Remove shades/lamps and remove dust from inside and outside.",
+                    Type = ChoreType.Extra,
+                    WeeklyInterval = 12,
+                    CreatedAt = now,
+                    UpdatedAt = now,
+                    CreatedBy = SEEDER,
+                    UpdatedBy = SEEDER
                 },
                 // 🌿 BALCONY
                 new ChoreDb
@@ -173,33 +299,33 @@ namespace Niles.Chores.Data
                     Title = "Balcony — Clean Floor",
                     Description = "Sweep or wash the balcony floor, remove debris and leaves.",
                     Type = ChoreType.Maintenance,
-                    WeeklyInterval = 1,
+                    WeeklyInterval = 8,
                     CreatedAt = now,
                     UpdatedAt = now,
-                    CreatedBy = "seeder",
-                    UpdatedBy = "seeder"
+                    CreatedBy = SEEDER,
+                    UpdatedBy = SEEDER
                 },
                 new ChoreDb
                 {
                     Title = "Balcony — Wipe Railings and Furniture",
                     Description = "Wipe the railing, chairs, table, and other outdoor surfaces.",
                     Type = ChoreType.Maintenance,
-                    WeeklyInterval = 2,
+                    WeeklyInterval = 8,
                     CreatedAt = now,
                     UpdatedAt = now,
-                    CreatedBy = "seeder",
-                    UpdatedBy = "seeder"
+                    CreatedBy = SEEDER,
+                    UpdatedBy = SEEDER
                 },
                 new ChoreDb
                 {
-                    Title = "Balcony — Plant Maintenance",
-                    Description = "Water plants, remove dry leaves, check plant condition.",
-                    Type = ChoreType.Maintenance,
-                    WeeklyInterval = 1,
+                    Title = "Balcony — Plant extra work",
+                    Description = "Replenish soil.",
+                    Type = ChoreType.Extra,
+                    WeeklyInterval = 30,
                     CreatedAt = now,
                     UpdatedAt = now,
-                    CreatedBy = "seeder",
-                    UpdatedBy = "seeder"
+                    CreatedBy = SEEDER,
+                    UpdatedBy = SEEDER
                 },
                 // 🍳 KITCHEN
                 new ChoreDb
@@ -210,8 +336,8 @@ namespace Niles.Chores.Data
                     WeeklyInterval = 1,
                     CreatedAt = now,
                     UpdatedAt = now,
-                    CreatedBy = "seeder",
-                    UpdatedBy = "seeder"
+                    CreatedBy = SEEDER,
+                    UpdatedBy = SEEDER
                 },
                 new ChoreDb
                 {
@@ -221,30 +347,30 @@ namespace Niles.Chores.Data
                     WeeklyInterval = 1,
                     CreatedAt = now,
                     UpdatedAt = now,
-                    CreatedBy = "seeder",
-                    UpdatedBy = "seeder"
+                    CreatedBy = SEEDER,
+                    UpdatedBy = SEEDER
                 },
                 new ChoreDb
                 {
-                    Title = "Kitchen — Wash Kitchen Towels and Sponges",
-                    Description = "Wash towels and sponges or replace them due to bacteria.",
+                    Title = "Kitchen — Wash/Replace Kitchen Towels and Sponges",
+                    Description = "Wash/replace towels and sponges due to bacteria.",
                     Type = ChoreType.Maintenance,
                     WeeklyInterval = 1,
                     CreatedAt = now,
                     UpdatedAt = now,
-                    CreatedBy = "seeder",
-                    UpdatedBy = "seeder"
+                    CreatedBy = SEEDER,
+                    UpdatedBy = SEEDER
                 },
                 new ChoreDb
                 {
                     Title = "Kitchen — Wipe Microwave Interior",
                     Description = "Wipe microwave walls and remove stains.",
-                    Type = ChoreType.Maintenance,
-                    WeeklyInterval = 1,
+                    Type = ChoreType.Extra,
+                    WeeklyInterval = 8,
                     CreatedAt = now,
                     UpdatedAt = now,
-                    CreatedBy = "seeder",
-                    UpdatedBy = "seeder"
+                    CreatedBy = SEEDER,
+                    UpdatedBy = SEEDER
                 },
                 new ChoreDb
                 {
@@ -254,8 +380,8 @@ namespace Niles.Chores.Data
                     WeeklyInterval = 2,
                     CreatedAt = now,
                     UpdatedAt = now,
-                    CreatedBy = "seeder",
-                    UpdatedBy = "seeder"
+                    CreatedBy = SEEDER,
+                    UpdatedBy = SEEDER
                 },
                 new ChoreDb
                 {
@@ -265,8 +391,8 @@ namespace Niles.Chores.Data
                     WeeklyInterval = 8,
                     CreatedAt = now,
                     UpdatedAt = now,
-                    CreatedBy = "seeder",
-                    UpdatedBy = "seeder"
+                    CreatedBy = SEEDER,
+                    UpdatedBy = SEEDER
                 },
                 new ChoreDb
                 {
@@ -276,19 +402,19 @@ namespace Niles.Chores.Data
                     WeeklyInterval = 4,
                     CreatedAt = now,
                     UpdatedAt = now,
-                    CreatedBy = "seeder",
-                    UpdatedBy = "seeder"
+                    CreatedBy = SEEDER,
+                    UpdatedBy = SEEDER
                 },
                 new ChoreDb
                 {
                     Title = "Kitchen — Freezer Organization",
                     Description = "Sort food items, check dates and arrangement.",
                     Type = ChoreType.Extra,
-                    WeeklyInterval = 6,
+                    WeeklyInterval = 12,
                     CreatedAt = now,
                     UpdatedAt = now,
-                    CreatedBy = "seeder",
-                    UpdatedBy = "seeder"
+                    CreatedBy = SEEDER,
+                    UpdatedBy = SEEDER
                 },
                 new ChoreDb
                 {
@@ -298,8 +424,8 @@ namespace Niles.Chores.Data
                     WeeklyInterval = 14,
                     CreatedAt = now,
                     UpdatedAt = now,
-                    CreatedBy = "seeder",
-                    UpdatedBy = "seeder"
+                    CreatedBy = SEEDER,
+                    UpdatedBy = SEEDER
                 },
                 new ChoreDb
                 {
@@ -309,63 +435,63 @@ namespace Niles.Chores.Data
                     WeeklyInterval = 1,
                     CreatedAt = now,
                     UpdatedAt = now,
-                    CreatedBy = "seeder",
-                    UpdatedBy = "seeder"
+                    CreatedBy = SEEDER,
+                    UpdatedBy = SEEDER
                 },
                 new ChoreDb
                 {
                     Title = "Kitchen — Coffee Machine: Cleaning Cycle",
                     Description = "Run descaling program or automatic cleaning.",
                     Type = ChoreType.Extra,
-                    WeeklyInterval = 5,
+                    WeeklyInterval = 8,
                     CreatedAt = now,
                     UpdatedAt = now,
-                    CreatedBy = "seeder",
-                    UpdatedBy = "seeder"
+                    CreatedBy = SEEDER,
+                    UpdatedBy = SEEDER
                 },
                 new ChoreDb
                 {
                     Title = "Kitchen — Coffee Grinder: Clean",
                     Description = "Disassemble grinder and remove oil and coffee residue.",
                     Type = ChoreType.Extra,
-                    WeeklyInterval = 4,
+                    WeeklyInterval = 8,
                     CreatedAt = now,
                     UpdatedAt = now,
-                    CreatedBy = "seeder",
-                    UpdatedBy = "seeder"
+                    CreatedBy = SEEDER,
+                    UpdatedBy = SEEDER
                 },
                 new ChoreDb
                 {
                     Title = "Kitchen — Kettle: Remove Limescale",
-                    Description = "Clean kettle with cleaner or citric acid.",
+                    Description = "Clean kettle with citric acid.",
                     Type = ChoreType.Extra,
                     WeeklyInterval = 4,
                     CreatedAt = now,
                     UpdatedAt = now,
-                    CreatedBy = "seeder",
-                    UpdatedBy = "seeder"
+                    CreatedBy = SEEDER,
+                    UpdatedBy = SEEDER
                 },
                 new ChoreDb
                 {
                     Title = "Kitchen — Range Hood Filter: Clean",
                     Description = "Wash filter by hand or in dishwasher.",
                     Type = ChoreType.Extra,
-                    WeeklyInterval = 4,
+                    WeeklyInterval = 12,
                     CreatedAt = now,
                     UpdatedAt = now,
-                    CreatedBy = "seeder",
-                    UpdatedBy = "seeder"
+                    CreatedBy = SEEDER,
+                    UpdatedBy = SEEDER
                 },
                 new ChoreDb
                 {
-                    Title = "Kitchen — Refrigerator Rear Grilles: Clean",
+                    Title = "[Q] Kitchen — Refrigerator Rear Grilles: Clean",
                     Description = "Wipe grilles for better cooling and energy savings.",
                     Type = ChoreType.Extra,
                     WeeklyInterval = 12,
                     CreatedAt = now,
                     UpdatedAt = now,
-                    CreatedBy = "seeder",
-                    UpdatedBy = "seeder"
+                    CreatedBy = SEEDER,
+                    UpdatedBy = SEEDER
                 },
                 // 🛋️ LIVING ROOM
                 new ChoreDb
@@ -376,19 +502,19 @@ namespace Niles.Chores.Data
                     WeeklyInterval = 1,
                     CreatedAt = now,
                     UpdatedAt = now,
-                    CreatedBy = "seeder",
-                    UpdatedBy = "seeder"
+                    CreatedBy = SEEDER,
+                    UpdatedBy = SEEDER
                 },
                 new ChoreDb
                 {
-                    Title = "Living Room — Robot Vacuum: Empty",
-                    Description = "Remove container, clean filter and check brushes.",
+                    Title = "Living Room — Robot Vacuum: Empty Container",
+                    Description = "Remove and empty the robot vacuum container, clean filter and check the brushes.",
                     Type = ChoreType.Maintenance,
                     WeeklyInterval = 1,
                     CreatedAt = now,
                     UpdatedAt = now,
-                    CreatedBy = "seeder",
-                    UpdatedBy = "seeder"
+                    CreatedBy = SEEDER,
+                    UpdatedBy = SEEDER
                 },
                 new ChoreDb
                 {
@@ -398,8 +524,8 @@ namespace Niles.Chores.Data
                     WeeklyInterval = 4,
                     CreatedAt = now,
                     UpdatedAt = now,
-                    CreatedBy = "seeder",
-                    UpdatedBy = "seeder"
+                    CreatedBy = SEEDER,
+                    UpdatedBy = SEEDER
                 },
                 new ChoreDb
                 {
@@ -409,8 +535,8 @@ namespace Niles.Chores.Data
                     WeeklyInterval = 2,
                     CreatedAt = now,
                     UpdatedAt = now,
-                    CreatedBy = "seeder",
-                    UpdatedBy = "seeder"
+                    CreatedBy = SEEDER,
+                    UpdatedBy = SEEDER
                 },
                 new ChoreDb
                 {
@@ -420,8 +546,8 @@ namespace Niles.Chores.Data
                     WeeklyInterval = 14,
                     CreatedAt = now,
                     UpdatedAt = now,
-                    CreatedBy = "seeder",
-                    UpdatedBy = "seeder"
+                    CreatedBy = SEEDER,
+                    UpdatedBy = SEEDER
                 },
                 new ChoreDb
                 {
@@ -431,8 +557,8 @@ namespace Niles.Chores.Data
                     WeeklyInterval = 4,
                     CreatedAt = now,
                     UpdatedAt = now,
-                    CreatedBy = "seeder",
-                    UpdatedBy = "seeder"
+                    CreatedBy = SEEDER,
+                    UpdatedBy = SEEDER
                 },
                 new ChoreDb
                 {
@@ -442,8 +568,8 @@ namespace Niles.Chores.Data
                     WeeklyInterval = 16,
                     CreatedAt = now,
                     UpdatedAt = now,
-                    CreatedBy = "seeder",
-                    UpdatedBy = "seeder"
+                    CreatedBy = SEEDER,
+                    UpdatedBy = SEEDER
                 },
                 // 🍽️ DINING ROOM
                 new ChoreDb
@@ -454,19 +580,19 @@ namespace Niles.Chores.Data
                     WeeklyInterval = 1,
                     CreatedAt = now,
                     UpdatedAt = now,
-                    CreatedBy = "seeder",
-                    UpdatedBy = "seeder"
+                    CreatedBy = SEEDER,
+                    UpdatedBy = SEEDER
                 },
                 new ChoreDb
                 {
                     Title = "Dining Room — Clean Chairs",
                     Description = "Wipe seat, backrest, and frame.",
                     Type = ChoreType.Maintenance,
-                    WeeklyInterval = 2,
+                    WeeklyInterval = 4,
                     CreatedAt = now,
                     UpdatedAt = now,
-                    CreatedBy = "seeder",
-                    UpdatedBy = "seeder"
+                    CreatedBy = SEEDER,
+                    UpdatedBy = SEEDER
                 },
                 new ChoreDb
                 {
@@ -476,8 +602,8 @@ namespace Niles.Chores.Data
                     WeeklyInterval = 8,
                     CreatedAt = now,
                     UpdatedAt = now,
-                    CreatedBy = "seeder",
-                    UpdatedBy = "seeder"
+                    CreatedBy = SEEDER,
+                    UpdatedBy = SEEDER
                 },
                 // 🚪 HALLWAY
                 new ChoreDb
@@ -488,30 +614,30 @@ namespace Niles.Chores.Data
                     WeeklyInterval = 2,
                     CreatedAt = now,
                     UpdatedAt = now,
-                    CreatedBy = "seeder",
-                    UpdatedBy = "seeder"
+                    CreatedBy = SEEDER,
+                    UpdatedBy = SEEDER
                 },
                 new ChoreDb
                 {
                     Title = "Hallway — Organize Shoes",
                     Description = "Sort shoes, remove seasonal or unnecessary pairs.",
-                    Type = ChoreType.Maintenance,
-                    WeeklyInterval = 2,
+                    Type = ChoreType.Extra,
+                    WeeklyInterval = 14,
                     CreatedAt = now,
                     UpdatedAt = now,
-                    CreatedBy = "seeder",
-                    UpdatedBy = "seeder"
+                    CreatedBy = SEEDER,
+                    UpdatedBy = SEEDER
                 },
                 new ChoreDb
                 {
                     Title = "Hallway — Wipe Closet Interior",
-                    Description = "Wipe shelves, drawers, and interior surfaces of dust.",
+                    Description = "Wipe/vacuum shelves, drawers, and interior surfaces of dust.",
                     Type = ChoreType.Extra,
                     WeeklyInterval = 8,
                     CreatedAt = now,
                     UpdatedAt = now,
-                    CreatedBy = "seeder",
-                    UpdatedBy = "seeder"
+                    CreatedBy = SEEDER,
+                    UpdatedBy = SEEDER
                 },
                 // 🛁 BATHROOM
                 new ChoreDb
@@ -522,8 +648,8 @@ namespace Niles.Chores.Data
                     WeeklyInterval = 1,
                     CreatedAt = now,
                     UpdatedAt = now,
-                    CreatedBy = "seeder",
-                    UpdatedBy = "seeder"
+                    CreatedBy = SEEDER,
+                    UpdatedBy = SEEDER
                 },
                 new ChoreDb
                 {
@@ -533,8 +659,8 @@ namespace Niles.Chores.Data
                     WeeklyInterval = 1,
                     CreatedAt = now,
                     UpdatedAt = now,
-                    CreatedBy = "seeder",
-                    UpdatedBy = "seeder"
+                    CreatedBy = SEEDER,
+                    UpdatedBy = SEEDER
                 },
                 new ChoreDb
                 {
@@ -544,8 +670,8 @@ namespace Niles.Chores.Data
                     WeeklyInterval = 1,
                     CreatedAt = now,
                     UpdatedAt = now,
-                    CreatedBy = "seeder",
-                    UpdatedBy = "seeder"
+                    CreatedBy = SEEDER,
+                    UpdatedBy = SEEDER
                 },
                 new ChoreDb
                 {
@@ -555,8 +681,8 @@ namespace Niles.Chores.Data
                     WeeklyInterval = 2,
                     CreatedAt = now,
                     UpdatedAt = now,
-                    CreatedBy = "seeder",
-                    UpdatedBy = "seeder"
+                    CreatedBy = SEEDER,
+                    UpdatedBy = SEEDER
                 },
                 new ChoreDb
                 {
@@ -566,19 +692,30 @@ namespace Niles.Chores.Data
                     WeeklyInterval = 1,
                     CreatedAt = now,
                     UpdatedAt = now,
-                    CreatedBy = "seeder",
-                    UpdatedBy = "seeder"
+                    CreatedBy = SEEDER,
+                    UpdatedBy = SEEDER
                 },
                 new ChoreDb
                 {
-                    Title = "Bathroom — Wash Shower Curtain",
-                    Description = "Remove curtain and wash in washing machine or by hand.",
+                    Title = "Bathroom — Put anti-limescale tabs in toilet",
+                    Description = "Use anti-limescale tabs",
                     Type = ChoreType.Extra,
-                    WeeklyInterval = 5,
+                    WeeklyInterval = 14,
                     CreatedAt = now,
                     UpdatedAt = now,
-                    CreatedBy = "seeder",
-                    UpdatedBy = "seeder"
+                    CreatedBy = SEEDER,
+                    UpdatedBy = SEEDER
+                },
+                new ChoreDb
+                {
+                    Title = "[Q] Bathroom — Wash Shower Curtain",
+                    Description = "Remove curtain and wash in washing machine or by hand.",
+                    Type = ChoreType.Extra,
+                    WeeklyInterval = 15,
+                    CreatedAt = now,
+                    UpdatedAt = now,
+                    CreatedBy = SEEDER,
+                    UpdatedBy = SEEDER
                 },
                 new ChoreDb
                 {
@@ -588,8 +725,8 @@ namespace Niles.Chores.Data
                     WeeklyInterval = 8,
                     CreatedAt = now,
                     UpdatedAt = now,
-                    CreatedBy = "seeder",
-                    UpdatedBy = "seeder"
+                    CreatedBy = SEEDER,
+                    UpdatedBy = SEEDER
                 },
                 new ChoreDb
                 {
@@ -599,20 +736,20 @@ namespace Niles.Chores.Data
                     WeeklyInterval = 4,
                     CreatedAt = now,
                     UpdatedAt = now,
-                    CreatedBy = "seeder",
-                    UpdatedBy = "seeder"
+                    CreatedBy = SEEDER,
+                    UpdatedBy = SEEDER
                 },
                 // 🧺 WASHING MACHINE / DRYER
                 new ChoreDb
                 {
                     Title = "Bathroom — Washing Machine: Cleaning Cycle",
-                    Description = "Run 90°C program with drum cleaner.",
+                    Description = "Run 90°C program with drum cleaner. Add tabs for limescale",
                     Type = ChoreType.Extra,
-                    WeeklyInterval = 4,
+                    WeeklyInterval = 8,
                     CreatedAt = now,
                     UpdatedAt = now,
-                    CreatedBy = "seeder",
-                    UpdatedBy = "seeder"
+                    CreatedBy = SEEDER,
+                    UpdatedBy = SEEDER
                 },
                 new ChoreDb
                 {
@@ -622,19 +759,30 @@ namespace Niles.Chores.Data
                     WeeklyInterval = 1,
                     CreatedAt = now,
                     UpdatedAt = now,
-                    CreatedBy = "seeder",
-                    UpdatedBy = "seeder"
+                    CreatedBy = SEEDER,
+                    UpdatedBy = SEEDER
                 },
                 new ChoreDb
                 {
-                    Title = "Bathroom — Dryer: Clean Condenser",
+                    Title = "Bathroom — Dryer: Clean Lower Filter",
+                    Description = "Vacuum and brush lower filter.",
+                    Type = ChoreType.Extra,
+                    WeeklyInterval = 1,
+                    CreatedAt = now,
+                    UpdatedAt = now,
+                    CreatedBy = SEEDER,
+                    UpdatedBy = SEEDER
+                },
+                new ChoreDb
+                {
+                    Title = "[Q] Bathroom — Dryer: Clean Condenser",
                     Description = "Rinse condenser under water (if model requires it).",
                     Type = ChoreType.Extra,
                     WeeklyInterval = 4,
                     CreatedAt = now,
                     UpdatedAt = now,
-                    CreatedBy = "seeder",
-                    UpdatedBy = "seeder"
+                    CreatedBy = SEEDER,
+                    UpdatedBy = SEEDER
                 },
                 // 🛏️ BEDROOM
                 new ChoreDb
@@ -642,11 +790,11 @@ namespace Niles.Chores.Data
                     Title = "Bedroom — Change Bedding",
                     Description = "Replace sheet, pillowcases, and duvet cover.",
                     Type = ChoreType.Maintenance,
-                    WeeklyInterval = 1,
+                    WeeklyInterval = 2,
                     CreatedAt = now,
                     UpdatedAt = now,
-                    CreatedBy = "seeder",
-                    UpdatedBy = "seeder"
+                    CreatedBy = SEEDER,
+                    UpdatedBy = SEEDER
                 },
                 new ChoreDb
                 {
@@ -656,8 +804,8 @@ namespace Niles.Chores.Data
                     WeeklyInterval = 1,
                     CreatedAt = now,
                     UpdatedAt = now,
-                    CreatedBy = "seeder",
-                    UpdatedBy = "seeder"
+                    CreatedBy = SEEDER,
+                    UpdatedBy = SEEDER
                 },
                 new ChoreDb
                 {
@@ -667,19 +815,19 @@ namespace Niles.Chores.Data
                     WeeklyInterval = 1,
                     CreatedAt = now,
                     UpdatedAt = now,
-                    CreatedBy = "seeder",
-                    UpdatedBy = "seeder"
+                    CreatedBy = SEEDER,
+                    UpdatedBy = SEEDER
                 },
                 new ChoreDb
                 {
                     Title = "Bedroom — Clean Mattress",
                     Description = "Vacuum mattress and spray with anti-mite spray.",
                     Type = ChoreType.Extra,
-                    WeeklyInterval = 8,
+                    WeeklyInterval = 14,
                     CreatedAt = now,
                     UpdatedAt = now,
-                    CreatedBy = "seeder",
-                    UpdatedBy = "seeder"
+                    CreatedBy = SEEDER,
+                    UpdatedBy = SEEDER
                 },
                 new ChoreDb
                 {
@@ -689,19 +837,19 @@ namespace Niles.Chores.Data
                     WeeklyInterval = 4,
                     CreatedAt = now,
                     UpdatedAt = now,
-                    CreatedBy = "seeder",
-                    UpdatedBy = "seeder"
+                    CreatedBy = SEEDER,
+                    UpdatedBy = SEEDER
                 },
                 new ChoreDb
                 {
-                    Title = "Bedroom — Deep Clean Mattress",
+                    Title = "[Q] Bedroom — Deep Clean Mattress",
                     Description = "Steam cleaner or professional cleaning.",
                     Type = ChoreType.Extra,
                     WeeklyInterval = 16,
                     CreatedAt = now,
                     UpdatedAt = now,
-                    CreatedBy = "seeder",
-                    UpdatedBy = "seeder"
+                    CreatedBy = SEEDER,
+                    UpdatedBy = SEEDER
                 },
                 // 🖥️ OFFICE
                 new ChoreDb
@@ -712,19 +860,19 @@ namespace Niles.Chores.Data
                     WeeklyInterval = 1,
                     CreatedAt = now,
                     UpdatedAt = now,
-                    CreatedBy = "seeder",
-                    UpdatedBy = "seeder"
+                    CreatedBy = SEEDER,
+                    UpdatedBy = SEEDER
                 },
                 new ChoreDb
                 {
                     Title = "Office — Disinfect Keyboard and Mouse",
                     Description = "Wipe with alcohol wipes or electronics cleaner.",
                     Type = ChoreType.Maintenance,
-                    WeeklyInterval = 2,
+                    WeeklyInterval = 4,
                     CreatedAt = now,
                     UpdatedAt = now,
-                    CreatedBy = "seeder",
-                    UpdatedBy = "seeder"
+                    CreatedBy = SEEDER,
+                    UpdatedBy = SEEDER
                 },
                 new ChoreDb
                 {
@@ -734,8 +882,8 @@ namespace Niles.Chores.Data
                     WeeklyInterval = 4,
                     CreatedAt = now,
                     UpdatedAt = now,
-                    CreatedBy = "seeder",
-                    UpdatedBy = "seeder"
+                    CreatedBy = SEEDER,
+                    UpdatedBy = SEEDER
                 },
                 new ChoreDb
                 {
@@ -745,137 +893,27 @@ namespace Niles.Chores.Data
                     WeeklyInterval = 8,
                     CreatedAt = now,
                     UpdatedAt = now,
-                    CreatedBy = "seeder",
-                    UpdatedBy = "seeder"
+                    CreatedBy = SEEDER,
+                    UpdatedBy = SEEDER
                 },
                 new ChoreDb
                 {
                     Title = "Office — Printer Maintenance",
                     Description = "Check toner/ink, clean trays and dust.",
                     Type = ChoreType.Extra,
-                    WeeklyInterval = 10,
+                    WeeklyInterval = 14,
                     CreatedAt = now,
                     UpdatedAt = now,
-                    CreatedBy = "seeder",
-                    UpdatedBy = "seeder"
+                    CreatedBy = SEEDER,
+                    UpdatedBy = SEEDER
                 }
             };
 
-            context.Chores.AddRange(chores);
-            await context.SaveChangesAsync(cancellationToken);
-
-            Console.WriteLine($"Created {chores.Count} chores.");
-
-            // Create some housekeeping records with completed chores
-            DateOnly today = DateOnly.FromDateTime(utcNow);
-            DateOnly lastWeek = today.AddDays(-7);
-            DateOnly twoWeeksAgo = today.AddDays(-14);
-            DateOnly threeWeeksAgo = today.AddDays(-21);
-
-            List<HousekeepingDb> housekeepingRecords = new List<HousekeepingDb>();
-
-            // Today's housekeeping
-            HousekeepingDb todayHousekeeping = new HousekeepingDb
-            {
-                Timestamp = new DateTimeOffset(today.ToDateTime(TimeOnly.FromTimeSpan(TimeSpan.FromHours(10))), TimeSpan.Zero),
-                Duration = TimeSpan.FromMinutes(45),
-                Note = "Quick morning cleanup",
-                CreatedAt = now,
-                UpdatedAt = now,
-                CreatedBy = "seeder",
-                UpdatedBy = "seeder"
-            };
-            housekeepingRecords.Add(todayHousekeeping);
-
-            // Last week's housekeeping
-            HousekeepingDb lastWeekHousekeeping = new HousekeepingDb
-            {
-                Timestamp = new DateTimeOffset(lastWeek.ToDateTime(TimeOnly.FromTimeSpan(TimeSpan.FromHours(14))), TimeSpan.Zero),
-                Duration = TimeSpan.FromMinutes(60),
-                Note = "Weekly deep clean",
-                CreatedAt = now,
-                UpdatedAt = now,
-                CreatedBy = "seeder",
-                UpdatedBy = "seeder"
-            };
-            housekeepingRecords.Add(lastWeekHousekeeping);
-
-            // Two weeks ago
-            HousekeepingDb twoWeeksAgoHousekeeping = new HousekeepingDb
-            {
-                Timestamp = new DateTimeOffset(twoWeeksAgo.ToDateTime(TimeOnly.FromTimeSpan(TimeSpan.FromHours(11))), TimeSpan.Zero),
-                Duration = TimeSpan.FromMinutes(50),
-                Note = "Regular maintenance",
-                CreatedAt = now,
-                UpdatedAt = now,
-                CreatedBy = "seeder",
-                UpdatedBy = "seeder"
-            };
-            housekeepingRecords.Add(twoWeeksAgoHousekeeping);
-
-            context.Housekeeping.AddRange(housekeepingRecords);
-            await context.SaveChangesAsync(cancellationToken);
-
-            Console.WriteLine($"Created {housekeepingRecords.Count} housekeeping records.");
-
-            // Create completed chores
-            List<CompletedChoreDb> completedChores = new List<CompletedChoreDb>
-            {
-                // Today's completed chores
-                new CompletedChoreDb { ChoreId = chores[0].Id, HousekeepingId = todayHousekeeping.Id },
-                new CompletedChoreDb { ChoreId = chores[1].Id, HousekeepingId = todayHousekeeping.Id },
-                new CompletedChoreDb { ChoreId = chores[2].Id, HousekeepingId = todayHousekeeping.Id },
-
-                // Last week's completed chores
-                new CompletedChoreDb { ChoreId = chores[0].Id, HousekeepingId = lastWeekHousekeeping.Id },
-                new CompletedChoreDb { ChoreId = chores[1].Id, HousekeepingId = lastWeekHousekeeping.Id },
-                new CompletedChoreDb { ChoreId = chores[2].Id, HousekeepingId = lastWeekHousekeeping.Id },
-                new CompletedChoreDb { ChoreId = chores[3].Id, HousekeepingId = lastWeekHousekeeping.Id },
-                new CompletedChoreDb { ChoreId = chores[7].Id, HousekeepingId = lastWeekHousekeeping.Id },
-
-                // Two weeks ago completed chores
-                new CompletedChoreDb { ChoreId = chores[0].Id, HousekeepingId = twoWeeksAgoHousekeeping.Id },
-                new CompletedChoreDb { ChoreId = chores[1].Id, HousekeepingId = twoWeeksAgoHousekeeping.Id },
-                new CompletedChoreDb { ChoreId = chores[2].Id, HousekeepingId = twoWeeksAgoHousekeeping.Id },
-                new CompletedChoreDb { ChoreId = chores[9].Id, HousekeepingId = twoWeeksAgoHousekeeping.Id }
-            };
-
-            context.CompletedChores.AddRange(completedChores);
-            await context.SaveChangesAsync(cancellationToken);
-
-            Console.WriteLine($"Created {completedChores.Count} completed chore records.");
-
-            // Create some critical chores (for chores that haven't been completed recently)
-            List<CriticalChoreDb> criticalChores = new List<CriticalChoreDb>
-            {
-                new CriticalChoreDb
-                {
-                    ChoreId = chores[6].Id, // Apartment — Clean Glass on Doors and Cabinets
-                    Note = "Glass on doors and cabinets is cloudy, needs cleaning",
-                    CompletedChoreId = null,
-                    CreatedAt = now.AddDays(-3),
-                    UpdatedAt = now.AddDays(-3),
-                    CreatedBy = "seeder",
-                    UpdatedBy = "seeder"
-                },
-                new CriticalChoreDb
-                {
-                    ChoreId = chores[38].Id, // Hallway — Wipe Closet Interior
-                    Note = "Hallway closet is dusty, needs interior cleaning",
-                    CompletedChoreId = null,
-                    CreatedAt = now.AddDays(-5),
-                    UpdatedAt = now.AddDays(-5),
-                    CreatedBy = "seeder",
-                    UpdatedBy = "seeder"
-                }
-            };
-
-            context.CriticalChores.AddRange(criticalChores);
-            await context.SaveChangesAsync(cancellationToken);
-
-            Console.WriteLine($"Created {criticalChores.Count} critical chore records.");
-            Console.WriteLine("Database seeding completed successfully!");
+            _context.Chores.AddRange(chores);
+            await _context.SaveChangesAsync(cancellationToken);
+            return chores;
         }
+
     }
 }
 

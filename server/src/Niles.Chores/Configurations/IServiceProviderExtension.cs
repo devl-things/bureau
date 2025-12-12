@@ -23,7 +23,6 @@ namespace Niles.Chores.Configurations
                 catch (Exception ex)
                 {
                     logger.LogCritical(ex, "Error applying database migrations.");
-                    throw;
                 }
             }
         }
@@ -34,7 +33,7 @@ namespace Niles.Chores.Configurations
             {
                 IChoresSeeder seeder = scope.ServiceProvider.GetRequiredService<IChoresSeeder>();
 
-                seeder.Seed();
+                seeder.SeedTest();
             }
         }
     }

@@ -3,11 +3,10 @@ using Niles.Chores.Web.Configurations;
 
 namespace Niles.Chores.Web
 {
-    public class Program
+    public static class Program
     {
-        public static void Main(string[] args)
+        public static async Task Main(string[] args)
         {
-            //TODO BUG link na /admin/chores prema /admin/housekeeing ne radi kako treba
             WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
             builder.Services.Configure<AppConfiguration>(builder.Configuration);
@@ -23,7 +22,7 @@ namespace Niles.Chores.Web
                 return Results.Json(config.Value);
             });
 
-            app.Run();
+            await app.RunAsync();
         }
     }
 }

@@ -5,11 +5,11 @@ using Niles.Chores.Configurations;
 
 namespace Niles.Chores.Api
 {
-    public class Program
+    public static class Program
     {
         public static async Task Main(string[] args)
         {
-            // TODO SEEDER_USAGE.md should be updated because that was changed
+            // TODO #66 SEEDER_USAGE.md should be updated because that was changed
 
             WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
@@ -63,7 +63,7 @@ namespace Niles.Chores.Api
             }
 
             app.MapControllers();
-            // TODO why are health checks not visible in swagger?
+            // health checks not visible in swagger, and that is for the best   
             app.MapHealthChecks("api/health",
                 new HealthCheckOptions
                 {
@@ -86,7 +86,7 @@ namespace Niles.Chores.Api
                     }
                 });
 
-            app.Run();
+            await app.RunAsync();
         }
     }
 }

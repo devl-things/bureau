@@ -1,3 +1,4 @@
+using Bureau;
 using Microsoft.AspNetCore.Mvc;
 using Niles.Chores.Data;
 
@@ -7,11 +8,9 @@ namespace Niles.Chores.Api.Controllers
     [ApiController]
     public class SeedController : ControllerBase
     {
-        private readonly ILogger<SeedController> _logger;
         private readonly IChoresSeeder _seeder;
-        public SeedController(ILogger<SeedController> logger, IChoresSeeder seeder)
+        public SeedController(IChoresSeeder seeder)
         {
-            _logger = logger;
             _seeder = seeder;
         }
 
@@ -19,32 +18,38 @@ namespace Niles.Chores.Api.Controllers
         [HttpPost]
         public async Task<IActionResult> SeedAsync(CancellationToken cancellationToken)
         {
-            try
+            Result seedResult = await _seeder.SeedChoresAsync(cancellationToken);
+
+            if (seedResult.IsError)
             {
-                await _seeder.SeedAsync(cancellationToken);
-                return Ok(new { message = "Database seeded successfully!" });
+                return StatusCode(500, new { error = "Database was not seeded.", details = seedResult.Error.ErrorMessage });
             }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error seeding database");
-                return StatusCode(500, new { error = "An error occurred while seeding the database.", details = ex.Message });
-            }
+            return Ok(new { message = "Database seeded successfully!" });
         }
 
-        // POST api/seed/clear
-        [HttpPost("clear")]
+        // POST api/seed/test
+        [HttpPost("test")]
+        public async Task<IActionResult> SeedTestAsync(CancellationToken cancellationToken)
+        {
+            Result seedResult = await _seeder.SeedTestAsync(cancellationToken);
+
+            if (seedResult.IsError)
+            {
+                return StatusCode(500, new { error = "Database was not seeded.", details = seedResult.Error.ErrorMessage });
+            }
+            return Ok(new { message = "Database seeded successfully!" });
+        }
+
+        // POST api/seed/test/clear
+        [HttpPost("test/clear")]
         public async Task<IActionResult> ClearAndSeedAsync(CancellationToken cancellationToken)
         {
-            try
+            Result seedResult = await _seeder.ClearAndSeedTestAsync(cancellationToken);
+            if (seedResult.IsError)
             {
-                await _seeder.ClearAndSeedAsync(cancellationToken);
-                return Ok(new { message = "Database cleared and seeded successfully!" });
+                return StatusCode(500, new { error = "Database was not cleared and seeded.", details = seedResult.Error.ErrorMessage });
             }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error clearing and seeding database");
-                return StatusCode(500, new { error = "An error occurred while clearing and seeding the database.", details = ex.Message });
-            }
+            return Ok(new { message = "Database seeded successfully!" });
         }
     }
 }

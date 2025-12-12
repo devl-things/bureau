@@ -4,11 +4,11 @@ namespace Niles.Chores.Api.Mappers
 {
     public static class PrioritizedChoreMapperExtension
     {
-        public static PrioritizedChoreDto ToDto(this PrioritizedChore chore)
+        public static PrioritizedChoreDto ToDto(this PrioritizedChore chore, Func<int, string> idFormatter)
         {
             return new PrioritizedChoreDto
             {
-                Id = chore.Id,
+                Id = idFormatter(chore.Id),
                 Title = chore.Title,
                 Description = chore.Description ?? string.Empty,
                 Criticality = (int)chore.Criticality,
