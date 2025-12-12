@@ -5,7 +5,7 @@ namespace Niles.Chores.Api.Mappers
 {
     public static class ChoreMapperExtension
     {
-        //TODO #74 [backend] set priority from chore
+        //TODO #84 [backend] set priority from chore
         public static ChoreDto ToDto(this Chore chore, Func<int, string> idFormatter)
         {
             return new ChoreDto

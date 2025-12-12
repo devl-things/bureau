@@ -8,6 +8,7 @@ namespace Niles.Chores.Data
 {
     internal class ChoresSeeder : IChoresSeeder
     {
+        private const string DatabaseAlreadyFullMessage = "Database already contains data. Skipping seed.";
         private const string SEEDER = "seeder";
         private readonly ILogger<ChoresSeeder> _logger;
         private readonly ChoresContext _context;
@@ -55,8 +56,8 @@ namespace Niles.Chores.Data
                 // Check if data already exists
                 if (await _context.Chores.AnyAsync(cancellationToken))
                 {
-                    _logger.LogWarning("Database already contains data. Skipping seed.");
-                    return "Database already contains data. Skipping seed.";
+                    _logger.LogWarning(DatabaseAlreadyFullMessage);
+                    return DatabaseAlreadyFullMessage;
                 }
                 await CreateChoresAsync(cancellationToken);
             }
@@ -75,8 +76,8 @@ namespace Niles.Chores.Data
                 // Check if data already exists
                 if (await _context.Chores.AnyAsync(cancellationToken))
                 {
-                    _logger.LogWarning("Database already contains data. Skipping seed.");
-                    return "Database already contains data. Skipping seed.";
+                    _logger.LogWarning(DatabaseAlreadyFullMessage);
+                    return DatabaseAlreadyFullMessage;
                 }
 
                 DateTimeOffset now = _timeProvider.GetUtcNow();
