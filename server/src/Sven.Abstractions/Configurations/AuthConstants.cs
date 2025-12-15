@@ -2,20 +2,29 @@
 {
     public static class AuthConstants
     {
-        public static class Scopes
+        public static class AuthenticationSchemes
         {
-            public const string OpenId = "openid";
-            public const string Profile = "profile";
-            public const string Email = "email";
-            public const string Address = "address";
-            public const string Phone = "phone";
-            public const string OfflineAccess = "offline_access";
+            public const string External = "External";
         }
-
         public static class ClientTypes
         {
             public const string Public = "public";
             public const string Confidential = "confidential";
+        }
+        public static class CookieNames
+        {
+            public const string PkceKey = "pkce_key";
+            public const string ClaimsKey = "claims_key";
+        }
+        public static class ExternalSchemes
+        {
+            public const string Google = "google";
+            public const string Microsoft = "microsoft";
+
+            public static bool Exists(string scheme)
+            {
+                return Google.Equals(scheme) || Microsoft.Equals(scheme);
+            }
         }
         public static class OAuth
         {
@@ -79,10 +88,6 @@
                 public const string TokenType = "token_type";
                 public const string ExpiresIn = "expires_in";
                 public const string Nonce = "nonce";
-
-                //Login field names
-                public const string Username = "username";
-                public const string Password = "password";
 
                 //Dynamic registration
                 public const string RedirectUris = "redirect_uris";
@@ -158,31 +163,36 @@
             {
                 public const string InvalidRequest = "Invalid request.";
                 public const string InvalidRedirectUriFormat = "Invalid redirect_uri format.";
+                public const string InvalidUsernamePassword = "Invalid username or password.";
+                public const string InvalidAuthorizationState = "Invalid or expired authorization request.";
+                public const string MissingAuthorizationState = "Missing authorization state";
                 public const string UnsupportedResponseType = "The response type is not supported";
                 public const string UnsupportedGrantType = "The grant type is not supported";
-                public const string MissingAuthorizationState = "Missing authorization state";
                 public const string CodeOrCodeVerifierMissing = "Code or code_verifier is missing";
                 public const string RefreshTokenNotFound = "Refresh token not found.";
                 public const string CreationAuthCodeFailed = "Failed to create authorization code.";
                 public const string RequestedScopeExceedsGranted = "Requested scope exceeds originally granted scope.";
                 public const string RequestedScopeNotGranted = "Requested scope is not granted.";
+
+                public const string UnManageable = "Something went wrong, try refreshing the page and start over.";
+                public const string SignUpExistingUser = "You cannot create account with this email, try signing in.";
             }
         }
-        public static class CookieNames
+        public static class PropertyNames
         {
-            public const string PkceKey = "pkce_key";
-            public const string ClaimsKey = "claims_key";
+            public const string Challenge = "c";
+            public const string Mode = "m";
+            public const string Ticket = "t";
+            public const string RedirectUrl = "redirect_url";
         }
-
-        public static class ExternalSchemes
+        public static class Scopes
         {
-            public const string Google = "google";
-            public const string Microsoft = "microsoft";
-
-            public static bool Exists(string scheme)
-            {
-                return Google.Equals(scheme) || Microsoft.Equals(scheme);
-            }
+            public const string OpenId = "openid";
+            public const string Profile = "profile";
+            public const string Email = "email";
+            public const string Address = "address";
+            public const string Phone = "phone";
+            public const string OfflineAccess = "offline_access";
         }
     }
 }

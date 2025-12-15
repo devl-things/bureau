@@ -2,7 +2,7 @@
 using Sven.Configurations;
 using Sven.Tests.Fixtures;
 using Sven.Tests.TestData;
-using System.Collections.Specialized;
+using Sven.Tests.TestUtils;
 using System.Net;
 using System.Web;
 
@@ -23,7 +23,7 @@ namespace Sven.Tests.Controllers
         [Trait("Type", "Expected error")]
         public async Task AuthorizeAsync_InvalidRedirectUri_ReturnsBadRequest()
         {
-            Dictionary<string, string> query = new Dictionary<string, string>
+            Dictionary<string, string> query = new()
             {
                 [AuthConstants.OAuth.FieldNames.ClientId] = TestDataConstants.TestClientId,
                 [AuthConstants.OAuth.FieldNames.RedirectUri] = "invalid-uri",
@@ -32,7 +32,7 @@ namespace Sven.Tests.Controllers
                 [AuthConstants.OAuth.FieldNames.CodeChallengeMethod] = AuthConstants.OAuth.CodeChallengeMethods.Sha256
             };
 
-            HttpResponseMessage response = await _client.GetAsync($"{Endpoints.Connect.Authorize}?{BuildQuery(query)}");
+            HttpResponseMessage response = await _client.GetAsync($"{Endpoints.Connect.Authorize}?{MiscHelper.BuildQueryString(query)}");
             string content = await response.Content.ReadAsStringAsync();
 
             Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
@@ -45,7 +45,7 @@ namespace Sven.Tests.Controllers
         [Trait("Type", "Expected error")]
         public async Task AuthorizeAsync_UnsupportedResponseType_RedirectsWithError()
         {
-            Dictionary<string, string> query = new Dictionary<string, string>
+            Dictionary<string, string> query = new()
             {
                 [AuthConstants.OAuth.FieldNames.ClientId] = TestDataConstants.TestClientId,
                 [AuthConstants.OAuth.FieldNames.RedirectUri] = TestDataConstants.TestClientRedirectUri,
@@ -54,7 +54,7 @@ namespace Sven.Tests.Controllers
                 [AuthConstants.OAuth.FieldNames.CodeChallengeMethod] = AuthConstants.OAuth.CodeChallengeMethods.Sha256
             };
 
-            HttpResponseMessage response = await _client.GetAsync($"{Endpoints.Connect.Authorize}?{BuildQuery(query)}");
+            HttpResponseMessage response = await _client.GetAsync($"{Endpoints.Connect.Authorize}?{MiscHelper.BuildQueryString(query)}");
 
             Assert.Equal(HttpStatusCode.Redirect, response.StatusCode);
             string? location = HttpUtility.UrlDecode(response.Headers.Location?.ToString());
@@ -62,31 +62,12 @@ namespace Sven.Tests.Controllers
             Assert.Contains(AuthConstants.OAuth.ErrorDescriptions.UnsupportedResponseType, location);
         }
 
-        [Fact(DisplayName = $"{Endpoints.Connect.AuthorizeLogin} {AuthConstants.OAuth.ErrorDescriptions.MissingAuthorizationState}")]
-        [Trait("Category", "Unit")]
-        [Trait("Type", "Expected error")]
-        public async Task LoginAsync_MissingPkceCookie_ReturnsBadRequest()
-        {
-            Dictionary<string, string> formData = new Dictionary<string, string>
-            {
-                ["username"] = "test-user",
-                ["password"] = "test-pass"
-            };
-
-            HttpResponseMessage response = await _client.PostAsync(Endpoints.Connect.AuthorizeLogin, new FormUrlEncodedContent(formData));
-            string content = await response.Content.ReadAsStringAsync();
-
-            Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
-            Assert.Contains(AuthConstants.OAuth.Errors.InvalidRequest, content);
-            Assert.Contains(AuthConstants.OAuth.ErrorDescriptions.MissingAuthorizationState, content);
-        }
-
-        [Fact(DisplayName = $"{Endpoints.Connect.AuthorizeContinue} {AuthConstants.OAuth.ErrorDescriptions.MissingAuthorizationState}")]
+        [Fact(DisplayName = $"{Endpoints.Connect.AuthorizePkce} {AuthConstants.OAuth.ErrorDescriptions.MissingAuthorizationState}")]
         [Trait("Category", "Unit")]
         [Trait("Type", "Expected error")]
         public async Task CompleteAuthorizeAsync_MissingPkceCookie_ReturnsBadRequest()
         {
-            HttpResponseMessage response = await _client.GetAsync(Endpoints.Connect.AuthorizeContinue);
+            HttpResponseMessage response = await _client.GetAsync(Endpoints.Connect.AuthorizePkce);
             string content = await response.Content.ReadAsStringAsync();
 
             Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
@@ -94,15 +75,6 @@ namespace Sven.Tests.Controllers
             Assert.Contains(AuthConstants.OAuth.ErrorDescriptions.MissingAuthorizationState, content);
         }
 
-        private string? BuildQuery(Dictionary<string, string> parameters)
-        {
-            NameValueCollection query = HttpUtility.ParseQueryString(string.Empty);
-            foreach (KeyValuePair<string, string> param in parameters)
-            {
-                query[param.Key] = param.Value;
-            }
-            return query.ToString();
-        }
         public void Dispose()
         {
             Dispose(true);

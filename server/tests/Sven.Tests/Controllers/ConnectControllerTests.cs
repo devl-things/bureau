@@ -1,8 +1,10 @@
 ﻿using Microsoft.AspNetCore.Mvc.Testing;
 using Sven.Configurations;
 using Sven.Models;
+using Sven.PageModels;
 using Sven.Tests.Fixtures;
 using Sven.Tests.TestData;
+using Sven.Tests.TestUtils;
 using System.IdentityModel.Tokens.Jwt;
 using System.Net;
 using System.Security.Cryptography;
@@ -50,15 +52,8 @@ namespace Sven.Tests.Controllers
             Assert.False(string.IsNullOrWhiteSpace(pkceKey));
 
             // Step 2: Login with user/pass and pkce_key cookie
-            HttpRequestMessage loginRequest = new HttpRequestMessage(HttpMethod.Post, Endpoints.Connect.AuthorizeLogin);
-            loginRequest.Content = new FormUrlEncodedContent(new Dictionary<string, string>
-            {
-                { AuthConstants.OAuth.FieldNames.Username, TestDataConstants.TestUserUsername },
-                { AuthConstants.OAuth.FieldNames.Password, TestDataConstants.TestUserPassword }
-            });
-            loginRequest.Headers.Add("Cookie", $"{AuthConstants.CookieNames.PkceKey}={pkceKey}");
-
-            HttpResponseMessage loginResponse = await _client.SendAsync(loginRequest);
+            string authorizeResponseContent = await authorizeResponse.Content.ReadAsStringAsync();
+            HttpResponseMessage loginResponse = await LoginUserAsync(authorizeResponseContent, pkceKey);
 
             string? redirectUriActual = loginResponse.RequestMessage?.RequestUri?.ToString();
             Assert.False(string.IsNullOrWhiteSpace(redirectUriActual));
@@ -150,15 +145,8 @@ namespace Sven.Tests.Controllers
             Assert.False(string.IsNullOrWhiteSpace(pkceKey));
 
             // Step 2: Login with user/pass and pkce_key cookie
-            HttpRequestMessage loginRequest = new HttpRequestMessage(HttpMethod.Post, Endpoints.Connect.AuthorizeLogin);
-            loginRequest.Content = new FormUrlEncodedContent(new Dictionary<string, string>
-            {
-                { AuthConstants.OAuth.FieldNames.Username, TestDataConstants.TestUserUsername },
-                { AuthConstants.OAuth.FieldNames.Password, TestDataConstants.TestUserPassword }
-            });
-            loginRequest.Headers.Add("Cookie", $"{AuthConstants.CookieNames.PkceKey}={pkceKey}");
-
-            HttpResponseMessage loginResponse = await _client.SendAsync(loginRequest);
+            string authorizeResponseContent = await authorizeResponse.Content.ReadAsStringAsync();
+            HttpResponseMessage loginResponse = await LoginUserAsync(authorizeResponseContent, pkceKey);
 
             string? redirectUriActual = loginResponse.RequestMessage?.RequestUri?.ToString();
             Assert.False(string.IsNullOrWhiteSpace(redirectUriActual));
@@ -213,15 +201,8 @@ namespace Sven.Tests.Controllers
             Assert.False(string.IsNullOrWhiteSpace(pkceKey));
 
             // Step 2: Login with user/pass and pkce_key cookie
-            HttpRequestMessage loginRequest = new HttpRequestMessage(HttpMethod.Post, Endpoints.Connect.AuthorizeLogin);
-            loginRequest.Content = new FormUrlEncodedContent(new Dictionary<string, string>
-            {
-                { AuthConstants.OAuth.FieldNames.Username, TestDataConstants.TestUserUsername },
-                { AuthConstants.OAuth.FieldNames.Password, TestDataConstants.TestUserPassword }
-            });
-            loginRequest.Headers.Add("Cookie", $"{AuthConstants.CookieNames.PkceKey}={pkceKey}");
-
-            HttpResponseMessage loginResponse = await _client.SendAsync(loginRequest);
+            string authorizeResponseContent = await authorizeResponse.Content.ReadAsStringAsync();
+            HttpResponseMessage loginResponse = await LoginUserAsync(authorizeResponseContent, pkceKey);
 
             string? redirectUriActual = loginResponse.RequestMessage?.RequestUri?.ToString();
             Assert.False(string.IsNullOrWhiteSpace(redirectUriActual));
@@ -291,15 +272,8 @@ namespace Sven.Tests.Controllers
             Assert.False(string.IsNullOrWhiteSpace(pkceKey));
 
             // Step 2: Login with user/pass and pkce_key cookie
-            HttpRequestMessage loginRequest = new HttpRequestMessage(HttpMethod.Post, Endpoints.Connect.AuthorizeLogin);
-            loginRequest.Content = new FormUrlEncodedContent(new Dictionary<string, string>
-            {
-                { AuthConstants.OAuth.FieldNames.Username, TestDataConstants.TestUserUsername },
-                { AuthConstants.OAuth.FieldNames.Password, TestDataConstants.TestUserPassword }
-            });
-            loginRequest.Headers.Add("Cookie", $"{AuthConstants.CookieNames.PkceKey}={pkceKey}");
-
-            HttpResponseMessage loginResponse = await _client.SendAsync(loginRequest);
+            string authorizeResponseContent = await authorizeResponse.Content.ReadAsStringAsync();
+            HttpResponseMessage loginResponse = await LoginUserAsync(authorizeResponseContent, pkceKey);
 
             string? redirectUriActual = loginResponse.RequestMessage?.RequestUri?.ToString();
             Assert.False(string.IsNullOrWhiteSpace(redirectUriActual));
@@ -372,15 +346,8 @@ namespace Sven.Tests.Controllers
             Assert.False(string.IsNullOrWhiteSpace(pkceKey));
 
             // Step 2: Login with user/pass and pkce_key cookie
-            HttpRequestMessage loginRequest = new HttpRequestMessage(HttpMethod.Post, Endpoints.Connect.AuthorizeLogin);
-            loginRequest.Content = new FormUrlEncodedContent(new Dictionary<string, string>
-            {
-                { AuthConstants.OAuth.FieldNames.Username, TestDataConstants.TestUserUsername },
-                { AuthConstants.OAuth.FieldNames.Password, TestDataConstants.TestUserPassword }
-            });
-            loginRequest.Headers.Add("Cookie", $"{AuthConstants.CookieNames.PkceKey}={pkceKey}");
-
-            HttpResponseMessage loginResponse = await _client.SendAsync(loginRequest);
+            string authorizeResponseContent = await authorizeResponse.Content.ReadAsStringAsync();
+            HttpResponseMessage loginResponse = await LoginUserAsync(authorizeResponseContent, pkceKey);
 
             string? redirectUriActual = loginResponse.RequestMessage?.RequestUri?.ToString();
             Assert.False(string.IsNullOrWhiteSpace(redirectUriActual));
@@ -408,6 +375,23 @@ namespace Sven.Tests.Controllers
             Assert.False(string.IsNullOrWhiteSpace(token.AccessToken));
             Assert.True(string.IsNullOrWhiteSpace(token.RefreshToken));
             Assert.True(string.IsNullOrWhiteSpace(token.IdToken));
+        }
+
+        private async Task<HttpResponseMessage> LoginUserAsync(string signInHtmlContent, string pkceKey)
+        {
+            string antiforgeryToken = MiscHelper.GetAntiforgeryTokenFromContent(signInHtmlContent);
+            string url = $"{Endpoints.Connect.SignIn}?handler=Login";
+            HttpRequestMessage loginRequest = new HttpRequestMessage(HttpMethod.Post, url);
+            loginRequest.Content = new FormUrlEncodedContent(new Dictionary<string, string>
+            {
+                { ViewConstants.PropertyNames.Username, TestDataConstants.TestUserUsername },
+                { ViewConstants.PropertyNames.Password, TestDataConstants.TestUserPassword },
+                { AuthConstants.PropertyNames.Mode, PageModelTypes.SignIn.Pkce },
+                { MiscHelper.AntiforgeryFormKey, antiforgeryToken }
+            });
+            loginRequest.Headers.Add("Cookie", $"{AuthConstants.CookieNames.PkceKey}={pkceKey}");
+
+            return await _client.SendAsync(loginRequest);
         }
 
         private static string GenerateCodeVerifier()

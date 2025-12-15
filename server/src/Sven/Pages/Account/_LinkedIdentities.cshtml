@@ -1,0 +1,144 @@
+﻿@using Sven.PageModels.Account
+@using Sven.PageModels.Account.LinkedIdentities
+@using Sven.PageModels.Connect
+@using Sven.PageModels.Connect.ExternalProviders
+@model LinkedIdentitiesViewModel
+
+<div class="sven-card">
+    <div class="sven-card-header">
+        <h5 class="mb-0">@Model.T9n.LblLinkedIdentity</h5>
+        @if (Model.Options.ShowManageBtn)
+        {
+            <a class="btn btn-outline-secondary btn-sm border-0" href="@Endpoints.Account.LinkedIdentities" title="@Model.T9n.LblManage">
+                <i class="bi bi-gear"></i>
+            </a>
+        }
+        
+    </div>
+    <div class="card-body p-2">
+        <table class="table table-hover align-middle m-0">
+            <thead class="table-light">
+                @if (Model.Options.ShowAddOption)
+                {
+                    <tr>
+                        <th scope="row">@Model.T9n.LblAdd</th>
+                        <th scope="row" colspan="@(Model.Options.ShowActions ? 3 : 2)">
+
+                            @foreach (ExternalProvider provider in Model.Data.ExternalProviders.Providers.Where(x => x.IsSignInEnabled))
+                            {
+                                <a class="btn btn-outline-secondary btn-sm border-0" href="@provider.GetSignInLink(Model.Data.ExternalProviders.Mode)" title="@provider.ProviderName">
+                                    <i class="bi @provider.IconCssClass"></i>
+                                </a>
+                            }
+                        </th>
+                    </tr>
+                }
+                <tr>
+                    <th scope="col">@Model.T9n.LblProvider</th>
+                    <th scope="col">@Model.T9n.LblAccount</th>
+                    <th scope="col">@Model.T9n.LblStatus</th>
+                    @if (Model.Options.ShowActions)
+                    {
+                        <th scope="col">@Model.T9n.LblActions</th>
+                    }
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model.Data.LinkedIdentities.Count > 0)
+                {
+                    @foreach (LinkedIdentityModel linkedIdentities in Model.Data.LinkedIdentities)
+                    {
+                        <tr>
+                            <td>
+                                <div class="d-flex align-items-center gap-2">
+                                    @if (!string.IsNullOrWhiteSpace(linkedIdentities.IconImageUrl))
+                                    {
+                                        <img src="@linkedIdentities.IconImageUrl" alt="@linkedIdentities.ProviderName"
+                                             width="20" height="20" class="rounded" />
+                                    }
+                                    else if (!string.IsNullOrWhiteSpace(linkedIdentities.IconClass))
+                                    {
+                                        <i class="@linkedIdentities.IconClass"></i>
+                                    }
+                                    else
+                                    {
+                                        <i class="bi bi-shield text-muted"></i>
+                                    }
+
+                                    <span>@linkedIdentities.ProviderName</span>
+                                </div>
+                            </td>
+                            <td>@linkedIdentities.Email</td>
+                            <td>
+                                @if (linkedIdentities.Status is null)
+                                {
+                                    <span class="text-warning">
+                                        <i class="bi bi-exclamation-circle me-1" title="@Model.T9n.LblError"></i>
+                                    </span>
+                                }
+                                else if (linkedIdentities.Status.Value)
+                                {
+                                    <span class="text-success">
+                                        <i class="bi bi-check-circle me-1" title="@Model.T9n.LblConnected"></i>
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="text-danger">
+                                        <i class="bi bi-x-circle me-1" title="@Model.T9n.LblDisconnected"></i>
+                                    </span>
+                                }
+                            </td>
+                            @if (Model.Options.ShowActions)
+                            {
+                                <td class="text-end">
+                                    <form method="post" asp-page="LinkedIdentities" asp-page-handler="Actions" class="d-inline">
+                                        <input type="hidden" name="@ViewConstants.PropertyNames.Id" value="@linkedIdentities.Id" />
+                                        @if (linkedIdentities.AvailableActions.HasFlag(LinkedIdentityActions.Connect))
+                                        {
+                                            <button type="submit" class="btn btn-outline-success btn-sm"
+                                            title="@Model.T9n.LblConnect" name="@ViewConstants.PropertyNames.Action" value="@LinkedIdentityActions.Connect">
+                                                <i class="bi bi-plug-fill"></i>
+                                            </button>
+                                        }
+                                        @if (linkedIdentities.AvailableActions.HasFlag(LinkedIdentityActions.Disconnect))
+                                        {
+                                            <button type="submit" class="btn btn-outline-danger btn-sm"
+                                            title="@Model.T9n.LblDisconnect" name="@ViewConstants.PropertyNames.Action" value="@LinkedIdentityActions.Disconnect">
+                                                <i class="bi bi-plug"></i>
+                                            </button>
+                                        }
+                                        @if (linkedIdentities.AvailableActions.HasFlag(LinkedIdentityActions.Remove))
+                                        {
+                                            <button type="submit" class="btn btn-outline-danger btn-sm"
+                                            title="@Model.T9n.LblRemove" name="@ViewConstants.PropertyNames.Action" value="@LinkedIdentityActions.Remove">
+                                                <i class="bi bi-trash3"></i>
+                                            </button>
+                                        }
+                                    </form>
+
+                                    @* Optional: Add another action *@
+                                    @* <a href="/account/identity/@linkedIdentities.Id" class="btn btn-outline-secondary btn-sm ms-1" title="View Details">
+        <i class="bi bi-eye"></i>
+    </a> *@
+                                </td>
+                            }
+                        </tr>
+
+                    }
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="4" class="text-center text-muted p-2">
+                            <div class="d-inline-flex align-items-center gap-2 small">
+                                <i class="bi bi-outlet fs-5"></i>
+                                <span>@Model.T9n.MsgNoLinkedIdentities</span>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
