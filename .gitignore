@@ -6,6 +6,13 @@ docs/test-coverage.md
 ## exchange with perplexity
 docs/perplexity-data/
 
+## file used to sync with perplexity
+docs/perplexity-data
+
+## temp folders where data is processed
+temp/
+
+
 # ignore local settings
 appsettings.Development.json
 
