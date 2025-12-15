@@ -1,6 +1,7 @@
 ﻿using Bureau.Core;
 using Microsoft.EntityFrameworkCore;
 using Sven.Data.Contexts;
+using Sven.Data.Mappers;
 using Sven.Data.Models;
 using Sven.Models;
 
@@ -15,6 +16,7 @@ namespace Sven.Data.Stores
             _context = context;
             _timeProvider = timeProvider;
         }
+        // #53 is it username or email!!
         public async Task<Result<SvenUser>> GetByUsernameAsync(string username, CancellationToken cancellationToken = default)
         {
             if (string.IsNullOrWhiteSpace(username))
@@ -27,13 +29,23 @@ namespace Sven.Data.Stores
             {
                 return new ResultError($"User does not exist.");
             }
-            SvenUser result = new SvenUser();
-            result.DisplayName = user.DisplayName;
-            result.PasswordHash = user.PasswordHash;
-            result.SubjectId = user.Identifier;
-            result.Username = user.Username;
 
-            return result;
+            return user.ToSvenUser();
+        }
+
+        public async Task<Result<SvenUser>> GetByIdentifierAsync(string userId, CancellationToken cancellationToken)
+        {
+            if (string.IsNullOrWhiteSpace(userId))
+            {
+                return new ResultError($"{nameof(userId)} field not defined.");
+            }
+            UserDb? user = await GetUserDbAsync(userId, cancellationToken);
+
+            if (user == null)
+            {
+                return new ResultError($"User does not exist.");
+            }
+            return user.ToSvenUser();
         }
 
         private Task<UserDb?> GetUserDbAsync(string identifier, CancellationToken cancellationToken = default)
@@ -62,6 +74,25 @@ namespace Sven.Data.Stores
             dbEntity.DisplayName = user.DisplayName;
             dbEntity.PasswordHash = user.PasswordHash;
 
+            await _context.SaveChangesAsync(cancellationToken);
+            return true;
+        }
+
+        public Task<bool> ExistsWithEmail(string email, CancellationToken cancellationToken)
+        {
+            // #53 add emails
+            return _context.Users.AnyAsync(x => x.Username == email);
+        }
+
+        public async Task<Result> RemoveAsync(string userId, CancellationToken cancellationToken)
+        {
+            UserDb? dbEntity = await GetUserDbAsync(userId, cancellationToken);
+
+            if (dbEntity == null)
+            {
+                return new ResultError($"User does not exist.");
+            }
+            _context.Users.Remove(dbEntity);
             await _context.SaveChangesAsync(cancellationToken);
             return true;
         }

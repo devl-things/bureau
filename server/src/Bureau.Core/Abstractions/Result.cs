@@ -67,28 +67,37 @@
         /// Message that can be logged next to <see cref="ErrorMessage"/> in logs
         /// </summary>
         public string? LogMessage { get; }
+        /// <summary>
+        /// Message that can be shown to user
+        /// </summary>
+        public string? UserMessage { get; }
         public Exception? Exception { get; }
 
-        public ResultError(string errorMessage) : this()
+        public ResultError(string errorMessage, string? logMessage, string? userMessage, Exception? exception)
         {
             ErrorMessage = errorMessage;
-        }
-
-        public ResultError(string errorMessage, string logMessage) : this(errorMessage)
-        {
             LogMessage = logMessage;
-        }
-        public ResultError(string errorMessage, Exception exception) : this(errorMessage)
-        {
+            UserMessage = userMessage;
             Exception = exception;
         }
-        public ResultError(Exception exception) : this(exception.Message, exception)
-        {
-        }
+        /// <summary>
+        /// Error message will be set as UserMessage as well
+        /// </summary>
+        /// <param name="errorMessage"></param>
+        public ResultError(string errorMessage) : this(errorMessage, null, errorMessage, null) { }
+        /// <summary>
+        /// Log message will be set as UserMessage as well
+        /// </summary>
+        /// <param name="errorMessage"></param>
+        /// <param name="logMessage"></param>
+        public ResultError(string errorMessage, string logMessage) : this(errorMessage, logMessage, logMessage, null) { }
+        public ResultError(Exception exception) : this(exception.Message, null, null, exception) { }
+
+        public ResultError(ResultError error, string userMessage) : this(error.ErrorMessage, error.LogMessage, userMessage, error.Exception) { }
 
         public override string ToString()
         {
-            return $"{ErrorMessage}{(LogMessage != null ? $"{Environment.NewLine}{LogMessage}" : string.Empty)}{(Exception != null ? $"{Environment.NewLine}{Exception.ToString()}" : string.Empty)}";
+            return $"{ErrorMessage}{(UserMessage != null ? $"{Environment.NewLine}{UserMessage}" : string.Empty)}{(LogMessage != null ? $"{Environment.NewLine}{LogMessage}" : string.Empty)}{(Exception != null ? $"{Environment.NewLine}{Exception.ToString()}" : string.Empty)}";
         }
     }
 }

@@ -2,6 +2,15 @@
 {
     public static class Endpoints
     {
+        public static class Account
+        {
+            public const string Base = "account";
+            public const string ChangePasswordPath = "change-password";
+            public const string LinkedIdentitiesPath = "linked";
+            public const string AccountInfo = $"/{Base}";
+            public const string ChangePassword = $"/{Base}/{ChangePasswordPath}";
+            public const string LinkedIdentities = $"/{Base}/{LinkedIdentitiesPath}";
+        }
         public static class Oidc
         {
             public const string Base = "oidc";
@@ -24,7 +33,9 @@
         {
             public const string Base = "external";
             public const string SignInBase = "signin";
+            public const string SignIn = $"/{Base}/{SignInBase}";
             public const string SignInWithProvider = SignInBase + "/{provider}";
+
 
             public const string SignInGoogle = $"/{Base}/{SignInBase}/google";
             public const string SignInMicrosoft = $"/{Base}/{SignInBase}/microsoft";
@@ -34,17 +45,22 @@
         {
             public const string Base = "connect";
             public const string AuthorizePath = "authorize";
-            public const string AuthorizeContinuePath = "authorize/continue";
-            public const string AuthorizeLoginPath = "authorize/login";
             public const string TokenPath = "token";
             public const string RevocationPath = "revocation";
+            public const string SignInPath = "signin";
+            public const string SignUpPath = "signup";
+            public const string ForgotPasswordPath = "forgot";
+            public const string LoginPath = "login";
 
-            public const string AuthorizePage = "/connect/authorize/page";
             public const string Authorize = $"/{Base}/{AuthorizePath}";
-            public const string AuthorizeContinue = $"/{Base}/{AuthorizeContinuePath}";
-            public const string AuthorizeLogin = $"/{Base}/{AuthorizeLoginPath}";
+            public const string AuthorizePkce = $"{Authorize}/{Modes.ExternalLogin.Pkce}";
+            public const string AuthorizePlain = $"{Authorize}/{Modes.ExternalLogin.Plain}";
             public const string Token = $"/{Base}/{TokenPath}";
             public const string Revocation = $"/{Base}/{RevocationPath}";
+            public const string SignIn = $"/{Base}/{SignInPath}";
+            public const string SignInPkce = $"{SignIn}?{AuthConstants.PropertyNames.Mode}={Modes.Connect.SignIn.Pkce}";
+            public const string SignUp = $"/{Base}/{SignUpPath}";
+            public const string ForgotPassword = $"/{Base}/{ForgotPasswordPath}";
         }
     }
 }

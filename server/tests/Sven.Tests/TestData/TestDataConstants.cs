@@ -8,5 +8,10 @@
         public const string TestUserUsername = "admin";
         public const string TestUserPassword = "admin";
 
+        public const string ExistingUserEmail = "wer@ert.er";
+
+        public const string NewUserEmail = "new.user@test.local";
+        public const string NewUserPassword = "MyS3cr3t!";
+
     }
 }
