@@ -158,13 +158,6 @@ for file in "$SOURCE_HTTP_TPL_DIR"/*.conf; do
   render_file "$file" "$out"
 done
 
-echo "==> Rendering snippets (templates -> rendered):"
-for file in "$SOURCE_SNIPPETS_TPL_DIR"/*.conf; do
-  base=$(basename "$file")
-  out="$RENDER_SNIPPETS_DIR/$base"
-  echo "    render: $base"
-  render_file "$file" "$out"
-done
 shopt -u nullglob
 
 echo "==> Installing rendered http-scope configs (only overwriting tag files):"
@@ -175,9 +168,9 @@ for file in "$RENDER_HTTP_DIR"/*.conf; do
   cp "$file" "$TARGET_HTTP_DIR/$base"
 done
 
-echo "==> Installing rendered snippets (only overwriting tag files):"
-for file in "$RENDER_SNIPPETS_DIR"/*.conf; do
-  [[ -e "$file" ]] || continue
+echo "==> Installing snippets (no rendering; overwrite only tag files):"
+shopt -s nullglob
+for file in "$SOURCE_SNIPPETS_TPL_DIR"/*.conf; do
   base=$(basename "$file")
   echo "    -> $TARGET_SNIPPETS_DIR/$base"
   cp "$file" "$TARGET_SNIPPETS_DIR/$base"
