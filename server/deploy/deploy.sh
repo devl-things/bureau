@@ -1,6 +1,4 @@
 #!/usr/bin/env bash
-export MSYS_NO_PATHCONV=1
-export MSYS2_ARG_CONV_EXCL="*"
 set -euo pipefail
 
 ########################################
@@ -22,7 +20,7 @@ fi
 # Export variables from .env (bash-compatible KEY=value lines)
 set -a
 # shellcheck disable=SC1090
-source "$CANONICAL_ENV_FILE"
+source <(grep -E '^DEPLOY__[A-Za-z0-9_]*=' "$CANONICAL_ENV_FILE")
 set +a
 
 ########################################
