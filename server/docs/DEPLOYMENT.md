@@ -1,13 +1,10 @@
 # Deployment
 
-This repository uses a **tag-based deployment** workflow driven by:
+This repository uses a **tag-based deployment** workflow driven by a single
+deployment script and a canonical environment file.
 
-- `server/deploy/deploy.sh` (deployment script)
-- `server/deploy/.env` (canonical environment file; **not committed**)
-- `server/deploy/docker-compose.yml` (stack definition, versioned by tag)
-- `server/deploy/nginx/` (NGINX configuration templates, versioned by tag)
-
-The deployment is **environment-agnostic**: environment-specific values are injected from `server/deploy/.env` at deploy time.
+The deployment process is intentionally **environment-agnostic**:
+all environment-specific values live in `.env`, which is excluded from git.
 
 ---
 
@@ -19,70 +16,95 @@ server/deploy/
   .env                  # excluded from git
   docker-compose.yml
   nginx/
-    https/              # http-scope includes; typically contain `server {}` blocks
-    snippets/           # reusable includes
+    https/              # NGINX server templates (rendered)
+    snippets/           # NGINX snippets (copied as-is)
 ```
 
 ---
 
-## Prerequisites
+## Canonical environment file (`.env`)
 
-### Required
-- `git`
-- Docker + Docker Compose v2 (`docker compose`)
-- Network access to clone from the configured repo remote
+The `.env` file serves **two different purposes**:
 
-### Optional (template rendering)
-The deployment script renders NGINX templates using `envsubst`.
+1) **Deployment configuration**
+2) **Application runtime configuration**
 
-- If you run the script in an environment that already has `envsubst` (e.g. Git Bash with gettext), nothing else is needed.
-- If `envsubst` is missing, the script will fail fast with a clear error.
-
-Verify `envsubst`:
-
-```bash
-command -v envsubst
-envsubst --version
-```
+It is intentionally **not committed to git**.
 
 ---
 
-## Canonical environment file
+### 1) Deployment configuration (`DEPLOY__*`)
 
-Create `server/deploy/.env` (excluded from git). It contains:
-
-### 1) Deployment variables
+Only variables prefixed with `DEPLOY__` are loaded into the deployment script.
 
 Required:
 
 ```env
-DEPLOY__ROOT=/path/to/root
+DEPLOY__ROOT=/path/to/deployment/root
 DEPLOY__NGINX_CONTAINER_NAME=nginx
 ```
 
 Optional:
 
 ```env
-DEPLOY__REPO_URL=<git repo url>
-DEPLOY__NGINX_HTTP_DIR=<override target http-scope dir>
-DEPLOY__NGINX_SNIPPETS_DIR=<override target snippets dir>
+DEPLOY__REPO_URL=https://example.com/repo.git
+DEPLOY__NGINX_HTTP_DIR=/custom/nginx/https
+DEPLOY__NGINX_SNIPPETS_DIR=/custom/nginx/snippets
 ```
 
-### 2) NGINX template variables
-
-Files under `server/deploy/nginx/https/*.conf` and `server/deploy/nginx/snippets/*.conf` may contain placeholders like:
-
-- `${DEPLOY__NGINX__APPKEY__SERVER_NAME}`
-- `${DEPLOY__NGINX__APPKEY__WEB_UPSTREAM}`
-- `${DEPLOY__NGINX__APPKEY__API_UPSTREAM}`
-
-All placeholders are rendered using values from `server/deploy/.env` at deploy time.
+The deploy script deliberately sources **only `DEPLOY__*` variables**
+to avoid shell-side path conversion issues (notably on Windows / Git Bash).
 
 ---
 
-## Running a deployment
+### 2) Application runtime configuration
 
-Run from any folder. The script creates a temporary folder named after the tag under your current working directory.
+All non-`DEPLOY__*` variables are **not sourced by the deploy script**.
+
+They are passed to the application **via Docker Compose** using `env_file: .env`.
+
+Example:
+
+```env
+Api__BaseUrl=
+Api__ChoresUrl=/api/chores
+Api__PrioritizedChoresSegment=/prioritized-chores
+```
+
+---
+
+## NGINX configuration model
+
+| Location | Purpose | Processing |
+|--------|--------|------------|
+| `nginx/https/*.conf` | App-specific server blocks | Rendered with `envsubst` |
+| `nginx/snippets/*.conf` | Shared nginx logic | Copied verbatim |
+
+Notes:
+
+- `nginx/https/*.conf` may include `${DEPLOY__...}` placeholders (rendered at deploy time).
+- `nginx/snippets/*.conf` must **not** be rendered, because snippets often contain NGINX
+  runtime variables like `$host`, `$remote_addr`, etc.
+
+---
+
+## Docker Compose requirements
+
+Application services that require runtime configuration should include:
+
+```yaml
+env_file:
+  - .env
+```
+
+The deploy script copies `.env` into the cloned tag directory so this works automatically.
+
+---
+
+## How to run a deployment
+
+You can run the script from **any directory**. A temporary folder named after the tag
+will be created in the current working directory.
 
 ```bash
 /path/to/repo/server/deploy/deploy.sh v0.1.0
@@ -92,34 +114,61 @@ Run from any folder. The script creates a temporary folder named after the tag u
 
 ## What `deploy.sh` does
 
-Given a tag:
+For a given git tag:
 
-1. Loads `server/deploy/.env` and exports all variables
-2. Clones the repo at the specified tag into `./<TAG>/`
-3. Copies canonical `.env` into the cloned tag (`./<TAG>/server/deploy/.env`)
-4. Renders NGINX templates from the cloned tag using `envsubst`
-5. Installs rendered configs into the target host directories:
-   - `${DEPLOY__NUC_ROOT}/nginx/conf/https/`
-   - `${DEPLOY__NUC_ROOT}/nginx/conf/snippets/`
+1. Loads only `DEPLOY__*` variables from `.env`
+2. Creates a temporary directory `./<TAG>/`
+3. Clones the repository and checks out `<TAG>`
+4. Copies `.env` into the cloned tag
+5. Renders NGINX configs from `nginx/https/` using `envsubst`
+6. Copies NGINX snippets without rendering
+7. Starts or updates the stack using Docker Compose
+8. Validates and reloads the NGINX container
+9. Cleans up the temporary directory
 
-   The script **only overwrites files present in the tag** and does not delete unrelated configs.
-
-6. Starts/updates the stack using the tag’s `docker-compose.yml`
-7. Validates and reloads the NGINX gateway container via `docker exec`
-8. Cleans up the temporary folder
+The script **only overwrites files present in the tag** and never deletes unrelated
+NGINX configuration.
 
 ---
 
-## Operational notes
+## Troubleshooting
 
-### Container name vs compose service name
-- `docker exec <CONTAINER_NAME> ...` uses the container name (e.g. `DEPLOY__NGINX_CONTAINER_NAME`)
-- `docker compose restart <SERVICE_NAME>` uses the compose service name
+### NGINX reload fails
 
-This deployment script uses `docker exec`.
+Run:
 
-### Restart vs reload
-- Template/config changes typically require only:
-  - `nginx -t`
-  - `nginx -s reload`
-- Container volume/port changes require a container restart (outside this script unless you add it explicitly).
+```bash
+docker exec <nginx-container> nginx -t
+```
+
+Then fix the reported file/line. After fixing, reload:
+
+```bash
+docker exec <nginx-container> nginx -s reload
+```
+
+### Application config values look wrong
+
+- Confirm the service has `env_file: .env` in `docker-compose.yml`
+- Confirm `.env` exists inside the checked-out tag directory after deploy
+- Remember: the deploy script does **not** source non-`DEPLOY__*` variables
+
+---
+
+## Windows / Git Bash note
+
+Sourcing variables whose values start with `/` in Git Bash can trigger
+automatic path conversion.
+
+To avoid this:
+- the deploy script sources **only `DEPLOY__*` variables**
+- application variables are handled exclusively by Docker Compose
+
+---
+
+## Adding another application
+
+1. Add `DEPLOY__NGINX__<APP>__*` variables to `.env`
+2. Add a new server template under `nginx/https/`
+3. Ensure the application service uses `env_file: .env`
+4. Deploy a new tag
