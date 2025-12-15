@@ -11,9 +11,9 @@ SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 ########################################
 CANONICAL_ENV_FILE="$SCRIPT_DIR/.env"
 
-if [ ! -f "$CANONICAL_ENV_FILE" ]; then
-  echo "ERROR: Expected deploy .env not found at:"
-  echo "  $CANONICAL_ENV_FILE"
+if [[ ! -f "$CANONICAL_ENV_FILE" ]]; then
+  echo "ERROR: Expected deploy .env not found at:" >&2
+  echo "  $CANONICAL_ENV_FILE" >&2
   exit 1
 fi
 
@@ -35,33 +35,33 @@ REPO_URL="${DEPLOY__REPO_URL:-}"
 
 # Allow overriding target dirs (optional)
 TARGET_HTTP_DIR="${DEPLOY__NGINX_HTTP_DIR:-$NUC_ROOT/nginx/conf/https}"
-TARGET_SNIPPETS_DIR="${DEPLOY__NGINX_SNIPPETS_DIR:-$NUC_ROOT/nginx/conf/snippets}"
+TARGET_SNIPPETS_DIR="${DEPLOY__NGINX_SNIPPETS_TPL_DIR:-$NUC_ROOT/nginx/conf/snippets}"
 
 ########################################
 # ARG: git tag to deploy
 ########################################
 TAG="${1:-}"
-if [ -z "$TAG" ]; then
-  echo "Usage: $(basename "$0") <git-tag>"
-  echo "Example: $(basename "$0") v0.1.0"
+if [[ -z "$TAG" ]]; then
+  echo "Usage: $(basename "$0") <git-tag>" >&2
+  echo "Example: $(basename "$0") v0.1.0" >&2
   exit 1
 fi
 
 ########################################
 # Repo URL fallback (if not set)
 ########################################
-if [ -z "$REPO_URL" ]; then
+if [[ -z "$REPO_URL" ]]; then
   if git -C "$SCRIPT_DIR/../.." rev-parse --is-inside-work-tree >/dev/null 2>&1; then
     REPO_URL=$(git -C "$SCRIPT_DIR/../.." remote get-url origin)
   else
-    echo "ERROR: DEPLOY__REPO_URL not set and cannot infer git remote."
+    echo "ERROR: DEPLOY__REPO_URL not set and cannot infer git remote." >&2
     exit 1
   fi
 fi
 
 echo "==> Deploying tag: $TAG"
 echo "    Repo URL:      $REPO_URL"
-echo "    NUC_ROOT:      $NUC_ROOT"
+echo "    Root:          $NUC_ROOT"
 echo "    NGINX:         $NGINX_CONTAINER_NAME"
 echo "    Env file:      $CANONICAL_ENV_FILE"
 echo "    Target https:  $TARGET_HTTP_DIR"
@@ -75,12 +75,13 @@ render_file() {
   local dst="$2"
 
   if ! command -v envsubst >/dev/null 2>&1; then
-    echo "ERROR: envsubst not found on PATH."
-    echo "Install gettext (envsubst) or add a renderer fallback."
-    exit 1
+    echo "ERROR: envsubst not found on PATH." >&2
+    echo "Install gettext (envsubst) or add a renderer fallback." >&2
+    return 1
   fi
 
   envsubst < "$src" > "$dst"
+  return 0
 }
 
 ########################################
@@ -89,7 +90,7 @@ render_file() {
 DEPLOY_ROOT="$(pwd)"
 TEMP_DIR="$DEPLOY_ROOT/$TAG"
 
-if [ -d "$TEMP_DIR" ]; then
+if [[ -d "$TEMP_DIR" ]]; then
   echo "==> Removing existing temp dir: $TEMP_DIR"
   rm -rf "$TEMP_DIR"
 fi
@@ -107,9 +108,9 @@ git -C "$TEMP_DIR" checkout "$TAG"
 # 3) Validate expected files/folders
 ########################################
 COMPOSE_FILE="$TEMP_DIR/server/deploy/docker-compose.yml"
-if [ ! -f "$COMPOSE_FILE" ] || [ ! -s "$COMPOSE_FILE" ]; then
-  echo "ERROR: docker-compose.yml not found or empty at:"
-  echo "  $COMPOSE_FILE"
+if [[ ! -f "$COMPOSE_FILE" || ! -s "$COMPOSE_FILE" ]]; then
+  echo "ERROR: docker-compose.yml not found or empty at:" >&2
+  echo "  $COMPOSE_FILE" >&2
   rm -rf "$TEMP_DIR"
   exit 1
 fi
@@ -117,16 +118,16 @@ fi
 SOURCE_HTTP_TPL_DIR="$TEMP_DIR/server/deploy/nginx/https"
 SOURCE_SNIPPETS_TPL_DIR="$TEMP_DIR/server/deploy/nginx/snippets"
 
-if [ ! -d "$SOURCE_HTTP_TPL_DIR" ]; then
-  echo "ERROR: nginx template folder not found:"
-  echo "  $SOURCE_HTTP_TPL_DIR"
+if [[ ! -d "$SOURCE_HTTP_TPL_DIR" ]]; then
+  echo "ERROR: nginx template folder not found:" >&2
+  echo "  $SOURCE_HTTP_TPL_DIR" >&2
   rm -rf "$TEMP_DIR"
   exit 1
 fi
 
-if [ ! -d "$SOURCE_SNIPPETS_TPL_DIR" ]; then
-  echo "ERROR: nginx snippets template folder not found:"
-  echo "  $SOURCE_SNIPPETS_TPL_DIR"
+if [[ ! -d "$SOURCE_SNIPPETS_TPL_DIR" ]]; then
+  echo "ERROR: nginx snippets template folder not found:" >&2
+  echo "  $SOURCE_SNIPPETS_TPL_DIR" >&2
   rm -rf "$TEMP_DIR"
   exit 1
 fi
@@ -140,8 +141,6 @@ cp "$CANONICAL_ENV_FILE" "$TEMP_ENV_FILE"
 
 ########################################
 # 5) Render nginx templates
-#    - only overwrites files present in the tag
-#    - does NOT delete unrelated configs
 ########################################
 RENDER_DIR="$TEMP_DIR/.rendered-nginx"
 RENDER_HTTP_DIR="$RENDER_DIR/https"
@@ -170,7 +169,7 @@ shopt -u nullglob
 
 echo "==> Installing rendered http-scope configs (only overwriting tag files):"
 for file in "$RENDER_HTTP_DIR"/*.conf; do
-  [ -e "$file" ] || continue
+  [[ -e "$file" ]] || continue
   base=$(basename "$file")
   echo "    -> $TARGET_HTTP_DIR/$base"
   cp "$file" "$TARGET_HTTP_DIR/$base"
@@ -178,7 +177,7 @@ done
 
 echo "==> Installing rendered snippets (only overwriting tag files):"
 for file in "$RENDER_SNIPPETS_DIR"/*.conf; do
-  [ -e "$file" ] || continue
+  [[ -e "$file" ]] || continue
   base=$(basename "$file")
   echo "    -> $TARGET_SNIPPETS_DIR/$base"
   cp "$file" "$TARGET_SNIPPETS_DIR/$base"
@@ -188,8 +187,8 @@ done
 # 6) Ensure docker network exists
 ########################################
 if ! docker network inspect nuc-network >/dev/null 2>&1; then
-  echo "WARNING: Docker network 'nuc-network' not found."
-  echo "If this is your first run, bring up the nuc env once so the network exists."
+  echo "WARNING: Docker network 'nuc-network' not found." >&2
+  echo "If this is your first run, bring up the env once so the network exists." >&2
 fi
 
 ########################################
