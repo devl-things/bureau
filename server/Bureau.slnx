@@ -3,11 +3,29 @@
     <Project Path="src/Bureau.Primitives/Bureau.Primitives.csproj" Id="9797915e-e401-4e8b-9151-4fbe6f8383a7" />
     <Project Path="src/Niles.Chores.Abstractions/Niles.Chores.Abstractions.csproj" />
     <Project Path="src/Niles.Chores/Niles.Chores.csproj" />
+    <Project Path="src/Sven.Abstractions/Sven.Abstractions.csproj">
+      <Build Solution="Debug|*" Project="false" />
+    </Project>
   </Folder>
-  <Folder Name="/Infrastructure/" />
+  <Folder Name="/Infrastructure/">
+    <Project Path="src/Sven.Data.Postgres/Sven.Data.Postgres.csproj">
+      <Build Solution="Debug|*" Project="false" />
+    </Project>
+    <Project Path="src/Sven.Data.SqlServer/Sven.Data.SqlServer.csproj">
+      <Build Solution="Debug|*" Project="false" />
+    </Project>
+    <Project Path="src/Sven.Data/Sven.Data.csproj">
+      <Build Solution="Debug|*" Project="false" />
+    </Project>
+  </Folder>
   <Folder Name="/Presentation/">
     <Project Path="src/Niles.Chores.Api/Niles.Chores.Api.csproj" />
     <Project Path="src/Niles.Chores.Web/Niles.Chores.Web.csproj" />
+    <Project Path="src/Sven/Sven.csproj">
+      <Build Solution="Debug|*" Project="false" />
+    </Project>
   </Folder>
-  <Folder Name="/Tests/" />
+  <Folder Name="/Tests/">
+    <Project Path="tests/Sven.Tests/Sven.Tests.csproj" />
+  </Folder>
 </Solution>
