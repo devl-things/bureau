@@ -1,11 +1,13 @@
 <Solution>
   <Folder Name="/Core/">
+    <Project Path="src/Bureau.Extensions.Logging/Bureau.Extensions.Logging.csproj" Id="b4460ee3-f6ed-4e4f-9bbf-be18942cb002" />
     <Project Path="src/Bureau.Primitives/Bureau.Primitives.csproj" Id="9797915e-e401-4e8b-9151-4fbe6f8383a7" />
     <Project Path="src/Niles.Chores.Abstractions/Niles.Chores.Abstractions.csproj" />
     <Project Path="src/Niles.Chores/Niles.Chores.csproj" />
   </Folder>
   <Folder Name="/Infrastructure/" />
   <Folder Name="/Presentation/">
+    <Project Path="src/Bureau.AspNetCore/Bureau.AspNetCore.csproj" Id="b6f299e3-2de1-4306-8e7e-301c1c0621e1" />
     <Project Path="src/Niles.Chores.Api/Niles.Chores.Api.csproj" />
     <Project Path="src/Niles.Chores.Web/Niles.Chores.Web.csproj" />
   </Folder>
