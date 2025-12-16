@@ -3,11 +3,15 @@
     <Project Path="src/Bureau.Primitives/Bureau.Primitives.csproj" Id="9797915e-e401-4e8b-9151-4fbe6f8383a7" />
     <Project Path="src/Niles.Chores.Abstractions/Niles.Chores.Abstractions.csproj" />
     <Project Path="src/Niles.Chores/Niles.Chores.csproj" />
+    <Project Path="src/Watson.Items/Watson.Items.csproj" Id="c58caa5d-063e-41d7-8846-efd863ac5bd3" />
   </Folder>
-  <Folder Name="/Infrastructure/" />
+  <Folder Name="/Infrastructure/">
+    <Project Path="src/Watson.Items.Ingest/Watson.Items.Ingest.csproj" Id="b0ac60f2-7fb4-4c37-b6af-b815f24c34c9" />
+  </Folder>
   <Folder Name="/Presentation/">
     <Project Path="src/Niles.Chores.Api/Niles.Chores.Api.csproj" />
     <Project Path="src/Niles.Chores.Web/Niles.Chores.Web.csproj" />
+    <Project Path="src/Watson.Items.Ingest.Api/Watson.Items.Ingest.Api.csproj" Id="8b47c0b7-01a6-4db1-abc0-5edefa6a846d" />
   </Folder>
   <Folder Name="/Tests/" />
 </Solution>
