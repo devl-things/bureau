@@ -6,5 +6,9 @@
         {
             public const string UnexpectedError = "system.unexpected_error";
         }
+        public static class Operation
+        {
+            public const string Failed = "operation.failed";
+        }
     }
 }

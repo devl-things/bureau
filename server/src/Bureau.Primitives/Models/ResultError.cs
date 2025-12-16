@@ -47,7 +47,7 @@ namespace Bureau
 
         public ResultError(string errorMessage)
         {
-            Code = ProblemCodes.System.UnexpectedError;
+            Code = ProblemCodes.Operation.Failed;
             ErrorMessage = errorMessage;
         }
 
@@ -64,10 +64,18 @@ namespace Bureau
         }
         public ResultError(ResultError error, string message)
         {
-            Code = ProblemCodes.System.UnexpectedError;
+            Code = error.Code;
             ErrorMessage = message;
             LogMessage = string.Join(";", error.ErrorMessage, error.LogMessage);
             Exception = error.Exception;
+        }
+
+        public ResultError(string code, string errorMessage, Exception exception, string logMessage)
+        {
+            Code = code;
+            ErrorMessage = errorMessage;
+            LogMessage = logMessage;
+            Exception = exception;
         }
 
         public override string ToString()
