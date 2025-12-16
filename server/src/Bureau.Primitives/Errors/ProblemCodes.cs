@@ -5,6 +5,7 @@
         public static class Operation
         {
             public const string Failed = "operation.failed";
+            public const string UnexpectedError = "operation.unexpected_error";
         }
         public static class Request
         {
