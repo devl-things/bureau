@@ -6,9 +6,5 @@ namespace Bureau.Server.Contracts
     {
         [JsonPropertyName("data")]
         public required T Data { get; init; }
-        public BureauResponse(T data)
-        {
-            Data = data;
-        }
     }
 }

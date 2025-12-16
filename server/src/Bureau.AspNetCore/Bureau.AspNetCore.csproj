@@ -13,5 +13,6 @@
   <ItemGroup>
     <ProjectReference Include="..\Bureau.Extensions.Logging\Bureau.Extensions.Logging.csproj" />
     <ProjectReference Include="..\Bureau.Primitives\Bureau.Primitives.csproj" />
+    <ProjectReference Include="..\Bureau.Server.Contracts\Bureau.Server.Contracts.csproj" />
   </ItemGroup>
 </Project>
