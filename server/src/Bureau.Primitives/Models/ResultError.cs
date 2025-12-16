@@ -28,6 +28,12 @@
         public ResultError(Exception exception) : this(exception.Message, exception)
         {
         }
+        public ResultError(ResultError error, string message)
+        {
+            ErrorMessage = message;
+            LogMessage = string.Join(";", error.ErrorMessage, error.LogMessage);
+            Exception = error.Exception;
+        }
 
         public override string ToString()
         {
