@@ -26,6 +26,8 @@
     </Project>
   </Folder>
   <Folder Name="/Tests/">
-    <Project Path="tests/Sven.Tests/Sven.Tests.csproj" />
+    <Project Path="tests/Sven.Tests/Sven.Tests.csproj">
+      <Build Solution="Debug|*" Project="false" />
+    </Project>
   </Folder>
 </Solution>
