@@ -10,18 +10,15 @@ namespace Bureau.AspNetCore.Middleware
 {
     public sealed class ApiExceptionHandlingMiddleware
     {
-        private static readonly JsonSerializerOptions JsonOptions = new JsonSerializerOptions
-        {
-            PropertyNamingPolicy = JsonNamingPolicy.CamelCase
-        };
-
         private readonly RequestDelegate _next;
         private readonly ILogger<ApiExceptionHandlingMiddleware> _logger;
+        private readonly JsonSerializerOptions _json;
 
-        public ApiExceptionHandlingMiddleware(RequestDelegate next, ILogger<ApiExceptionHandlingMiddleware> logger)
+        public ApiExceptionHandlingMiddleware(RequestDelegate next, ILogger<ApiExceptionHandlingMiddleware> logger, JsonSerializerOptions json)
         {
             _next = next;
             _logger = logger;
+            _json = json;
         }
 
         public async Task Invoke(HttpContext context)
@@ -58,14 +55,10 @@ namespace Bureau.AspNetCore.Middleware
                 ProblemDetails problemDetails = ProblemDetailsFactory.Create(context, traceId);
 
                 context.Response.Clear();
-                context.Response.StatusCode = StatusCodes.Status500InternalServerError;
+                context.Response.StatusCode = problemDetails.Status ?? StatusCodes.Status500InternalServerError;
                 context.Response.ContentType = "application/problem+json";
 
-                await JsonSerializer.SerializeAsync(
-                    context.Response.Body,
-                    problemDetails,
-                    JsonOptions,
-                    context.RequestAborted);
+                await JsonSerializer.SerializeAsync(context.Response.Body, problemDetails, _json, context.RequestAborted);
             }
         }
     }

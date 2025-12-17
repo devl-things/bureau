@@ -8,16 +8,18 @@ namespace Bureau.AspNetCore.Problems
     {
         public static ProblemDetails Create(HttpContext context, string traceId)
         {
+            string code = ProblemCodes.System.UnexpectedError;
+            ProblemCodeDefinition pcDefinition = ProblemCodeDefinitionResolver.Resolve(code);
             ProblemDetails problemDetails = new ProblemDetails
             {
-                Status = StatusCodes.Status500InternalServerError,
-                Title = ProblemDetailsTitleResolver.Resolve(StatusCodes.Status500InternalServerError),
+                Status = pcDefinition.StatusCode,
+                Title = pcDefinition.Title,
                 Detail = null,
-                Type = ProblemDetailsTypeResolver.Resolve(ProblemCodes.System.UnexpectedError),
+                Type = ProblemDetailsTypeResolver.Resolve(code),
                 Instance = context.Request.Path
             };
 
-            problemDetails.Extensions[ProblemDetailsExtensionNames.Code] = ProblemCodes.System.UnexpectedError;
+            problemDetails.Extensions[ProblemDetailsExtensionNames.Code] = code;
             problemDetails.Extensions[ProblemDetailsExtensionNames.TraceId] = traceId;
 
             return problemDetails;

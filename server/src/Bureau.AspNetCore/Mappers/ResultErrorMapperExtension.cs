@@ -7,14 +7,14 @@ namespace Bureau.AspNetCore.Mappers
 {
     public static class ResultErrorMapperExtension
     {
-        public static ProblemDetails ToProblemDetails(this ResultError error, HttpContext httpContext, int statusCode)
+        public static ProblemDetails ToProblemDetails(this ResultError error, HttpContext httpContext)
         {
             string traceId = TraceIdAccessor.GetTraceId(httpContext);
-
+            ProblemCodeDefinition pcDefinition = ProblemCodeDefinitionResolver.Resolve(error.Code);
             ProblemDetails problemDetails = new ProblemDetails
             {
-                Status = statusCode,
-                Title = ProblemDetailsTitleResolver.Resolve(error.Code),
+                Status = pcDefinition.StatusCode,
+                Title = pcDefinition.Title,
                 Detail = error.ErrorMessage,
                 Instance = httpContext.Request.Path,
                 Type = ProblemDetailsTypeResolver.Resolve(error.Code)
@@ -23,6 +23,12 @@ namespace Bureau.AspNetCore.Mappers
             problemDetails.Extensions[ProblemDetailsExtensionNames.Code] = error.Code;
             problemDetails.Extensions[ProblemDetailsExtensionNames.TraceId] = traceId;
 
+            return problemDetails;
+        }
+        public static ProblemDetails ToProblemDetails(this ResultError error, HttpContext httpContext, int statusCode)
+        {
+            ProblemDetails problemDetails = error.ToProblemDetails(httpContext);
+            problemDetails.Status = statusCode;
             return problemDetails;
         }
     }

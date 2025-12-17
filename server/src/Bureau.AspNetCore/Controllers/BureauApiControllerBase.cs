@@ -22,7 +22,14 @@ namespace Bureau.AspNetCore.Controllers
         {
             return StatusCode(StatusCodes.Status400BadRequest, ValidationProblemDetailsFactory.Create(HttpContext, modelState));
         }
-        protected IActionResult ProblemDetailsResponse(int statusCode, ResultError error)
+        protected IActionResult ProblemDetailsResponse(ResultError error)
+        {
+            _logger.LogResultError(error, HttpContext);
+            ProblemDetails problem = error.ToProblemDetails(HttpContext);
+            int statusCode = problem.Status ?? StatusCodes.Status500InternalServerError;
+            return StatusCode(statusCode, problem);
+        }
+        protected IActionResult ProblemDetailsResponse(ResultError error, int statusCode)
         {
             _logger.LogResultError(error, HttpContext);
             return StatusCode(statusCode, error.ToProblemDetails(HttpContext, statusCode));

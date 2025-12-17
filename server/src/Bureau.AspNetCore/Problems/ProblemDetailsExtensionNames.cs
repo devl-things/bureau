@@ -1,4 +1,4 @@
-﻿namespace Bureau.AspNetCore
+﻿namespace Bureau.AspNetCore.Problems
 {
     public static class ProblemDetailsExtensionNames
     {
