@@ -1,6 +1,4 @@
-﻿using Bureau.Primitives.Errors;
-
-namespace Bureau
+﻿namespace Bureau
 {
     public readonly struct ResultError
     {
@@ -45,32 +43,7 @@ namespace Bureau
         public string? LogMessage { get; }
         public Exception? Exception { get; }
 
-        public ResultError(string errorMessage)
-        {
-            Code = ProblemCodes.Operation.Failed;
-            ErrorMessage = errorMessage;
-        }
-
-        public ResultError(string errorMessage, string logMessage) : this(errorMessage)
-        {
-            LogMessage = logMessage;
-        }
-        public ResultError(string errorMessage, Exception exception) : this(errorMessage)
-        {
-            Exception = exception;
-        }
-        public ResultError(Exception exception) : this(exception.Message, exception)
-        {
-        }
-        public ResultError(ResultError error, string message)
-        {
-            Code = error.Code;
-            ErrorMessage = message;
-            LogMessage = string.Join(";", error.ErrorMessage, error.LogMessage);
-            Exception = error.Exception;
-        }
-
-        public ResultError(string code, string errorMessage, Exception exception, string logMessage)
+        private ResultError(string code, string errorMessage, Exception exception, string logMessage)
         {
             Code = code;
             ErrorMessage = errorMessage;
@@ -78,9 +51,44 @@ namespace Bureau
             Exception = exception;
         }
 
+        public static ResultError From(ResultError error, string errorMessage)
+        {
+            return new ResultError(error.Code, errorMessage, error.Exception!, string.Join(";", error.ErrorMessage, error.LogMessage));
+        }
+
+        public static ResultError From(string code)
+        {
+            return new ResultError(code, null!, null!, null!);
+        }
+
+        public static ResultError From(string code, string errorMessage)
+        {
+            return new ResultError(code, errorMessage, null!, null!);
+        }
+        public static ResultError From(string code, string errorMessage, Exception exception)
+        {
+            return new ResultError(code, errorMessage, exception, null!);
+        }
+        public static ResultError From(string code, Exception exception)
+        {
+            return new ResultError(code, null!, exception, null!);
+        }
+        public static ResultError From(string code, Exception exception, string logMessage)
+        {
+            return new ResultError(code, null!, exception, logMessage);
+        }
+        public static ResultError From(string code, string errorMessage, string logMessage)
+        {
+            return new ResultError(code, errorMessage, null!, logMessage);
+        }
+        public static ResultError FromLogMessage(string code, string logMessage)
+        {
+            return new ResultError(code, null!, null!, logMessage);
+        }
+
         public override string ToString()
         {
-            return $"{ErrorMessage}{(LogMessage != null ? $"{Environment.NewLine}{LogMessage}" : string.Empty)}{(Exception != null ? $"{Environment.NewLine}{Exception.ToString()}" : string.Empty)}";
+            return $"{Code} - {ErrorMessage}{(LogMessage != null ? $"{Environment.NewLine}{LogMessage}" : string.Empty)}{(Exception != null ? $"{Environment.NewLine}{Exception.ToString()}" : string.Empty)}";
         }
     }
 }
