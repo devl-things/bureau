@@ -32,34 +32,40 @@ namespace Niles.Chores.Data
             _context.Chores.RemoveRange(await _context.Chores.ToListAsync(cancellationToken));
 
             await _context.SaveChangesAsync(cancellationToken);
-            _logger.Info("Existing data cleared.");
+            _logger.Info("Seeding - Existing data cleared.");
 
-            return await SeedTestAsync(cancellationToken);
+            Result<SeedOutcome> result = await SeedTestAsync(cancellationToken);
+            if (result.IsError)
+            {
+                return result.Error;
+            }
+
+            return true;
         }
 
-        public Result SeedTest()
+        public Result<SeedOutcome> SeedTest()
         {
             return SeedTestAsync().GetAwaiter().GetResult();
         }
 
-        public async Task<Result> SeedChoresAsync(CancellationToken cancellationToken = default)
+        public async Task<Result<SeedOutcome>> SeedChoresAsync(CancellationToken cancellationToken = default)
         {
             if (await _context.Chores.AnyAsync(cancellationToken))
             {
-                _logger.LogWarning(DatabaseAlreadyFullMessage);
-                return DatabaseAlreadyFullMessage;
+                _logger.Info(DatabaseAlreadyFullMessage);
+                return SeedOutcome.AlreadySeeded;
             }
             await CreateChoresAsync(cancellationToken);
-            return true;
+            return SeedOutcome.Seeded;
         }
 
-        public async Task<Result> SeedTestAsync(CancellationToken cancellationToken = default)
+        public async Task<Result<SeedOutcome>> SeedTestAsync(CancellationToken cancellationToken = default)
         {
             // Check if data already exists
             if (await _context.Chores.AnyAsync(cancellationToken))
             {
                 _logger.LogWarning(DatabaseAlreadyFullMessage);
-                return DatabaseAlreadyFullMessage;
+                return SeedOutcome.AlreadySeeded;
             }
 
             DateTimeOffset now = _timeProvider.GetUtcNow();
@@ -169,7 +175,7 @@ namespace Niles.Chores.Data
             await _context.SaveChangesAsync(cancellationToken);
             _logger.Info("Created: {0} chores; {1} housekeeping records; {2} completed chore records; {3} critical chore records.",
                 chores.Count.ToString(), housekeepingRecords.Count.ToString(), completedChores.Count.ToString(), criticalChores.Count.ToString());
-            return true;
+            return SeedOutcome.Seeded;
         }
 
         private async Task<List<ChoreDb>> CreateChoresAsync(CancellationToken cancellationToken = default)

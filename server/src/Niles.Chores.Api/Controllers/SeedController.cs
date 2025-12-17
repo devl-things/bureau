@@ -15,33 +15,30 @@ namespace Niles.Chores.Api.Controllers
             _seeder = seeder;
         }
 
-        // POST api/seed
         [HttpPost]
         public async Task<IActionResult> SeedAsync(CancellationToken cancellationToken)
         {
-            Result seedResult = await _seeder.SeedChoresAsync(cancellationToken);
+            Result<SeedOutcome> seedResult = await _seeder.SeedChoresAsync(cancellationToken);
 
             if (seedResult.IsError)
             {
                 return ProblemDetailsResponse(StatusCodes.Status400BadRequest, seedResult.Error);
             }
-            return Ok();
+            return Ok(new { data = seedResult.Value.ToString() });
         }
 
-        // POST api/seed/test
         [HttpPost("test")]
         public async Task<IActionResult> SeedTestAsync(CancellationToken cancellationToken)
         {
-            Result seedResult = await _seeder.SeedTestAsync(cancellationToken);
+            Result<SeedOutcome> seedResult = await _seeder.SeedTestAsync(cancellationToken);
 
             if (seedResult.IsError)
             {
                 return ProblemDetailsResponse(StatusCodes.Status400BadRequest, seedResult.Error);
             }
-            return Ok();
+            return Ok(new { data = seedResult.Value.ToString() });
         }
 
-        // POST api/seed/test/clear
         [HttpPost("test/clear")]
         public async Task<IActionResult> ClearAndSeedAsync(CancellationToken cancellationToken)
         {

@@ -18,9 +18,9 @@ namespace Niles.Chores.Configurations
                 ChoresContext db = scope.ServiceProvider.GetRequiredService<ChoresContext>();
                 try
                 {
-                    logger.LogInformation("Applying database migrations...");
+                    logger.Info("Applying database migrations...");
                     db.Database.Migrate();
-                    logger.LogInformation("Database migrations applied successfully.");
+                    logger.Info("Database migrations applied successfully.");
                 }
                 catch (Exception ex)
                 {
@@ -37,17 +37,20 @@ namespace Niles.Chores.Configurations
                 IChoresSeeder seeder = scope.ServiceProvider.GetRequiredService<IChoresSeeder>();
                 try
                 {
-                    Result seedResult = seeder.SeedTest();
+                    Result<SeedOutcome> seedResult = seeder.SeedTest();
                     if (seedResult.IsError)
                     {
                         logger.LogResultError(seedResult.Error);
                     }
+                    else
+                    {
+                        logger.Info($"Seeding over - {seedResult.Value}");
+                    }
                 }
                 catch (Exception ex)
                 {
-                    logger.LogCritical(ex, "Error applying database migrations.");
+                    logger.LogCritical(ex, "Error seeding database.");
                 }
-
             }
         }
     }
