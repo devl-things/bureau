@@ -17,8 +17,6 @@
         public static implicit operator Result(bool data) { return new Result(data, default); }
 
         public static implicit operator Result(ResultError error) { return new Result(error); }
-        public static implicit operator Result(string errorMessage) { return new Result(new ResultError(errorMessage)); }
-        public static implicit operator Result(Exception exception) { return new Result(new ResultError(exception)); }
     }
     public readonly struct Result<T>
     {
@@ -39,7 +37,5 @@
         public static implicit operator Result<T>(T successData) { return new Result<T>(successData); }
 
         public static implicit operator Result<T>(ResultError error) { return new Result<T>(error); }
-        public static implicit operator Result<T>(string errorMessage) { return new Result<T>(new ResultError(errorMessage)); }
-        public static implicit operator Result<T>(Exception exception) { return new Result<T>(new ResultError(exception)); }
     }
 }
