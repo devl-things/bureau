@@ -16,7 +16,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Bureau.AspNetCore\Bureau.AspNetCore.csproj" />
-    <ProjectReference Include="..\Bureau.Server.Contracts\Bureau.Server.Contracts.csproj" />
     <ProjectReference Include="..\Niles.Chores\Niles.Chores.csproj" />
   </ItemGroup>
 

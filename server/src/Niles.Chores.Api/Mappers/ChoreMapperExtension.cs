@@ -25,10 +25,9 @@ namespace Niles.Chores.Api.Mappers
         public static Result<Chore> ToResultModel(this ChoreDto dto)
         {
             Chore model = new Chore();
-            // parse type
             if (!Enum.TryParse<ChoreType>(dto.Type, ignoreCase: true, out ChoreType type))
             {
-                return new ResultError(ProblemCodes.Validation.Failed, $"Invalid type.", null!, $"Received {dto.Type}, expected one of: {string.Join(", ", Enum.GetNames<ChoreType>())}.");
+                return ResultError.From(ProblemCodes.Validation.InvalidEnumValue, $"Invalid type.", $"Received {dto.Type}, expected one of: {string.Join(", ", Enum.GetNames<ChoreType>())}.");
             }
             model.Type = type;
 

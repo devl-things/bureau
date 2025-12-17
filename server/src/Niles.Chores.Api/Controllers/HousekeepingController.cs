@@ -1,5 +1,6 @@
 ﻿using Bureau;
 using Bureau.AspNetCore.Controllers;
+using Bureau.Primitives.Errors;
 using Bureau.Server.Contracts.Mappers;
 using Microsoft.AspNetCore.Mvc;
 using Niles.Chores.Api.Dtos;
@@ -40,13 +41,13 @@ namespace Niles.Chores.Api.Controllers
             Result<int> idResult = EntityIdParser.ParseEntityId(id);
             if (idResult.IsError)
             {
-                return ProblemDetailsResponse(StatusCodes.Status400BadRequest, idResult.Error);
+                return ProblemDetailsResponse(idResult.Error);
             }
 
             Result<Housekeeping> result = await _housekeepingService.GetHousekeepingAsync(idResult.Value, cancellationToken);
             if (result.IsError)
             {
-                return ProblemDetailsResponse(StatusCodes.Status404NotFound, result.Error);
+                return ProblemDetailsResponse(result.Error);
             }
             // TODO Bureau.Server.Contracts BureauResponse this also changes on the frontend! so new issue
             HousekeepingDto dto = result.Value.ToDto(IdObfuscator.Encode);
@@ -61,7 +62,7 @@ namespace Niles.Chores.Api.Controllers
             {
                 return BadRequest(ModelState);
             }
-
+            //TODO adjust these returns
             if (!ChoresDateParser.TryParseDateTime(dto.Date, out DateTimeOffset dateTime))
             {
                 return BadRequest(new { error = "Invalid date format." });
@@ -101,8 +102,8 @@ namespace Niles.Chores.Api.Controllers
             }
 
             // Note: Critical chores are automatically marked as completed in HouseKeepingService.CreateHousekeepingAsync
-
-            return Ok(new { message = "Chores submitted successfully", id = result.Value!.Id.HasValue ? IdObfuscator.Encode(result.Value.Id.Value) : null });
+            // TODO Bureau.Server.Contracts BureauResponse this also changes on the frontend! so new issue
+            return Ok(new { message = "Chores submitted successfully", id = IdObfuscator.Encode(result.Value.Id) });
         }
 
         // POST api/housekeeping
@@ -117,23 +118,22 @@ namespace Niles.Chores.Api.Controllers
             Result<Housekeeping> modelResult = dto.ToResultModel();
             if (modelResult.IsError)
             {
-                return ProblemDetailsResponse(StatusCodes.Status400BadRequest, modelResult.Error);
+                return ProblemDetailsResponse(modelResult.Error);
             }
 
             Result<Housekeeping> result = await _housekeepingService.CreateHousekeepingAsync(modelResult.Value, cancellationToken);
             if (result.IsError)
             {
-                return ProblemDetailsResponse(StatusCodes.Status400BadRequest, result.Error);
+                return ProblemDetailsResponse(result.Error);
             }
 
-            string encodedId = result.Value!.Id.HasValue ? IdObfuscator.Encode(result.Value.Id.Value) : string.Empty;
             // TODO Bureau.Server.Contracts BureauResponse this also changes on the frontend! so new issue
-            return CreatedAtAction(nameof(GetByIdAsync), new { id = encodedId }, dto);
+            return CreatedAtAction(nameof(GetByIdAsync), new { id = IdObfuscator.Encode(result.Value.Id) }, dto);
         }
 
         // PUT api/housekeeping/{id}
         [HttpPut("{id}")]
-        public async Task<IActionResult> Put(string id, [FromBody] HousekeepingDto dto, CancellationToken cancellationToken)
+        public async Task<IActionResult> PutAsync(string id, [FromBody] HousekeepingDto dto, CancellationToken cancellationToken)
         {
             if (!ModelState.IsValid)
             {
@@ -142,46 +142,43 @@ namespace Niles.Chores.Api.Controllers
 
             if (dto.Id != null && dto.Id != id)
             {
-                //TODO deal with ResultError creating
-                return BadRequest(new { error = "Id in body does not match route id." });
+                return ProblemDetailsResponse(ResultError.From(ProblemCodes.Request.IdMismatch, "Id in body does not match route id."));
             }
 
             Result<int> idResult = EntityIdParser.ParseEntityId(id);
             if (idResult.IsError)
             {
-                return ProblemDetailsResponse(StatusCodes.Status400BadRequest, idResult.Error);
+                return ProblemDetailsResponse(idResult.Error);
             }
 
-            Result<Housekeeping> modelResult = dto.ToResultModel();
+            Result<Housekeeping> modelResult = dto.ToResultModel(idResult.Value);
             if (modelResult.IsError)
             {
-                return ProblemDetailsResponse(StatusCodes.Status400BadRequest, modelResult.Error);
+                return ProblemDetailsResponse(modelResult.Error);
             }
-            //TODO put this id in ToResultModel like chores
-            modelResult.Value.Id = idResult.Value;
 
             Result<Housekeeping> result = await _housekeepingService.UpdateHousekeepingAsync(modelResult.Value, cancellationToken);
             if (result.IsError)
             {
-                return ProblemDetailsResponse(StatusCodes.Status404NotFound, result.Error);
+                return ProblemDetailsResponse(result.Error);
             }
             return NoContent();
         }
 
         // DELETE api/housekeeping/{id}
         [HttpDelete("{id}")]
-        public async Task<IActionResult> Delete(string id, CancellationToken cancellationToken)
+        public async Task<IActionResult> DeleteAsync(string id, CancellationToken cancellationToken)
         {
             Result<int> idResult = EntityIdParser.ParseEntityId(id);
             if (idResult.IsError)
             {
-                return ProblemDetailsResponse(StatusCodes.Status400BadRequest, idResult.Error);
+                return ProblemDetailsResponse(idResult.Error);
             }
 
             Result result = await _housekeepingService.DeleteHousekeepingAsync(idResult.Value, cancellationToken);
             if (result.IsError)
             {
-                return ProblemDetailsResponse(StatusCodes.Status404NotFound, result.Error);
+                return ProblemDetailsResponse(result.Error);
             }
             return NoContent();
         }

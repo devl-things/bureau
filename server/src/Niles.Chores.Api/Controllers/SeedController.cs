@@ -22,7 +22,7 @@ namespace Niles.Chores.Api.Controllers
 
             if (seedResult.IsError)
             {
-                return ProblemDetailsResponse(StatusCodes.Status400BadRequest, seedResult.Error);
+                return ProblemDetailsResponse(seedResult.Error);
             }
             return Ok(new { data = seedResult.Value.ToString() });
         }
@@ -34,7 +34,7 @@ namespace Niles.Chores.Api.Controllers
 
             if (seedResult.IsError)
             {
-                return ProblemDetailsResponse(StatusCodes.Status400BadRequest, seedResult.Error);
+                return ProblemDetailsResponse(seedResult.Error);
             }
             return Ok(new { data = seedResult.Value.ToString() });
         }
@@ -45,7 +45,7 @@ namespace Niles.Chores.Api.Controllers
             Result seedResult = await _seeder.ClearAndSeedTestAsync(cancellationToken);
             if (seedResult.IsError)
             {
-                return ProblemDetailsResponse(StatusCodes.Status400BadRequest, seedResult.Error);
+                return ProblemDetailsResponse(seedResult.Error);
             }
             return Ok();
         }

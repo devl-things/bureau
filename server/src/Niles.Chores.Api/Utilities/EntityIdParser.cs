@@ -9,8 +9,7 @@ namespace Niles.Chores.Api.Utilities
         {
             if (!IdObfuscator.TryDecode(id, out int intId))
             {
-                ResultError error = new ResultError(ProblemCodes.Request.InvalidId, ErrorMessages.InvalidIdFormat, null!, string.Format("Id = {0} cannot be decoded", id));
-                return error;
+                return ResultError.FromLogMessage(ProblemCodes.Request.InvalidId, string.Format("Id = {0} cannot be decoded", id));
             }
             return intId;
         }

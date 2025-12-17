@@ -1,5 +1,6 @@
 ﻿using Bureau;
 using Bureau.AspNetCore.Controllers;
+using Bureau.Primitives.Errors;
 using Bureau.Server.Contracts.Mappers;
 using Microsoft.AspNetCore.Mvc;
 using Niles.Chores.Api.Dtos;
@@ -40,13 +41,13 @@ namespace Niles.Chores.Api.Controllers
             Result<int> idResult = EntityIdParser.ParseEntityId(id);
             if (idResult.IsError)
             {
-                return ProblemDetailsResponse(StatusCodes.Status400BadRequest, idResult.Error);
+                return ProblemDetailsResponse(idResult.Error);
             }
 
             Result<Chore> result = await _choreService.GetChoreAsync(idResult.Value, cancellationToken);
             if (result.IsError)
             {
-                return ProblemDetailsResponse(StatusCodes.Status404NotFound, result.Error);
+                return ProblemDetailsResponse(result.Error);
             }
             // TODO Bureau.Server.Contracts BureauResponse this also changes on the frontend! so new issue
             return Ok(result.Value.ToDto(IdObfuscator.Encode));
@@ -64,13 +65,13 @@ namespace Niles.Chores.Api.Controllers
             Result<Chore> modelResult = dto.ToResultModel();
             if (modelResult.IsError)
             {
-                return ProblemDetailsResponse(StatusCodes.Status400BadRequest, modelResult.Error);
+                return ProblemDetailsResponse(modelResult.Error);
             }
 
             Result<Chore> result = await _choreService.CreateChoreAsync(modelResult.Value!, cancellationToken);
             if (result.IsError)
             {
-                return ProblemDetailsResponse(StatusCodes.Status400BadRequest, result.Error);
+                return ProblemDetailsResponse(result.Error);
             }
 
             string encodedId = IdObfuscator.Encode(result.Value!.Id);
@@ -90,25 +91,24 @@ namespace Niles.Chores.Api.Controllers
 
             if (dto.Id != null && dto.Id != id)
             {
-                //TODO deal with ResultError creating
-                return BadRequest(new { error = "Id in body does not match route id." });
+                return ProblemDetailsResponse(ResultError.From(ProblemCodes.Request.IdMismatch, "Id in body does not match route id."));
             }
             Result<int> idResult = EntityIdParser.ParseEntityId(id);
             if (idResult.IsError)
             {
-                return ProblemDetailsResponse(StatusCodes.Status400BadRequest, idResult.Error);
+                return ProblemDetailsResponse(idResult.Error);
             }
 
             Result<Chore> modelResult = dto.ToResultModel(idResult.Value);
             if (modelResult.IsError)
             {
-                return ProblemDetailsResponse(StatusCodes.Status400BadRequest, modelResult.Error);
+                return ProblemDetailsResponse(modelResult.Error);
             }
 
             Result<Chore> result = await _choreService.UpdateChoreAsync(modelResult.Value!, cancellationToken);
             if (result.IsError)
             {
-                return ProblemDetailsResponse(StatusCodes.Status404NotFound, result.Error);
+                return ProblemDetailsResponse(result.Error);
             }
             return NoContent();
         }
@@ -120,13 +120,13 @@ namespace Niles.Chores.Api.Controllers
             Result<int> idResult = EntityIdParser.ParseEntityId(id);
             if (idResult.IsError)
             {
-                return ProblemDetailsResponse(StatusCodes.Status400BadRequest, idResult.Error);
+                return ProblemDetailsResponse(idResult.Error);
             }
 
             Result result = await _choreService.DeleteChoreAsync(idResult.Value, cancellationToken);
             if (result.IsError)
             {
-                return ProblemDetailsResponse(StatusCodes.Status404NotFound, result.Error);
+                return ProblemDetailsResponse(result.Error);
             }
             return NoContent();
         }

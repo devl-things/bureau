@@ -1,4 +1,5 @@
 ﻿using Bureau;
+using Bureau.Primitives.Errors;
 using Niles.Chores.Api.Dtos;
 
 namespace Niles.Chores.Api.Mappers
@@ -9,7 +10,7 @@ namespace Niles.Chores.Api.Mappers
         {
             return new HousekeepingDto
             {
-                Id = housekeeping.Id.HasValue ? idFormatter(housekeeping.Id.Value) : null,
+                Id = idFormatter(housekeeping.Id),
                 DateTime = housekeeping.DateTime.UtcDateTime,
                 Duration = housekeeping.Duration.ToString(),
                 Note = housekeeping.Note,
@@ -27,12 +28,11 @@ namespace Niles.Chores.Api.Mappers
             }
             catch (Exception ex)
             {
-                return $"Invalid datetime: {ex.Message}";
+                return ResultError.From(ProblemCodes.Validation.InvalidFormat, "Invalid datetime", ex);
             }
-            // parse duration
             if (!ChoresDateParser.TryParseDuration(dto.Duration, out TimeSpan duration))
             {
-                return "Duration should be set";
+                return ResultError.From(ProblemCodes.Validation.InvalidFormat, "Invalid duration", $"Duration malformed, passed value {dto.Duration}");
             }
             model.Duration = duration;
 
@@ -40,6 +40,17 @@ namespace Niles.Chores.Api.Mappers
             //TODO #82 this should be List<string>
             model.CompletedChoreIds = dto.CompletedChoreIds ?? new List<int>();
             return model;
+        }
+
+        public static Result<Housekeeping> ToResultModel(this HousekeepingDto dto, int id)
+        {
+            Result<Housekeeping> result = dto.ToResultModel();
+            if (result.IsError)
+            {
+                return result;
+            }
+            result.Value!.Id = id;
+            return result;
         }
     }
 }
