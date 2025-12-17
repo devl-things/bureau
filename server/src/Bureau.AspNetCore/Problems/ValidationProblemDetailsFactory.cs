@@ -10,34 +10,30 @@ namespace Bureau.AspNetCore.Problems
     {
         public static ValidationProblemDetails Create(HttpContext httpContext, ModelStateDictionary modelState)
         {
-            ValidationProblemDetails problem = new ValidationProblemDetails(modelState)
-            {
-                Status = StatusCodes.Status400BadRequest,
-                Title = ProblemDetailsTitleResolver.Resolve(StatusCodes.Status400BadRequest),
-                Instance = httpContext.Request.Path,
-                Type = ProblemDetailsTypeResolver.Resolve(ProblemCodes.Validation.Failed)
-            };
-
-            problem.Extensions[ProblemDetailsExtensionNames.Code] = ProblemCodes.Validation.Failed;
-            problem.Extensions[ProblemDetailsExtensionNames.TraceId] = TraceIdAccessor.GetTraceId(httpContext);
-
+            ValidationProblemDetails problem = new(modelState);
+            PopulateDefaults(problem, httpContext);
             return problem;
         }
 
         public static ValidationProblemDetails Create(HttpContext httpContext, IDictionary<string, string[]> errors)
         {
-            ValidationProblemDetails problem = new ValidationProblemDetails(errors)
-            {
-                Status = StatusCodes.Status400BadRequest,
-                Title = ProblemDetailsTitleResolver.Resolve(StatusCodes.Status400BadRequest),
-                Instance = httpContext.Request.Path,
-                Type = ProblemDetailsTypeResolver.Resolve(ProblemCodes.Validation.Failed)
-            };
-
-            problem.Extensions[ProblemDetailsExtensionNames.Code] = ProblemCodes.Validation.Failed;
-            problem.Extensions[ProblemDetailsExtensionNames.TraceId] = TraceIdAccessor.GetTraceId(httpContext);
-
+            ValidationProblemDetails problem = new(errors);
+            PopulateDefaults(problem, httpContext);
             return problem;
+        }
+
+        private static void PopulateDefaults(ValidationProblemDetails problem, HttpContext httpContext)
+        {
+            string code = ProblemCodes.Validation.Failed;
+            ProblemCodeDefinition pcDefinition = ProblemCodeDefinitionResolver.Resolve(code);
+
+            problem.Status = pcDefinition.StatusCode;
+            problem.Title = pcDefinition.Title;
+            problem.Instance = httpContext.Request.Path;
+            problem.Type = ProblemDetailsTypeResolver.Resolve(code);
+
+            problem.Extensions[ProblemDetailsExtensionNames.Code] = code;
+            problem.Extensions[ProblemDetailsExtensionNames.TraceId] = TraceIdAccessor.GetTraceId(httpContext);
         }
     }
 }
