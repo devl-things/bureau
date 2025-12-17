@@ -1,4 +1,5 @@
 ﻿using Bureau;
+using Bureau.Primitives.Errors;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
 using Niles.Chores.Contexts;
@@ -26,7 +27,8 @@ namespace Niles.Chores.Services
                 .Where(c => c.Id == id)
                 .SelectChoreWithCritical()
                 .FirstOrDefaultAsync(cancellationToken);
-            if (chore == null) return "Not found";
+            //TODO deal with this creation this is not good
+            if (chore == null) return new ResultError(ProblemCodes.Resource.NotFound, "Not found", null!, string.Format("Chore {0}, not found", id));
             return chore.ToChore();
         }
 
@@ -71,7 +73,7 @@ namespace Niles.Chores.Services
         {
             if (chore == null)
             {
-                return "Chore cannot be null";
+                return new ResultError(ProblemCodes.Operation.UnexpectedError, "Chore is null", null!, "This shouldn't happen, chore is null! Who called it?!");
             }
 
             DateTimeOffset now = _timeProvider.GetUtcNow();
@@ -96,13 +98,13 @@ namespace Niles.Chores.Services
         {
             if (chore == null || chore.Id == 0)
             {
-                return "Chore cannot be null and must have a valid Id";
+                return new ResultError(ProblemCodes.Operation.UnexpectedError, "Chore cannot be null and must have a valid Id", null!, "This shouldn't happen, chore is null! Who called it?!");
             }
 
             ChoreDb? choreDb = await _context.Chores.FindAsync(new object[] { chore.Id }, cancellationToken);
             if (choreDb == null)
             {
-                return $"Chore with Id {chore.Id} not found";
+                return new ResultError(ProblemCodes.Resource.NotFound, "Chore not found", null!, $"Chore with Id {chore.Id} not found");
             }
 
             choreDb.Title = chore.Title;
@@ -126,7 +128,7 @@ namespace Niles.Chores.Services
 
             if (rowsAffected == 0)
             {
-                return $"Chore with Id {id} not found";
+                return new ResultError(ProblemCodes.Resource.NotFound, "Chore not found", null!, $"Chore with Id {id} not found");
             }
 
             return true;

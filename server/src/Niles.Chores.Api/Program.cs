@@ -1,3 +1,5 @@
+using Bureau.AspNetCore.Logging;
+using Bureau.AspNetCore.Middleware;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Niles.Chores.Api.Utilities;
@@ -12,6 +14,8 @@ namespace Niles.Chores.Api
             // TODO #66 SEEDER_USAGE.md should be updated because that was changed
 
             WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
+
+            builder.Logging.AddBureauActivityTracking();
 
             // Add services to the container.
             builder.Services.AddChores(builder.Configuration.GetConnectionString("NilesDb")!);
@@ -53,6 +57,8 @@ namespace Niles.Chores.Api
 
                 app.UseCors();
             }
+
+            app.UseMiddleware<ApiExceptionHandlingMiddleware>();
 
             app.UseAuthorization();
 

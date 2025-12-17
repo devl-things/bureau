@@ -1,4 +1,5 @@
 using Bureau;
+using Bureau.Primitives.Errors;
 using Niles.Chores.Api.Dtos;
 
 namespace Niles.Chores.Api.Mappers
@@ -27,7 +28,7 @@ namespace Niles.Chores.Api.Mappers
             // parse type
             if (!Enum.TryParse<ChoreType>(dto.Type, ignoreCase: true, out ChoreType type))
             {
-                return $"Invalid type. Expected one of: {string.Join(", ", Enum.GetNames<ChoreType>())}.";
+                return new ResultError(ProblemCodes.Validation.Failed, $"Invalid type.", null!, $"Received {dto.Type}, expected one of: {string.Join(", ", Enum.GetNames<ChoreType>())}.");
             }
             model.Type = type;
 
@@ -39,7 +40,7 @@ namespace Niles.Chores.Api.Mappers
         public static Result<Chore> ToResultModel(this ChoreDto dto, int id)
         {
             Result<Chore> result = dto.ToResultModel();
-            if (!result.IsSuccess)
+            if (result.IsError)
             {
                 return result;
             }

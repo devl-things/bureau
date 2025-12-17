@@ -1,4 +1,6 @@
 ﻿using Bureau;
+using Bureau.AspNetCore.Controllers;
+using Bureau.Server.Contracts.Mappers;
 using Microsoft.AspNetCore.Mvc;
 using Niles.Chores.Api.Dtos;
 using Niles.Chores.Api.Factories;
@@ -10,11 +12,11 @@ namespace Niles.Chores.Api.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class ChoresController : ControllerBase
+    public class ChoresController : BureauApiControllerBase
     {
         private readonly IChoreService _choreService;
 
-        public ChoresController(IChoreService choreService)
+        public ChoresController(ILogger<ChoresController> logger, IChoreService choreService) : base(logger)
         {
             _choreService = choreService;
         }
@@ -35,15 +37,18 @@ namespace Niles.Chores.Api.Controllers
         [HttpGet("{id}")]
         public async Task<IActionResult> GetByIdAsync(string id, CancellationToken cancellationToken)
         {
-            if (!IdObfuscator.TryDecode(id, out int intId))
+            Result<int> idResult = EntityIdParser.ParseEntityId(id);
+            if (idResult.IsError)
             {
-                return BadRequest(new { error = ErrorMessages.InvalidIdFormat });
+                return ProblemDetailsResponse(StatusCodes.Status400BadRequest, idResult.Error);
             }
-            Result<Chore> result = await _choreService.GetChoreAsync(intId, cancellationToken);
+
+            Result<Chore> result = await _choreService.GetChoreAsync(idResult.Value, cancellationToken);
             if (result.IsError)
             {
-                return NotFound();
+                return ProblemDetailsResponse(StatusCodes.Status404NotFound, result.Error);
             }
+            // TODO Bureau.Server.Contracts BureauResponse this also changes on the frontend! so new issue
             return Ok(result.Value.ToDto(IdObfuscator.Encode));
         }
 
@@ -53,24 +58,25 @@ namespace Niles.Chores.Api.Controllers
         {
             if (!ModelState.IsValid)
             {
-                return BadRequest(ModelState);
+                return ProblemDetailsResponse(ModelState);
             }
 
-            Result<Chore> resultModel = dto.ToResultModel();
-            if (resultModel.IsError)
+            Result<Chore> modelResult = dto.ToResultModel();
+            if (modelResult.IsError)
             {
-                return BadRequest(new { error = resultModel.Error.ErrorMessage });
+                return ProblemDetailsResponse(StatusCodes.Status400BadRequest, modelResult.Error);
             }
 
-            Result<Chore> result = await _choreService.CreateChoreAsync(resultModel.Value!, cancellationToken);
+            Result<Chore> result = await _choreService.CreateChoreAsync(modelResult.Value!, cancellationToken);
             if (result.IsError)
             {
-                return StatusCode(StatusCodes.Status500InternalServerError, new { error = result.Error.ErrorMessage ?? "Failed to create chore." });
+                return ProblemDetailsResponse(StatusCodes.Status400BadRequest, result.Error);
             }
 
             string encodedId = IdObfuscator.Encode(result.Value!.Id);
             dto.Id = encodedId;
-            return CreatedAtAction(nameof(GetAsync), new { id = encodedId }, dto);
+            // TODO Bureau.Server.Contracts BureauResponse this also changes on the frontend! so new issue
+            return CreatedAtAction(nameof(GetByIdAsync), new { id = encodedId }, dto);
         }
 
         // PUT api/chores/{id}
@@ -79,33 +85,30 @@ namespace Niles.Chores.Api.Controllers
         {
             if (!ModelState.IsValid)
             {
-                return BadRequest(ModelState);
+                return ProblemDetailsResponse(ModelState);
             }
 
             if (dto.Id != null && dto.Id != id)
             {
+                //TODO deal with ResultError creating
                 return BadRequest(new { error = "Id in body does not match route id." });
             }
-            if (!IdObfuscator.TryDecode(id, out int intId))
+            Result<int> idResult = EntityIdParser.ParseEntityId(id);
+            if (idResult.IsError)
             {
-                return BadRequest(new { error = ErrorMessages.InvalidIdFormat });
+                return ProblemDetailsResponse(StatusCodes.Status400BadRequest, idResult.Error);
             }
 
-            Result<Chore> modelResult = dto.ToResultModel(intId);
-
+            Result<Chore> modelResult = dto.ToResultModel(idResult.Value);
             if (modelResult.IsError)
             {
-                return BadRequest(new { error = modelResult.Error.ErrorMessage });
+                return ProblemDetailsResponse(StatusCodes.Status400BadRequest, modelResult.Error);
             }
 
             Result<Chore> result = await _choreService.UpdateChoreAsync(modelResult.Value!, cancellationToken);
             if (result.IsError)
             {
-                if (result.Error.ErrorMessage?.Contains("not found") == true)
-                {
-                    return NotFound();
-                }
-                return StatusCode(StatusCodes.Status500InternalServerError, new { error = result.Error.ErrorMessage ?? "Failed to update chore." });
+                return ProblemDetailsResponse(StatusCodes.Status404NotFound, result.Error);
             }
             return NoContent();
         }
@@ -114,15 +117,16 @@ namespace Niles.Chores.Api.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteAsync(string id, CancellationToken cancellationToken)
         {
-            if (!IdObfuscator.TryDecode(id, out int intId))
+            Result<int> idResult = EntityIdParser.ParseEntityId(id);
+            if (idResult.IsError)
             {
-                return BadRequest(new { error = ErrorMessages.InvalidIdFormat });
+                return ProblemDetailsResponse(StatusCodes.Status400BadRequest, idResult.Error);
             }
 
-            Result result = await _choreService.DeleteChoreAsync(intId, cancellationToken);
+            Result result = await _choreService.DeleteChoreAsync(idResult.Value, cancellationToken);
             if (result.IsError)
             {
-                return NotFound();
+                return ProblemDetailsResponse(StatusCodes.Status404NotFound, result.Error);
             }
             return NoContent();
         }

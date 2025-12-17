@@ -937,7 +937,7 @@
                 throw new Error("API response not OK: " + response.status);
             }
 
-            const data = await response.json();
+            const data = (await response.json()).data;
             if (!Array.isArray(data)) {
                 throw new TypeError("Unexpected API format (expected array)");
             }

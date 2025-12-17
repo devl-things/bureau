@@ -1,4 +1,6 @@
 ﻿using Bureau;
+using Bureau.AspNetCore.Controllers;
+using Bureau.Server.Contracts.Mappers;
 using Microsoft.AspNetCore.Mvc;
 using Niles.Chores.Api.Dtos;
 using Niles.Chores.Api.Factories;
@@ -10,11 +12,11 @@ namespace Niles.Chores.Api.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class HousekeepingController : ControllerBase
+    public class HousekeepingController : BureauApiControllerBase
     {
         private readonly IHouseKeepingService _housekeepingService;
 
-        public HousekeepingController(IHouseKeepingService housekeepingService)
+        public HousekeepingController(ILogger<HousekeepingController> logger, IHouseKeepingService housekeepingService) : base(logger)
         {
             _housekeepingService = housekeepingService;
         }
@@ -33,25 +35,27 @@ namespace Niles.Chores.Api.Controllers
 
         // GET api/housekeeping/{id}
         [HttpGet("{id}")]
-        public async Task<IActionResult> GetAsync(string id, CancellationToken cancellationToken)
+        public async Task<IActionResult> GetByIdAsync(string id, CancellationToken cancellationToken)
         {
-            if (!IdObfuscator.TryDecode(id, out int intId))
+            Result<int> idResult = EntityIdParser.ParseEntityId(id);
+            if (idResult.IsError)
             {
-                return BadRequest(new { error = ErrorMessages.InvalidIdFormat });
+                return ProblemDetailsResponse(StatusCodes.Status400BadRequest, idResult.Error);
             }
 
-            Result<Housekeeping> result = await _housekeepingService.GetHousekeepingAsync(intId, cancellationToken);
+            Result<Housekeeping> result = await _housekeepingService.GetHousekeepingAsync(idResult.Value, cancellationToken);
             if (result.IsError)
             {
-                return NotFound();
+                return ProblemDetailsResponse(StatusCodes.Status404NotFound, result.Error);
             }
+            // TODO Bureau.Server.Contracts BureauResponse this also changes on the frontend! so new issue
             HousekeepingDto dto = result.Value.ToDto(IdObfuscator.Encode);
             return Ok(dto);
         }
 
         // POST api/housekeeping/submit
         [HttpPost("submit")]
-        public async Task<IActionResult> Submit([FromBody] HousekeepingSubmitDto dto, CancellationToken cancellationToken)
+        public async Task<IActionResult> SubmitAsync([FromBody] HousekeepingSubmitDto dto, CancellationToken cancellationToken)
         {
             if (!ModelState.IsValid)
             {
@@ -103,27 +107,28 @@ namespace Niles.Chores.Api.Controllers
 
         // POST api/housekeeping
         [HttpPost]
-        public async Task<IActionResult> Post([FromBody] HousekeepingDto dto, CancellationToken cancellationToken)
+        public async Task<IActionResult> PostAsync([FromBody] HousekeepingDto dto, CancellationToken cancellationToken)
         {
             if (!ModelState.IsValid)
             {
-                return BadRequest(ModelState);
+                return ProblemDetailsResponse(ModelState);
             }
 
             Result<Housekeeping> modelResult = dto.ToResultModel();
             if (modelResult.IsError)
             {
-                return BadRequest(new { error = modelResult.Error.ErrorMessage });
+                return ProblemDetailsResponse(StatusCodes.Status400BadRequest, modelResult.Error);
             }
 
             Result<Housekeeping> result = await _housekeepingService.CreateHousekeepingAsync(modelResult.Value, cancellationToken);
             if (result.IsError)
             {
-                return StatusCode(StatusCodes.Status500InternalServerError, new { error = result.Error.ErrorMessage ?? "Failed to create housekeeping." });
+                return ProblemDetailsResponse(StatusCodes.Status400BadRequest, result.Error);
             }
 
             string encodedId = result.Value!.Id.HasValue ? IdObfuscator.Encode(result.Value.Id.Value) : string.Empty;
-            return CreatedAtAction(nameof(GetAsync), new { id = encodedId }, dto);
+            // TODO Bureau.Server.Contracts BureauResponse this also changes on the frontend! so new issue
+            return CreatedAtAction(nameof(GetByIdAsync), new { id = encodedId }, dto);
         }
 
         // PUT api/housekeeping/{id}
@@ -132,31 +137,33 @@ namespace Niles.Chores.Api.Controllers
         {
             if (!ModelState.IsValid)
             {
-                return BadRequest(ModelState);
+                return ProblemDetailsResponse(ModelState);
             }
 
             if (dto.Id != null && dto.Id != id)
             {
+                //TODO deal with ResultError creating
                 return BadRequest(new { error = "Id in body does not match route id." });
             }
 
-            if (!IdObfuscator.TryDecode(id, out int intId))
+            Result<int> idResult = EntityIdParser.ParseEntityId(id);
+            if (idResult.IsError)
             {
-                return BadRequest(new { error = ErrorMessages.InvalidIdFormat });
+                return ProblemDetailsResponse(StatusCodes.Status400BadRequest, idResult.Error);
             }
 
             Result<Housekeeping> modelResult = dto.ToResultModel();
             if (modelResult.IsError)
             {
-                return BadRequest(new { error = modelResult.Error.ErrorMessage });
+                return ProblemDetailsResponse(StatusCodes.Status400BadRequest, modelResult.Error);
             }
-
-            modelResult.Value.Id = intId;
+            //TODO put this id in ToResultModel like chores
+            modelResult.Value.Id = idResult.Value;
 
             Result<Housekeeping> result = await _housekeepingService.UpdateHousekeepingAsync(modelResult.Value, cancellationToken);
             if (result.IsError)
             {
-                return NotFound();
+                return ProblemDetailsResponse(StatusCodes.Status404NotFound, result.Error);
             }
             return NoContent();
         }
@@ -165,15 +172,16 @@ namespace Niles.Chores.Api.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(string id, CancellationToken cancellationToken)
         {
-            if (!IdObfuscator.TryDecode(id, out int intId))
+            Result<int> idResult = EntityIdParser.ParseEntityId(id);
+            if (idResult.IsError)
             {
-                return BadRequest(new { error = ErrorMessages.InvalidIdFormat });
+                return ProblemDetailsResponse(StatusCodes.Status400BadRequest, idResult.Error);
             }
 
-            Result result = await _housekeepingService.DeleteHousekeepingAsync(intId, cancellationToken);
+            Result result = await _housekeepingService.DeleteHousekeepingAsync(idResult.Value, cancellationToken);
             if (result.IsError)
             {
-                return NotFound();
+                return ProblemDetailsResponse(StatusCodes.Status404NotFound, result.Error);
             }
             return NoContent();
         }

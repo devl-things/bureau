@@ -7,6 +7,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Bureau.Extensions.Logging\Bureau.Extensions.Logging.csproj" />
     <ProjectReference Include="..\Niles.Chores.Abstractions\Niles.Chores.Abstractions.csproj" />
   </ItemGroup>
 

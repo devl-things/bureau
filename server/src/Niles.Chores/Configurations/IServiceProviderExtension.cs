@@ -1,4 +1,6 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Bureau;
+using Bureau.Extensions.Logging;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Niles.Chores.Contexts;
@@ -31,9 +33,21 @@ namespace Niles.Chores.Configurations
         {
             using (IServiceScope scope = serviceProvider.CreateScope())
             {
+                ILogger<IChoresSeeder> logger = scope.ServiceProvider.GetRequiredService<ILogger<IChoresSeeder>>();
                 IChoresSeeder seeder = scope.ServiceProvider.GetRequiredService<IChoresSeeder>();
+                try
+                {
+                    Result seedResult = seeder.SeedTest();
+                    if (seedResult.IsError)
+                    {
+                        logger.LogResultError(seedResult.Error);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    logger.LogCritical(ex, "Error applying database migrations.");
+                }
 
-                seeder.SeedTest();
             }
         }
     }

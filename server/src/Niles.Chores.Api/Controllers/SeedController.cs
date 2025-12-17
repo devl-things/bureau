@@ -1,4 +1,5 @@
 using Bureau;
+using Bureau.AspNetCore.Controllers;
 using Microsoft.AspNetCore.Mvc;
 using Niles.Chores.Data;
 
@@ -6,10 +7,10 @@ namespace Niles.Chores.Api.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class SeedController : ControllerBase
+    public class SeedController : BureauApiControllerBase
     {
         private readonly IChoresSeeder _seeder;
-        public SeedController(IChoresSeeder seeder)
+        public SeedController(ILogger<SeedController> logger, IChoresSeeder seeder) : base(logger)
         {
             _seeder = seeder;
         }
@@ -22,9 +23,9 @@ namespace Niles.Chores.Api.Controllers
 
             if (seedResult.IsError)
             {
-                return StatusCode(500, new { error = "Database was not seeded.", details = seedResult.Error.ErrorMessage });
+                return ProblemDetailsResponse(StatusCodes.Status400BadRequest, seedResult.Error);
             }
-            return Ok(new { message = "Database seeded successfully!" });
+            return Ok();
         }
 
         // POST api/seed/test
@@ -35,9 +36,9 @@ namespace Niles.Chores.Api.Controllers
 
             if (seedResult.IsError)
             {
-                return StatusCode(500, new { error = "Database was not seeded.", details = seedResult.Error.ErrorMessage });
+                return ProblemDetailsResponse(StatusCodes.Status400BadRequest, seedResult.Error);
             }
-            return Ok(new { message = "Database seeded successfully!" });
+            return Ok();
         }
 
         // POST api/seed/test/clear
@@ -47,9 +48,9 @@ namespace Niles.Chores.Api.Controllers
             Result seedResult = await _seeder.ClearAndSeedTestAsync(cancellationToken);
             if (seedResult.IsError)
             {
-                return StatusCode(500, new { error = "Database was not cleared and seeded.", details = seedResult.Error.ErrorMessage });
+                return ProblemDetailsResponse(StatusCodes.Status400BadRequest, seedResult.Error);
             }
-            return Ok(new { message = "Database seeded successfully!" });
+            return Ok();
         }
     }
 }
