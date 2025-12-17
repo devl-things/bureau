@@ -1,6 +1,6 @@
-﻿using Bureau.AspNetCore.Tracing;
+﻿using Bureau.AspNetCore.Problems;
+using Bureau.AspNetCore.Tracing;
 using Bureau.Extensions.Logging;
-using Bureau.Primitives.Errors;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
@@ -55,7 +55,7 @@ namespace Bureau.AspNetCore.Middleware
                     throw;
                 }
 
-                ProblemDetails problemDetails = CreateUnexpectedErrorProblemDetails(context, traceId);
+                ProblemDetails problemDetails = ProblemDetailsFactory.Create(context, traceId);
 
                 context.Response.Clear();
                 context.Response.StatusCode = StatusCodes.Status500InternalServerError;
@@ -67,23 +67,6 @@ namespace Bureau.AspNetCore.Middleware
                     JsonOptions,
                     context.RequestAborted);
             }
-        }
-
-        private static ProblemDetails CreateUnexpectedErrorProblemDetails(HttpContext context, string traceId)
-        {
-            ProblemDetails problemDetails = new ProblemDetails
-            {
-                Status = StatusCodes.Status500InternalServerError,
-                Title = "An unexpected error occurred.",
-                Detail = "An unexpected error occurred. Please try again later.",
-                Type = ProblemDetailsType.FromCode(ProblemCodes.System.UnexpectedError),
-                Instance = context.Request.Path
-            };
-
-            problemDetails.Extensions[ProblemDetailsExtensionNames.Code] = ProblemCodes.System.UnexpectedError;
-            problemDetails.Extensions[ProblemDetailsExtensionNames.TraceId] = traceId;
-
-            return problemDetails;
         }
     }
 }

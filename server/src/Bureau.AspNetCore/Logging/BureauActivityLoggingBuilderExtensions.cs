@@ -2,7 +2,7 @@
 
 namespace Bureau.AspNetCore.Logging
 {
-    public static class BureauActivityLoggingExtensions
+    public static class BureauActivityLoggingBuilderExtensions
     {
         public static ILoggingBuilder AddBureauActivityTracking(this ILoggingBuilder logging)
         {

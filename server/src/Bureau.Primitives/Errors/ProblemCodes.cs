@@ -9,6 +9,7 @@
         }
         public static class Request
         {
+            public const string Failed = "request.failed";
             public const string InvalidId = "request.invalid_id";
             public const string IdMismatch = "request.id_mismatch";
         }
