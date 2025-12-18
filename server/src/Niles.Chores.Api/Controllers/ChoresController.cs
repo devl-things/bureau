@@ -1,12 +1,12 @@
 ﻿using Bureau;
 using Bureau.AspNetCore.Controllers;
 using Bureau.Primitives.Errors;
+using Bureau.Server.Contracts;
 using Bureau.Server.Contracts.Mappers;
 using Microsoft.AspNetCore.Mvc;
 using Niles.Chores.Api.Dtos;
 using Niles.Chores.Api.Factories;
 using Niles.Chores.Api.Mappers;
-using Niles.Chores.Api.Utilities;
 using Niles.Chores.Services;
 
 namespace Niles.Chores.Api.Controllers
@@ -16,10 +16,13 @@ namespace Niles.Chores.Api.Controllers
     public class ChoresController : BureauApiControllerBase
     {
         private readonly IChoreService _choreService;
+        private readonly IIdObfuscator _idObfuscator;
 
-        public ChoresController(ILogger<ChoresController> logger, IChoreService choreService) : base(logger)
+        public ChoresController(ILogger<ChoresController> logger,
+            IChoreService choreService, IIdObfuscator idObfuscator) : base(logger)
         {
             _choreService = choreService;
+            _idObfuscator = idObfuscator;
         }
 
         // GET: api/chores?search=term&page=1&pageSize=10 (returns paginated chores with search)
@@ -31,14 +34,13 @@ namespace Niles.Chores.Api.Controllers
 
             PagedResult<Chore> pagedResult = await _choreService.GetChoresAsync(searchParameters, cancellationToken);
 
-            return Ok(pagedResult.ToPagedResponse(x => x.ToDto(IdObfuscator.Encode)));
+            return Ok(pagedResult.ToPagedResponse(x => x.ToDto(_idObfuscator)));
         }
 
-        // GET api/chores/{id}
         [HttpGet("{id}")]
         public async Task<IActionResult> GetByIdAsync(string id, CancellationToken cancellationToken)
         {
-            Result<int> idResult = EntityIdParser.ParseEntityId(id);
+            Result<int> idResult = _idObfuscator.Decode(id);
             if (idResult.IsError)
             {
                 return ProblemDetailsResponse(idResult.Error);
@@ -49,13 +51,11 @@ namespace Niles.Chores.Api.Controllers
             {
                 return ProblemDetailsResponse(result.Error);
             }
-            // TODO Bureau.Server.Contracts BureauResponse this also changes on the frontend! so new issue
-            return Ok(result.Value.ToDto(IdObfuscator.Encode));
+            return OkResponse(result.Value.ToDto(_idObfuscator));
         }
 
-        // POST api/chores
         [HttpPost]
-        public async Task<IActionResult> PostAsync([FromBody] ChoreDto dto, CancellationToken cancellationToken)
+        public async Task<IActionResult> PostAsync([FromBody] CreateChoreRequest dto, CancellationToken cancellationToken)
         {
             if (!ModelState.IsValid)
             {
@@ -74,15 +74,12 @@ namespace Niles.Chores.Api.Controllers
                 return ProblemDetailsResponse(result.Error);
             }
 
-            string encodedId = IdObfuscator.Encode(result.Value!.Id);
-            dto.Id = encodedId;
-            // TODO Bureau.Server.Contracts BureauResponse this also changes on the frontend! so new issue
-            return CreatedAtAction(nameof(GetByIdAsync), new { id = encodedId }, dto);
+            ChoreDto chore = result.Value.ToDto(_idObfuscator);
+            return CreatedAtAction(nameof(GetByIdAsync), new { id = chore.Id }, new BureauResponse<ChoreDto>(chore));
         }
 
-        // PUT api/chores/{id}
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutAsync(string id, [FromBody] ChoreDto dto, CancellationToken cancellationToken)
+        public async Task<IActionResult> PutAsync(string id, [FromBody] UpdateChoreRequest dto, CancellationToken cancellationToken)
         {
             if (!ModelState.IsValid)
             {
@@ -93,13 +90,8 @@ namespace Niles.Chores.Api.Controllers
             {
                 return ProblemDetailsResponse(ResultError.From(ProblemCodes.Request.IdMismatch, "Id in body does not match route id."));
             }
-            Result<int> idResult = EntityIdParser.ParseEntityId(id);
-            if (idResult.IsError)
-            {
-                return ProblemDetailsResponse(idResult.Error);
-            }
 
-            Result<Chore> modelResult = dto.ToResultModel(idResult.Value);
+            Result<Chore> modelResult = dto.ToResultModel(_idObfuscator);
             if (modelResult.IsError)
             {
                 return ProblemDetailsResponse(modelResult.Error);
@@ -113,11 +105,10 @@ namespace Niles.Chores.Api.Controllers
             return NoContent();
         }
 
-        // DELETE api/chores/{id}
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteAsync(string id, CancellationToken cancellationToken)
         {
-            Result<int> idResult = EntityIdParser.ParseEntityId(id);
+            Result<int> idResult = _idObfuscator.Decode(id);
             if (idResult.IsError)
             {
                 return ProblemDetailsResponse(idResult.Error);

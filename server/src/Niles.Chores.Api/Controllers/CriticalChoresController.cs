@@ -1,8 +1,8 @@
 ﻿using Bureau;
 using Bureau.AspNetCore.Controllers;
+using Bureau.Server.Contracts;
 using Microsoft.AspNetCore.Mvc;
 using Niles.Chores.Api.Dtos;
-using Niles.Chores.Api.Utilities;
 using Niles.Chores.Services;
 
 namespace Niles.Chores.Api.Controllers
@@ -11,12 +11,14 @@ namespace Niles.Chores.Api.Controllers
     [ApiController]
     public class CriticalChoresController : BureauApiControllerBase
     {
-
         private readonly ICriticalChoreService _criticalChoreService;
+        private readonly IIdObfuscator _idObfuscator;
 
-        public CriticalChoresController(ILogger<CriticalChoresController> logger, ICriticalChoreService criticalChoreService) : base(logger)
+        public CriticalChoresController(ILogger<CriticalChoresController> logger,
+            ICriticalChoreService criticalChoreService, IIdObfuscator idObfuscator) : base(logger)
         {
             _criticalChoreService = criticalChoreService;
+            _idObfuscator = idObfuscator;
         }
 
         [HttpPost]
@@ -26,7 +28,7 @@ namespace Niles.Chores.Api.Controllers
             {
                 return ProblemDetailsResponse(ModelState);
             }
-            Result<int> idResult = EntityIdParser.ParseEntityId(id);
+            Result<int> idResult = _idObfuscator.Decode(id);
             if (idResult.IsError)
             {
                 return ProblemDetailsResponse(idResult.Error);
@@ -43,7 +45,7 @@ namespace Niles.Chores.Api.Controllers
         [HttpDelete]
         public async Task<IActionResult> RemoveCriticalAsync(string id, CancellationToken cancellationToken)
         {
-            Result<int> idResult = EntityIdParser.ParseEntityId(id);
+            Result<int> idResult = _idObfuscator.Decode(id);
             if (idResult.IsError)
             {
                 return ProblemDetailsResponse(idResult.Error);

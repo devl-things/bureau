@@ -1,5 +1,6 @@
 using Bureau.AspNetCore.Logging;
 using Bureau.AspNetCore.Middleware;
+using Bureau.Server.Contracts;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Niles.Chores.Api.Utilities;
@@ -16,6 +17,8 @@ namespace Niles.Chores.Api
             WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
             builder.Logging.AddBureauActivityTracking();
+
+            builder.Services.AddSingleton<IIdObfuscator, IdObfuscator>();
 
             // Add services to the container.
             builder.Services.AddChores(builder.Configuration.GetConnectionString("NilesDb")!);

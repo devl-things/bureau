@@ -1,56 +1,84 @@
 ﻿using Bureau;
 using Bureau.Primitives.Errors;
+using Bureau.Server.Contracts;
 using Niles.Chores.Api.Dtos;
 
 namespace Niles.Chores.Api.Mappers
 {
     public static class HousekeepingMapperExtension
     {
-        public static HousekeepingDto ToDto(this Housekeeping housekeeping, Func<int, string> idFormatter)
+        public static HousekeepingDto ToDto(this Housekeeping housekeeping, IIdObfuscator idObfuscator)
         {
             return new HousekeepingDto
             {
-                Id = idFormatter(housekeeping.Id),
-                DateTime = housekeeping.DateTime.UtcDateTime,
+                Id = idObfuscator.Encode(housekeeping.Id),
+                DateTime = housekeeping.DateTime.ToString(),
                 Duration = housekeeping.Duration.ToString(),
                 Note = housekeeping.Note,
-                CompletedChoreIds = housekeeping.CompletedChoreIds ?? new List<int>(),
-                CompletedChores = housekeeping.CompletedChores?.Select(c => c.ToDto(idFormatter)).ToList() ?? new List<ChoreDto>()
+                CompletedChores = housekeeping.CompletedChores?.Select(c => c.ToDto(idObfuscator)).ToList() ?? new List<ChoreDto>()
             };
         }
 
-        public static Result<Housekeeping> ToResultModel(this HousekeepingDto dto)
+        public static Result<Housekeeping> ToResultModel(this CreateHousekeepingRequest dto, IIdObfuscator idObfuscator)
         {
-            Housekeeping model = new();
-            try
+            return dto.ToResultModelBase(idObfuscator);
+        }
+        public static Result<Housekeeping> ToResultModel(this UpdateHousekeepingRequest dto, IIdObfuscator idObfuscator)
+        {
+            Result<Housekeeping> housekeepingResult = dto.ToResultModelBase(idObfuscator);
+            if (housekeepingResult.IsError)
             {
-                model.DateTime = new DateTimeOffset(dto.DateTime);
+                return housekeepingResult;
             }
-            catch (Exception ex)
+
+            Result<int> idResult = idObfuscator.Decode(dto.Id);
+            if (idResult.IsError)
             {
-                return ResultError.From(ProblemCodes.Validation.InvalidFormat, "Invalid datetime", ex);
+                return idResult.Error;
+            }
+            Housekeeping housekeeping = housekeepingResult.Value;
+            housekeeping.Id = idResult.Value;
+            return housekeeping;
+        }
+
+        private static Result<Housekeeping> ToResultModelBase(this HousekeepingRequestBase dto, IIdObfuscator idObfuscator)
+        {
+            if (!ChoresDateParser.TryParseDateTime(dto.DateTime, out DateTimeOffset dateTime))
+            {
+                return ResultError.From(ProblemCodes.Validation.InvalidFormat, "Invalid datetime", $"DateTime malformed, passed value {dto.DateTime}");
             }
             if (!ChoresDateParser.TryParseDuration(dto.Duration, out TimeSpan duration))
             {
                 return ResultError.From(ProblemCodes.Validation.InvalidFormat, "Invalid duration", $"Duration malformed, passed value {dto.Duration}");
             }
-            model.Duration = duration;
-
-            model.Note = dto.Note;
-            //TODO #82 this should be List<string>
-            model.CompletedChoreIds = dto.CompletedChoreIds ?? new List<int>();
-            return model;
-        }
-
-        public static Result<Housekeeping> ToResultModel(this HousekeepingDto dto, int id)
-        {
-            Result<Housekeeping> result = dto.ToResultModel();
-            if (result.IsError)
+            if (duration == TimeSpan.Zero)
             {
-                return result;
+                return ResultError.From(ProblemCodes.Validation.OutOfRange, "Duration cannot be zero");
             }
-            result.Value!.Id = id;
-            return result;
+
+            List<int> completedChoreIds = new List<int>(dto.CompletedChoreIds.Count);
+            foreach (string id in dto.CompletedChoreIds)
+            {
+                Result<int> idResult = idObfuscator.Decode(id);
+                if (idResult.IsSuccess)
+                {
+                    completedChoreIds.Add(idResult.Value);
+                }
+                else
+                {
+                    return idResult.Error;
+                }
+            }
+
+            Housekeeping model = new Housekeeping
+            {
+                DateTime = dateTime,
+                Duration = duration,
+                Note = dto.Note,
+                CompletedChoreIds = completedChoreIds
+            };
+
+            return model;
         }
     }
 }

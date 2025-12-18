@@ -1,19 +1,19 @@
-using System.Text.Json.Serialization;
+﻿using System.Text.Json.Serialization;
 
 namespace Niles.Chores.Api.Dtos
 {
-    public class HousekeepingDto
+    public abstract class HousekeepingRequestBase
     {
-        [JsonPropertyName("id")]
-        public string? Id { get; set; }
         [JsonPropertyName("datetime")]
         public string DateTime { get; set; } = string.Empty;
+
         [JsonPropertyName("duration")]
         public string? Duration { get; set; }
+
         [JsonPropertyName("note")]
         public string? Note { get; set; }
-        [JsonPropertyName("completedChores")]
-        public List<ChoreDto> CompletedChores { get; set; } = new List<ChoreDto>();
+
+        [JsonPropertyName("completedChoreIds")]
+        public List<string> CompletedChoreIds { get; set; } = new();
     }
 }
-

@@ -1,14 +1,15 @@
-﻿using Niles.Chores.Api.Dtos;
+﻿using Bureau.Server.Contracts;
+using Niles.Chores.Api.Dtos;
 
 namespace Niles.Chores.Api.Mappers
 {
     public static class PrioritizedChoreMapperExtension
     {
-        public static PrioritizedChoreDto ToDto(this PrioritizedChore chore, Func<int, string> idFormatter)
+        public static PrioritizedChoreDto ToDto(this PrioritizedChore chore, IIdObfuscator idObfuscator)
         {
             return new PrioritizedChoreDto
             {
-                Id = idFormatter(chore.Id),
+                Id = idObfuscator.Encode(chore.Id),
                 Title = chore.Title,
                 Description = chore.Description ?? string.Empty,
                 Criticality = (int)chore.Criticality,

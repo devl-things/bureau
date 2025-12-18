@@ -1,5 +1,6 @@
 using Bureau;
 using Bureau.Primitives.Errors;
+using Bureau.Server.Contracts;
 using Niles.Chores.Api.Dtos;
 
 namespace Niles.Chores.Api.Mappers
@@ -7,11 +8,11 @@ namespace Niles.Chores.Api.Mappers
     public static class ChoreMapperExtension
     {
         //TODO #84 [backend] set priority from chore
-        public static ChoreDto ToDto(this Chore chore, Func<int, string> idFormatter)
+        public static ChoreDto ToDto(this Chore chore, IIdObfuscator idObfuscator)
         {
             return new ChoreDto
             {
-                Id = idFormatter(chore.Id),
+                Id = idObfuscator.Encode(chore.Id),
                 Title = chore.Title,
                 Description = chore.Description ?? string.Empty,
                 Type = chore.Type.ToString(),
@@ -22,7 +23,28 @@ namespace Niles.Chores.Api.Mappers
             };
         }
 
-        public static Result<Chore> ToResultModel(this ChoreDto dto)
+        public static Result<Chore> ToResultModel(this CreateChoreRequest dto)
+        {
+            return dto.ToResultModelBase();
+        }
+        public static Result<Chore> ToResultModel(this UpdateChoreRequest dto, IIdObfuscator idObfuscator)
+        {
+            Result<Chore> result = dto.ToResultModelBase();
+            if (result.IsError)
+            {
+                return result;
+            }
+            Result<int> idResult = idObfuscator.Decode(dto.Id);
+            if (idResult.IsError)
+            {
+                return idResult.Error;
+            }
+            Chore chore = result.Value;
+            chore.Id = idResult.Value;
+            return chore;
+        }
+
+        private static Result<Chore> ToResultModelBase(this ChoreRequestBase dto)
         {
             Chore model = new Chore();
             if (!Enum.TryParse<ChoreType>(dto.Type, ignoreCase: true, out ChoreType type))
@@ -35,16 +57,6 @@ namespace Niles.Chores.Api.Mappers
             model.Description = dto.Description;
             model.WeeklyInterval = dto.WeeklyInterval;
             return model;
-        }
-        public static Result<Chore> ToResultModel(this ChoreDto dto, int id)
-        {
-            Result<Chore> result = dto.ToResultModel();
-            if (result.IsError)
-            {
-                return result;
-            }
-            result.Value!.Id = id;
-            return result;
         }
     }
 }
