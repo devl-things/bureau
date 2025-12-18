@@ -36,7 +36,7 @@ namespace Bureau.AspNetCore.Controllers
         }
         protected IActionResult OkResponse<T>(T value)
         {
-            return Ok(new BureauResponse<T>() { Data = value });
+            return Ok(new BureauResponse<T>(value));
         }
     }
 }

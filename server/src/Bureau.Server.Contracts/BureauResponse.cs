@@ -1,4 +1,5 @@
-﻿using System.Text.Json.Serialization;
+﻿using System.Diagnostics.CodeAnalysis;
+using System.Text.Json.Serialization;
 
 namespace Bureau.Server.Contracts
 {
@@ -7,6 +8,7 @@ namespace Bureau.Server.Contracts
         [JsonPropertyName("data")]
         public required T Data { get; init; }
 
+        [SetsRequiredMembers]
         public BureauResponse(T data)
         {
             Data = data;
