@@ -1,17 +1,17 @@
-using System.Text.Json.Serialization;
+﻿using System.Text.Json.Serialization;
 
-namespace Niles.Chores.Api.Dtos
+namespace Bureau.Server.Contracts
 {
-    public class PagedResponse<T>
+    public class BureauPagedResponse<T>
     {
         [JsonPropertyName("data")]
-        public IEnumerable<T> Data { get; set; } = new List<T>();
+        public IEnumerable<T> Data { get; set; } = Array.Empty<T>();
 
         [JsonPropertyName("meta")]
-        public PagedMeta Meta { get; set; } = new PagedMeta();
+        public BureauPagedMeta Meta { get; set; } = new BureauPagedMeta();
     }
 
-    public class PagedMeta
+    public class BureauPagedMeta
     {
         [JsonPropertyName("page")]
         public int Page { get; set; }
@@ -32,4 +32,3 @@ namespace Niles.Chores.Api.Dtos
         public bool HasPrevious { get; set; }
     }
 }
-

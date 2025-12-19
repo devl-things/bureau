@@ -1,4 +1,3 @@
-using Niles.Chores;
 using Niles.Chores.Models;
 
 namespace Niles.Chores.Mappers

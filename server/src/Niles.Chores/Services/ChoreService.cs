@@ -1,10 +1,12 @@
 ﻿using Bureau;
+using Bureau.Primitives.Errors;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
 using Niles.Chores.Contexts;
 using Niles.Chores.Extensions;
 using Niles.Chores.Mappers;
 using Niles.Chores.Models;
+using Niles.Chores.Utilities;
 
 namespace Niles.Chores.Services
 {
@@ -26,7 +28,7 @@ namespace Niles.Chores.Services
                 .Where(c => c.Id == id)
                 .SelectChoreWithCritical()
                 .FirstOrDefaultAsync(cancellationToken);
-            if (chore == null) return "Not found";
+            if (chore == null) return ResultError.FromLogMessage(ProblemCodes.Resource.NotFound, string.Format(LogMessages.EntityNotFound, nameof(Chore), id));
             return chore.ToChore();
         }
 
@@ -71,7 +73,7 @@ namespace Niles.Chores.Services
         {
             if (chore == null)
             {
-                return "Chore cannot be null";
+                return ResultError.From(ProblemCodes.Operation.UnexpectedError, "Chore is null");
             }
 
             DateTimeOffset now = _timeProvider.GetUtcNow();
@@ -88,6 +90,7 @@ namespace Niles.Chores.Services
             _context.Chores.Add(choreDb);
             await _context.SaveChangesAsync(cancellationToken);
 
+            _cache.RemovePriotizedChores();
             chore.Id = choreDb.Id;
             return chore;
         }
@@ -96,13 +99,13 @@ namespace Niles.Chores.Services
         {
             if (chore == null || chore.Id == 0)
             {
-                return "Chore cannot be null and must have a valid Id";
+                return ResultError.From(ProblemCodes.Operation.UnexpectedError, "Chore is null or it has invalid Id");
             }
 
             ChoreDb? choreDb = await _context.Chores.FindAsync(new object[] { chore.Id }, cancellationToken);
             if (choreDb == null)
             {
-                return $"Chore with Id {chore.Id} not found";
+                return ResultError.FromLogMessage(ProblemCodes.Resource.NotFound, string.Format(LogMessages.EntityNotFound, nameof(Chore), chore.Id));
             }
 
             choreDb.Title = chore.Title;
@@ -126,9 +129,9 @@ namespace Niles.Chores.Services
 
             if (rowsAffected == 0)
             {
-                return $"Chore with Id {id} not found";
+                return ResultError.FromLogMessage(ProblemCodes.Resource.NotFound, string.Format(LogMessages.EntityNotFound, nameof(Chore), id));
             }
-
+            _cache.RemovePriotizedChores();
             return true;
 
         }

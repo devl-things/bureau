@@ -1,15 +1,13 @@
-﻿using Bureau;
-using Niles.Chores.Api.Dtos;
-namespace Niles.Chores.Api.Mappers
+﻿namespace Bureau.Server.Contracts.Mappers
 {
     public static class PagedResponseMapperExtension
     {
-        public static PagedResponse<TDestination> ToPagedResponse<TSource, TDestination>(this PagedResult<TSource> pagedResult, Func<TSource, TDestination> mapTo)
+        public static BureauPagedResponse<TDestination> ToPagedResponse<TSource, TDestination>(this PagedResult<TSource> pagedResult, Func<TSource, TDestination> mapTo)
         {
-            return new PagedResponse<TDestination>()
+            return new BureauPagedResponse<TDestination>()
             {
                 Data = pagedResult.Values.Select(mapTo),
-                Meta = new PagedMeta
+                Meta = new BureauPagedMeta
                 {
                     Page = pagedResult.Page,
                     PageSize = pagedResult.PageSize,

@@ -417,7 +417,7 @@
                 notesCell.innerHTML = `<span class="notes">${safeNote}</span>`;
 
                 const countCell = document.createElement("td");
-                const safeCount = HtmlSanitizer.sanitize(log.completedChores?.length ?? log.completedChoreIds?.length ?? 0);
+                const safeCount = HtmlSanitizer.sanitize(log.completedChores?.length ?? 0);
 
                 countCell.innerHTML = `<span class="count-pill">${safeCount}</span>`;
 

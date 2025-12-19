@@ -15,6 +15,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Bureau.AspNetCore\Bureau.AspNetCore.csproj" />
     <ProjectReference Include="..\Niles.Chores\Niles.Chores.csproj" />
   </ItemGroup>
 

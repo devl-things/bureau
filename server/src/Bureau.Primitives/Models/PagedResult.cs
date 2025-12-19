@@ -20,7 +20,7 @@
                     return 0;
                 }
 
-                return (int)((Count + PageSize - 1) / PageSize);
+                return (Count + PageSize - 1) / PageSize;
             }
         }
         public bool HasPrevious { get { return Page > 1; } }
@@ -50,7 +50,5 @@
         public PagedResult(ResultError error) : this(default!, false, error) { }
 
         public static implicit operator PagedResult<T>(ResultError error) { return new PagedResult<T>(error); }
-        public static implicit operator PagedResult<T>(string errorMessage) { return new PagedResult<T>(new ResultError(errorMessage)); }
-        public static implicit operator PagedResult<T>(Exception exception) { return new PagedResult<T>(new ResultError(exception)); }
     }
 }

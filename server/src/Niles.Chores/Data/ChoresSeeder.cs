@@ -1,4 +1,5 @@
 using Bureau;
+using Bureau.Extensions.Logging;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Niles.Chores.Contexts;
@@ -23,118 +24,105 @@ namespace Niles.Chores.Data
 
         public async Task<Result> ClearAndSeedTestAsync(CancellationToken cancellationToken = default)
         {
-            try
-            {
-                // this should be done more effieciently with TRUNCATE or similar
-                // but since this is for test purposes, it's acceptable for now
-                _context.CriticalChores.RemoveRange(await _context.CriticalChores.ToListAsync(cancellationToken));
-                _context.CompletedChores.RemoveRange(await _context.CompletedChores.ToListAsync(cancellationToken));
-                _context.Housekeeping.RemoveRange(await _context.Housekeeping.ToListAsync(cancellationToken));
-                _context.Chores.RemoveRange(await _context.Chores.ToListAsync(cancellationToken));
+            // this should be done more effieciently with TRUNCATE or similar
+            // but since this is for test purposes, it's acceptable for now
+            _context.CriticalChores.RemoveRange(await _context.CriticalChores.ToListAsync(cancellationToken));
+            _context.CompletedChores.RemoveRange(await _context.CompletedChores.ToListAsync(cancellationToken));
+            _context.Housekeeping.RemoveRange(await _context.Housekeeping.ToListAsync(cancellationToken));
+            _context.Chores.RemoveRange(await _context.Chores.ToListAsync(cancellationToken));
 
-                await _context.SaveChangesAsync(cancellationToken);
-                _logger.LogInformation("Existing data cleared.");
+            await _context.SaveChangesAsync(cancellationToken);
+            _logger.Info("Seeding - Existing data cleared.");
 
-                return await SeedTestAsync(cancellationToken);
-            }
-            catch (Exception ex)
+            Result<SeedOutcome> result = await SeedTestAsync(cancellationToken);
+            if (result.IsError)
             {
-                _logger.LogError(ex, "Error seeding database.");
-                return ex;
+                return result.Error;
             }
-        }
 
-        public void SeedTest()
-        {
-            SeedTestAsync().GetAwaiter().GetResult();
-        }
-
-        public async Task<Result> SeedChoresAsync(CancellationToken cancellationToken = default)
-        {
-            try
-            {
-                // Check if data already exists
-                if (await _context.Chores.AnyAsync(cancellationToken))
-                {
-                    _logger.LogWarning(DatabaseAlreadyFullMessage);
-                    return DatabaseAlreadyFullMessage;
-                }
-                await CreateChoresAsync(cancellationToken);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error seeding database.");
-                return ex;
-            }
             return true;
         }
 
-        public async Task<Result> SeedTestAsync(CancellationToken cancellationToken = default)
+        public Result<SeedOutcome> SeedTest()
         {
-            try
+            return SeedTestAsync().GetAwaiter().GetResult();
+        }
+
+        public async Task<Result<SeedOutcome>> SeedChoresAsync(CancellationToken cancellationToken = default)
+        {
+            if (await _context.Chores.AnyAsync(cancellationToken))
             {
-                // Check if data already exists
-                if (await _context.Chores.AnyAsync(cancellationToken))
-                {
-                    _logger.LogWarning(DatabaseAlreadyFullMessage);
-                    return DatabaseAlreadyFullMessage;
-                }
+                _logger.Info(DatabaseAlreadyFullMessage);
+                return SeedOutcome.AlreadySeeded;
+            }
+            await CreateChoresAsync(cancellationToken);
+            return SeedOutcome.Seeded;
+        }
 
-                DateTimeOffset now = _timeProvider.GetUtcNow();
-                DateTime utcNow = now.UtcDateTime;
+        public async Task<Result<SeedOutcome>> SeedTestAsync(CancellationToken cancellationToken = default)
+        {
+            // Check if data already exists
+            if (await _context.Chores.AnyAsync(cancellationToken))
+            {
+                _logger.LogWarning(DatabaseAlreadyFullMessage);
+                return SeedOutcome.AlreadySeeded;
+            }
 
-                List<ChoreDb> chores = await CreateChoresAsync(cancellationToken);
-                // Create some housekeeping records with completed chores
-                DateOnly today = DateOnly.FromDateTime(utcNow);
-                DateOnly lastWeek = today.AddDays(-7);
-                DateOnly twoWeeksAgo = today.AddDays(-14);
+            DateTimeOffset now = _timeProvider.GetUtcNow();
+            DateTime utcNow = now.UtcDateTime;
 
-                List<HousekeepingDb> housekeepingRecords = new List<HousekeepingDb>();
+            List<ChoreDb> chores = await CreateChoresAsync(cancellationToken);
+            // Create some housekeeping records with completed chores
+            DateOnly today = DateOnly.FromDateTime(utcNow);
+            DateOnly lastWeek = today.AddDays(-7);
+            DateOnly twoWeeksAgo = today.AddDays(-14);
 
-                // Today's housekeeping
-                HousekeepingDb todayHousekeeping = new HousekeepingDb
-                {
-                    Timestamp = new DateTimeOffset(today.ToDateTime(TimeOnly.FromTimeSpan(TimeSpan.FromHours(10))), TimeSpan.Zero),
-                    Duration = TimeSpan.FromMinutes(45),
-                    Note = "Quick morning cleanup",
-                    CreatedAt = now,
-                    UpdatedAt = now,
-                    CreatedBy = SEEDER,
-                    UpdatedBy = SEEDER
-                };
-                housekeepingRecords.Add(todayHousekeeping);
+            List<HousekeepingDb> housekeepingRecords = new List<HousekeepingDb>();
 
-                // Last week's housekeeping
-                HousekeepingDb lastWeekHousekeeping = new HousekeepingDb
-                {
-                    Timestamp = new DateTimeOffset(lastWeek.ToDateTime(TimeOnly.FromTimeSpan(TimeSpan.FromHours(14))), TimeSpan.Zero),
-                    Duration = TimeSpan.FromMinutes(60),
-                    Note = "Weekly deep clean",
-                    CreatedAt = now,
-                    UpdatedAt = now,
-                    CreatedBy = SEEDER,
-                    UpdatedBy = SEEDER
-                };
-                housekeepingRecords.Add(lastWeekHousekeeping);
+            // Today's housekeeping
+            HousekeepingDb todayHousekeeping = new HousekeepingDb
+            {
+                Timestamp = new DateTimeOffset(today.ToDateTime(TimeOnly.FromTimeSpan(TimeSpan.FromHours(10))), TimeSpan.Zero),
+                Duration = TimeSpan.FromMinutes(45),
+                Note = "Quick morning cleanup",
+                CreatedAt = now,
+                UpdatedAt = now,
+                CreatedBy = SEEDER,
+                UpdatedBy = SEEDER
+            };
+            housekeepingRecords.Add(todayHousekeeping);
 
-                // Two weeks ago
-                HousekeepingDb twoWeeksAgoHousekeeping = new HousekeepingDb
-                {
-                    Timestamp = new DateTimeOffset(twoWeeksAgo.ToDateTime(TimeOnly.FromTimeSpan(TimeSpan.FromHours(11))), TimeSpan.Zero),
-                    Duration = TimeSpan.FromMinutes(50),
-                    Note = "Regular maintenance",
-                    CreatedAt = now,
-                    UpdatedAt = now,
-                    CreatedBy = SEEDER,
-                    UpdatedBy = SEEDER
-                };
-                housekeepingRecords.Add(twoWeeksAgoHousekeeping);
+            // Last week's housekeeping
+            HousekeepingDb lastWeekHousekeeping = new HousekeepingDb
+            {
+                Timestamp = new DateTimeOffset(lastWeek.ToDateTime(TimeOnly.FromTimeSpan(TimeSpan.FromHours(14))), TimeSpan.Zero),
+                Duration = TimeSpan.FromMinutes(60),
+                Note = "Weekly deep clean",
+                CreatedAt = now,
+                UpdatedAt = now,
+                CreatedBy = SEEDER,
+                UpdatedBy = SEEDER
+            };
+            housekeepingRecords.Add(lastWeekHousekeeping);
 
-                _context.Housekeeping.AddRange(housekeepingRecords);
-                await _context.SaveChangesAsync(cancellationToken);
+            // Two weeks ago
+            HousekeepingDb twoWeeksAgoHousekeeping = new HousekeepingDb
+            {
+                Timestamp = new DateTimeOffset(twoWeeksAgo.ToDateTime(TimeOnly.FromTimeSpan(TimeSpan.FromHours(11))), TimeSpan.Zero),
+                Duration = TimeSpan.FromMinutes(50),
+                Note = "Regular maintenance",
+                CreatedAt = now,
+                UpdatedAt = now,
+                CreatedBy = SEEDER,
+                UpdatedBy = SEEDER
+            };
+            housekeepingRecords.Add(twoWeeksAgoHousekeeping);
 
-                // Create completed chores
-                List<CompletedChoreDb> completedChores = new List<CompletedChoreDb>
+            _context.Housekeeping.AddRange(housekeepingRecords);
+            await _context.SaveChangesAsync(cancellationToken);
+
+            // Create completed chores
+            List<CompletedChoreDb> completedChores = new List<CompletedChoreDb>
                 {
                     // Today's completed chores
                     new CompletedChoreDb { ChoreId = chores[0].Id, HousekeepingId = todayHousekeeping.Id },
@@ -155,11 +143,11 @@ namespace Niles.Chores.Data
                     new CompletedChoreDb { ChoreId = chores[9].Id, HousekeepingId = twoWeeksAgoHousekeeping.Id }
                 };
 
-                _context.CompletedChores.AddRange(completedChores);
-                await _context.SaveChangesAsync(cancellationToken);
+            _context.CompletedChores.AddRange(completedChores);
+            await _context.SaveChangesAsync(cancellationToken);
 
-                // Create some critical chores (for chores that haven't been completed recently)
-                List<CriticalChoreDb> criticalChores = new List<CriticalChoreDb>
+            // Create some critical chores (for chores that haven't been completed recently)
+            List<CriticalChoreDb> criticalChores = new List<CriticalChoreDb>
                 {
                     new CriticalChoreDb
                     {
@@ -183,18 +171,11 @@ namespace Niles.Chores.Data
                     }
                 };
 
-                _context.CriticalChores.AddRange(criticalChores);
-                await _context.SaveChangesAsync(cancellationToken);
-
-                _logger.LogInformation("Created: {0} chores; {1} housekeeping records; {2} completed chore records; {3} critical chore records.",
-                    chores.Count, housekeepingRecords.Count, completedChores.Count, criticalChores.Count);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error seeding database.");
-                return ex;
-            }
-            return true;
+            _context.CriticalChores.AddRange(criticalChores);
+            await _context.SaveChangesAsync(cancellationToken);
+            _logger.Info("Created: {0} chores; {1} housekeeping records; {2} completed chore records; {3} critical chore records.",
+                chores.Count.ToString(), housekeepingRecords.Count.ToString(), completedChores.Count.ToString(), criticalChores.Count.ToString());
+            return SeedOutcome.Seeded;
         }
 
         private async Task<List<ChoreDb>> CreateChoresAsync(CancellationToken cancellationToken = default)
