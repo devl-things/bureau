@@ -2,7 +2,7 @@
 
 namespace Niles.Chores.Api.Dtos
 {
-    public class ChoreRequestBase
+    public abstract class ChoreRequestBase
     {
         [JsonPropertyName("title")]
         public string Title { get; set; } = string.Empty;
@@ -11,6 +11,7 @@ namespace Niles.Chores.Api.Dtos
         [JsonPropertyName("type")]
         public string Type { get; set; } = string.Empty;
         [JsonPropertyName("weeklyInterval")]
+        [JsonRequired]
         public int WeeklyInterval { get; set; }
     }
 }
