@@ -1,5 +1,6 @@
 using Bureau.AspNetCore.Logging;
 using Bureau.AspNetCore.Middleware;
+using Bureau.AspNetCore.Serialization;
 using Bureau.Server.Contracts;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
@@ -17,6 +18,7 @@ namespace Niles.Chores.Api
             WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
             builder.Logging.AddBureauActivityTracking();
+            builder.Services.AddBureauJsonSerialization();
 
             builder.Services.AddSingleton<IIdObfuscator, IdObfuscator>();
 
