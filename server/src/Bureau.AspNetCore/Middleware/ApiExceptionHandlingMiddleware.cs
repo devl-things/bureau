@@ -4,6 +4,7 @@ using Bureau.Extensions.Logging;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using System.Text.Json;
 
 namespace Bureau.AspNetCore.Middleware
@@ -14,11 +15,11 @@ namespace Bureau.AspNetCore.Middleware
         private readonly ILogger<ApiExceptionHandlingMiddleware> _logger;
         private readonly JsonSerializerOptions _json;
 
-        public ApiExceptionHandlingMiddleware(RequestDelegate next, ILogger<ApiExceptionHandlingMiddleware> logger, JsonSerializerOptions json)
+        public ApiExceptionHandlingMiddleware(RequestDelegate next, ILogger<ApiExceptionHandlingMiddleware> logger, IOptions<JsonOptions> jsonOptions)
         {
             _next = next;
             _logger = logger;
-            _json = json;
+            _json = jsonOptions.Value.JsonSerializerOptions;
         }
 
         public async Task Invoke(HttpContext context)
