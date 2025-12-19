@@ -90,6 +90,7 @@ namespace Niles.Chores.Services
             _context.Chores.Add(choreDb);
             await _context.SaveChangesAsync(cancellationToken);
 
+            _cache.RemovePriotizedChores();
             chore.Id = choreDb.Id;
             return chore;
         }
@@ -130,7 +131,7 @@ namespace Niles.Chores.Services
             {
                 return ResultError.FromLogMessage(ProblemCodes.Resource.NotFound, string.Format(LogMessages.EntityNotFound, nameof(Chore), id));
             }
-
+            _cache.RemovePriotizedChores();
             return true;
 
         }

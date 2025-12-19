@@ -1,6 +1,7 @@
 using Bureau;
 using Bureau.Primitives.Errors;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
 using Niles.Chores.Contexts;
 using Niles.Chores.Models;
 using Niles.Chores.Utilities;
@@ -11,11 +12,13 @@ namespace Niles.Chores.Services
     {
         private readonly ChoresContext _context;
         private readonly TimeProvider _timeProvider;
+        private readonly IMemoryCache _cache;
 
-        public CriticalChoreService(ChoresContext context, TimeProvider timeProvider)
+        public CriticalChoreService(ChoresContext context, TimeProvider timeProvider, IMemoryCache cache)
         {
             _context = context;
             _timeProvider = timeProvider;
+            _cache = cache;
         }
 
         public async Task<Result> CreateCriticalChoreAsync(int choreId, string note, CancellationToken cancellationToken = default)
@@ -46,7 +49,7 @@ namespace Niles.Chores.Services
 
             _context.CriticalChores.Add(criticalChore);
             await _context.SaveChangesAsync(cancellationToken);
-
+            _cache.RemovePriotizedChores();
             return true;
         }
 
@@ -63,7 +66,7 @@ namespace Niles.Chores.Services
 
             _context.CriticalChores.RemoveRange(openCriticalChores);
             await _context.SaveChangesAsync(cancellationToken);
-
+            _cache.RemovePriotizedChores();
             return true;
         }
 
