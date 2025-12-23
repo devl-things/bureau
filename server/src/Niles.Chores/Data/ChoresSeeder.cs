@@ -56,6 +56,34 @@ namespace Niles.Chores.Data
                 return SeedOutcome.AlreadySeeded;
             }
             await CreateChoresAsync(cancellationToken);
+            List<HousekeepingDb> housekeepingRecords = new List<HousekeepingDb>(1);
+
+            DateTimeOffset dt20251220 = new DateTimeOffset(2025, 12, 20, 13, 0, 0, TimeSpan.FromHours(1));
+            HousekeepingDb housekeeping20251220 = new HousekeepingDb
+            {
+                Timestamp = dt20251220,
+                Duration = TimeSpan.FromHours(3),
+                Note = "Total clean up",
+                CreatedAt = dt20251220,
+                UpdatedAt = dt20251220,
+                CreatedBy = SEEDER,
+                UpdatedBy = SEEDER
+            };
+            housekeepingRecords.Add(housekeeping20251220);
+            await _context.SaveChangesAsync(cancellationToken);
+
+            List<CompletedChoreDb> cc20251220 = await _context.Chores
+                .Where(x => x.Title.Contains("Oven: Deep Clean") ||
+                    x.Title.Contains("Turnover Mattress") ||
+                    x.Title.Contains("Clean Lower Filter") ||
+                    x.Title.Contains("Clean Refrigerator") ||
+                    x.Title.Contains("drawer KTC-020-030"))
+                .Select(x => new CompletedChoreDb() { ChoreId = x.Id, HousekeepingId = housekeeping20251220.Id })
+                .ToListAsync();
+
+            _context.CompletedChores.AddRange(cc20251220);
+            await _context.SaveChangesAsync(cancellationToken);
+
             return SeedOutcome.Seeded;
         }
 
@@ -185,7 +213,7 @@ namespace Niles.Chores.Data
             // Create sample chores
             List<ChoreDb> chores = new List<ChoreDb>
             {
-                // 🧹 GENERAL
+                #region 🧹 GENERAL - APP
                 new ChoreDb
                 {
                     Title = "Apartment — Vacuum Floors",
@@ -274,7 +302,8 @@ namespace Niles.Chores.Data
                     CreatedBy = SEEDER,
                     UpdatedBy = SEEDER
                 },
-                // 🌿 BALCONY
+                #endregion
+                #region 🌿 BALCONY - BLC
                 new ChoreDb
                 {
                     Title = "Balcony — Clean Floor",
@@ -308,7 +337,8 @@ namespace Niles.Chores.Data
                     CreatedBy = SEEDER,
                     UpdatedBy = SEEDER
                 },
-                // 🍳 KITCHEN
+                #endregion
+                #region 🍳 KITCHEN - KTC
                 new ChoreDb
                 {
                     Title = "Kitchen — Wipe Countertops",
@@ -474,7 +504,19 @@ namespace Niles.Chores.Data
                     CreatedBy = SEEDER,
                     UpdatedBy = SEEDER
                 },
-                // 🛋️ LIVING ROOM
+                new ChoreDb
+                {
+                    Title = "Kitchen — Clean drawer KTC-020-030",
+                    Description = "Take out all stuff, throw away expired, clean the drawer",
+                    Type = ChoreType.Extra,
+                    WeeklyInterval = 12,
+                    CreatedAt = now,
+                    UpdatedAt = now,
+                    CreatedBy = SEEDER,
+                    UpdatedBy = SEEDER
+                },
+                #endregion
+                #region 🛋️ LIVING ROOM - LVR
                 new ChoreDb
                 {
                     Title = "Living Room — Dust TV and Devices",
@@ -552,7 +594,8 @@ namespace Niles.Chores.Data
                     CreatedBy = SEEDER,
                     UpdatedBy = SEEDER
                 },
-                // 🍽️ DINING ROOM
+                #endregion
+                #region 🍽️ DINING ROOM - DNR
                 new ChoreDb
                 {
                     Title = "Dining Room — Wipe Dining Table",
@@ -586,7 +629,8 @@ namespace Niles.Chores.Data
                     CreatedBy = SEEDER,
                     UpdatedBy = SEEDER
                 },
-                // 🚪 HALLWAY
+                #endregion
+                #region 🚪 HALLWAY - HLW
                 new ChoreDb
                 {
                     Title = "Hallway — Clean Mirror",
@@ -620,7 +664,8 @@ namespace Niles.Chores.Data
                     CreatedBy = SEEDER,
                     UpdatedBy = SEEDER
                 },
-                // 🛁 BATHROOM
+                #endregion
+                #region 🛁 BATHROOM - BTR
                 new ChoreDb
                 {
                     Title = "Bathroom — Clean Toilet Bowl",
@@ -720,7 +765,8 @@ namespace Niles.Chores.Data
                     CreatedBy = SEEDER,
                     UpdatedBy = SEEDER
                 },
-                // 🧺 WASHING MACHINE / DRYER
+                #endregion
+                #region 🧺 WASHING MACHINE / DRYER - LAA (Laundry appliances)
                 new ChoreDb
                 {
                     Title = "Bathroom — Washing Machine: Cleaning Cycle",
@@ -765,7 +811,8 @@ namespace Niles.Chores.Data
                     CreatedBy = SEEDER,
                     UpdatedBy = SEEDER
                 },
-                // 🛏️ BEDROOM
+                #endregion
+                #region 🛏️ BEDROOM - BDR
                 new ChoreDb
                 {
                     Title = "Bedroom — Change Bedding",
@@ -794,6 +841,17 @@ namespace Niles.Chores.Data
                     Description = "Focus on area around bed and under furniture.",
                     Type = ChoreType.Maintenance,
                     WeeklyInterval = 1,
+                    CreatedAt = now,
+                    UpdatedAt = now,
+                    CreatedBy = SEEDER,
+                    UpdatedBy = SEEDER
+                },
+                new ChoreDb
+                {
+                    Title = "Bedroom — Turnover Mattress",
+                    Description = "Turnover the mattress.",
+                    Type = ChoreType.Extra,
+                    WeeklyInterval = 24,
                     CreatedAt = now,
                     UpdatedAt = now,
                     CreatedBy = SEEDER,
@@ -832,7 +890,8 @@ namespace Niles.Chores.Data
                     CreatedBy = SEEDER,
                     UpdatedBy = SEEDER
                 },
-                // 🖥️ OFFICE
+                #endregion
+                #region 🖥️ OFFICE - OFF
                 new ChoreDb
                 {
                     Title = "Office — Wipe Desk",
@@ -888,6 +947,7 @@ namespace Niles.Chores.Data
                     CreatedBy = SEEDER,
                     UpdatedBy = SEEDER
                 }
+                #endregion
             };
 
             _context.Chores.AddRange(chores);

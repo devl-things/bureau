@@ -22,7 +22,7 @@ namespace Niles.Chores.Models
         public override bool Equals(object? obj)
         {
             if (obj is null) return false;
-            if (obj.GetType() != typeof(YearsWeek)) return false;
+            if (obj is not YearsWeek) return false;
             YearsWeek yearsWeek = (YearsWeek)obj;
             return Year == yearsWeek.Year && Week == yearsWeek.Week;
         }

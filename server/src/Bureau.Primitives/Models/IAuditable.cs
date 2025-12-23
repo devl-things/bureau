@@ -1,4 +1,4 @@
-﻿namespace Niles.Chores.Models
+﻿namespace Bureau
 {
     public interface IAuditable
     {

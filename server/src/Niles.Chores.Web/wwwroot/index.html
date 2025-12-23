@@ -16,7 +16,6 @@
             --border-subtle: #e5e7eb;
             --radius-lg: 18px;
             --shadow-soft: 0 8px 22px rgba(15, 23, 42, 0.12);
-
             --priority-critical: #9f1239;
             --priority-high: #b45309;
             --priority-medium: #1d4ed8;
@@ -133,9 +132,9 @@
             color: #166534;
         }
 
-        .status-label.offline {
-            color: #b91c1c;
-        }
+            .status-label.offline {
+                color: #b91c1c;
+            }
 
         .status-dot-offline {
             background: radial-gradient(circle, #f97373, #ef4444);
@@ -164,16 +163,16 @@
             box-shadow: 0 3px 8px rgba(15, 23, 42, 0.08);
         }
 
-        .refresh-btn:active {
-            transform: translateY(1px);
-            box-shadow: 0 1px 4px rgba(15, 23, 42, 0.08);
-        }
+            .refresh-btn:active {
+                transform: translateY(1px);
+                box-shadow: 0 1px 4px rgba(15, 23, 42, 0.08);
+            }
 
-        .refresh-btn[disabled] {
-            opacity: 0.6;
-            cursor: not-allowed;
-            box-shadow: none;
-        }
+            .refresh-btn[disabled] {
+                opacity: 0.6;
+                cursor: not-allowed;
+                box-shadow: none;
+            }
 
         .refresh-icon {
             font-size: 1rem;
@@ -277,36 +276,36 @@
             border: 1px solid #e5e7eb;
             box-shadow: 0 4px 10px rgba(15, 23, 42, 0.05);
             transform: translateY(0);
-            transition: transform 0.18s ease-out, box-shadow 0.18s ease-out,
-                border-color 0.18s ease-out, background 0.18s ease-out,
-                opacity 0.18s ease-out;
+            transition: transform 0.18s ease-out, box-shadow 0.18s ease-out, border-color 0.18s ease-out, background 0.18s ease-out, opacity 0.18s ease-out;
             cursor: pointer;
         }
 
-        .chore:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 6px 14px rgba(15, 23, 42, 0.08);
-            border-color: rgba(59, 130, 246, 0.5);
-            background: #ffffff;
-        }
+            .chore:hover {
+                transform: translateY(-1px);
+                box-shadow: 0 6px 14px rgba(15, 23, 42, 0.08);
+                border-color: rgba(59, 130, 246, 0.5);
+                background: #ffffff;
+            }
 
-        .chore.completed {
-            border-color: rgba(22, 163, 74, 0.75);
-            background: #ecfdf5;
-            opacity: 0.95;
-        }
+            .chore.completed {
+                border-color: rgba(22, 163, 74, 0.75);
+                background: #ecfdf5;
+                opacity: 0.95;
+            }
 
         .chore-left {
             display: flex;
             align-items: center;
             gap: 7px;
             flex: 1;
+            min-width: 0;
         }
 
         .chore-texts {
             display: flex;
             flex-direction: column;
             gap: 3px;
+            min-width: 0;
         }
 
         .chore-title {
@@ -356,40 +355,40 @@
             color: var(--priority-critical);
         }
 
-        .priority-critical .priority-label-short {
-            background: #fdf2f8;
-            color: var(--priority-critical);
-        }
+            .priority-critical .priority-label-short {
+                background: #fdf2f8;
+                color: var(--priority-critical);
+            }
 
         .priority-high {
             border-color: rgba(180, 83, 9, 0.4);
             color: var(--priority-high);
         }
 
-        .priority-high .priority-label-short {
-            background: #fffbeb;
-            color: var(--priority-high);
-        }
+            .priority-high .priority-label-short {
+                background: #fffbeb;
+                color: var(--priority-high);
+            }
 
         .priority-medium {
             border-color: rgba(37, 99, 235, 0.35);
             color: var(--priority-medium);
         }
 
-        .priority-medium .priority-label-short {
-            background: #eff6ff;
-            color: var(--priority-medium);
-        }
+            .priority-medium .priority-label-short {
+                background: #eff6ff;
+                color: var(--priority-medium);
+            }
 
         .priority-low {
             border-color: rgba(21, 128, 61, 0.35);
             color: var(--priority-low);
         }
 
-        .priority-low .priority-label-short {
-            background: #ecfdf5;
-            color: var(--priority-low);
-        }
+            .priority-low .priority-label-short {
+                background: #ecfdf5;
+                color: var(--priority-low);
+            }
 
         .type-pill {
             padding: 2px 6px;
@@ -399,11 +398,11 @@
             color: #4b5563;
         }
 
-        .type-pill.extra {
-            background: #fff7ed;
-            border-color: #fed7aa;
-            color: #9a3412;
-        }
+            .type-pill.extra {
+                background: #fff7ed;
+                border-color: #fed7aa;
+                color: #9a3412;
+            }
 
         .checkbox-wrap {
             flex-shrink: 0;
@@ -428,23 +427,23 @@
             transition: border-color 0.16s ease-out, background 0.16s ease-out, box-shadow 0.16s ease-out;
         }
 
-        input[type="checkbox"]::after {
-            content: "✓";
-            font-size: 0.9rem;
-            color: white;
-            transform: scale(0);
-            transition: transform 0.14s ease-out;
-        }
+            input[type="checkbox"]::after {
+                content: "✓";
+                font-size: 0.9rem;
+                color: white;
+                transform: scale(0);
+                transition: transform 0.14s ease-out;
+            }
 
-        input[type="checkbox"]:checked {
-            border-color: transparent;
-            background: linear-gradient(135deg, #22c55e, #16a34a);
-            box-shadow: 0 0 0 2px rgba(22, 163, 74, 0.35);
-        }
+            input[type="checkbox"]:checked {
+                border-color: transparent;
+                background: linear-gradient(135deg, #22c55e, #16a34a);
+                box-shadow: 0 0 0 2px rgba(22, 163, 74, 0.35);
+            }
 
-        input[type="checkbox"]:checked::after {
-            transform: scale(1);
-        }
+                input[type="checkbox"]:checked::after {
+                    transform: scale(1);
+                }
 
         .submit-row {
             display: flex;
@@ -469,16 +468,16 @@
             box-shadow: 0 4px 10px rgba(22, 163, 74, 0.35);
         }
 
-        .submit-btn:active {
-            transform: translateY(1px);
-            box-shadow: 0 2px 6px rgba(22, 163, 74, 0.3);
-        }
+            .submit-btn:active {
+                transform: translateY(1px);
+                box-shadow: 0 2px 6px rgba(22, 163, 74, 0.3);
+            }
 
-        .submit-btn:disabled {
-            opacity: 0.7;
-            cursor: not-allowed;
-            box-shadow: none;
-        }
+            .submit-btn:disabled {
+                opacity: 0.7;
+                cursor: not-allowed;
+                box-shadow: none;
+            }
 
         .toast {
             position: fixed;
@@ -500,10 +499,10 @@
             transition: transform 0.22s ease-out, opacity 0.22s ease-out;
         }
 
-        .toast.visible {
-            transform: translateX(-50%) translateY(0);
-            opacity: 1;
-        }
+            .toast.visible {
+                transform: translateX(-50%) translateY(0);
+                opacity: 1;
+            }
 
         .toast-icon {
             font-size: 1rem;
@@ -550,8 +549,7 @@
 
         @keyframes pulse {
 
-            0%,
-            100% {
+            0%, 100% {
                 transform: scale(1);
                 opacity: 0.8;
             }
@@ -574,9 +572,9 @@
             z-index: 30;
         }
 
-        .modal-backdrop.visible {
-            display: flex;
-        }
+            .modal-backdrop.visible {
+                display: flex;
+            }
 
         .modal-panel {
             background: #ffffff;
@@ -623,22 +621,22 @@
             font-family: inherit;
         }
 
-        .modal-field input:focus,
-        .modal-field textarea:focus {
-            outline: none;
-            border-color: #2563eb;
-            box-shadow: 0 0 0 1px rgba(37, 99, 235, 0.35);
-        }
+            .modal-field input:focus,
+            .modal-field textarea:focus {
+                outline: none;
+                border-color: #2563eb;
+                box-shadow: 0 0 0 1px rgba(37, 99, 235, 0.35);
+            }
 
-        .modal-field input[type="number"] {
-            -moz-appearance: textfield;
-        }
+            .modal-field input[type="number"] {
+                -moz-appearance: textfield;
+            }
 
-        .modal-field input[type="number"]::-webkit-outer-spin-button,
-        .modal-field input[type="number"]::-webkit-inner-spin-button {
-            -webkit-appearance: none;
-            margin: 0;
-        }
+                .modal-field input[type="number"]::-webkit-outer-spin-button,
+                .modal-field input[type="number"]::-webkit-inner-spin-button {
+                    -webkit-appearance: none;
+                    margin: 0;
+                }
 
         .modal-field textarea {
             resize: vertical;
@@ -668,9 +666,9 @@
             border: 1px solid #d1d5db;
         }
 
-        .btn-secondary:active {
-            transform: translateY(1px);
-        }
+            .btn-secondary:active {
+                transform: translateY(1px);
+            }
 
         .btn-primary {
             background: linear-gradient(135deg, #22c55e, #16a34a);
@@ -678,16 +676,50 @@
             box-shadow: 0 4px 10px rgba(22, 163, 74, 0.35);
         }
 
-        .btn-primary:active {
-            transform: translateY(1px);
-            box-shadow: 0 2px 6px rgba(22, 163, 74, 0.3);
-        }
+            .btn-primary:active {
+                transform: translateY(1px);
+                box-shadow: 0 2px 6px rgba(22, 163, 74, 0.3);
+            }
 
         .btn[disabled] {
             opacity: 0.7;
             cursor: not-allowed;
             box-shadow: none;
         }
+
+        /* Chore note (only for critical chores with note) */
+        .chore-note {
+            margin-top: 6px;
+            font-size: 0.78rem;
+            color: #111827;
+            font-weight: 650;
+            line-height: 1.25rem;
+            padding: 6px 8px;
+            border-radius: 10px;
+            background: #fff1f2;
+            border: 1px solid rgba(159, 18, 57, 0.22);
+            display: -webkit-box;
+            -webkit-box-orient: vertical;
+            -webkit-line-clamp: 1; /* 1 line on mobile */
+            overflow: hidden;
+            width: 100%;
+        }
+
+            .chore-note.expandable {
+                cursor: pointer;
+                position: relative;
+                padding-right: 30px;
+            }
+
+                .chore-note.expandable::after {
+                    content: "↗";
+                    position: absolute;
+                    right: 10px;
+                    top: 50%;
+                    transform: translateY(-50%);
+                    font-size: 0.82rem;
+                    color: #2563eb;
+                }
 
         @media (min-width: 600px) {
             .app {
@@ -696,6 +728,11 @@
 
             .app-inner {
                 min-height: calc(100vh - 48px);
+            }
+
+            /* 2 lines on desktop */
+            .chore-note {
+                -webkit-line-clamp: 2;
             }
         }
     </style>
@@ -797,6 +834,35 @@
         </div>
     </div>
 
+    <!-- Modal popup for viewing full chore note -->
+    <div class="modal-backdrop" id="note-modal">
+        <div class="modal-panel">
+            <div class="modal-title">Chore note</div>
+            <div class="modal-subtitle" id="note-modal-chore-title"></div>
+
+            <div class="modal-fields">
+                <div class="modal-field">
+                    <label for="note-modal-content">Note</label>
+                    <div id="note-modal-content" style="
+                        border:1px solid #d1d5db;
+                        border-radius:10px;
+                        padding:10px;
+                        font-size:0.85rem;
+                        white-space:pre-wrap;
+                        max-height: 45vh;
+                        overflow:auto;
+                    "></div>
+                </div>
+            </div>
+
+            <div class="modal-actions">
+                <button type="button" class="btn btn-secondary" id="note-modal-close-btn">
+                    Close
+                </button>
+            </div>
+        </div>
+    </div>
+
     <div class="toast" id="toast">
         <span class="toast-icon" id="toast-icon">✓</span>
         <span class="toast-text" id="toast-text">Saved</span>
@@ -814,9 +880,9 @@
 
         let todayIso = null; // YYYY-MM-DD
 
-        document.addEventListener("DOMContentLoaded",async () => {
+        document.addEventListener("DOMContentLoaded", async () => {
             const apiConfig = await loadApiConfig();
-                
+
             renderTodayDate();
 
             const refreshBtn = document.getElementById("refresh-btn");
@@ -842,6 +908,16 @@
                 }
             });
 
+            const noteModalCloseBtn = document.getElementById("note-modal-close-btn");
+            noteModalCloseBtn.addEventListener("click", closeNoteModal);
+
+            const noteModalBackdrop = document.getElementById("note-modal");
+            noteModalBackdrop.addEventListener("click", (e) => {
+                if (e.target === noteModalBackdrop) {
+                    closeNoteModal();
+                }
+            });
+
             checkApiHealthAndLoad(apiConfig);
         });
 
@@ -856,8 +932,9 @@
                 day: "numeric"
             });
 
-            todayIso = now.toISOString().slice(0, 10);;
+            todayIso = now.toISOString().slice(0, 10);
         }
+
         /**
          * @param {ApiConfig} apiConfig
          */
@@ -888,6 +965,7 @@
                 setLoading(false);
             }
         }
+
         /**
          * @param {ApiConfig} apiConfig
          */
@@ -905,6 +983,7 @@
                 return false;
             }
         }
+
         /**
          * @param {ApiConfig} apiConfig
          */
@@ -922,6 +1001,7 @@
                 setLoading(false);
             }
         }
+
         /**
          * @param {ApiConfig} apiConfig
          */
@@ -958,7 +1038,8 @@
                     criticalityNumber: criticalityNum,
                     criticalityName: priorityNameFromNumber(criticalityNum),
                     priority: priorityNum,
-                    type: normalizeType(item.type)
+                    type: normalizeType(item.type),
+                    note: (item.note ?? "").trim()
                 };
             });
         }
@@ -1024,7 +1105,6 @@
                 li.dataset.priority = String(chore.priority);
                 li.dataset.originalIndex = String(index);
 
-
                 const leftDiv = document.createElement("div");
                 leftDiv.className = "chore-left";
 
@@ -1072,6 +1152,32 @@
                 metaEl.appendChild(typePill);
 
                 textDiv.appendChild(metaEl);
+
+                // ---- NOTE (only Critical + non-empty) ----
+                if (chore.criticalityNumber === PRIORITY.CRITICAL && chore.note) {
+                    const noteEl = document.createElement("div");
+                    noteEl.className = "chore-note";
+                    noteEl.textContent = chore.note;
+
+                    // Prevent clicking note from toggling checkbox/chore selection
+                    noteEl.addEventListener("click", (e) => {
+                        e.stopPropagation();
+                        if (noteEl.classList.contains("expandable")) {
+                            openNoteModal(chore.title, chore.note);
+                        }
+                    });
+
+                    textDiv.appendChild(noteEl);
+
+                    // After it's in DOM, detect overflow -> mark expandable
+                    requestAnimationFrame(() => {
+                        const isOverflowing = noteEl.scrollHeight > noteEl.clientHeight + 1;
+                        if (isOverflowing) {
+                            noteEl.classList.add("expandable");
+                            noteEl.title = "Click to view full note";
+                        }
+                    });
+                }
 
                 leftDiv.appendChild(textDiv);
 
@@ -1328,6 +1434,22 @@
             showToast._timeoutId = setTimeout(() => {
                 toast.classList.remove("visible");
             }, 2600);
+        }
+
+        function openNoteModal(choreTitle, noteText) {
+            const modal = document.getElementById("note-modal");
+            const titleEl = document.getElementById("note-modal-chore-title");
+            const contentEl = document.getElementById("note-modal-content");
+
+            titleEl.textContent = choreTitle || "";
+            contentEl.textContent = noteText || "";
+
+            modal.classList.add("visible");
+        }
+
+        function closeNoteModal() {
+            const modal = document.getElementById("note-modal");
+            modal.classList.remove("visible");
         }
     </script>
 </body>
