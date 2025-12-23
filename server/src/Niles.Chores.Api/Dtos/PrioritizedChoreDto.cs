@@ -18,8 +18,8 @@ namespace Niles.Chores.Api.Dtos
         public string Type { get; set; } = string.Empty;
         [JsonPropertyName("completed")]
         public bool IsCompleted { get; set; }
-        [JsonIgnore]
-        public DateOnly Date { get; set; }
+        [JsonPropertyName("note")]
+        public string? Note { get; set; }
     }
 
 }

@@ -15,7 +15,8 @@ namespace Niles.Chores.Api.Mappers
                 Criticality = (int)chore.Criticality,
                 Priority = chore.Priority,
                 Type = chore.Type.ToString(),
-                IsCompleted = false
+                IsCompleted = false,
+                Note = chore.Note,
             };
         }
     }
