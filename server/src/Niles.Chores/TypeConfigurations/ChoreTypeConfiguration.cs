@@ -1,4 +1,6 @@
-﻿using Microsoft.EntityFrameworkCore.Metadata.Builders;
+﻿using Bureau.EntityFrameworkCore.SqlServer.TypeConfigurations;
+using Bureau.EntityFrameworkCore.TypeConfigurations;
+using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Niles.Chores.Models;
 
 namespace Niles.Chores.TypeConfigurations
@@ -8,6 +10,7 @@ namespace Niles.Chores.TypeConfigurations
         public override void Configure(EntityTypeBuilder<ChoreDb> builder)
         {
             base.Configure(builder);
+            builder.ConfigureAuditFields();
 
             builder.HasKey(x => x.Id);
             builder.Property(x => x.Id).ValueGeneratedOnAdd();
