@@ -3,9 +3,9 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace Bureau.Admin.Hosting.Configurations
 {
-    public static class AppsRegistryCollectionExtensions
+    public static class AppsRegistryServiceCollectionExtensions
     {
-        public static IServiceCollection AddAdminAppsRegistry(this IServiceCollection services, IConfiguration configuration)
+        public static IServiceCollection AddBureauAdminAppsRegistry(this IServiceCollection services, IConfiguration configuration)
         {
             ArgumentNullException.ThrowIfNull(services);
 
