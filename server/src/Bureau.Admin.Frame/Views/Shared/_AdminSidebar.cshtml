@@ -1,0 +1,22 @@
+﻿@using System
+@using Bureau.Admin.Hosting
+@model IAppsRegistry
+
+<div class="admin-nav">
+    <div class="admin-nav-title">Bureau</div>
+    <div class="admin-nav-subtitle">Admin</div>
+
+    <ul class="admin-nav-list">
+        @foreach (AppDescriptor app in Model.Apps)
+        {
+            bool isActive = string.Equals(app.Key, Model.CurrentAppKey, StringComparison.OrdinalIgnoreCase);
+            string activeClass = isActive ? "is-active" : string.Empty;
+
+            <li class="admin-nav-item @activeClass">
+                <a class="admin-nav-link" href="@app.Url">
+                    <span class="admin-nav-text">@app.Title</span>
+                </a>
+            </li>
+        }
+    </ul>
+</div>

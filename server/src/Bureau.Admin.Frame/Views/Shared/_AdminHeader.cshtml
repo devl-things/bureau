@@ -1,0 +1,16 @@
+﻿<div class="admin-header-bar">
+    <div>
+        <h1 class="admin-page-title">@ViewData["Title"]</h1>
+    </div>
+
+    <div class="admin-header-right">
+        @if (User != null && User.Identity != null && User.Identity.IsAuthenticated)
+        {
+            <span class="admin-user">@User.Identity.Name</span>
+        }   
+        else
+        {
+            <span class="admin-badge">DEV</span>
+        }
+    </div>
+</div>
