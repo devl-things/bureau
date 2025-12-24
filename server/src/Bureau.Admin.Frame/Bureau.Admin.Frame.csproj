@@ -5,7 +5,7 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <AddRazorSupportForMvc>true</AddRazorSupportForMvc>
-	<StaticWebAssetBasePath>assets/frame</StaticWebAssetBasePath>
+	<StaticWebAssetBasePath></StaticWebAssetBasePath>
   </PropertyGroup>
 
   <ItemGroup>
