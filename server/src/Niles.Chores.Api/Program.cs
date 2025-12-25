@@ -1,3 +1,4 @@
+using Bureau.AspNetCore.Cors;
 using Bureau.AspNetCore.Logging;
 using Bureau.AspNetCore.Middleware;
 using Bureau.AspNetCore.Serialization;
@@ -26,19 +27,8 @@ namespace Niles.Chores.Api
             // Add services to the container.
             builder.Services.AddChores(builder.Configuration.GetConnectionString("NilesDb")!);
 
-            // Only register the CORS policy in development
-            if (builder.Environment.IsDevelopment())
-            {
-                builder.Services.AddCors(options =>
-                {
-                    options.AddDefaultPolicy(policy =>
-                    {
-                        policy.AllowAnyOrigin()
-                              .AllowAnyHeader()
-                              .AllowAnyMethod();
-                    });
-                });
-            }
+            builder.Services.AddBureauCors(builder.Configuration, builder.Environment);
+
             builder.Services.AddBureauApiAuth(builder.Configuration);
 
             builder.Services.AddControllers();
@@ -61,11 +51,11 @@ namespace Niles.Chores.Api
                     options.SwaggerEndpoint("/swagger/v1/swagger.json", "Housekeeping API v1");
                     options.RoutePrefix = "swagger";
                 });
-
-                app.UseCors();
             }
 
             app.UseMiddleware<ApiExceptionHandlingMiddleware>();
+
+            app.UseBureauCors();
 
             app.UseAuthentication();
             app.UseAuthorization();
