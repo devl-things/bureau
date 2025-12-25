@@ -6,7 +6,7 @@ namespace Bureau.AspNetCore.Cors
     {
         public static IApplicationBuilder UseBureauCors(this IApplicationBuilder app)
         {
-            app.UseCors(CorsConstants.DefaultCorsPolicyName);
+            app.UseCors(CorsConstants.BureauCorsPolicyName);
             return app;
         }
     }

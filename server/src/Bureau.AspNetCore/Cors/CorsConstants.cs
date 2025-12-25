@@ -1,7 +1,7 @@
 ﻿namespace Bureau.AspNetCore.Cors
 {
-    internal static class CorsConstants
+    public static class CorsConstants
     {
-        public const string DefaultCorsPolicyName = "DefaultCors";
+        public const string BureauCorsPolicyName = "BureauCors";
     }
 }
