@@ -13,8 +13,6 @@
 
     public sealed class DevAuthOptions
     {
-        public bool AutoSignIn { get; set; } = true;
-
         /// <summary>
         /// UI-only: auto sign-in applies only under this path (e.g. /admin).
         /// Leave empty to apply to all paths.
