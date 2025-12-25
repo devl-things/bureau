@@ -10,6 +10,7 @@
   <Folder Name="/Infrastructure/">
     <Project Path="src/Bureau.EntityFrameworkCore.SqlServer/Bureau.EntityFrameworkCore.SqlServer.csproj" Id="2e798e31-56ab-4538-abe0-07f6770f7dc4" />
     <Project Path="src/Bureau.EntityFrameworkCore/Bureau.EntityFrameworkCore.csproj" Id="65335513-4834-4f55-8e76-128a56955782" />
+    <Project Path="src/Bureau.Server.Hosting/Bureau.Server.Hosting.csproj" Id="49670b92-3b7a-4c90-a802-e248675a732e" />
   </Folder>
   <Folder Name="/Presentation/">
     <Project Path="src/Bureau.Admin.Frame/Bureau.Admin.Frame.csproj" Id="5f1f69e7-40fd-4dde-894d-2f87bdba48a6" />
