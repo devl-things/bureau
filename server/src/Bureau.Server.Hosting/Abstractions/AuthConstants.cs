@@ -2,6 +2,7 @@
 {
     public static class AuthConstants
     {
+        public const string DevUiScheme = "BureauDevUi";
         public const string CookieScheme = "BureauCookie";
         public const string OidcScheme = "BureauOidc";
         public const string DevApiTokenScheme = "BureauDevApiToken";
