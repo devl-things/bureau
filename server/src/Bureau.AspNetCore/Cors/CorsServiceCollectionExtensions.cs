@@ -21,7 +21,7 @@ namespace Bureau.AspNetCore.Cors
 
             services.AddCors(options =>
             {
-                options.AddPolicy(CorsConstants.DefaultCorsPolicyName, policy =>
+                options.AddPolicy(CorsConstants.BureauCorsPolicyName, policy =>
                 {
                     ConfigurePolicy(policy, corsOptions);
                 });
