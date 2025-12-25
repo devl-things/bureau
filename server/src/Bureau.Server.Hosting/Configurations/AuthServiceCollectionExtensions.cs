@@ -13,13 +13,7 @@ namespace Bureau.Server.Hosting.Configurations
 
             ArgumentNullException.ThrowIfNull(configuration);
 
-            services.AddOptions<AuthOptions>()
-                .Bind(configuration.GetSection(AuthOptions.SectionName))
-                .ValidateOnStart();
-
-            services.AddSingleton<IDevPrincipalFactory, DevPrincipalFactory>();
-
-            AuthOptions options = configuration.GetSection(AuthOptions.SectionName).Get<AuthOptions>() ?? new AuthOptions();
+            AuthOptions options = ConfigureAuthOptions(services, configuration);
 
             if (options.Mode == AuthMode.None)
             {
@@ -48,7 +42,7 @@ namespace Bureau.Server.Hosting.Configurations
                 })
                 .AddCookie(AuthConstants.CookieScheme, cookie =>
                 {
-                    cookie.Cookie.Name = "bureau_host";
+                    cookie.Cookie.Name = AuthConstants.BureauHostCookieName;
                     cookie.SlidingExpiration = true;
                     // No LoginPath. Challenge will go to OIDC.
                 })
@@ -90,13 +84,7 @@ namespace Bureau.Server.Hosting.Configurations
 
             ArgumentNullException.ThrowIfNull(configuration);
 
-            services.AddOptions<AuthOptions>()
-                .Bind(configuration.GetSection(AuthOptions.SectionName))
-                .ValidateOnStart();
-
-            services.AddSingleton<IDevPrincipalFactory, DevPrincipalFactory>();
-
-            AuthOptions options = configuration.GetSection(AuthOptions.SectionName).Get<AuthOptions>() ?? new AuthOptions();
+            AuthOptions options = ConfigureAuthOptions(services, configuration);
 
             if (options.Mode == AuthMode.None)
             {
@@ -106,16 +94,14 @@ namespace Bureau.Server.Hosting.Configurations
             if (options.Mode == AuthMode.Dev)
             {
                 services.AddAuthentication(AuthConstants.DevApiTokenScheme)
-                    .AddScheme<Microsoft.AspNetCore.Authentication.AuthenticationSchemeOptions, DevApiTokenAuthenticationHandler>(
-                        AuthConstants.DevApiTokenScheme,
-                        configureOptions => { });
+                    .AddScheme<AuthenticationSchemeOptions, DevApiTokenAuthenticationHandler>(AuthConstants.DevApiTokenScheme, configureOptions => { });
 
                 services.AddAuthorization();
                 return services;
             }
 
-            // Sven mode: validate JWT access tokens
-            services.AddAuthentication(AuthConstants.JwtBearerScheme)
+            services
+                .AddAuthentication(AuthConstants.JwtBearerScheme)
                 .AddJwtBearer(AuthConstants.JwtBearerScheme, jwt =>
                 {
                     jwt.Authority = options.Oidc.Authority;
@@ -125,6 +111,19 @@ namespace Bureau.Server.Hosting.Configurations
 
             services.AddAuthorization();
             return services;
+        }
+
+
+        private static AuthOptions ConfigureAuthOptions(IServiceCollection services, IConfiguration configuration)
+        {
+            services.AddOptions<AuthOptions>()
+                .Bind(configuration.GetSection(AuthOptions.SectionName))
+                .ValidateOnStart();
+
+            services.AddSingleton<IDevPrincipalFactory, DevPrincipalFactory>();
+
+            AuthOptions options = configuration.GetSection(AuthOptions.SectionName).Get<AuthOptions>() ?? new AuthOptions();
+            return options;
         }
     }
 }
