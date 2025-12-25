@@ -12,5 +12,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Bureau.Admin.Frame\Bureau.Admin.Frame.csproj" />
+    <ProjectReference Include="..\Bureau.Server.Hosting\Bureau.Server.Hosting.csproj" />
   </ItemGroup>
 </Project>

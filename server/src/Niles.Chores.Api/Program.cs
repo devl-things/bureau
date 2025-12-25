@@ -2,6 +2,7 @@ using Bureau.AspNetCore.Logging;
 using Bureau.AspNetCore.Middleware;
 using Bureau.AspNetCore.Serialization;
 using Bureau.Server.Contracts;
+using Bureau.Server.Hosting.Configurations;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Niles.Chores.Api.Utilities;
@@ -38,6 +39,7 @@ namespace Niles.Chores.Api
                     });
                 });
             }
+            builder.Services.AddBureauApiAuth(builder.Configuration);
 
             builder.Services.AddControllers();
             builder.Services.AddEndpointsApiExplorer();
@@ -65,6 +67,7 @@ namespace Niles.Chores.Api
 
             app.UseMiddleware<ApiExceptionHandlingMiddleware>();
 
+            app.UseAuthentication();
             app.UseAuthorization();
 
             // Seed database in development

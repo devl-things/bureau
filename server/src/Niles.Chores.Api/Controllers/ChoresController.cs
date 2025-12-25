@@ -3,6 +3,7 @@ using Bureau.AspNetCore.Controllers;
 using Bureau.Primitives.Errors;
 using Bureau.Server.Contracts;
 using Bureau.Server.Contracts.Mappers;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Niles.Chores.Api.Dtos;
 using Niles.Chores.Api.Factories;
@@ -38,6 +39,7 @@ namespace Niles.Chores.Api.Controllers
         }
 
         [HttpGet("{id}")]
+        [Authorize]
         public async Task<IActionResult> GetByIdAsync(string id, CancellationToken cancellationToken)
         {
             Result<int> idResult = _idObfuscator.Decode(id);

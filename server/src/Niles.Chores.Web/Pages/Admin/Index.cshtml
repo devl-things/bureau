@@ -1,5 +1,6 @@
 ﻿@page "/admin"
 @model Niles.Chores.Web.Pages.Admin.IndexModel
+@attribute [Authorize]
 @{
     ViewData["Title"] = "Chores Admin (Frame Test)";
 }
@@ -8,3 +9,6 @@
     If you can see this content inside the frame (sidebar + header + content panel),
     then <strong>Bureau.Admin.Frame</strong> is wired correctly.
 </p>
+
+<p>Authenticated: @User.Identity?.IsAuthenticated</p>
+<p>User: @User.Identity?.Name</p>
