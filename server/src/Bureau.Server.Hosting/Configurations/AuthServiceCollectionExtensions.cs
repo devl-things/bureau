@@ -1,4 +1,5 @@
 ﻿using Bureau.Server.Hosting.Dev;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -25,20 +26,36 @@ namespace Bureau.Server.Hosting.Configurations
                 return services;
             }
 
-            services.AddAuthentication(AuthConstants.CookieScheme)
+            if (options.Mode == AuthMode.Dev)
+            {
+                services
+                    .AddAuthentication(authentication =>
+                    {
+                        authentication.DefaultAuthenticateScheme = AuthConstants.DevUiScheme;
+                        authentication.DefaultChallengeScheme = AuthConstants.DevUiScheme;
+                    })
+                    .AddScheme<AuthenticationSchemeOptions, DevUiAuthenticationHandler>(AuthConstants.DevUiScheme, configureOptions => { });
+
+                services.AddAuthorization();
+                return services;
+            }
+
+            services
+                .AddAuthentication(authentication =>
+                {
+                    authentication.DefaultScheme = AuthConstants.CookieScheme;
+                    authentication.DefaultChallengeScheme = AuthConstants.OidcScheme;
+                })
                 .AddCookie(AuthConstants.CookieScheme, cookie =>
                 {
                     cookie.Cookie.Name = "bureau_host";
                     cookie.SlidingExpiration = true;
-                });
-
-            services.AddAuthorization();
-
-            if (options.Mode == AuthMode.Oidc)
-            {
-                services.AddAuthentication().AddOpenIdConnect(AuthConstants.OidcScheme, oidc =>
+                    // No LoginPath. Challenge will go to OIDC.
+                })
+                .AddOpenIdConnect(AuthConstants.OidcScheme, oidc =>
                 {
                     oidc.SignInScheme = AuthConstants.CookieScheme;
+
                     oidc.Authority = options.Oidc.Authority;
                     oidc.ClientId = options.Oidc.ClientId;
                     oidc.ClientSecret = options.Oidc.ClientSecret;
@@ -59,10 +76,11 @@ namespace Bureau.Server.Hosting.Configurations
                     {
                         oidc.Scope.Add("openid");
                         oidc.Scope.Add("profile");
+                        oidc.Scope.Add("email");
                     }
                 });
-            }
 
+            services.AddAuthorization();
             return services;
         }
 
