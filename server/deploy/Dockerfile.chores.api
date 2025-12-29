@@ -6,12 +6,14 @@ WORKDIR /src
 COPY ["src/Bureau.Primitives/Bureau.Primitives.csproj", "src/Bureau.Primitives/"]
 COPY ["src/Niles.Chores.Abstractions/Niles.Chores.Abstractions.csproj", "src/Niles.Chores.Abstractions/"]
 COPY ["src/Niles.Chores/Niles.Chores.csproj", "src/Niles.Chores/"]
+COPY ["src/Niles.Chores.Contracts/Niles.Chores.Contracts.csproj", "src/Niles.Chores.Contracts/"]
 COPY ["src/Niles.Chores.Api/Niles.Chores.Api.csproj", "src/Niles.Chores.Api/"]
 RUN dotnet restore "./src/Niles.Chores.Api/Niles.Chores.Api.csproj"
 
 COPY ["src/Bureau.Primitives/", "src/Bureau.Primitives/"]
 COPY ["src/Niles.Chores.Abstractions/", "src/Niles.Chores.Abstractions/"]
 COPY ["src/Niles.Chores/", "src/Niles.Chores/"]
+COPY ["src/Niles.Chores.Contracts/", "src/Niles.Chores.Contracts/"]
 COPY ["src/Niles.Chores.Api/", "src/Niles.Chores.Api/"]
 
 

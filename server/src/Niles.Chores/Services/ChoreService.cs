@@ -46,8 +46,8 @@ namespace Niles.Chores.Services
                 }
 
                 query = query.Where(c =>
-                    (c.Title != null && c.Title.Contains(searchParameters.Search, StringComparison.OrdinalIgnoreCase)) ||
-                    (c.Description != null && c.Description.Contains(searchParameters.Search, StringComparison.OrdinalIgnoreCase)) ||
+                    (c.Title != null && c.Title.Contains(searchParameters.Search)) ||
+                    (c.Description != null && c.Description.Contains(searchParameters.Search)) ||
                     (searchType.HasValue && c.Type == searchType.Value)
                 );
             }

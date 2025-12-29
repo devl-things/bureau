@@ -8,11 +8,12 @@ using Microsoft.AspNetCore.Mvc;
 using Niles.Chores.Api.Dtos;
 using Niles.Chores.Api.Factories;
 using Niles.Chores.Api.Mappers;
+using Niles.Chores.Contracts;
 using Niles.Chores.Services;
 
 namespace Niles.Chores.Api.Controllers
 {
-    [Route("api/[controller]")]
+    [Route(ApiRoutes.Chores.Root)]
     [ApiController]
     public class ChoresController : BureauApiControllerBase
     {
@@ -26,8 +27,8 @@ namespace Niles.Chores.Api.Controllers
             _idObfuscator = idObfuscator;
         }
 
-        // GET: api/chores?search=term&page=1&pageSize=10 (returns paginated chores with search)
-        // GET: api/chores (returns first page)
+        // GET: chores?search=term&page=1&pageSize=10 (returns paginated chores with search)
+        // GET: chores (returns first page)
         [HttpGet]
         public async Task<IActionResult> GetAsync([FromQuery] SearchQueryDto queryParams, CancellationToken cancellationToken)
         {
@@ -38,9 +39,9 @@ namespace Niles.Chores.Api.Controllers
             return Ok(pagedResult.ToPagedResponse(x => x.ToDto(_idObfuscator)));
         }
 
-        [HttpGet("{id}")]
+        [HttpGet(ApiRoutes.ByIdSegment)]
         [Authorize]
-        public async Task<IActionResult> GetByIdAsync(string id, CancellationToken cancellationToken)
+        public async Task<IActionResult> GetByIdAsync([FromRoute] string id, CancellationToken cancellationToken)
         {
             Result<int> idResult = _idObfuscator.Decode(id);
             if (idResult.IsError)
@@ -80,8 +81,8 @@ namespace Niles.Chores.Api.Controllers
             return CreatedAtAction(nameof(GetByIdAsync), new { id = chore.Id }, new BureauResponse<ChoreDto>(chore));
         }
 
-        [HttpPut("{id}")]
-        public async Task<IActionResult> PutAsync(string id, [FromBody] UpdateChoreRequest dto, CancellationToken cancellationToken)
+        [HttpPut(ApiRoutes.ByIdSegment)]
+        public async Task<IActionResult> PutAsync([FromRoute] string id, [FromBody] UpdateChoreRequest dto, CancellationToken cancellationToken)
         {
             if (!ModelState.IsValid)
             {
@@ -107,8 +108,8 @@ namespace Niles.Chores.Api.Controllers
             return NoContent();
         }
 
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteAsync(string id, CancellationToken cancellationToken)
+        [HttpDelete(ApiRoutes.ByIdSegment)]
+        public async Task<IActionResult> DeleteAsync([FromRoute] string id, CancellationToken cancellationToken)
         {
             Result<int> idResult = _idObfuscator.Decode(id);
             if (idResult.IsError)

@@ -8,6 +8,28 @@ importers:
 
   .: {}
 
+  apps/bureau-bundles:
+    dependencies:
+      '@bureau/chores-admin':
+        specifier: workspace:*
+        version: link:../../libs/chores-admin
+      react:
+        specifier: ^18.3.1
+        version: 18.3.1
+      react-dom:
+        specifier: ^18.3.1
+        version: 18.3.1(react@18.3.1)
+    devDependencies:
+      '@vitejs/plugin-react':
+        specifier: ^4.3.4
+        version: 4.7.0(vite@6.4.1)
+      typescript:
+        specifier: ^5.7.2
+        version: 5.9.3
+      vite:
+        specifier: ^6.4.1
+        version: 6.4.1
+
   apps/playground:
     dependencies:
       '@bureau/client-core':
@@ -35,6 +57,15 @@ importers:
       vite:
         specifier: ^6.0.0
         version: 6.4.1
+
+  libs/chores-admin:
+    dependencies:
+      react:
+        specifier: ^18.3.1
+        version: 18.3.1
+      react-dom:
+        specifier: ^18.3.1
+        version: 18.3.1(react@18.3.1)
 
   libs/client-core:
     devDependencies:

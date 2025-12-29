@@ -3,11 +3,12 @@ using Bureau.AspNetCore.Controllers;
 using Bureau.Server.Contracts;
 using Microsoft.AspNetCore.Mvc;
 using Niles.Chores.Api.Dtos;
+using Niles.Chores.Contracts;
 using Niles.Chores.Services;
 
 namespace Niles.Chores.Api.Controllers
 {
-    [Route("api/chores/{id}/critical")]
+    [Route(ApiRoutes.Chores.Root)]
     [ApiController]
     public class CriticalChoresController : BureauApiControllerBase
     {
@@ -21,7 +22,7 @@ namespace Niles.Chores.Api.Controllers
             _idObfuscator = idObfuscator;
         }
 
-        [HttpPost]
+        [HttpPost(ApiRoutes.Chores.CriticalSegment)]
         public async Task<IActionResult> MarkCriticalAsync(string id, [FromBody] CriticalChoreDto dto, CancellationToken cancellationToken)
         {
             if (!ModelState.IsValid)
@@ -42,7 +43,7 @@ namespace Niles.Chores.Api.Controllers
             return NoContent();
         }
 
-        [HttpDelete]
+        [HttpDelete(ApiRoutes.Chores.CriticalSegment)]
         public async Task<IActionResult> RemoveCriticalAsync(string id, CancellationToken cancellationToken)
         {
             Result<int> idResult = _idObfuscator.Decode(id);

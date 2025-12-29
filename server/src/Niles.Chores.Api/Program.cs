@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Niles.Chores.Api.Utilities;
 using Niles.Chores.Configurations;
+using Niles.Chores.Contracts;
 
 namespace Niles.Chores.Api
 {
@@ -68,7 +69,7 @@ namespace Niles.Chores.Api
 
             app.MapControllers();
             // health checks not visible in swagger, and that is for the best   
-            app.MapHealthChecks("api/health",
+            app.MapHealthChecks(ApiRoutes.Health.Root,
                 new HealthCheckOptions
                 {
                     ResponseWriter = async (context, report) =>

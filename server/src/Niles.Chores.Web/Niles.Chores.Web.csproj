@@ -7,11 +7,12 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Folder Include="wwwroot\" />
+    <ProjectReference Include="..\Bureau.Admin.Frame\Bureau.Admin.Frame.csproj" />
+    <ProjectReference Include="..\Bureau.Server.Hosting\Bureau.Server.Hosting.csproj" />
+    <ProjectReference Include="..\Niles.Chores.Contracts\Niles.Chores.Contracts.csproj" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Bureau.Admin.Frame\Bureau.Admin.Frame.csproj" />
-    <ProjectReference Include="..\Bureau.Server.Hosting\Bureau.Server.Hosting.csproj" />
+    <Folder Include="wwwroot\assets\" />
   </ItemGroup>
 </Project>

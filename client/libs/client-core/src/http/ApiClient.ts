@@ -1,4 +1,4 @@
-import type { ClientRuntimeConfig } from "../config/ClientRuntimeConfig";
+import type { AppRuntimeOptions } from "../config/AppRuntimeOptions";
 import type { IAccessTokenProvider } from "../auth/IAccessTokenProvider";
 import { NullAccessTokenProvider } from "../auth/NullAccessTokenProvider";
 import { AuthorizationHeaderFactory } from "../auth/AuthorizationHeaderFactory";
@@ -17,10 +17,10 @@ export type ApiRequest = {
 };
 
 export class ApiClient {
-    private readonly _config: ClientRuntimeConfig;
+    private readonly _config: AppRuntimeOptions;
     private readonly _tokenProvider: IAccessTokenProvider;
 
-    public constructor(config: ClientRuntimeConfig, tokenProvider?: IAccessTokenProvider) {
+    public constructor(config: AppRuntimeOptions, tokenProvider?: IAccessTokenProvider) {
         this._config = config;
         this._tokenProvider = tokenProvider ?? new NullAccessTokenProvider();
     }
@@ -99,8 +99,15 @@ export class ApiClient {
     }
 
     private combineUrl(baseUrl: string, path: string): string {
+        const trimmedPath: string = path.trim();
+
+        // ✅ allow calling full absolute endpoints from runtime config
+        if (trimmedPath.startsWith("http://") || trimmedPath.startsWith("https://")) {
+            return trimmedPath;
+        }
+
         const left: string = baseUrl.endsWith("/") ? baseUrl.slice(0, -1) : baseUrl;
-        const right: string = path.startsWith("/") ? path : `/${path}`;
+        const right: string = trimmedPath.startsWith("/") ? trimmedPath : `/${trimmedPath}`;
         return `${left}${right}`;
     }
 

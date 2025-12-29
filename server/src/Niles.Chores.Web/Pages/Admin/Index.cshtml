@@ -2,13 +2,27 @@
 @model Niles.Chores.Web.Pages.Admin.IndexModel
 @attribute [Authorize]
 @{
-    ViewData["Title"] = "Chores Admin (Frame Test)";
+    ViewData["Title"] = "Chores Admin";
+}
+@section Styles {
+    <link rel="stylesheet" href="/css/chores-admin.css" />
+}
+@section Head {
+    <bureau-app-runtime-options />
 }
 
-<p>
-    If you can see this content inside the frame (sidebar + header + content panel),
-    then <strong>Bureau.Admin.Frame</strong> is wired correctly.
-</p>
+<div id="chores-admin-root">
+    <div style="color: var(--muted); padding: 12px 0;">
+        Loading chores admin…
+    </div>
+</div>
 
-<p>Authenticated: @User.Identity?.IsAuthenticated</p>
-<p>User: @User.Identity?.Name</p>
+
+@section Scripts {
+    <!-- vendor (keep for now; later we can bundle it) -->
+    <script src="/js/vendor/dompurify-3.1.6.min.js"></script>
+
+    <bureau-bundle name="chores-admin" />
+}
+
+

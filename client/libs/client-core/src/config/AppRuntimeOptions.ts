@@ -1,4 +1,4 @@
-export type ClientRuntimeConfig = {
+export type AppRuntimeOptions = {
     /**
      * e.g. "dev", "prod"
      */

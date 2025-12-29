@@ -7,11 +7,12 @@ using Microsoft.AspNetCore.Mvc;
 using Niles.Chores.Api.Dtos;
 using Niles.Chores.Api.Factories;
 using Niles.Chores.Api.Mappers;
+using Niles.Chores.Contracts;
 using Niles.Chores.Services;
 
 namespace Niles.Chores.Api.Controllers
 {
-    [Route("api/[controller]")]
+    [Route(ApiRoutes.Housekeeping.Root)]
     [ApiController]
     public class HousekeepingController : BureauApiControllerBase
     {
@@ -25,8 +26,8 @@ namespace Niles.Chores.Api.Controllers
             _idObfuscator = idObfuscator;
         }
 
-        // GET: api/housekeeping?search=term&page=1&pageSize=10
-        // GET: api/housekeeping (returns first 20 records)
+        // GET: housekeeping?search=term&page=1&pageSize=10
+        // GET: housekeeping (returns first 20 records)
         [HttpGet]
         public async Task<IActionResult> GetAsync([FromQuery] SearchQueryDto queryParams, CancellationToken cancellationToken = default)
         {
@@ -37,8 +38,8 @@ namespace Niles.Chores.Api.Controllers
             return Ok(pagedResult.ToPagedResponse(x => x.ToDto(_idObfuscator)));
         }
 
-        [HttpGet("{id}")]
-        public async Task<IActionResult> GetByIdAsync(string id, CancellationToken cancellationToken)
+        [HttpGet(ApiRoutes.ByIdSegment)]
+        public async Task<IActionResult> GetByIdAsync([FromRoute] string id, CancellationToken cancellationToken)
         {
             Result<int> idResult = _idObfuscator.Decode(id);
             if (idResult.IsError)
@@ -54,7 +55,7 @@ namespace Niles.Chores.Api.Controllers
             return OkResponse(result.Value.ToDto(_idObfuscator));
         }
 
-        [HttpPost("submit")]
+        [HttpPost(ApiRoutes.Housekeeping.SubmitSegment)]
         public async Task<IActionResult> SubmitAsync([FromBody] CreateHousekeepingRequest dto, CancellationToken cancellationToken)
         {
             if (!ModelState.IsValid)
@@ -77,8 +78,8 @@ namespace Niles.Chores.Api.Controllers
             return CreatedAtAction(nameof(GetByIdAsync), new { id = _idObfuscator.Encode(result.Value.Id) }, new BureauResponse<HousekeepingDto>(result.Value.ToDto(_idObfuscator)));
         }
 
-        [HttpPut("{id}")]
-        public async Task<IActionResult> PutAsync(string id, [FromBody] UpdateHousekeepingRequest dto, CancellationToken cancellationToken)
+        [HttpPut(ApiRoutes.ByIdSegment)]
+        public async Task<IActionResult> PutAsync([FromRoute] string id, [FromBody] UpdateHousekeepingRequest dto, CancellationToken cancellationToken)
         {
             if (!ModelState.IsValid)
             {
@@ -104,8 +105,8 @@ namespace Niles.Chores.Api.Controllers
             return NoContent();
         }
 
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteAsync(string id, CancellationToken cancellationToken)
+        [HttpDelete(ApiRoutes.ByIdSegment)]
+        public async Task<IActionResult> DeleteAsync([FromRoute] string id, CancellationToken cancellationToken)
         {
             Result<int> idResult = _idObfuscator.Decode(id);
             if (idResult.IsError)

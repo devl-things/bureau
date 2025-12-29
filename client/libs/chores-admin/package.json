@@ -1,0 +1,14 @@
+{
+    "name": "@bureau/chores-admin",
+    "private": true,
+    "version": "0.1.13",
+    "type": "module",
+    "exports": {
+        ".": "./src/index.ts"
+    },
+    "dependencies": {
+        "@bureau/client-core": "workspace:*",
+        "react": "^18.3.1",
+        "react-dom": "^18.3.1"
+    }
+}

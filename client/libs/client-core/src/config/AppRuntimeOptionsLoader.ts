@@ -1,4 +1,4 @@
-import type { ClientRuntimeConfig } from "./ClientRuntimeConfig";
+import type { AppRuntimeOptions } from "./AppRuntimeOptions";
 
 declare global {
     interface Window {
@@ -6,8 +6,8 @@ declare global {
     }
 }
 
-export class ClientRuntimeConfigLoader {
-    public static loadFromWindow(): ClientRuntimeConfig {
+export class AppRuntimeOptionsLoader {
+    public static loadFromWindow(): AppRuntimeOptions {
         const raw: unknown = window.__BUREAU__;
 
         if (raw === null || raw === undefined || typeof raw !== "object") {
@@ -46,7 +46,7 @@ export class ClientRuntimeConfigLoader {
             throw new Error("Invalid runtime config: 'apiBaseUrls' must contain at least one entry.");
         }
 
-        const config: ClientRuntimeConfig = {
+        const config: AppRuntimeOptions = {
             environment: environment.trim(),
             version: version.trim(),
             apiBaseUrls: urls

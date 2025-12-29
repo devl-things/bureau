@@ -9,6 +9,10 @@
       {
         "Path": "src\\Niles.Chores.Web\\Niles.Chores.Web.csproj",
         "Action": "Start"
+      },
+      {
+        "Path": "src\\Bureau.Frontend.DevRunner\\Bureau.Frontend.DevRunner.csproj",
+        "Action": "Start"
       }
     ]
   }

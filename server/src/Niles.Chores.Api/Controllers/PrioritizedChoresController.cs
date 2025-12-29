@@ -2,11 +2,12 @@
 using Bureau.Server.Contracts;
 using Microsoft.AspNetCore.Mvc;
 using Niles.Chores.Api.Mappers;
+using Niles.Chores.Contracts;
 using Niles.Chores.Services;
 
 namespace Niles.Chores.Api.Controllers
 {
-    [Route("api/housekeeping/prioritized-chores")]
+    [Route(ApiRoutes.Housekeeping.Root)]
     [ApiController]
     public class PrioritizedChoresController : BureauApiControllerBase
     {
@@ -22,8 +23,8 @@ namespace Niles.Chores.Api.Controllers
             _idObfuscator = idObfuscator;
         }
 
-        // GET /api/housekeeping/prioritized-chores?date=2025-11-27
-        [HttpGet]
+        // GET /housekeeping/prioritized-chores?date=2025-11-27
+        [HttpGet(ApiRoutes.Housekeeping.PrioritizedChoresSegment)]
         public async Task<IActionResult> GetChoresAsync([FromQuery] DateOnly? date, CancellationToken cancellationToken = default)
         {
             DateOnly dateOnly = date ?? DateOnly.FromDateTime(_timeProvider.GetUtcNow().DateTime);
