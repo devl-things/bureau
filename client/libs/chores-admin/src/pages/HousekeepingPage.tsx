@@ -96,10 +96,7 @@ export function HousekeepingPage(props: Props): React.ReactElement {
         if (dict[byIdUrlKey]) {
             return endpoints.build(byIdUrlKey, { id });
         }
-
-        // fallback: list endpoint + /{id}
-        const base = endpoints.get(listUrlKey);
-        return `${base.replace(/\/+$/, "")}/${encodeURIComponent(id)}`;
+        throw new Error(`No endpoint found for key '${byIdUrlKey}'`);
     }
 
     async function load(): Promise<void> {

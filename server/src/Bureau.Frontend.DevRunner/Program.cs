@@ -7,12 +7,11 @@ namespace Bureau.Frontend.DevRunner
         public static int Main(string[] args)
         {
             string workingDirectory = FindRepoRoot();
-            string arguments = "-C client/apps/bureau-bundles dev";
+            string cmdPath = Path.Combine(Environment.SystemDirectory, "cmd.exe");
 
             ProcessStartInfo startInfo = new ProcessStartInfo
             {
-                FileName = "cmd.exe",
-                Arguments = $"/c pnpm {arguments}",
+                FileName = cmdPath,
                 WorkingDirectory = workingDirectory,
 
                 UseShellExecute = false,
@@ -21,6 +20,11 @@ namespace Bureau.Frontend.DevRunner
                 RedirectStandardInput = true,
                 CreateNoWindow = false
             };
+            startInfo.ArgumentList.Add("/c");
+            startInfo.ArgumentList.Add("pnpm");
+            startInfo.ArgumentList.Add("-C");
+            startInfo.ArgumentList.Add("client/apps/bureau-bundles");
+            startInfo.ArgumentList.Add("dev");
 
             using (Process process = new Process())
             {
