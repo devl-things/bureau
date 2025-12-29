@@ -28,32 +28,39 @@ namespace Bureau.Server.Hosting.Tags
 
             FrontendOptions options = _options.Value;
 
-            string src = BuildScriptSrc(options, Name);
-
-            output.TagName = "script";
+            output.TagName = null; // remove wrapper tag entirely
             output.TagMode = TagMode.StartTagAndEndTag;
-            output.Attributes.SetAttribute("type", "module");
-            output.Attributes.SetAttribute("src", src);
-            output.Content.SetHtmlContent(string.Empty);
+
+            string html = options.UseViteDevServer ? BuildDevScripts(options, Name) : BuildProdScript(options, Name);
+
+            output.Content.SetHtmlContent(html);
         }
 
-        private static string BuildScriptSrc(FrontendOptions options, string name)
+        private static string BuildDevScripts(FrontendOptions options, string name)
         {
-            if (options.UseViteDevServer)
+            if (!options.Bundles.TryGetValue(name, out string? entry) || string.IsNullOrWhiteSpace(entry))
             {
-                if (!options.Bundles.TryGetValue(name, out string? entry) || string.IsNullOrWhiteSpace(entry))
-                {
-                    throw new InvalidOperationException($"BureauFrontend:Bundles is missing a dev entry for '{name}'.");
-                }
-
-                string origin = options.ViteDevServerOrigin.TrimEnd('/');
-                string normalizedEntry = entry.StartsWith('/') ? entry : "/" + entry;
-
-                return origin + normalizedEntry;
+                throw new InvalidOperationException($"Frontend:Bundles is missing a dev entry for '{name}'.");
             }
 
+            string origin = options.ViteDevServerOrigin.TrimEnd('/');
+            string normalizedEntry = entry.StartsWith('/') ? entry : "/" + entry;
+
+            string viteClient = origin + "/@vite/client";
+            string entryUrl = origin + normalizedEntry;
+
+            return $"""
+<script type="module" src="{viteClient}"></script>
+<script type="module" src="{entryUrl}"></script>
+""";
+        }
+
+        private static string BuildProdScript(FrontendOptions options, string name)
+        {
             string publicPath = options.BundlesPublicPath.TrimEnd('/');
-            return $"{publicPath}/{name}.js";
+            string src = $"{publicPath}/{name}.js";
+
+            return $"""<script type="module" src="{src}"></script>""";
         }
     }
 }
