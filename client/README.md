@@ -14,7 +14,7 @@ It is designed to:
 * allow **independent small ASP.NET hosts** to consume frontend bundles
 * keep frontend concerns clearly separated from backend (`server/`) code
 * scale gradually without forcing a single mega-SPA
-* provide a clean foundation for **React MPAs with shared packages**
+* provide a clean foundation for **React MPAs with shared libs**
 
 ---
 
@@ -28,13 +28,13 @@ It is designed to:
 
 2. **Libraries are never served directly**
 
-   * Shared code lives in packages
+   * Shared code lives in *libs*
    * Only built *apps* are served by ASP.NET hosts
 
 3. **Auth and API access are cross-cutting concerns**
 
    * Admin and non-admin apps both call APIs
-   * Auth helpers therefore live in shared packages, not UI-only code
+   * Auth helpers therefore live in shared libs, not UI-only code
 
 4. **Bundling is a client concern; hosting is a server concern**
 
@@ -55,7 +55,7 @@ client/
 │  ├─ playground/
 │  └─ bureau-bundles/
 │
-├─ packages/
+├─ libs/
 │  ├─ client-core/
 │  ├─ admin-core/
 │  └─ admin-ui/
@@ -107,7 +107,7 @@ The playground is a **frontend-only development environment**.
 
 Purpose:
 
-* develop and test shared packages (`client-core`, `admin-ui`, etc.)
+* develop and test shared libs (`client-core`, `admin-ui`, etc.)
 * prototype admin CRUD UIs quickly
 * debug API, auth, and error-handling logic
 
@@ -121,11 +121,11 @@ This satisfies the requirement that frontend modules can be developed and tested
 
 ---
 
-## `packages/`
+## `libs/`
 
-The `packages/` directory contains **shared frontend libraries** reused across apps.
+The `libs/` directory contains **shared frontend libraries** reused across apps.
 
-Packages:
+Libs:
 
 * are **not runnable by themselves**
 * do not define pages or routes
@@ -133,7 +133,7 @@ Packages:
 
 ---
 
-### `packages/client-core`
+### `libs/client-core`
 
 **No React dependency.**
 
@@ -148,7 +148,7 @@ Responsibilities:
 
   * abstractions required to later obtain / attach access tokens (e.g. token provider interfaces, auth context primitives)
   * support for adding `Authorization` headers consistently
-  * future-ready shape for OIDC/Sven access-token acquisition (implementation may live in separate packages, but the contracts belong here)
+  * future-ready shape for OIDC/Sven access-token acquisition (implementation may live in separate lib, but the contracts belong here)
 * small browser utilities (sanitization wrappers, helpers)
 
 Key rules:
@@ -161,7 +161,7 @@ This package defines the *lowest-level frontend contracts*.
 
 ---
 
-### `packages/admin-core`
+### `libs/admin-core`
 
 **No React dependency.**
 
@@ -183,7 +183,7 @@ Non-goals:
 
 ---
 
-### `packages/admin-ui`
+### `libs/admin-ui`
 
 **React-only UI components.**
 
@@ -194,7 +194,7 @@ Responsibilities:
 
 Important note:
 
-* **Generic UI primitives** such as tables, pagination, search inputs, dialogs, and notifications can be useful in **both admin and non-admin apps**. When a component is truly generic, it should live in a more general UI package (to be introduced later, e.g. `packages/ui`), and `admin-ui` should contain only admin-flavored composition and conventions.
+* **Generic UI primitives** such as tables, pagination, search inputs, dialogs, and notifications can be useful in **both admin and non-admin apps**. When a component is truly generic, it should live in a more general UI package (to be introduced later, e.g. `libs/ui`), and `admin-ui` should contain only admin-flavored composition and conventions.
 
 Rules:
 
@@ -256,7 +256,7 @@ It does **not** bundle frontend UI itself.
 
 ### Build
 
-* packages are built as libraries
+* libs are built as libraries
 * apps are bundled via Vite
 
 ### Deployment
@@ -270,7 +270,7 @@ It does **not** bundle frontend UI itself.
 
 1. Backend code stays in `server/`
 2. Frontend code stays in `client/`
-3. `apps/` produce bundles; `packages/` provide reusable code
+3. `apps/` produce bundles; `libs/` provide reusable code
 4. Hosts decide *where* and *when* a frontend bundle is rendered
 5. Auth and navigation are host responsibilities, with shared primitives in `client-core`
 
@@ -281,7 +281,7 @@ It does **not** bundle frontend UI itself.
 This structure allows gradual evolution:
 
 * static or Razor-based admin pages can coexist with React-based features
-* shared UI and logic can be extracted incrementally into packages
+* shared UI and logic can be extracted incrementally into libs
 * no forced migration to a single SPA or microfrontend architecture
 
 ---
