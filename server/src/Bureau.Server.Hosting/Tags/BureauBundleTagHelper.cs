@@ -47,10 +47,12 @@ namespace Bureau.Server.Hosting.Tags
             string normalizedEntry = entry.StartsWith('/') ? entry : "/" + entry;
 
             string viteClient = origin + "/@vite/client";
+            string reactPreamble = origin + "/src/react-refresh-preamble.ts";
             string entryUrl = origin + normalizedEntry;
 
             return $"""
 <script type="module" src="{viteClient}"></script>
+<script type="module" src="{reactPreamble}"></script>
 <script type="module" src="{entryUrl}"></script>
 """;
         }
