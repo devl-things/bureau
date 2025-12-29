@@ -29,25 +29,30 @@ namespace Niles.Chores.Services
             {
                 return ResultError.FromLogMessage(ProblemCodes.Resource.NotFound, string.Format(LogMessages.EntityNotFound, nameof(Chore), choreId));
             }
-
-            // Check if there's already an open critical chore for this chore
-            bool existingOpen = await HasOpenCriticalChoreAsync(choreId, cancellationToken);
-            if (existingOpen)
+            List<CriticalChoreDb> openCriticalChores = await QueryOpenCriticalChore(choreId).ToListAsync(cancellationToken);
+            if (openCriticalChores.Count > 1)
             {
-                return ResultError.From(ProblemCodes.Resource.Conflict, "This chore already has an open critical status. Please remove it first.");
+                return ResultError.From(ProblemCodes.Resource.Conflict, "This chore has multiple open critical statuses. Please remove them first.");
             }
-
-            DateTimeOffset now = _timeProvider.GetUtcNow();
-            CriticalChoreDb criticalChore = new CriticalChoreDb
+            if (openCriticalChores.Count == 0)
             {
-                ChoreId = choreId,
-                Note = note,
-                CompletedChoreId = null, // Not completed yet
-                CreatedAt = now,
-                UpdatedAt = now
-            };
-
-            _context.CriticalChores.Add(criticalChore);
+                DateTimeOffset now = _timeProvider.GetUtcNow();
+                CriticalChoreDb criticalChore = new CriticalChoreDb
+                {
+                    ChoreId = choreId,
+                    Note = note,
+                    CompletedChoreId = null, // Not completed yet
+                    CreatedAt = now,
+                    UpdatedAt = now
+                };
+                _context.CriticalChores.Add(criticalChore);
+            }
+            else
+            {
+                CriticalChoreDb existingChore = openCriticalChores[0];
+                existingChore.Note = note;
+                existingChore.UpdatedAt = _timeProvider.GetUtcNow();
+            }
             await _context.SaveChangesAsync(cancellationToken);
             _cache.RemovePriotizedChores();
             return true;
@@ -55,9 +60,7 @@ namespace Niles.Chores.Services
 
         public async Task<Result> DeleteCriticalChoreAsync(int choreId, CancellationToken cancellationToken = default)
         {
-            List<CriticalChoreDb> openCriticalChores = await _context.CriticalChores
-                .Where(c => c.ChoreId == choreId && c.CompletedChoreId == null)
-                .ToListAsync(cancellationToken);
+            List<CriticalChoreDb> openCriticalChores = await QueryOpenCriticalChore(choreId).ToListAsync(cancellationToken);
 
             if (!openCriticalChores.Any())
             {
@@ -70,10 +73,9 @@ namespace Niles.Chores.Services
             return true;
         }
 
-        private async Task<bool> HasOpenCriticalChoreAsync(int choreId, CancellationToken cancellationToken = default)
+        private IQueryable<CriticalChoreDb> QueryOpenCriticalChore(int choreId)
         {
-            return await _context.CriticalChores
-                .AnyAsync(c => c.ChoreId == choreId && c.CompletedChoreId == null, cancellationToken);
+            return _context.CriticalChores.Where(c => c.ChoreId == choreId && c.CompletedChoreId == null);
         }
 
         public async Task MarkCriticalChoresAsCompletedAsync(Dictionary<int, int> choreIdToCompletedChoreIdMap, CancellationToken cancellationToken = default)

@@ -18,7 +18,7 @@ type PagedMeta = {
     hasPrevious: boolean;
 };
 
-type ModalMode = "none" | "create" | "edit" | "delete" | "critical";
+type ModalMode = "none" | "create" | "edit" | "delete" | "critical" | "critical-edit";
 
 type ChoreUpsertForm = {
     title: string;
@@ -28,7 +28,7 @@ type ChoreUpsertForm = {
 };
 
 type CriticalForm = {
-    date: string;
+    date: string; // yyyy-MM-dd
     description: string;
 };
 
@@ -44,6 +44,26 @@ function toErrorMessage(err: unknown): string {
     if (err instanceof ApiError) return err.message;
     if (err instanceof Error) return err.message;
     return "Unexpected error";
+}
+
+/**
+ * Adjust these mappings to match your real API shape.
+ * I assume ChoreDto exposes critical fields so we can prefill the modal.
+ */
+function prefillCriticalFormFromChore(chore: ChoreDto): CriticalForm {
+    // 1) date
+    // accept "2025-12-29" or ISO "2025-12-29T10:00:00Z"
+    const rawDate = (chore as any).criticalDate as string | null | undefined;
+    let date = "";
+    if (typeof rawDate === "string" && rawDate.trim().length > 0) {
+        date = rawDate.includes("T") ? rawDate.slice(0, 10) : rawDate;
+    }
+
+    // 2) description/note
+    const rawDesc = ((chore as any).criticalDescription ?? (chore as any).criticalNote) as string | null | undefined;
+    const description = typeof rawDesc === "string" ? rawDesc : "";
+
+    return { date, description };
 }
 
 export function ChorePage(props: Props): React.ReactElement {
@@ -119,6 +139,13 @@ export function ChorePage(props: Props): React.ReactElement {
 
     function openCritical(chore: ChoreDto): void {
         setActive(chore);
+
+        if (chore.isCritical) {
+            setCriticalForm(prefillCriticalFormFromChore(chore));
+            setModal("critical-edit");
+            return;
+        }
+
         setCriticalForm(emptyCriticalForm());
         setModal("critical");
     }
@@ -202,6 +229,7 @@ export function ChorePage(props: Props): React.ReactElement {
 
     async function submitCritical(): Promise<void> {
         if (!active?.id) return;
+
         setModalBusy(true);
         setError(null);
 
@@ -214,8 +242,15 @@ export function ChorePage(props: Props): React.ReactElement {
                 return;
             }
 
+            // Treat this as upsert: mark or update critical info.
             await choresApi.markCriticalAsync(active.id, { date, description });
-            showToast("Marked as critical.", true);
+
+            if (modal === "critical-edit") {
+                showToast("Critical info updated.", true);
+            } else {
+                showToast("Marked as critical.", true);
+            }
+
             closeModal();
             await load();
         } catch (e: unknown) {
@@ -240,6 +275,12 @@ export function ChorePage(props: Props): React.ReactElement {
             showToast(toErrorMessage(e), false);
         }
     }
+
+    const criticalModalTitle = modal === "critical-edit" ? "Edit critical" : "Mark critical";
+    const criticalModalSubtitle =
+        modal === "critical-edit"
+            ? `Update critical reminder details for "${active?.title ?? active?.id ?? "this chore"}".`
+            : `Provide context for why "${active?.title ?? active?.id ?? "this chore"}" is critical.`;
 
     return (
         <>
@@ -280,7 +321,7 @@ export function ChorePage(props: Props): React.ReactElement {
                             </tr>
                         ) : (
                             items.map((chore) => (
-                                <tr key={chore.id}>
+                                <tr key={chore.id ?? ""}>
                                     <td style={{ padding: "16px 20px" }}>{chore.id}</td>
                                     <td style={{ padding: "16px 20px" }}>
                                         <div>{chore.title ?? "Untitled"}</div>
@@ -313,9 +354,14 @@ export function ChorePage(props: Props): React.ReactElement {
                                             </button>
 
                                             {chore.isCritical ? (
-                                                <button type="button" className="btn" onClick={() => void removeCritical(chore)}>
-                                                    Remove Critical
-                                                </button>
+                                                <>
+                                                    <button type="button" className="btn" onClick={() => openCritical(chore)}>
+                                                        Edit Critical
+                                                    </button>
+                                                    <button type="button" className="btn" onClick={() => void removeCritical(chore)}>
+                                                        Remove Critical
+                                                    </button>
+                                                </>
                                             ) : (
                                                 <button type="button" className="btn" onClick={() => openCritical(chore)}>
                                                     Critical
@@ -448,11 +494,11 @@ export function ChorePage(props: Props): React.ReactElement {
                         </>
                     ) : null}
 
-                    {modal === "critical" ? (
+                    {modal === "critical" || modal === "critical-edit" ? (
                         <>
                             <header>
-                                <h2>Mark critical</h2>
-                                <p>Provide context for why "{active?.title ?? active?.id ?? "this chore"}" is critical.</p>
+                                <h2>{criticalModalTitle}</h2>
+                                <p>{criticalModalSubtitle}</p>
                             </header>
 
                             <form
