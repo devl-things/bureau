@@ -1,6 +1,6 @@
 # Frontend Workspace Structure (`client/`)
 
-This document describes how frontend code is organized in this repository and how it is intended to be used.
+This document describes how frontend code is organized in this repository and how it is intended to be used. It represents the **current source of truth** for the Bureau frontend architecture, combining workspace structure, package responsibilities, and the agreed pnpm + Vite bundling strategy.
 
 ---
 
@@ -10,10 +10,40 @@ The `client/` workspace contains **all frontend source code** that is not implem
 
 It is designed to:
 
-* support **shared UI and logic** across multiple admin applications
+* support **shared UI and logic** across multiple admin and non-admin applications
 * allow **independent small ASP.NET hosts** to consume frontend bundles
 * keep frontend concerns clearly separated from backend (`server/`) code
 * scale gradually without forcing a single mega-SPA
+* provide a clean foundation for **React MPAs with shared libs**
+
+---
+
+## Core principles
+
+1. **Clear separation of concerns**
+
+   * Libraries provide reusable logic
+   * Apps produce deployable bundles
+   * ASP.NET hosts control routing, auth, and layout
+
+2. **Libraries are never served directly**
+
+   * Shared code lives in *libs*
+   * Only built *apps* are served by ASP.NET hosts
+
+3. **Auth and API access are cross-cutting concerns**
+
+   * Admin and non-admin apps both call APIs
+   * Auth helpers therefore live in shared libs, not UI-only code
+
+4. **Bundling is a client concern; hosting is a server concern**
+
+   * Vite builds JS/CSS bundles
+   * ASP.NET hosts decide which bundles to serve and where to mount them
+
+5. **Frontend modules must be runnable without a host during development**
+
+   * A dedicated playground enables frontend work without wiring into product hosts
 
 ---
 
@@ -22,12 +52,11 @@ It is designed to:
 ```
 client/
 ├─ apps/
-│  └─ bureau-admin/
-│     ├─ src/
-│     ├─ entries/
-│     └─ package.json
+│  ├─ playground/
+│  └─ bureau-bundles/
 │
-├─ packages/
+├─ libs/
+│  ├─ client-core/
 │  ├─ admin-core/
 │  └─ admin-ui/
 │
@@ -46,97 +75,204 @@ An app:
 * can be built and/or run independently
 * produces one or more **frontend bundles** (JS/CSS)
 
-### `apps/bureau-admin`
+### `apps/bureau-bundles`
 
-This app produces **React entry bundles** used by admin features.
+This app is a **bundle producer**, not a host or portal.
 
-Key characteristics:
+Responsibilities:
 
-* **MPA-style**: multiple entry points (e.g. chores admin, items admin)
-* bundles are **mounted inside ASP.NET host pages**, not run as a standalone SPA
+* build React-based frontend bundles using Vite
+* support **MPA-style multiple entry points**
+* output deployable JS/CSS artifacts
+
+Characteristics:
+
+* bundles are **mounted inside ASP.NET host pages**
 * routing is handled by the host (server-side), not React Router
+* authentication and navigation are not owned by this app
 
 Example entries:
 
-* `entries/chores-admin.tsx`
-* `entries/items-admin.tsx`
+* `src/entries/chores-admin.tsx`
+* `src/entries/items-admin.tsx`
+* `src/entries/etl-jobs-admin.tsx`
 
-The app itself does **not** own authentication or navigation; those are handled by the ASP.NET host and the shared frame.
+The app itself does **not** know which host will serve the bundle.
 
 ---
 
-## `packages/`
+### `apps/playground`
 
-The `packages/` directory contains **shared frontend libraries** that are reused across apps.
+The playground is a **frontend-only development environment**.
 
-Packages:
+Purpose:
+
+* develop and test shared libs (`client-core`, `admin-ui`, etc.)
+* prototype admin CRUD UIs quickly
+* debug API, auth, and error-handling logic
+
+Key characteristics:
+
+* runs via Vite dev server
+* proxies API calls to a running backend
+* requires **no ASP.NET host wiring**
+
+This satisfies the requirement that frontend modules can be developed and tested independently.
+
+---
+
+## `libs/`
+
+The `libs/` directory contains **shared frontend libraries** reused across apps.
+
+Libs:
 
 * are **not runnable by themselves**
 * do not define pages or routes
 * are consumed by one or more apps
 
-### `packages/admin-core`
+---
+
+### `libs/client-core`
 
 **No React dependency.**
 
+This is the **shared browser foundation** for all frontend code.
+
 Responsibilities:
 
-* loading browser-facing config (e.g. from `/config`)
 * API client helpers (`fetch` wrapper)
-* auth header handling (dev token now, Sven/OIDC later)
+* JSON parsing and error handling
 * ProblemDetails-style error parsing
+* **Auth foundations for calling APIs**
 
-This package is intentionally framework-agnostic so it can be reused by:
+  * abstractions required to later obtain / attach access tokens (e.g. token provider interfaces, auth context primitives)
+  * support for adding `Authorization` headers consistently
+  * future-ready shape for OIDC/Sven access-token acquisition (implementation may live in separate lib, but the contracts belong here)
+* small browser utilities (sanitization wrappers, helpers)
 
-* React-based admin features
-* potential future non-React frontend tooling
+Key rules:
+
+* contains no product-specific endpoint mappings
+* contains no UI components
+* can be used by admin and non-admin apps
+
+This package defines the *lowest-level frontend contracts*.
 
 ---
 
-### `packages/admin-ui`
+### `libs/admin-core`
+
+**No React dependency.**
+
+This is a **thin admin-specific layer** on top of `client-core`.
+
+Responsibilities:
+
+* admin-specific auth defaults or conventions
+* wiring for dev-token auth in admin scenarios
+* future OIDC/Sven admin helpers
+
+Non-goals:
+
+* no API logic duplication
+* no UI components
+* no hosting knowledge
+
+`admin-core` always depends on `client-core`, never the other way around.
+
+---
+
+### `libs/admin-ui`
 
 **React-only UI components.**
 
 Responsibilities:
 
-* reusable admin UI building blocks
-* consistent look & behavior across admin features
+* reusable UI building blocks intended primarily for admin experiences
+* feature contracts and composition helpers for admin features
 
-Examples:
+Important note:
 
-* tables & pagination
-* dialogs & confirmations
-* toast/notification system
-* search inputs
+* **Generic UI primitives** such as tables, pagination, search inputs, dialogs, and notifications can be useful in **both admin and non-admin apps**. When a component is truly generic, it should live in a more general UI package (to be introduced later, e.g. `libs/ui`), and `admin-ui` should contain only admin-flavored composition and conventions.
 
-Packages in `admin-ui` must **not** contain API logic or business rules.
+Rules:
+
+* must not contain API logic
+* must not contain business rules
+* focuses purely on UI and composition
 
 ---
 
 ## Relationship to ASP.NET hosts
 
-ASP.NET hosts (e.g. `Bureau.Admin.Host`, `Niles.Chores.Web`) are responsible for:
+ASP.NET **hosts** are runnable applications (Visual Studio F5 / deployed services). Examples:
+
+* `Niles.Chores.Web` (host)
+* `Niles.Chores.Api` (host)
+* `Bureau.Admin` (host)
+
+Separately, there may be shared **libraries** (not hosts) that provide common hosting or UI wiring. For example, a project named like `Bureau.Admin.Hosting` may be a reusable library rather than a runnable host.
+
+Hosts are responsible for:
 
 * routing
 * authentication
-* rendering the shared admin frame
+* rendering the shared **Admin.Frame** (or equivalent shell)
+* injecting runtime config
 * mounting frontend bundles produced by `client/apps/*`
 
 Frontend code in `client/`:
 
-* never renders the global frame
-* never owns navigation between admin applications
+* never renders the global admin frame
+* never owns navigation between applications
 * is always mounted into a host-provided page
 
 ---
 
-## Design rules
+## Bureau Admin Portal (server-side context)
 
-1. **Backend code stays in `server/`**
-2. **Frontend code stays in `client/`**
-3. `apps/` produce bundles; `packages/` provide reusable code
+Optionally, a **Bureau Admin Portal** may exist as an ASP.NET host.
+
+Its role:
+
+* act as a directory / launcher for product admin hosts
+* use an app registry to list available admin systems
+* redirect users to independent admin hosts
+
+It does **not** bundle frontend UI itself.
+
+---
+
+## Build & deployment model
+
+### Development
+
+* Backend: run via Visual Studio (F5)
+* Frontend:
+
+  * playground → fast iteration
+  * bureau-bundles → real admin feature bundles
+
+### Build
+
+* libs are built as libraries
+* apps are bundled via Vite
+
+### Deployment
+
+* ASP.NET hosts copy **only app build output** into `wwwroot`
+* shared package artifacts are never served directly
+
+---
+
+## Design rules (summary)
+
+1. Backend code stays in `server/`
+2. Frontend code stays in `client/`
+3. `apps/` produce bundles; `libs/` provide reusable code
 4. Hosts decide *where* and *when* a frontend bundle is rendered
-5. Auth and navigation are host responsibilities, not frontend responsibilities
+5. Auth and navigation are host responsibilities, with shared primitives in `client-core`
 
 ---
 
@@ -144,16 +280,19 @@ Frontend code in `client/`:
 
 This structure allows gradual evolution:
 
-* existing static or Razor-based admin pages can coexist with React-based features
-* shared UI and logic can be extracted incrementally into packages
+* static or Razor-based admin pages can coexist with React-based features
+* shared UI and logic can be extracted incrementally into libs
 * no forced migration to a single SPA or microfrontend architecture
 
 ---
 
 ## Summary
 
-The `client/` workspace exists to provide **shared, reusable frontend foundations** while keeping:
+The `client/` workspace provides a **clean, scalable frontend foundation** that supports:
 
-* admin hosts small and independent
-* navigation and auth centralized in .NET
-* frontend complexity contained and optional
+* independent admin hosts
+* shared React-based admin features
+* gradual modernization
+* future OIDC integration
+
+This document should be kept in sync as the frontend architecture evolves.
