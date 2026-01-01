@@ -35,7 +35,7 @@ namespace Niles.Chores.Api.Controllers
                 return ProblemDetailsResponse(idResult.Error);
             }
 
-            Result result = await _criticalChoreService.CreateCriticalChoreAsync(idResult.Value, dto.Description, cancellationToken);
+            Result result = await _criticalChoreService.UpsertCriticalChoreAsync(idResult.Value, dto.Description, cancellationToken);
             if (result.IsError)
             {
                 return ProblemDetailsResponse(result.Error);

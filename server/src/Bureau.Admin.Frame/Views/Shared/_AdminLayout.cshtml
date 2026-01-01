@@ -14,12 +14,18 @@
 </head>
 <body>
     <div class="admin-shell">
-        <aside class="admin-sidebar">
+        <aside class="admin-sidebar" id="adminSidebar">
             @await Html.PartialAsync("_AdminSidebar", AppsRegistry)
         </aside>
 
         <div class="admin-main">
             <header class="admin-header">
+                <button class="admin-nav-toggle" type="button" id="adminNavToggle" aria-controls="adminSidebar" aria-expanded="false" aria-label="Open menu">
+                    <!-- hamburger -->
+                    <svg class="icon icon-menu" viewBox="0 0 24 24" aria-hidden="true">
+                        <path d="M5 7h14M5 12h14M5 17h14" />
+                    </svg>
+                </button>
                 @await Html.PartialAsync("_AdminHeader")
             </header>
 
@@ -27,8 +33,9 @@
                 @RenderBody()
             </main>
         </div>
+        <div class="admin-backdrop" id="adminBackdrop" hidden></div>
     </div>
-
+    <script src="~/assets/frame/js/bureau-admin-frame.js" asp-append-version="true"></script>
     @RenderSection("Scripts", required: false)
 </body>
 </html>

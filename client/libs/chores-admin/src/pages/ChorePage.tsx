@@ -28,7 +28,6 @@ type ChoreUpsertForm = {
 };
 
 type CriticalForm = {
-    date: string; // yyyy-MM-dd
     description: string;
 };
 
@@ -37,7 +36,7 @@ function emptyChoreForm(): ChoreUpsertForm {
 }
 
 function emptyCriticalForm(): CriticalForm {
-    return { date: "", description: "" };
+    return { description: "" };
 }
 
 function toErrorMessage(err: unknown): string {
@@ -51,19 +50,11 @@ function toErrorMessage(err: unknown): string {
  * I assume ChoreDto exposes critical fields so we can prefill the modal.
  */
 function prefillCriticalFormFromChore(chore: ChoreDto): CriticalForm {
-    // 1) date
-    // accept "2025-12-29" or ISO "2025-12-29T10:00:00Z"
-    const rawDate = (chore as any).criticalDate as string | null | undefined;
-    let date = "";
-    if (typeof rawDate === "string" && rawDate.trim().length > 0) {
-        date = rawDate.includes("T") ? rawDate.slice(0, 10) : rawDate;
-    }
-
-    // 2) description/note
+    // description/note
     const rawDesc = ((chore as any).criticalDescription ?? (chore as any).criticalNote) as string | null | undefined;
     const description = typeof rawDesc === "string" ? rawDesc : "";
 
-    return { date, description };
+    return { description };
 }
 
 export function ChorePage(props: Props): React.ReactElement {
@@ -234,16 +225,15 @@ export function ChorePage(props: Props): React.ReactElement {
         setError(null);
 
         try {
-            const date = criticalForm.date.trim();
             const description = criticalForm.description.trim();
 
-            if (date.length === 0 || description.length === 0) {
-                showToast("Date and notes are required.", false);
+            if (description.length === 0) {
+                showToast("Notes are required.", false);
                 return;
             }
 
             // Treat this as upsert: mark or update critical info.
-            await choresApi.markCriticalAsync(active.id, { date, description });
+            await choresApi.markCriticalAsync(active.id, { description });
 
             if (modal === "critical-edit") {
                 showToast("Critical info updated.", true);
@@ -508,16 +498,6 @@ export function ChorePage(props: Props): React.ReactElement {
                                 }}
                                 style={{ display: "flex", flexDirection: "column", gap: 14 }}
                             >
-                                <label>
-                                    Reminder date
-                                    <input
-                                        type="date"
-                                        required
-                                        value={criticalForm.date}
-                                        onChange={(e) => setCriticalForm({ ...criticalForm, date: e.target.value })}
-                                    />
-                                </label>
-
                                 <label>
                                     Notes
                                     <textarea

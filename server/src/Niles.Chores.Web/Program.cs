@@ -24,8 +24,6 @@ namespace Niles.Chores.Web
                 .Validate(options => !options.UseViteDevServer || !string.IsNullOrWhiteSpace(options.ViteDevServerOrigin), "ViteDevServerOrigin is required when UseViteDevServer=true.")
                 .ValidateOnStart();
 
-            builder.Services.Configure<AppConfiguration>(builder.Configuration);
-
             builder.Services.AddBureauAdminAppsRegistry(builder.Configuration);
             builder.Services.AddRazorPages();
 
@@ -42,10 +40,6 @@ namespace Niles.Chores.Web
             app.UseAuthorization();
 
             app.MapRazorPages();
-            app.MapGet("/config", (IOptions<AppConfiguration> config) =>
-            {
-                return Results.Json(config.Value);
-            });
 
             await app.RunAsync();
         }
