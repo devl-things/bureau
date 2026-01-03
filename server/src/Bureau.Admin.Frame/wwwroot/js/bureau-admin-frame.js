@@ -9,21 +9,21 @@
 (function () {
     "use strict";
 
-    var root = document.documentElement;
+    const root = document.documentElement;
 
     function isMobile() {
-        return window.matchMedia("(max-width: 1023px)").matches;
+        return globalThis.matchMedia("(max-width: 1023px)").matches;
     }
 
     // -----------------------------
     // Sidebar
     // -----------------------------
 
-    var shell = document.querySelector(".admin-shell");
-    var sidebar = document.getElementById("adminSidebar");
-    var navToggle = document.getElementById("adminNavToggle"); // hamburger (only visible when closed)
-    var navClose = document.getElementById("adminNavClose");   // close icon inside sidebar
-    var backdrop = document.getElementById("adminBackdrop");
+    const shell = document.querySelector(".admin-shell");
+    const sidebar = document.getElementById("adminSidebar");
+    const navToggle = document.getElementById("adminNavToggle"); // hamburger (only visible when closed)
+    const navClose = document.getElementById("adminNavClose");   // close icon inside sidebar
+    const backdrop = document.getElementById("adminBackdrop");
 
     function setBackdropVisible(visible) {
         if (!backdrop) {
@@ -37,7 +37,7 @@
             return;
         }
 
-        var open = shell.classList.contains("nav-open");
+        const open = shell.classList.contains("nav-open");
 
         if (navToggle) {
             navToggle.setAttribute("aria-expanded", open ? "true" : "false");
@@ -110,7 +110,7 @@
                 return;
             }
 
-            var target = e.target;
+            let target = e.target;
             if (!target) {
                 return;
             }
@@ -119,14 +119,14 @@
                 target = target.parentElement;
             }
 
-            if (target && target.tagName === "A") {
+            if (target?.tagName === "A") {
                 closeNav();
             }
         });
     }
 
     // Keep backdrop/scroll correct when resizing
-    window.addEventListener("resize", function () {
+    globalThis.addEventListener("resize", function () {
         applyOpenEffects();
     });
 
@@ -139,25 +139,25 @@
             return;
         }
 
-        var startX = 0;
-        var startY = 0;
-        var tracking = false;
+        let startX = 0;
+        let startY = 0;
+        let tracking = false;
 
-        var minSwipeX = 70;
-        var maxOffAxisY = 60;
+        const minSwipeX = 70;
+        const maxOffAxisY = 60;
 
         sidebar.addEventListener("touchstart", function (e) {
             if (!isMobile()) {
                 return;
             }
-            if (!shell || !shell.classList.contains("nav-open")) {
+            if (!shell?.classList.contains("nav-open")) {
                 return;
             }
-            if (!e.touches || e.touches.length !== 1) {
+            if (e.touches?.length !== 1) {
                 return;
             }
 
-            var t = e.touches[0];
+            const t = e.touches[0];
             startX = t.clientX;
             startY = t.clientY;
             tracking = true;
@@ -167,16 +167,16 @@
             if (!tracking) {
                 return;
             }
-            if (!e.touches || e.touches.length !== 1) {
+            if (e.touches?.length !== 1) {
                 tracking = false;
                 return;
             }
 
-            var t = e.touches[0];
-            var dx = t.clientX - startX;
-            var dy = t.clientY - startY;
+            const t = e.touches[0];
+            const absDx = Math.abs(t.clientX - startX);
+            const absDy = Math.abs(t.clientY - startY);
 
-            if (Math.abs(dy) > maxOffAxisY && Math.abs(dy) > Math.abs(dx)) {
+            if (absDy > maxOffAxisY && absDy > absDx) {
                 tracking = false;
             }
         }, { passive: true });
@@ -191,11 +191,11 @@
                 return;
             }
 
-            var t = e.changedTouches[0];
-            var dx = t.clientX - startX;
-            var dy = t.clientY - startY;
+            const t = e.changedTouches[0];
+            const dx = t.clientX - startX;
+            const absDy = Math.abs(t.clientY - startY);
 
-            if (dx < -minSwipeX && Math.abs(dy) < maxOffAxisY) {
+            if (dx < -minSwipeX && absDy < maxOffAxisY) {
                 closeNav();
             }
         }, { passive: true });
@@ -205,34 +205,34 @@
     // Theme toggle
     // -----------------------------
 
-    var themeToggle = document.getElementById("adminThemeToggle");
-    var storageKey = "bureau_admin_theme"; // "light" | "dark" | null (auto)
+    const themeToggle = document.getElementById("adminThemeToggle");
+    const storageKey = "bureau_admin_theme"; // "light" | "dark" | null (auto)
 
     function readSavedTheme() {
         try {
-            var value = localStorage.getItem(storageKey);
+            const value = localStorage.getItem(storageKey);
             if (value === "light" || value === "dark") {
                 return value;
             }
             return null;
         } catch (e) {
+            console.error(e);
             return null;
         }
     }
 
     function applyTheme(theme) {
         if (theme === "light" || theme === "dark") {
-            root.setAttribute("data-theme", theme);
-            try { localStorage.setItem(storageKey, theme); } catch (e) { }
+            root.dataset.theme = theme;
+            try { localStorage.setItem(storageKey, theme); } catch (e) { console.error(e); }
             return;
         }
-
-        root.removeAttribute("data-theme");
-        try { localStorage.removeItem(storageKey); } catch (e) { }
+        delete root.dataset.theme;
+        try { localStorage.removeItem(storageKey); } catch (e) { console.error(e); }
     }
 
     function getExplicitTheme() {
-        var value = root.getAttribute("data-theme");
+        const value = root.dataset.theme;
         if (value === "light" || value === "dark") {
             return value;
         }
@@ -243,7 +243,7 @@
 
     if (themeToggle) {
         themeToggle.addEventListener("click", function () {
-            var current = getExplicitTheme();
+            const current = getExplicitTheme();
             if (current === "dark") {
                 applyTheme("light");
                 return;

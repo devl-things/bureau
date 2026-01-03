@@ -8,6 +8,7 @@ namespace Niles.Chores.Web.Pages.Admin
     {
         public void OnGet()
         {
+            // Intentionally empty – page has no GET-side logic
         }
     }
 }

@@ -8,7 +8,7 @@ function App(): JSX.Element {
     React.useEffect(() => {
         console.log("main.tsx loaded");
         // For now, simulate the host injecting runtime config
-        (window as unknown as { __BUREAU__?: unknown }).__BUREAU__ = {
+        (globalThis as unknown as { __BUREAU__?: unknown }).__BUREAU__ = {
             environment: "dev",
             version: "local",
             apiBaseUrls: { demo: "http://localhost:1234" },

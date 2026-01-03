@@ -8,7 +8,7 @@ declare global {
 
 export class AppRuntimeOptionsLoader {
     public static loadFromWindow(): AppRuntimeOptions {
-        const raw: unknown = window.__BUREAU__;
+        const raw: unknown = globalThis.__BUREAU__;
 
         if (raw === null || raw === undefined || typeof raw !== "object") {
             throw new Error("Missing window.__BUREAU__ runtime configuration.");

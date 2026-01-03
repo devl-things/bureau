@@ -1,6 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import type { ApiClient } from "@bureau/client-core";
-import type { AppRuntimeOptions } from "@bureau/client-core";
+import type { ApiClient, AppRuntimeOptions } from "@bureau/client-core";
 import { ApiError } from "@bureau/client-core";
 import { ChoresApi, type ChoreDto } from "../api/choresApi";
 

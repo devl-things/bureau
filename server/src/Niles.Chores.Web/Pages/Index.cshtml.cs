@@ -1,4 +1,3 @@
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 
 namespace Niles.Chores.Web.Pages
@@ -7,6 +6,7 @@ namespace Niles.Chores.Web.Pages
     {
         public void OnGet()
         {
+            // Intentionally empty – page has no GET-side logic
         }
     }
 }

@@ -38,9 +38,7 @@ export class ApiClient {
         const baseUrl: string = this.resolveBaseUrl(request.apiKey);
         const url: string = this.combineUrl(baseUrl, request.path);
 
-        const headers: Record<string, string> = {
-            ...(request.headers ?? {})
-        };
+        const headers: Record<string, string> = request.headers ?? {};
 
         const token: string | null = await this._tokenProvider.getAccessTokenAsync();
         const authHeader: string | null = AuthorizationHeaderFactory.createBearer(token);

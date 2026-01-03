@@ -21,14 +21,7 @@ export class Endpoints {
     public build(key: string, route?: RouteParams, query?: QueryParams): string {
         let url: string = this.get(key);
 
-        if (route) {
-            for (const routeKey of Object.keys(route)) {
-                const token = `{${routeKey}}`;
-                const raw = route[routeKey];
-                const replaced = raw === null || raw === undefined ? "" : encodeURIComponent(String(raw));
-                url = url.split(token).join(replaced);
-            }
-        }
+        url = this.applyRouteParams(url, route);
 
         if (query) {
             const qs = new URLSearchParams();
@@ -47,5 +40,22 @@ export class Endpoints {
         }
 
         return url;
+    }
+
+    private applyRouteParams(url: string, route?: RouteParams): string {
+        if (!route) {
+            return url;
+        }
+
+        let result: string = url;
+
+        for (const routeKey of Object.keys(route)) {
+            const token: string = `{${routeKey}}`;
+            const raw: unknown = route[routeKey];
+            const replaced: string = raw === null || raw === undefined ? "" : encodeURIComponent(String(raw));
+            result = result.split(token).join(replaced);
+        }
+
+        return result;
     }
 }
