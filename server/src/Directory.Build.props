@@ -1,0 +1,18 @@
+<Project>
+  <PropertyGroup>
+    <!-- Repo layout -->
+    <BureauClientRoot>$(MSBuildThisFileDirectory)..\..\client</BureauClientRoot>
+
+    <!-- Canonical frontend bundler -->
+    <BureauBundlesApp>@bureau/bureau-bundles</BureauBundlesApp>
+    <BureauBundlesAppFolder>$(BureauClientRoot)\apps\bureau-bundles</BureauBundlesAppFolder>
+
+    <!-- Bundler outputs -->
+    <BureauBundlesDist>$(BureauBundlesAppFolder)\dist</BureauBundlesDist>
+    <BureauBundlesDistAssets>$(BureauBundlesDist)\assets</BureauBundlesDistAssets>
+
+    <!-- Web convention -->
+    <BureauAssetsFolder>wwwroot\assets</BureauAssetsFolder>
+  </PropertyGroup>
+</Project>
+

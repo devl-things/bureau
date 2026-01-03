@@ -33,9 +33,18 @@ export default defineConfig({
             },
             output: {
                 // final output paths inside dist
-                entryFileNames: "admin/assets/[name].js",
-                chunkFileNames: "admin/assets/chunks/[name]-[hash].js",
-                assetFileNames: "admin/assets/[name]-[hash][extname]"
+                entryFileNames: "assets/[name]/[name].js",
+                chunkFileNames: "assets/[name]/chunks/[name]-[hash].js",
+                assetFileNames: (assetInfo) => {
+                    const name: string = assetInfo.name ?? "";
+                    const ext: string = path.extname(name).toLowerCase();
+
+                    if (ext === ".css") {
+                        return "assets/[name]/[name][extname]";
+                    }
+
+                    return "assets/[name]/[name]-[hash][extname]";
+                },
             }
         }
     }

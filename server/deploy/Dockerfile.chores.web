@@ -1,33 +1,54 @@
-FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+FROM node:18-alpine AS frontend
+# -------------------- frontend build --------------------
+WORKDIR /work
+
+COPY client/package.json client/pnpm-lock.yaml ./client/
+COPY client/apps ./client/apps
+COPY client/libs ./client/libs
+
+WORKDIR /work/client
+RUN corepack enable && pnpm install --frozen-lockfile
+RUN pnpm --filter @bureau/bureau-bundles build
+
+FROM mcr.microsoft.com/dotnet/sdk:8.0 AS restore
+# -------------------- dotnet restore --------------------
 ARG BUILD_CONFIGURATION=Release
-WORKDIR /src
+WORKDIR /work
 
-# copy project + restore
-COPY ["src/Niles.Chores.Web/Niles.Chores.Web.csproj", "src/Niles.Chores.Web/"]
-RUN dotnet restore "src/Niles.Chores.Web/Niles.Chores.Web.csproj"
+COPY server/src/Directory.Build.props ./server/src/
+COPY server/src/Niles.Chores.Web/Niles.Chores.Web.csproj ./server/src/Niles.Chores.Web/
 
-# copy source + build
-COPY src/Niles.Chores.Web/ src/Niles.Chores.Web/
-WORKDIR "/src/src/Niles.Chores.Web"
-RUN dotnet build "Niles.Chores.Web.csproj" -c $BUILD_CONFIGURATION -o /app/build
+COPY server/src/Bureau.Admin.Hosting/Bureau.Admin.Hosting.csproj ./server/src/Bureau.Admin.Hosting/
+COPY server/src/Bureau.Admin.Frame/Bureau.Admin.Frame.csproj ./server/src/Bureau.Admin.Frame/
+COPY server/src/Bureau.Server.Hosting/Bureau.Server.Hosting.csproj ./server/src/Bureau.Server.Hosting/
+COPY server/src/Niles.Chores.Contracts/Niles.Chores.Contracts.csproj ./server/src/Niles.Chores.Contracts/
 
-FROM build AS publish
+RUN dotnet restore "./server/src/Niles.Chores.Web/Niles.Chores.Web.csproj"
+
+FROM restore AS publish
+# -------------------- dotnet publish --------------------
 ARG BUILD_CONFIGURATION=Release
-WORKDIR "/src/src/Niles.Chores.Web"
-RUN dotnet publish "Niles.Chores.Web.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false
+WORKDIR /work
 
-# runtime
+# Copy sources ONLY for the projects we restored
+COPY server/src/Niles.Chores.Web/ ./server/src/Niles.Chores.Web/
+COPY server/src/Bureau.Admin.Hosting/ ./server/src/Bureau.Admin.Hosting/
+COPY server/src/Bureau.Admin.Frame/ ./server/src/Bureau.Admin.Frame/
+COPY server/src/Bureau.Server.Hosting/ ./server/src/Bureau.Server.Hosting/
+COPY server/src/Niles.Chores.Contracts/ ./server/src/Niles.Chores.Contracts/
+
+RUN dotnet publish "./server/src/Niles.Chores.Web/Niles.Chores.Web.csproj" \
+    -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false
+
 FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS runtime
-
+# -------------------- runtime --------------------
 RUN adduser --disabled-password --home /app appuser
-
 USER appuser
 
 WORKDIR /app
 COPY --from=publish /app/publish ./
+COPY --from=frontend /work/client/apps/bureau-bundles/dist/assets ./wwwroot/assets
 
-# Kestrel port for the web frontend
 ENV ASPNETCORE_URLS=http://0.0.0.0:5000
 EXPOSE 5000
-
 ENTRYPOINT ["dotnet", "Niles.Chores.Web.dll"]

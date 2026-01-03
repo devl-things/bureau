@@ -1,4 +1,9 @@
 <Solution>
+  <Configurations>
+    <BuildType Name="Debug" />
+    <BuildType Name="Release" />
+    <BuildType Name="Test" />
+  </Configurations>
   <Folder Name="/Core/">
     <Project Path="src/Bureau.Extensions.Logging/Bureau.Extensions.Logging.csproj" Id="b4460ee3-f6ed-4e4f-9bbf-be18942cb002" />
     <Project Path="src/Bureau.Extensions.Time/Bureau.Extensions.Time.csproj" Id="48e39c90-2d89-499d-897f-fa55220793c5" />

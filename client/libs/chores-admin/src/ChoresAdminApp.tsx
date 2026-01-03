@@ -3,6 +3,7 @@ import { AppRuntimeOptionsLoader } from "@bureau/client-core";
 import { createAdminApi } from "./api/createAdminClient";
 import { ChorePage } from "./pages/ChorePage";
 import { HousekeepingPage } from "./pages/HousekeepingPage";
+import "./styles/chores-admin.css";
 
 type TabKey = "chores" | "housekeeping";
 

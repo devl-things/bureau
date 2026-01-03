@@ -5,7 +5,7 @@
     ViewData["Title"] = "Chores Admin";
 }
 @section Styles {
-    <link rel="stylesheet" href="/css/chores-admin.css" />
+    <bureau-bundle-styles name="chores-admin" />
 }
 @section Head {
     <bureau-app-runtime-options />
@@ -19,9 +19,6 @@
 
 
 @section Scripts {
-    <!-- vendor (keep for now; later we can bundle it) -->
-    <script src="/js/vendor/dompurify-3.1.6.min.js"></script>
-
     <bureau-bundle name="chores-admin" />
 }
 

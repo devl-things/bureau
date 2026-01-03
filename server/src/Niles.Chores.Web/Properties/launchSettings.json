@@ -1,6 +1,6 @@
 ﻿{
   "profiles": {
-    "http": {
+    "http-dev": {
       "commandName": "Project",
       "dotnetRunMessages": true,
       "launchBrowser": true,
@@ -8,6 +8,16 @@
       "applicationUrl": "http://localhost:5073",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development"
+      }
+    },
+    "http-test": {
+      "commandName": "Project",
+      "dotnetRunMessages": true,
+      "launchBrowser": true,
+      "launchUrl": "admin",
+      "applicationUrl": "http://localhost:5073",
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Test"
       }
     }
   }

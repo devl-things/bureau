@@ -60,7 +60,7 @@ namespace Bureau.Server.Hosting.Tags
         private static string BuildProdScript(FrontendOptions options, string name)
         {
             string publicPath = options.BundlesPublicPath.TrimEnd('/');
-            string src = $"{publicPath}/{name}.js";
+            string src = $"{publicPath}/{name}/{name}.js";
 
             return $"""<script type="module" src="{src}"></script>""";
         }

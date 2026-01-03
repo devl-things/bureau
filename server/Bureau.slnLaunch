@@ -1,18 +1,36 @@
 [
   {
-    "Name": "Niles.Chores",
+    "Name": "Niles.Chores[Dev]",
     "Projects": [
       {
         "Path": "src\\Niles.Chores.Api\\Niles.Chores.Api.csproj",
-        "Action": "Start"
+        "Action": "Start",
+        "DebugTarget": "http"
       },
       {
         "Path": "src\\Niles.Chores.Web\\Niles.Chores.Web.csproj",
-        "Action": "Start"
+        "Action": "Start",
+        "DebugTarget": "http-dev"
       },
       {
         "Path": "src\\Bureau.Frontend.DevRunner\\Bureau.Frontend.DevRunner.csproj",
-        "Action": "Start"
+        "Action": "Start",
+        "DebugTarget": "Bureau.Frontend.DevRunner"
+      }
+    ]
+  },
+  {
+    "Name": "Niles.Chores[Test]",
+    "Projects": [
+      {
+        "Path": "src\\Niles.Chores.Api\\Niles.Chores.Api.csproj",
+        "Action": "Start",
+        "DebugTarget": "http"
+      },
+      {
+        "Path": "src\\Niles.Chores.Web\\Niles.Chores.Web.csproj",
+        "Action": "Start",
+        "DebugTarget": "http-test"
       }
     ]
   }

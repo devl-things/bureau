@@ -18,8 +18,8 @@ services:
 
   niles-chores-web:
     build:
-      context: ..
-      dockerfile: deploy/Dockerfile.chores.web
+      context: ../..
+      dockerfile: server/deploy/Dockerfile.chores.web
     container_name: niles-chores-web
     environment:
       ASPNETCORE_ENVIRONMENT: "${ASPNETCORE_ENVIRONMENT}"

@@ -20,6 +20,7 @@
     - If this value changes, update layout links accordingly.
     -->
 	<StaticWebAssetBasePath>assets/frame</StaticWebAssetBasePath>
+	<Configurations>Debug;Release;Test</Configurations>
   </PropertyGroup>
 
   <ItemGroup>
