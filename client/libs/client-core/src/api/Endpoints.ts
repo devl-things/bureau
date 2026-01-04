@@ -1,7 +1,8 @@
 import type { AppRuntimeOptions } from "../config/AppRuntimeOptions";
 
-export type RouteParams = Record<string, string | number | boolean | null | undefined>;
-export type QueryParams = Record<string, string | number | boolean | null | undefined>;
+export type ParamValue = string | number | boolean | null | undefined;
+export type RouteParams = Record<string, ParamValue>;
+export type QueryParams = Record<string, ParamValue>;
 
 export class Endpoints {
     private readonly _urls: Record<string, string>;
