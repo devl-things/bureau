@@ -10,15 +10,22 @@ namespace Niles.Chores.Web.Configurations
         {
             ArgumentNullException.ThrowIfNull(options);
 
-            if (!options.ApiBaseUrls.TryGetValue("choresApiBase", out string? baseUrl))
+            if (string.IsNullOrWhiteSpace(options.DefaultApiKey))
+            {
+                return;
+            }
+
+            if (!options.ApiBaseUrls.TryGetValue(options.DefaultApiKey, out string? baseUrl))
             {
                 return;
             }
 
             string normalizedBaseUrl = NormalizeBaseUrl(baseUrl);
 
+            // Optional: default key for “main API”
+            options.DefaultApiKey ??= "choresApiBase";
             // Base
-            options.ApiBaseUrls["choresApiBase"] = normalizedBaseUrl;
+            options.ApiBaseUrls[options.DefaultApiKey] = normalizedBaseUrl;
 
             // Derived absolute endpoints (templates)
             options.ApiBaseUrls["chores.chores"] = Combine(normalizedBaseUrl, ApiRoutes.Chores.Root);
@@ -32,15 +39,13 @@ namespace Niles.Chores.Web.Configurations
 
             options.ApiBaseUrls["chores.health"] = Combine(normalizedBaseUrl, ApiRoutes.Health.Root);
 
-            // Optional: default key for “main API”
-            options.DefaultApiKey ??= "choresApiBase";
         }
 
         private static string NormalizeBaseUrl(string value)
         {
             string trimmed = value.Trim();
 
-            if (trimmed.EndsWith("/", StringComparison.Ordinal))
+            if (trimmed.EndsWith('/'))
             {
                 trimmed = trimmed.TrimEnd('/');
             }
