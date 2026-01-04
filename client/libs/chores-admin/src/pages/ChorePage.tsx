@@ -1,7 +1,10 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import type { PagedMeta } from "@bureau/client-core";
-import { ChoresApi, type ChoreDto, type Props } from "../api/choresApi";
+import type { ChoreDto, Props } from "../api/choresApi";
+import { ChoresApi } from "../api/choresApi";
 import { TableBodyRows } from "../components/TableBodyRows";
+import { ModalShell } from "../components/ModalShell";
+import { toErrorMessage } from "../utils/ui";
 
 type ModalMode = "none" | "create" | "edit" | "delete" | "critical" | "critical-edit";
 
@@ -22,11 +25,6 @@ function emptyChoreForm(): ChoreUpsertForm {
 
 function emptyCriticalForm(): CriticalForm {
     return { description: "" };
-}
-
-function toErrorMessage(err: unknown): string {
-    if (err instanceof Error) return err.message;
-    return "Unexpected error";
 }
 
 /**
@@ -73,7 +71,7 @@ export function ChorePage(props: Readonly<Props>): React.ReactElement {
         setError(null);
         try {
             const result = await choresApi.getChoresAsync({ page, pageSize, search: search.trim() });
-            setItems(result.items);
+            setItems(result.data);
             setMeta(result.meta);
         } catch (e: unknown) {
             setItems([]);
@@ -256,15 +254,6 @@ export function ChorePage(props: Readonly<Props>): React.ReactElement {
             ? `Update critical reminder details for "${active?.title ?? active?.id ?? "this chore"}".`
             : `Provide context for why "${active?.title ?? active?.id ?? "this chore"}" is critical.`;
 
-    function renderModal(): React.ReactNode {
-        return (
-            <div className={`modal-backdrop ${modal !== "none" && "visible"}`} aria-hidden={modal === "none"}>
-                <div className="modal">
-                    {renderModalBody()}
-                </div>
-            </div>
-        );
-    }
     function renderModalBody(): React.ReactNode {
         if (modal === "create" || modal === "edit") {
             return (
@@ -515,7 +504,9 @@ export function ChorePage(props: Readonly<Props>): React.ReactElement {
             {error ? <div style={{ marginTop: 12, color: "var(--danger)" }}>{error}</div> : null}
 
             {/* Modal */}
-            {renderModal()}
+            <ModalShell open={modal !== "none"} busy={modalBusy} onRequestClose={closeModal}>
+                {renderModalBody()}
+            </ModalShell>
 
             {/* Toast */}
             <div

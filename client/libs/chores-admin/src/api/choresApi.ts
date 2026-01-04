@@ -1,4 +1,4 @@
-import type { AppRuntimeOptions, PagedMeta } from "@bureau/client-core";
+import type { AppRuntimeOptions, PagedMeta, PagedResponse } from "@bureau/client-core";
 import { ApiClient, Endpoints, isPagedResponse } from "@bureau/client-core";
 
 
@@ -7,6 +7,13 @@ export type Props = {
     runtime: AppRuntimeOptions;
 };
 
+export type SearchQuery = {
+    page: number;
+    pageSize: number;
+    search?: string;
+};
+
+// Chores
 export type ChoreDto = {
     id: string;
     title: string;
@@ -27,10 +34,43 @@ export type CriticalPayload = {
     description: string;
 };
 
-export type PagedResult<T> = {
-    items: T[];
-    meta: PagedMeta | null;
+// Housekeeping
+
+export type HousekeepingChoreDto = {
+    id?: string | null;
+    title?: string | null;
 };
+
+export type HousekeepingLogDto = {
+    id: string;
+    datetime: string;
+    duration: string;
+    note?: string | null;
+    completedChores?: HousekeepingChoreDto[] | null;
+};
+
+export type HousekeepingUpsert = {
+    datetime: string; // ISO
+    duration: string; // "HH:mm" or whatever your API expects
+    note: string | null;
+    completedChoreIds: string[];
+};
+
+// -----------------------------
+// Shared helpers
+// -----------------------------
+const EMPTY_PAGED_META: PagedMeta = {
+    page: 0,
+    pageSize: 0,
+    total: 0,
+    totalPages: 0,
+    hasNext: false,
+    hasPrevious: false
+};
+
+function emptyPagedResponse<T>(): PagedResponse<T> {
+    return { data: [], meta: EMPTY_PAGED_META };
+}
 
 export class ChoresApi {
     private readonly _api: ApiClient;
@@ -41,7 +81,8 @@ export class ChoresApi {
         this._endpoints = new Endpoints(runtime);
     }
 
-    public async getChoresAsync(input: { page: number; pageSize: number; search?: string }): Promise<PagedResult<ChoreDto>> {
+    // Chores
+    public async getChoresAsync(input: SearchQuery): Promise<PagedResponse<ChoreDto>> {
         const url = this._endpoints.build("chores.chores", undefined, {
             page: input.page,
             pageSize: input.pageSize,
@@ -50,15 +91,11 @@ export class ChoresApi {
 
         const payload: unknown = await this._api.getAsync<unknown>({ path: url });
 
-        if (Array.isArray(payload)) {
-            return { items: payload as ChoreDto[], meta: null };
-        }
-
         if (isPagedResponse<ChoreDto>(payload)) {
-            return { items: payload.data ?? [], meta: payload.meta ?? null };
+            return payload;
         }
 
-        return { items: [], meta: null };
+        return emptyPagedResponse<ChoreDto>();
     }
 
     public async createChoreAsync(model: ChoreUpsert): Promise<void> {
@@ -93,6 +130,46 @@ export class ChoresApi {
 
     public async removeCriticalAsync(id: string): Promise<void> {
         const url = this._endpoints.build("chores.critical", { id });
+        await this._api.requestAsync<void>({
+            method: "DELETE",
+            path: url
+        });
+    }
+
+    // Housekeeping
+    public async getHousekeepingLogsAsync(input: SearchQuery): Promise<PagedResponse<HousekeepingLogDto>> {
+        const url = this._endpoints.build("chores.housekeeping", undefined, {
+            page: input.page,
+            pageSize: input.pageSize,
+            search: (input.search ?? "").trim()
+        });
+
+        const payload: unknown = await this._api.getAsync<unknown>({ path: url });
+
+        if (isPagedResponse<HousekeepingLogDto>(payload)) {
+            return payload;
+        }
+
+        return emptyPagedResponse<HousekeepingLogDto>();
+    }
+
+    public async createHousekeepingLogAsync(model: HousekeepingUpsert): Promise<void> {
+        // your page used endpoints.get("chores.housekeepingSubmit") for create
+        const url = this._endpoints.get("chores.housekeepingSubmit");
+        await this._api.postAsync<void>({ path: url, body: model });
+    }
+
+    public async updateHousekeepingLogAsync(id: string, model: HousekeepingUpsert): Promise<void> {
+        const url = this._endpoints.build("chores.housekeepingById", { id });
+        await this._api.requestAsync<void>({
+            method: "PUT",
+            path: url,
+            body: { id, ...model }
+        });
+    }
+
+    public async deleteHousekeepingLogAsync(id: string): Promise<void> {
+        const url = this._endpoints.build("chores.housekeepingById", { id });
         await this._api.requestAsync<void>({
             method: "DELETE",
             path: url

@@ -1,23 +1,11 @@
 import React, { useEffect, useMemo, useState } from "react";
-import type { PagedMeta, PagedResponse } from "@bureau/client-core";
-import { Endpoints, isPagedResponse } from "@bureau/client-core";
-import { Props } from "../api/choresApi";
+import type { PagedMeta } from "@bureau/client-core";
+import type { HousekeepingChoreDto, HousekeepingLogDto, Props } from "../api/choresApi";
+import { ChoresApi } from "../api/choresApi";
 import { TableBodyRows } from "../components/TableBodyRows";
+import { ModalShell } from "../components/ModalShell";
+import { toErrorMessage } from "../utils/ui";
 
-
-
-type HousekeepingChoreDto = {
-    id?: string | null;
-    title?: string | null;
-};
-
-type HousekeepingLogDto = {
-    id: string;
-    datetime: string;
-    duration: string;
-    note?: string | null;
-    completedChores?: HousekeepingChoreDto[] | null;
-};
 
 type ModalMode = "none" | "view" | "create" | "edit" | "delete";
 
@@ -30,11 +18,6 @@ type LogForm = {
 
 function emptyLogForm(): LogForm {
     return { datetime: new Date().toISOString(), duration: "00:30", note: "", completedChoreIds: "" };
-}
-
-function toErrorMessage(err: unknown): string {
-    if (err instanceof Error) return err.message;
-    return "Unexpected error";
 }
 
 function formatDate(value: string): string {
@@ -61,10 +44,7 @@ function formatDuration(duration: string): string {
 }
 
 export function HousekeepingPage(props: Readonly<Props>): React.ReactElement {
-    const endpoints = useMemo(() => new Endpoints(props.runtime), [props.runtime]);
-
-    const listUrlKey = "chores.housekeeping";
-    const byIdUrlKey = "chores.housekeepingById"; // if you have it; if not, we’ll fallback to `${base}/{id}`
+    const choresApi = useMemo(() => new ChoresApi(props.api, props.runtime), [props.api, props.runtime]);
 
     const [items, setItems] = useState<HousekeepingLogDto[]>([]);
     const [meta, setMeta] = useState<PagedMeta | null>(null);
@@ -85,37 +65,19 @@ export function HousekeepingPage(props: Readonly<Props>): React.ReactElement {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [page, pageSize, search]);
 
-    function getLogByIdUrl(id: string): string {
-        const dict = props.runtime.apiBaseUrls;
-        if (dict[byIdUrlKey]) {
-            return endpoints.build(byIdUrlKey, { id });
-        }
-        throw new Error(`No endpoint found for key '${byIdUrlKey}'`);
-    }
-
     async function load(): Promise<void> {
         setLoading(true);
         setError(null);
 
         try {
-            const url = endpoints.build(listUrlKey, undefined, {
+            const result = await choresApi.getHousekeepingLogsAsync({
                 page,
                 pageSize,
                 search: search.trim()
             });
 
-            const payload = await props.api.getAsync<unknown>({ path: url });
-
-            if (Array.isArray(payload)) {
-                setItems(payload as HousekeepingLogDto[]);
-                setMeta(null);
-            } else if (isPagedResponse<HousekeepingLogDto>(payload)) {
-                setItems(payload.data ?? []);
-                setMeta(payload.meta ?? null);
-            } else {
-                setItems([]);
-                setMeta(null);
-            }
+            setItems(result.data ?? []);
+            setMeta(result.meta ?? null);
         } catch (e: unknown) {
             setItems([]);
             setMeta(null);
@@ -149,7 +111,7 @@ export function HousekeepingPage(props: Readonly<Props>): React.ReactElement {
             datetime: log.datetime,
             duration: log.duration,
             note: log.note ?? "",
-            completedChoreIds: (log.completedChores ?? []).map((x) => x.id).filter(Boolean).join(", ")
+            completedChoreIds: (log.completedChores ?? []).map((x: HousekeepingChoreDto) => x.id).filter(Boolean).join(", ")
         });
         setModal("edit");
     }
@@ -177,11 +139,9 @@ export function HousekeepingPage(props: Readonly<Props>): React.ReactElement {
             };
 
             if (modal === "create") {
-                const url = endpoints.get("chores.housekeepingSubmit"); // or a dedicated create endpoint if you have one
-                await props.api.postAsync<void>({ path: url, body: payload });
+                await choresApi.createHousekeepingLogAsync(payload);
             } else if (modal === "edit" && active?.id) {
-                const url = getLogByIdUrl(active.id);
-                await props.api.requestAsync<void>({ method: "PUT", path: url, body: { id: active.id, ...payload } });
+                await choresApi.updateHousekeepingLogAsync(active.id, payload);
             }
 
             closeModal();
@@ -200,8 +160,7 @@ export function HousekeepingPage(props: Readonly<Props>): React.ReactElement {
         setError(null);
 
         try {
-            const url = getLogByIdUrl(active.id);
-            await props.api.requestAsync<void>({ method: "DELETE", path: url });
+            await choresApi.deleteHousekeepingLogAsync(active.id);
             closeModal();
             await load();
         } catch (e: unknown) {
@@ -292,8 +251,7 @@ export function HousekeepingPage(props: Readonly<Props>): React.ReactElement {
                         }}
                     >
                         <div style={{ color: "var(--muted)", fontSize: "0.85rem" }}>
-                            Showing {(meta.page - 1) * meta.pageSize + 1}-{Math.min(meta.page * meta.pageSize, meta.total)} of{" "}
-                            {meta.total}
+                            Showing {(meta.page - 1) * meta.pageSize + 1}-{Math.min(meta.page * meta.pageSize, meta.total)} of {meta.total}
                         </div>
                         <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
                             <button type="button" className="btn ghost" disabled={!meta.hasPrevious} onClick={() => setPage(page - 1)}>
@@ -312,126 +270,121 @@ export function HousekeepingPage(props: Readonly<Props>): React.ReactElement {
 
             {error ? <div style={{ marginTop: 12, color: "var(--danger)" }}>{error}</div> : null}
 
-            {/* Modal */}
-            <div className={`modal-backdrop ${modal !== "none" && "visible"}`} aria-hidden={modal === "none"}>
-                <div className="modal" style={{ width: "min(520px, 100%)" }}>
-                    {modal === "view" && active ? (
-                        <>
-                            <header>
-                                <h2>{formatDate(active.datetime)}</h2>
-                                <p style={{ color: "var(--muted)" }}>{active.note ?? "No notes provided"}</p>
-                            </header>
+            <ModalShell open={modal !== "none"} busy={busy} onRequestClose={closeModal} widthStyle={{ width: "min(520px, 100%)" }}>
+                {modal === "view" && active ? (
+                    <>
+                        <header>
+                            <h2>{formatDate(active.datetime)}</h2>
+                            <p style={{ color: "var(--muted)" }}>{active.note ?? "No notes provided"}</p>
+                        </header>
 
-                            <ul className="detail-list">
-                                <li>
-                                    <span className="detail-label">Duration</span>
-                                    <span>{formatDuration(active.duration)}</span>
-                                </li>
-                                <li>
-                                    <span className="detail-label">Chores completed</span>
-                                    <span>{(active.completedChores ?? []).length}</span>
-                                </li>
-                            </ul>
+                        <ul className="detail-list">
+                            <li>
+                                <span className="detail-label">Duration</span>
+                                <span>{formatDuration(active.duration)}</span>
+                            </li>
+                            <li>
+                                <span className="detail-label">Chores completed</span>
+                                <span>{(active.completedChores ?? []).length}</span>
+                            </li>
+                        </ul>
 
-                            <section>
-                                <h3 style={{ margin: 0 }}>Completed chores</h3>
-                                <p className="notes" style={{ margin: "4px 0 8px" }}>
-                                    {(active.completedChores ?? []).length ? "List of completed chores." : "No chore data available."}
-                                </p>
-                                <ul className="chores-list">
-                                    {(active.completedChores ?? []).length ? (
-                                        (active.completedChores ?? []).map((c, idx) => (
-                                            <li key={`${c.id ?? "x"}-${idx}`}>
-                                                <strong>{c.title ?? c.id ?? "Chore"}</strong>
-                                            </li>
-                                        ))
-                                    ) : (
-                                        <li style={{ listStyle: "none", border: "none", background: "transparent", padding: 0, color: "var(--muted)" }}>
-                                            No chores recorded.
+                        <section>
+                            <h3 style={{ margin: 0 }}>Completed chores</h3>
+                            <p className="notes" style={{ margin: "4px 0 8px" }}>
+                                {(active.completedChores ?? []).length ? "List of completed chores." : "No chore data available."}
+                            </p>
+                            <ul className="chores-list">
+                                {(active.completedChores ?? []).length ? (
+                                    (active.completedChores ?? []).map((c, idx) => (
+                                        <li key={`${c.id ?? "x"}-${idx}`}>
+                                            <strong>{c.title ?? c.id ?? "Chore"}</strong>
                                         </li>
-                                    )}
-                                </ul>
-                            </section>
+                                    ))
+                                ) : (
+                                    <li style={{ listStyle: "none", border: "none", background: "transparent", padding: 0, color: "var(--muted)" }}>
+                                        No chores recorded.
+                                    </li>
+                                )}
+                            </ul>
+                        </section>
 
-                            <div className="modal-actions">
-                                <button type="button" className="btn" onClick={closeModal}>
-                                    Close
-                                </button>
-                            </div>
-                        </>
-                    ) : null}
+                        <div className="modal-actions">
+                            <button type="button" className="btn" onClick={closeModal}>
+                                Close
+                            </button>
+                        </div>
+                    </>
+                ) : null}
 
-                    {modal === "create" || modal === "edit" ? (
-                        <>
-                            <header>
-                                <h2>{modal === "edit" ? "Edit log" : "Create log"}</h2>
-                                <p style={{ color: "var(--muted)" }}>Admin form (simple). Duration format: HH:mm</p>
-                            </header>
+                {modal === "create" || modal === "edit" ? (
+                    <>
+                        <header>
+                            <h2>{modal === "edit" ? "Edit log" : "Create log"}</h2>
+                            <p style={{ color: "var(--muted)" }}>Admin form (simple). Duration format: HH:mm</p>
+                        </header>
 
-                            <form
-                                onSubmit={(e) => {
-                                    e.preventDefault();
-                                    void submitCreateOrEdit();
-                                }}
-                                style={{ display: "flex", flexDirection: "column", gap: 14 }}
-                            >
-                                <label>
-                                    <span>Datetime (ISO)</span>
-                                    <input value={form.datetime} onChange={(e) => setForm({ ...form, datetime: e.target.value })} />
-                                </label>
+                        <form
+                            onSubmit={(e) => {
+                                e.preventDefault();
+                                void submitCreateOrEdit();
+                            }}
+                            style={{ display: "flex", flexDirection: "column", gap: 14 }}
+                        >
+                            <label>
+                                <span>Datetime (ISO)</span>
+                                <input value={form.datetime} onChange={(e) => setForm({ ...form, datetime: e.target.value })} />
+                            </label>
 
-                                <label>
-                                    <span>Duration (HH:mm)</span>
-                                    <input value={form.duration} onChange={(e) => setForm({ ...form, duration: e.target.value })} />
-                                </label>
+                            <label>
+                                <span>Duration (HH:mm)</span>
+                                <input value={form.duration} onChange={(e) => setForm({ ...form, duration: e.target.value })} />
+                            </label>
 
-                                <label>
-                                    <span>Note</span>
-                                    <textarea value={form.note} onChange={(e) => setForm({ ...form, note: e.target.value })} />
-                                </label>
+                            <label>
+                                <span>Note</span>
+                                <textarea value={form.note} onChange={(e) => setForm({ ...form, note: e.target.value })} />
+                            </label>
 
-                                <label>
-                                    <span>Completed chore IDs (comma-separated)</span>
-                                    <input
-                                        value={form.completedChoreIds}
-                                        onChange={(e) => setForm({ ...form, completedChoreIds: e.target.value })}
-                                        placeholder="e.g. 2b3a..., 7a1c..."
-                                    />
-                                </label>
-
-                                <div className="modal-actions">
-                                    <button type="button" className="btn ghost" disabled={busy} onClick={closeModal}>
-                                        Cancel
-                                    </button>
-                                    <button type="submit" className="btn" disabled={busy}>
-                                        Save
-                                    </button>
-                                </div>
-                            </form>
-                        </>
-                    ) : null}
-
-                    {modal === "delete" && active ? (
-                        <>
-                            <header>
-                                <h2>Delete log</h2>
-                                <p style={{ color: "var(--muted)" }}>
-                                    Are you sure you want to delete log "{formatDate(active.datetime)}"?
-                                </p>
-                            </header>
+                            <label>
+                                <span>Completed chore IDs (comma-separated)</span>
+                                <input
+                                    value={form.completedChoreIds}
+                                    onChange={(e) => setForm({ ...form, completedChoreIds: e.target.value })}
+                                    placeholder="e.g. 2b3a..., 7a1c..."
+                                />
+                            </label>
 
                             <div className="modal-actions">
                                 <button type="button" className="btn ghost" disabled={busy} onClick={closeModal}>
                                     Cancel
                                 </button>
-                                <button type="button" className="btn btn-danger" disabled={busy} onClick={() => void confirmDelete()}>
-                                    Delete
+                                <button type="submit" className="btn" disabled={busy}>
+                                    Save
                                 </button>
                             </div>
-                        </>
-                    ) : null}
-                </div>
-            </div>
+                        </form>
+                    </>
+                ) : null}
+
+                {modal === "delete" && active ? (
+                    <>
+                        <header>
+                            <h2>Delete log</h2>
+                            <p style={{ color: "var(--muted)" }}>Are you sure you want to delete log "{formatDate(active.datetime)}"?</p>
+                        </header>
+
+                        <div className="modal-actions">
+                            <button type="button" className="btn ghost" disabled={busy} onClick={closeModal}>
+                                Cancel
+                            </button>
+                            <button type="button" className="btn btn-danger" disabled={busy} onClick={() => void confirmDelete()}>
+                                Delete
+                            </button>
+                        </div>
+                    </>
+                ) : null}
+            </ModalShell>
         </>
     );
 }
