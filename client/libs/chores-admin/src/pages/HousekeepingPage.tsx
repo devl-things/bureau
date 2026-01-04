@@ -1,15 +1,10 @@
 import React, { useEffect, useMemo, useState } from "react";
-import type { ApiClient } from "@bureau/client-core";
-import type { AppRuntimeOptions } from "@bureau/client-core";
-import { Endpoints } from "@bureau/client-core";
-import { ApiError } from "@bureau/client-core";
-import type { PagedMeta, PagedResponse } from "@bureau/client-core/api/Paging";
-import { isPagedResponse } from "@bureau/client-core/api/isPagedResponse";
+import type { PagedMeta, PagedResponse } from "@bureau/client-core";
+import { Endpoints, isPagedResponse } from "@bureau/client-core";
+import { Props } from "../api/choresApi";
+import { TableBodyRows } from "../components/TableBodyRows";
 
-type Props = {
-    api: ApiClient;
-    runtime: AppRuntimeOptions;
-};
+
 
 type HousekeepingChoreDto = {
     id?: string | null;
@@ -38,7 +33,6 @@ function emptyLogForm(): LogForm {
 }
 
 function toErrorMessage(err: unknown): string {
-    if (err instanceof ApiError) return err.message;
     if (err instanceof Error) return err.message;
     return "Unexpected error";
 }
@@ -66,7 +60,7 @@ function formatDuration(duration: string): string {
     return `${hrs} hr${hrs > 1 ? "s" : ""} ${mins} min`;
 }
 
-export function HousekeepingPage(props: Props): React.ReactElement {
+export function HousekeepingPage(props: Readonly<Props>): React.ReactElement {
     const endpoints = useMemo(() => new Endpoints(props.runtime), [props.runtime]);
 
     const listUrlKey = "chores.housekeeping";
@@ -248,46 +242,43 @@ export function HousekeepingPage(props: Props): React.ReactElement {
                         </tr>
                     </thead>
                     <tbody>
-                        {loading ? (
-                            <tr>
-                                <td colSpan={5} className="empty">
-                                    Loading logs…
-                                </td>
-                            </tr>
-                        ) : items.length === 0 ? (
-                            <tr>
-                                <td colSpan={5} className="empty">
-                                    {search.trim().length > 0 ? "No logs match that search." : "No housekeeping logs available."}
-                                </td>
-                            </tr>
-                        ) : (
-                            items.map((log) => {
-                                const count = (log.completedChores ?? []).length;
-                                return (
-                                    <tr key={log.id}>
-                                        <td style={{ padding: "16px 20px" }}>{formatDate(log.datetime)}</td>
-                                        <td style={{ padding: "16px 20px" }}>{formatDuration(log.duration)}</td>
-                                        <td style={{ padding: "16px 20px", color: "var(--muted)" }}>{log.note ?? "—"}</td>
-                                        <td style={{ padding: "16px 20px" }}>
-                                            <span className="count-pill">{count}</span>
-                                        </td>
-                                        <td style={{ padding: "16px 20px" }}>
-                                            <div className="actions">
-                                                <button type="button" className="btn" onClick={() => openView(log)}>
-                                                    View
-                                                </button>
-                                                <button type="button" className="btn" onClick={() => openEdit(log)}>
-                                                    Edit
-                                                </button>
-                                                <button type="button" className="btn btn-danger" onClick={() => openDelete(log)}>
-                                                    Delete
-                                                </button>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                );
-                            })
-                        )}
+                        <TableBodyRows
+                            loading={loading}
+                            items={items}
+                            search={search}
+                            colSpan={5}
+                            loadingText="Loading logs…"
+                            emptyText="No housekeeping logs available."
+                            emptyWhenSearchingText="No logs match that search."
+                            renderRows={(rows) =>
+                                rows.map((log) => {
+                                    const count = (log.completedChores ?? []).length;
+                                    return (
+                                        <tr key={log.id}>
+                                            <td style={{ padding: "16px 20px" }}>{formatDate(log.datetime)}</td>
+                                            <td style={{ padding: "16px 20px" }}>{formatDuration(log.duration)}</td>
+                                            <td style={{ padding: "16px 20px", color: "var(--muted)" }}>{log.note ?? "—"}</td>
+                                            <td style={{ padding: "16px 20px" }}>
+                                                <span className="count-pill">{count}</span>
+                                            </td>
+                                            <td style={{ padding: "16px 20px" }}>
+                                                <div className="actions">
+                                                    <button type="button" className="btn" onClick={() => openView(log)}>
+                                                        View
+                                                    </button>
+                                                    <button type="button" className="btn" onClick={() => openEdit(log)}>
+                                                        Edit
+                                                    </button>
+                                                    <button type="button" className="btn btn-danger" onClick={() => openDelete(log)}>
+                                                        Delete
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    );
+                                })
+                            }
+                        />
                     </tbody>
                 </table>
 
@@ -323,7 +314,7 @@ export function HousekeepingPage(props: Props): React.ReactElement {
             {error ? <div style={{ marginTop: 12, color: "var(--danger)" }}>{error}</div> : null}
 
             {/* Modal */}
-            <div className={`modal-backdrop ${modal !== "none" ? "visible" : ""}`} aria-hidden={modal === "none"}>
+            <div className={`modal-backdrop ${modal !== "none" && "visible"}`} aria-hidden={modal === "none"}>
                 <div className="modal" style={{ width: "min(520px, 100%)" }}>
                     {modal === "view" && active ? (
                         <>
@@ -386,22 +377,22 @@ export function HousekeepingPage(props: Props): React.ReactElement {
                                 style={{ display: "flex", flexDirection: "column", gap: 14 }}
                             >
                                 <label>
-                                    Datetime (ISO)
+                                    <span>Datetime (ISO)</span>
                                     <input value={form.datetime} onChange={(e) => setForm({ ...form, datetime: e.target.value })} />
                                 </label>
 
                                 <label>
-                                    Duration (HH:mm)
+                                    <span>Duration (HH:mm)</span>
                                     <input value={form.duration} onChange={(e) => setForm({ ...form, duration: e.target.value })} />
                                 </label>
 
                                 <label>
-                                    Note
+                                    <span>Note</span>
                                     <textarea value={form.note} onChange={(e) => setForm({ ...form, note: e.target.value })} />
                                 </label>
 
                                 <label>
-                                    Completed chore IDs (comma-separated)
+                                    <span>Completed chore IDs (comma-separated)</span>
                                     <input
                                         value={form.completedChoreIds}
                                         onChange={(e) => setForm({ ...form, completedChoreIds: e.target.value })}

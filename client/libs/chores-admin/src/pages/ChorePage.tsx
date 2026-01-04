@@ -1,21 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import type { ApiClient, AppRuntimeOptions } from "@bureau/client-core";
-import { ApiError } from "@bureau/client-core";
-import { ChoresApi, type ChoreDto } from "../api/choresApi";
-
-type Props = {
-    api: ApiClient;
-    runtime: AppRuntimeOptions;
-};
-
-type PagedMeta = {
-    page: number;
-    pageSize: number;
-    total: number;
-    totalPages: number;
-    hasNext: boolean;
-    hasPrevious: boolean;
-};
+import type { PagedMeta } from "@bureau/client-core";
+import { ChoresApi, type ChoreDto, type Props } from "../api/choresApi";
+import { TableBodyRows } from "../components/TableBodyRows";
 
 type ModalMode = "none" | "create" | "edit" | "delete" | "critical" | "critical-edit";
 
@@ -39,7 +25,6 @@ function emptyCriticalForm(): CriticalForm {
 }
 
 function toErrorMessage(err: unknown): string {
-    if (err instanceof ApiError) return err.message;
     if (err instanceof Error) return err.message;
     return "Unexpected error";
 }
@@ -56,7 +41,7 @@ function prefillCriticalFormFromChore(chore: ChoreDto): CriticalForm {
     return { description };
 }
 
-export function ChorePage(props: Props): React.ReactElement {
+export function ChorePage(props: Readonly<Props>): React.ReactElement {
     const choresApi = useMemo(() => new ChoresApi(props.api, props.runtime), [props.api, props.runtime]);
 
     const [items, setItems] = useState<ChoreDto[]>([]);
@@ -89,7 +74,7 @@ export function ChorePage(props: Props): React.ReactElement {
         try {
             const result = await choresApi.getChoresAsync({ page, pageSize, search: search.trim() });
             setItems(result.items);
-            setMeta(result.meta as PagedMeta | null);
+            setMeta(result.meta);
         } catch (e: unknown) {
             setItems([]);
             setMeta(null);
@@ -101,8 +86,8 @@ export function ChorePage(props: Props): React.ReactElement {
 
     function showToast(message: string, positive: boolean): void {
         setToast({ message, positive });
-        window.clearTimeout((showToast as any)._t);
-        (showToast as any)._t = window.setTimeout(() => setToast(null), 2600);
+        globalThis.clearTimeout((showToast as any)._t);
+        (showToast as any)._t = globalThis.setTimeout(() => setToast(null), 2600);
     }
 
     function openCreate(): void {
@@ -152,10 +137,10 @@ export function ChorePage(props: Props): React.ReactElement {
         setPage(1);
 
         if (searchDebounceRef.current) {
-            window.clearTimeout(searchDebounceRef.current);
+            globalThis.clearTimeout(searchDebounceRef.current);
         }
 
-        searchDebounceRef.current = window.setTimeout(() => {
+        searchDebounceRef.current = globalThis.setTimeout(() => {
             // state already updated; effect triggers load
         }, 300);
     }
@@ -253,7 +238,7 @@ export function ChorePage(props: Props): React.ReactElement {
     async function removeCritical(chore: ChoreDto): Promise<void> {
         if (!chore.id) return;
 
-        const ok = window.confirm(`Remove critical status from "${chore.title ?? chore.id}"?`);
+        const ok = globalThis.confirm(`Remove critical status from "${chore.title ?? chore.id}"?`);
         if (!ok) return;
 
         try {
@@ -270,6 +255,139 @@ export function ChorePage(props: Props): React.ReactElement {
         modal === "critical-edit"
             ? `Update critical reminder details for "${active?.title ?? active?.id ?? "this chore"}".`
             : `Provide context for why "${active?.title ?? active?.id ?? "this chore"}" is critical.`;
+
+    function renderModal(): React.ReactNode {
+        return (
+            <div className={`modal-backdrop ${modal !== "none" && "visible"}`} aria-hidden={modal === "none"}>
+                <div className="modal">
+                    {renderModalBody()}
+                </div>
+            </div>
+        );
+    }
+    function renderModalBody(): React.ReactNode {
+        if (modal === "create" || modal === "edit") {
+            return (
+                <>
+                    <header>
+                        <h2>{modal === "edit" ? "Edit chore" : "Create chore"}</h2>
+                        <p>{modal === "edit" ? "Update the selected chore." : "Add a brand new chore."}</p>
+                    </header>
+
+                    <form
+                        onSubmit={(e) => {
+                            e.preventDefault();
+                            void submitChoreForm();
+                        }}
+                        style={{ display: "flex", flexDirection: "column", gap: 14 }}
+                    >
+                        <label>
+                            <span>Title</span>
+                            <input
+                                value={choreForm.title}
+                                required
+                                onChange={(e) => setChoreForm({ ...choreForm, title: e.target.value })}
+                            />
+                        </label>
+
+                        <label>
+                            <span>Description</span>
+                            <textarea
+                                value={choreForm.description}
+                                onChange={(e) => setChoreForm({ ...choreForm, description: e.target.value })}
+                            />
+                        </label>
+
+                        <label>
+                            <span>Type</span>
+                            <input
+                                value={choreForm.type}
+                                placeholder="e.g. Cleaning, Errand"
+                                onChange={(e) => setChoreForm({ ...choreForm, type: e.target.value })}
+                            />
+                        </label>
+
+                        <label>
+                            <span>Repeat every (weeks)</span>
+                            <input
+                                type="number"
+                                min={1}
+                                step={1}
+                                value={choreForm.repeatEveryWeeks}
+                                onChange={(e) => setChoreForm({ ...choreForm, repeatEveryWeeks: e.target.value })}
+                            />
+                        </label>
+
+                        <div className="modal-actions">
+                            <button type="button" className="btn ghost" disabled={modalBusy} onClick={closeModal}>
+                                Cancel
+                            </button>
+                            <button type="submit" className="btn" disabled={modalBusy}>
+                                {modal === "edit" ? "Save changes" : "Create"}
+                            </button>
+                        </div>
+                    </form>
+                </>
+            );
+        }
+        if (modal === "delete") {
+            return (
+                <>
+                    <header>
+                        <h2>Delete chore</h2>
+                        <p>Are you sure you want to delete "{active?.title ?? active?.id ?? "this chore"}"?</p>
+                    </header>
+
+                    <div className="modal-actions">
+                        <button type="button" className="btn ghost" disabled={modalBusy} onClick={closeModal}>
+                            Cancel
+                        </button>
+                        <button type="button" className="btn btn-danger" disabled={modalBusy} onClick={() => void confirmDelete()}>
+                            Delete
+                        </button>
+                    </div>
+                </>
+            );
+        }
+
+        if (modal === "critical" || modal === "critical-edit") {
+            return (
+                <>
+                    <header>
+                        <h2>{criticalModalTitle}</h2>
+                        <p>{criticalModalSubtitle}</p>
+                    </header>
+
+                    <form
+                        onSubmit={(e) => {
+                            e.preventDefault();
+                            void submitCritical();
+                        }}
+                        style={{ display: "flex", flexDirection: "column", gap: 14 }}
+                    >
+                        <label>
+                            <span>Notes</span>
+                            <textarea
+                                required
+                                value={criticalForm.description}
+                                placeholder="Describe why this is critical"
+                                onChange={(e) => setCriticalForm({ ...criticalForm, description: e.target.value })}
+                            />
+                        </label>
+
+                        <div className="modal-actions">
+                            <button type="button" className="btn ghost" disabled={modalBusy} onClick={closeModal}>
+                                Cancel
+                            </button>
+                            <button type="submit" className="btn" disabled={modalBusy}>
+                                Save
+                            </button>
+                        </div>
+                    </form>
+                </>
+            );
+        }
+    }
 
     return (
         <>
@@ -296,75 +414,72 @@ export function ChorePage(props: Props): React.ReactElement {
                         </tr>
                     </thead>
                     <tbody>
-                        {loading ? (
-                            <tr>
-                                <td colSpan={3} className="empty">
-                                    Loading chores…
-                                </td>
-                            </tr>
-                        ) : items.length === 0 ? (
-                            <tr>
-                                <td colSpan={3} className="empty">
-                                    {search.trim().length > 0 ? "No chores match that search." : "No chores found."}
-                                </td>
-                            </tr>
-                        ) : (
-                            items.map((chore) => (
-                                <tr key={chore.id ?? ""}>
-                                    <td style={{ padding: "16px 20px" }}>{chore.id}</td>
-                                    <td style={{ padding: "16px 20px" }}>
-                                        <div>{chore.title ?? "Untitled"}</div>
+                        <TableBodyRows
+                            loading={loading}
+                            items={items}
+                            search={search}
+                            colSpan={3}
+                            loadingText="Loading chores…"
+                            emptyText="No chores found."
+                            emptyWhenSearchingText="No chores match that search."
+                            renderRows={(rows) =>
+                                rows.map((chore) => (
+                                    <tr key={chore.id ?? ""}>
+                                        <td style={{ padding: "16px 20px" }}>{chore.id}</td>
+                                        <td style={{ padding: "16px 20px" }}>
+                                            <div>{chore.title ?? "Untitled"}</div>
 
-                                        <div className="meta-line">
-                                            {chore.type ? <span className="badge">{chore.type}</span> : null}
-                                            {chore.isCritical ? (
-                                                <span
-                                                    className="badge"
-                                                    style={{
-                                                        background: "rgba(159, 18, 57, 0.16)",
-                                                        borderColor: "rgba(159, 18, 57, 0.25)",
-                                                        color: "#f87171"
-                                                    }}
-                                                >
-                                                    Critical
-                                                </span>
-                                            ) : null}
-                                            {chore.weeklyInterval ? (
-                                                <small className="muted-label">Every {chore.weeklyInterval} wk(s)</small>
-                                            ) : null}
-                                        </div>
+                                            <div className="meta-line">
+                                                {chore.type ? <span className="badge">{chore.type}</span> : null}
+                                                {chore.isCritical ? (
+                                                    <span
+                                                        className="badge"
+                                                        style={{
+                                                            background: "rgba(159, 18, 57, 0.16)",
+                                                            borderColor: "rgba(159, 18, 57, 0.25)",
+                                                            color: "#f87171"
+                                                        }}
+                                                    >
+                                                        Critical
+                                                    </span>
+                                                ) : null}
+                                                {chore.weeklyInterval ? (
+                                                    <small className="muted-label">Every {chore.weeklyInterval} wk(s)</small>
+                                                ) : null}
+                                            </div>
 
-                                        {chore.description ? <small className="badge subtle">{chore.description}</small> : null}
-                                    </td>
-                                    <td style={{ padding: "16px 20px" }}>
-                                        <div className="actions">
-                                            <button type="button" className="btn" onClick={() => openEdit(chore)}>
-                                                Edit
-                                            </button>
-
-                                            {chore.isCritical ? (
-                                                <>
-                                                    <button type="button" className="btn" onClick={() => openCritical(chore)}>
-                                                        Edit Critical
-                                                    </button>
-                                                    <button type="button" className="btn" onClick={() => void removeCritical(chore)}>
-                                                        Remove Critical
-                                                    </button>
-                                                </>
-                                            ) : (
-                                                <button type="button" className="btn" onClick={() => openCritical(chore)}>
-                                                    Critical
+                                            {chore.description ? <small className="badge subtle">{chore.description}</small> : null}
+                                        </td>
+                                        <td style={{ padding: "16px 20px" }}>
+                                            <div className="actions">
+                                                <button type="button" className="btn" onClick={() => openEdit(chore)}>
+                                                    Edit
                                                 </button>
-                                            )}
 
-                                            <button type="button" className="btn btn-danger" onClick={() => openDelete(chore)}>
-                                                Delete
-                                            </button>
-                                        </div>
-                                    </td>
-                                </tr>
-                            ))
-                        )}
+                                                {chore.isCritical ? (
+                                                    <>
+                                                        <button type="button" className="btn" onClick={() => openCritical(chore)}>
+                                                            Edit Critical
+                                                        </button>
+                                                        <button type="button" className="btn" onClick={() => void removeCritical(chore)}>
+                                                            Remove Critical
+                                                        </button>
+                                                    </>
+                                                ) : (
+                                                    <button type="button" className="btn" onClick={() => openCritical(chore)}>
+                                                        Critical
+                                                    </button>
+                                                )}
+
+                                                <button type="button" className="btn btn-danger" onClick={() => openDelete(chore)}>
+                                                    Delete
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ))
+                            }
+                        />
                     </tbody>
                 </table>
 
@@ -400,126 +515,7 @@ export function ChorePage(props: Props): React.ReactElement {
             {error ? <div style={{ marginTop: 12, color: "var(--danger)" }}>{error}</div> : null}
 
             {/* Modal */}
-            <div className={`modal-backdrop ${modal !== "none" ? "visible" : ""}`} aria-hidden={modal === "none"}>
-                <div className="modal">
-                    {modal === "create" || modal === "edit" ? (
-                        <>
-                            <header>
-                                <h2>{modal === "edit" ? "Edit chore" : "Create chore"}</h2>
-                                <p>{modal === "edit" ? "Update the selected chore." : "Add a brand new chore."}</p>
-                            </header>
-
-                            <form
-                                onSubmit={(e) => {
-                                    e.preventDefault();
-                                    void submitChoreForm();
-                                }}
-                                style={{ display: "flex", flexDirection: "column", gap: 14 }}
-                            >
-                                <label>
-                                    Title
-                                    <input
-                                        value={choreForm.title}
-                                        required
-                                        onChange={(e) => setChoreForm({ ...choreForm, title: e.target.value })}
-                                    />
-                                </label>
-
-                                <label>
-                                    Description
-                                    <textarea
-                                        value={choreForm.description}
-                                        onChange={(e) => setChoreForm({ ...choreForm, description: e.target.value })}
-                                    />
-                                </label>
-
-                                <label>
-                                    Type
-                                    <input
-                                        value={choreForm.type}
-                                        placeholder="e.g. Cleaning, Errand"
-                                        onChange={(e) => setChoreForm({ ...choreForm, type: e.target.value })}
-                                    />
-                                </label>
-
-                                <label>
-                                    Repeat every (weeks)
-                                    <input
-                                        type="number"
-                                        min={1}
-                                        step={1}
-                                        value={choreForm.repeatEveryWeeks}
-                                        onChange={(e) => setChoreForm({ ...choreForm, repeatEveryWeeks: e.target.value })}
-                                    />
-                                </label>
-
-                                <div className="modal-actions">
-                                    <button type="button" className="btn ghost" disabled={modalBusy} onClick={closeModal}>
-                                        Cancel
-                                    </button>
-                                    <button type="submit" className="btn" disabled={modalBusy}>
-                                        {modal === "edit" ? "Save changes" : "Create"}
-                                    </button>
-                                </div>
-                            </form>
-                        </>
-                    ) : null}
-
-                    {modal === "delete" ? (
-                        <>
-                            <header>
-                                <h2>Delete chore</h2>
-                                <p>Are you sure you want to delete "{active?.title ?? active?.id ?? "this chore"}"?</p>
-                            </header>
-
-                            <div className="modal-actions">
-                                <button type="button" className="btn ghost" disabled={modalBusy} onClick={closeModal}>
-                                    Cancel
-                                </button>
-                                <button type="button" className="btn btn-danger" disabled={modalBusy} onClick={() => void confirmDelete()}>
-                                    Delete
-                                </button>
-                            </div>
-                        </>
-                    ) : null}
-
-                    {modal === "critical" || modal === "critical-edit" ? (
-                        <>
-                            <header>
-                                <h2>{criticalModalTitle}</h2>
-                                <p>{criticalModalSubtitle}</p>
-                            </header>
-
-                            <form
-                                onSubmit={(e) => {
-                                    e.preventDefault();
-                                    void submitCritical();
-                                }}
-                                style={{ display: "flex", flexDirection: "column", gap: 14 }}
-                            >
-                                <label>
-                                    Notes
-                                    <textarea
-                                        required
-                                        value={criticalForm.description}
-                                        placeholder="Describe why this is critical"
-                                        onChange={(e) => setCriticalForm({ ...criticalForm, description: e.target.value })}
-                                    />
-                                </label>
-
-                                <div className="modal-actions">
-                                    <button type="button" className="btn ghost" disabled={modalBusy} onClick={closeModal}>
-                                        Cancel
-                                    </button>
-                                    <button type="submit" className="btn" disabled={modalBusy}>
-                                        Save
-                                    </button>
-                                </div>
-                            </form>
-                        </>
-                    ) : null}
-                </div>
-            </div>
+            {renderModal()}
 
             {/* Toast */}
             <div

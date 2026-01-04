@@ -1,7 +1,11 @@
-import { Endpoints, isPagedResponse } from "@bureau/client-core";
-import type { ApiClient, AppRuntimeOptions, PagedMeta, PagedResponse } from "@bureau/client-core";
+import type { AppRuntimeOptions, PagedMeta, PagedResponse } from "@bureau/client-core";
+import { ApiClient, Endpoints, isPagedResponse } from "@bureau/client-core";
 
 
+export type Props = {
+    api: ApiClient;
+    runtime: AppRuntimeOptions;
+};
 
 export type ChoreDto = {
     id: string;
@@ -20,7 +24,6 @@ export type ChoreUpsert = {
 };
 
 export type CriticalPayload = {
-    date: string; // yyyy-MM-dd
     description: string;
 };
 
