@@ -1,13 +1,17 @@
 FROM node:18-alpine AS frontend
 # -------------------- frontend build --------------------
-WORKDIR /work
-
-COPY client/package.json client/pnpm-lock.yaml ./client/
-COPY client/apps ./client/apps
-COPY client/libs ./client/libs
-
 WORKDIR /work/client
-RUN corepack enable && pnpm install --frozen-lockfile
+
+RUN corepack enable
+
+COPY client/package.json client/pnpm-lock.yaml client/pnpm-workspace.yaml ./
+
+RUN pnpm fetch --frozen-lockfile
+
+COPY client/apps ./apps
+COPY client/libs ./libs
+
+RUN pnpm install --offline --frozen-lockfile
 RUN pnpm --filter @bureau/bureau-bundles build
 
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS restore
