@@ -1,11 +1,12 @@
 using Bureau;
 using Bureau.AspNetCore.Controllers;
 using Microsoft.AspNetCore.Mvc;
+using Niles.Chores.Contracts;
 using Niles.Chores.Data;
 
 namespace Niles.Chores.Api.Controllers
 {
-    [Route("api/[controller]")]
+    [Route(ApiRoutes.Seed.Root)]
     [ApiController]
     public class SeedController : BureauApiControllerBase
     {
@@ -27,7 +28,7 @@ namespace Niles.Chores.Api.Controllers
             return Ok(new { data = seedResult.Value.ToString() });
         }
 
-        [HttpPost("test")]
+        [HttpPost(ApiRoutes.Seed.TestSegment)]
         public async Task<IActionResult> SeedTestAsync(CancellationToken cancellationToken)
         {
             Result<SeedOutcome> seedResult = await _seeder.SeedTestAsync(cancellationToken);
@@ -39,7 +40,7 @@ namespace Niles.Chores.Api.Controllers
             return Ok(new { data = seedResult.Value.ToString() });
         }
 
-        [HttpPost("test/clear")]
+        [HttpPost(ApiRoutes.Seed.TestClearSegment)]
         public async Task<IActionResult> ClearAndSeedAsync(CancellationToken cancellationToken)
         {
             Result seedResult = await _seeder.ClearAndSeedTestAsync(cancellationToken);

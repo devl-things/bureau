@@ -1,0 +1,36 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Razor">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <AddRazorSupportForMvc>true</AddRazorSupportForMvc>
+	<!--
+    Static web assets base path for this RCL.
+
+    All files under wwwroot/ are served publicly under:
+      /assets/frame/*
+
+    Example:
+      wwwroot/css/bureau-admin-frame.css
+      -> /assets/frame/css/bureau-admin-frame.css
+
+    IMPORTANT:
+    - Layouts must reference assets using ~/assets/frame/...
+    - If this value changes, update layout links accordingly.
+    -->
+	<StaticWebAssetBasePath>assets/frame</StaticWebAssetBasePath>
+	<Configurations>Debug;Release;Test</Configurations>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Bureau.Admin.Hosting\Bureau.Admin.Hosting.csproj" />
+  </ItemGroup>
+
+
+
+</Project>

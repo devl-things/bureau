@@ -1,0 +1,13 @@
+﻿namespace Bureau.Server.Hosting
+{
+    public static class AuthConstants
+    {
+        public const string DevUiScheme = "BureauDevUi";
+        public const string CookieScheme = "BureauCookie";
+        public const string OidcScheme = "BureauOidc";
+        public const string DevApiTokenScheme = "BureauDevApiToken";
+        public const string JwtBearerScheme = "Bearer";
+
+        public const string BureauHostCookieName = "bureau_host";
+    }
+}

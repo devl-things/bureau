@@ -1,0 +1,26 @@
+@baseUrl = http://localhost:5032
+@devToken = dev-token
+
+###
+# 1) Should return 401 (no Authorization header)
+GET {{baseUrl}}/api/chores/23
+Accept: application/json
+
+###
+# 2) Should return 401 (wrong token)
+GET {{baseUrl}}/api/chores/23
+Accept: application/json
+Authorization: Bearer wrong-token
+
+###
+# 3) Should return 200 (Dev token)
+GET {{baseUrl}}/api/chores/23
+Accept: application/json
+Authorization: Bearer {{devToken}}
+
+###
+# 4) Should return 200 (Dev token) - optional: show identity on server
+# (Same request as #3; keep for quick reruns)
+GET {{baseUrl}}/api/chores/23
+Accept: application/json
+Authorization: Bearer {{devToken}}

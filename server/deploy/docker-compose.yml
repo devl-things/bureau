@@ -10,27 +10,48 @@ services:
     environment:
       ASPNETCORE_ENVIRONMENT: "${ASPNETCORE_ENVIRONMENT}"
       # chores api settings
+      Auth__Mode: "${Auth__Mode}"
+      Auth__Dev__ScopePath: "${Auth__Dev__ScopePath}"
+      Auth__Dev__UserName: "${Auth__Dev__UserName}"
+      Auth__Dev__Email: "${Auth__Dev__Email}"
+      Auth__Dev__Roles__0: "${Auth__Dev__Roles__0}"
       ConnectionStrings__NilesDb: "${ConnectionStrings__NilesDb}"
+      Cors__AllowedOrigins__0: "${Cors__AllowedOrigins__0}"
+      Cors__AllowedHeaders__0: "${Cors__AllowedHeaders__0}"
+      Cors__AllowedMethods__0: "${Cors__AllowedMethods__0}"
       Logging__LogLevel__Default: "${Logging__LogLevel__Default}"
       Logging__LogLevel__Microsoft.AspNetCore: "${Logging__LogLevel__Microsoft_AspNetCore}"
     networks:
       - nuc-network
+    restart: unless-stopped
 
   niles-chores-web:
     build:
-      context: ..
-      dockerfile: deploy/Dockerfile.chores.web
+      context: ../..
+      dockerfile: server/deploy/Dockerfile.chores.web
     container_name: niles-chores-web
     environment:
       ASPNETCORE_ENVIRONMENT: "${ASPNETCORE_ENVIRONMENT}"
       # chores web settings
-      Api__BaseUrl: "${Api__BaseUrl}"
-      Api__ChoresUrl: "${Api__ChoresUrl}"
-      Api__HealthUrl: "${Api__HealthUrl}"
-      Api__HousekeepingUrl: "${Api__HousekeepingUrl}"
-      Api__HousekeepingSubmitSegment: "${Api__HousekeepingSubmitSegment}"
+      Admin__CurrentApp: "${Admin__CurrentApp}"
+      Admin__Apps__0__Key: "${Admin__Apps__0__Key}"
+      Admin__Apps__0__Title: "${Admin__Apps__0__Title}"
+      Admin__Apps__0__Url: "${Admin__Apps__0__Url}"
+      Admin__Apps__0__Icon: "${Admin__Apps__0__Icon}"
+      AppRuntime__Environment: "${AppRuntime__Environment}"
+      AppRuntime__Version: "${AppRuntime__Version}"
+      AppRuntime__DefaultApiKey: "${AppRuntime__DefaultApiKey}"
+      AppRuntime__ApiBaseUrls__choresApi: "${AppRuntime__ApiBaseUrls__choresApi}"
+      Auth__Mode: "${Auth__Mode}"
+      Auth__Dev__ScopePath: "${Auth__Dev__ScopePath}"
+      Auth__Dev__UserName: "${Auth__Dev__UserName}"
+      Auth__Dev__Email: "${Auth__Dev__Email}"
+      Auth__Dev__Roles__0: "${Auth__Dev__Roles__0}"
+      Frontend__UseViteDevServer: "${Frontend__UseViteDevServer}"
+      Frontend__BundlesPublicPath: "${Frontend__BundlesPublicPath}"
     networks:
       - nuc-network
+    restart: unless-stopped
 
 networks:
   nuc-network:

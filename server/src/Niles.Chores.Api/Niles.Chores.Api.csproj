@@ -4,6 +4,7 @@
     <TargetFramework>net8.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
+    <Configurations>Debug;Release;Test</Configurations>
   </PropertyGroup>
 
   <ItemGroup>
@@ -16,6 +17,8 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Bureau.AspNetCore\Bureau.AspNetCore.csproj" />
+    <ProjectReference Include="..\Bureau.Server.Hosting\Bureau.Server.Hosting.csproj" />
+    <ProjectReference Include="..\Niles.Chores.Contracts\Niles.Chores.Contracts.csproj" />
     <ProjectReference Include="..\Niles.Chores\Niles.Chores.csproj" />
   </ItemGroup>
 

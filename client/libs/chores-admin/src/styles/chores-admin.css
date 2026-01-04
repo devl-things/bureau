@@ -1,0 +1,334 @@
+﻿/* admin-content.css
+   Content styles aligned to bureau-admin-frame.css
+   - No :root color overrides
+   - No body overrides
+   - Calm, low-contrast, sharp lines
+*/
+
+/* Ensure predictable sizing in content area */
+.admin-content * {
+    box-sizing: border-box;
+}
+
+/* Layout inside content */
+.shell {
+    max-width: 1080px;
+    margin: 0;
+    padding: 0;
+}
+
+/* Page header inside content */
+.admin-content header {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 18px;
+}
+
+.title {
+    font-size: 1.2rem;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    margin: 0;
+}
+
+.subtitle {
+    color: var(--muted);
+    font-size: 0.95rem;
+    margin: 0;
+}
+
+/* Small meta line */
+.meta-line {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 8px 0 0;
+}
+
+.muted-label {
+    color: var(--muted);
+}
+
+/* Controls */
+.controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-top: 10px;
+}
+
+    .controls input[type="search"] {
+        flex: 1;
+        min-width: 220px;
+        padding: 10px 12px;
+        border-radius: var(--radius);
+        border: 1px solid var(--line);
+        background: var(--surface);
+        color: var(--ink);
+        font-size: 0.95rem;
+        outline: none;
+    }
+
+        .controls input[type="search"]::placeholder {
+            color: color-mix(in srgb, var(--muted) 85%, transparent);
+        }
+
+    .controls button {
+        padding: 10px 14px;
+        border-radius: var(--radius);
+        border: 1px solid var(--line);
+        background: transparent;
+        color: var(--ink);
+        font-weight: 600;
+        letter-spacing: 0.02em;
+        cursor: pointer;
+        transition: background var(--ease), border-color var(--ease), color var(--ease);
+    }
+
+        .controls button:hover {
+            background: var(--hover);
+            border-color: color-mix(in srgb, var(--accent) 45%, var(--line));
+        }
+
+/* Panel */
+.panel {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 8px 0;
+    box-shadow: none;
+}
+
+/* Table */
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+thead th {
+    text-align: left;
+    padding: 10px 20px;
+    font-size: 0.78rem;
+    letter-spacing: 0.10em;
+    text-transform: uppercase;
+    color: var(--muted);
+    font-weight: 600;
+    border-bottom: 1px solid var(--line);
+}
+
+tbody tr {
+    border-top: 1px solid var(--line);
+}
+
+tbody td {
+    padding: 14px 20px;
+    font-size: 0.95rem;
+}
+
+tbody tr:hover {
+    background: color-mix(in srgb, var(--hover) 65%, transparent);
+}
+
+/* Actions */
+.actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+/* Buttons: no pills */
+.btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 7px 10px;
+    border-radius: var(--radius);
+    border: 1px solid var(--line);
+    font-size: 0.82rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    cursor: pointer;
+    background: transparent;
+    color: var(--ink);
+    transition: background var(--ease), border-color var(--ease), color var(--ease);
+}
+
+    .btn:hover {
+        background: var(--hover);
+        border-color: color-mix(in srgb, var(--accent) 45%, var(--line));
+    }
+
+.btn-danger {
+    color: #b54a4a; /* calm danger */
+}
+
+:root[data-theme="dark"] .btn-danger {
+    color: #e08a8a;
+}
+
+/* Badges: subtle, not neon */
+.badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: var(--radius);
+    font-size: 0.78rem;
+    background: color-mix(in srgb, var(--accent) 12%, var(--surface));
+    border: 1px solid color-mix(in srgb, var(--accent) 24%, var(--line));
+    color: color-mix(in srgb, var(--accent) 88%, var(--ink));
+}
+
+    .badge.subtle {
+        background: color-mix(in srgb, var(--muted) 12%, var(--surface));
+        border-color: color-mix(in srgb, var(--muted) 22%, var(--line));
+        color: var(--muted);
+    }
+
+/* Empty */
+.empty {
+    text-align: center;
+    padding: 24px 10px;
+    color: var(--muted);
+    font-size: 0.95rem;
+}
+
+/* Modal backdrop */
+.modal-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.22);
+    backdrop-filter: blur(6px);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 50;
+    padding: 20px;
+}
+
+    .modal-backdrop.visible {
+        display: flex;
+    }
+
+/* Modal */
+.modal {
+    width: min(420px, 100%);
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 18px;
+}
+
+    .modal header {
+        margin-bottom: 12px;
+    }
+
+        .modal header h2 {
+            margin: 0 0 6px;
+            font-size: 1.05rem;
+            font-weight: 600;
+        }
+
+        .modal header p {
+            margin: 0;
+            color: var(--muted);
+            font-size: 0.92rem;
+        }
+
+    .modal form {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .modal label {
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: var(--muted);
+    }
+
+    .modal input,
+    .modal textarea {
+        width: 100%;
+        padding: 10px 12px;
+        border-radius: var(--radius);
+        border: 1px solid var(--line);
+        background: var(--surface-2);
+        color: var(--ink);
+        font-size: 0.95rem;
+    }
+
+    .modal textarea {
+        min-height: 110px;
+        resize: vertical;
+    }
+
+/* Modal actions */
+.modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 6px;
+}
+
+.ghost {
+    background: transparent;
+    border: 1px solid var(--line);
+    color: var(--muted);
+}
+
+    .ghost:hover {
+        background: var(--hover);
+        color: var(--ink);
+    }
+
+/* Toast */
+.toast {
+    position: fixed;
+    right: 20px;
+    bottom: 20px;
+    padding: 12px 14px;
+    border-radius: var(--radius);
+    background: var(--surface);
+    color: var(--ink);
+    border: 1px solid var(--line);
+    display: none;
+    min-width: 220px;
+    box-shadow: none;
+    z-index: 60;
+}
+
+    .toast.visible {
+        display: block;
+    }
+
+/* Breadcrumbs */
+.breadcrumbs a {
+    color: color-mix(in srgb, var(--accent) 80%, var(--ink));
+    text-decoration: none;
+    font-size: 0.9rem;
+}
+
+    .breadcrumbs a:hover {
+        text-decoration: underline;
+    }
+
+/* Pagination container */
+#pagination {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+}
+
+/* Responsive tweaks */
+@media (max-width: 640px) {
+    .actions {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    thead th, tbody td {
+        padding-left: 14px;
+        padding-right: 14px;
+    }
+}

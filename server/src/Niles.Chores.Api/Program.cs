@@ -1,11 +1,14 @@
+using Bureau.AspNetCore.Cors;
 using Bureau.AspNetCore.Logging;
 using Bureau.AspNetCore.Middleware;
 using Bureau.AspNetCore.Serialization;
 using Bureau.Server.Contracts;
+using Bureau.Server.Hosting.Configurations;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Niles.Chores.Api.Utilities;
 using Niles.Chores.Configurations;
+using Niles.Chores.Contracts;
 
 namespace Niles.Chores.Api
 {
@@ -25,19 +28,9 @@ namespace Niles.Chores.Api
             // Add services to the container.
             builder.Services.AddChores(builder.Configuration.GetConnectionString("NilesDb")!);
 
-            // Only register the CORS policy in development
-            if (builder.Environment.IsDevelopment())
-            {
-                builder.Services.AddCors(options =>
-                {
-                    options.AddDefaultPolicy(policy =>
-                    {
-                        policy.AllowAnyOrigin()
-                              .AllowAnyHeader()
-                              .AllowAnyMethod();
-                    });
-                });
-            }
+            builder.Services.AddBureauCors(builder.Configuration, builder.Environment);
+
+            builder.Services.AddBureauApiAuth(builder.Configuration);
 
             builder.Services.AddControllers();
             builder.Services.AddEndpointsApiExplorer();
@@ -59,12 +52,13 @@ namespace Niles.Chores.Api
                     options.SwaggerEndpoint("/swagger/v1/swagger.json", "Housekeeping API v1");
                     options.RoutePrefix = "swagger";
                 });
-
-                app.UseCors();
             }
 
             app.UseMiddleware<ApiExceptionHandlingMiddleware>();
 
+            app.UseBureauCors();
+
+            app.UseAuthentication();
             app.UseAuthorization();
 
             // Seed database in development
@@ -75,7 +69,7 @@ namespace Niles.Chores.Api
 
             app.MapControllers();
             // health checks not visible in swagger, and that is for the best   
-            app.MapHealthChecks("api/health",
+            app.MapHealthChecks(ApiRoutes.Health.Root,
                 new HealthCheckOptions
                 {
                     ResponseWriter = async (context, report) =>
