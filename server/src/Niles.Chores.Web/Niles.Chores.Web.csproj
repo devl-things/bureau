@@ -1,13 +1,51 @@
-<Project Sdk="Microsoft.NET.Sdk.Web">
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
-  <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
-    <Nullable>enable</Nullable>
-    <ImplicitUsings>enable</ImplicitUsings>
-  </PropertyGroup>
+	<PropertyGroup>
+		<TargetFramework>net8.0</TargetFramework>
+		<Nullable>enable</Nullable>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Configurations>Debug;Release;Test</Configurations>
+	</PropertyGroup>
 
-  <ItemGroup>
-    <Folder Include="wwwroot\" />
-  </ItemGroup>
+	<ItemGroup>
+		<ProjectReference Include="..\Bureau.Admin.Frame\Bureau.Admin.Frame.csproj" />
+		<ProjectReference Include="..\Bureau.Server.Hosting\Bureau.Server.Hosting.csproj" />
+		<ProjectReference Include="..\Niles.Chores.Contracts\Niles.Chores.Contracts.csproj" />
+	</ItemGroup>
 
+	<ItemGroup>
+		<Folder Include="wwwroot\assets\" />
+	</ItemGroup>
+
+	<PropertyGroup>
+		<BureauBundleName>chores-admin</BureauBundleName>
+		
+		<BureauBundleSource>$(BureauBundlesDistAssets)\$(BureauBundleName)</BureauBundleSource>
+		<BureauBundleDestination>$(MSBuildProjectDirectory)\$(BureauAssetsFolder)\$(BureauBundleName)</BureauBundleDestination>
+	</PropertyGroup>
+
+	<Target Name="BuildBureauBundlesForTest"
+          BeforeTargets="Build"
+          Condition="'$(Configuration)' == 'Test' and '$(OS)' == 'Windows_NT'">
+
+		<Message Importance="high" Text="(Test) Building $(BureauBundlesApp)..." />
+		<Exec WorkingDirectory="$(BureauClientRoot)"
+			  Command="pnpm --filter $(BureauBundlesApp) build" />
+
+		<Message Importance="high" Text="(Test) Copying bundle '$(BureauBundleName)' -> $(BureauAssetsFolder) (without touching other bundles)..." />
+
+		<MakeDir Directories="$(MSBuildProjectDirectory)\$(BureauAssetsFolder)" />
+
+		<!-- Clean only this bundle folder -->
+		<Exec Command="rmdir /S /Q &quot;$(BureauBundleDestination)&quot; 2&gt;nul || exit /b 0" />
+		<MakeDir Directories="$(BureauBundleDestination)" />
+
+		<!-- Fail fast if bundler did not produce expected output -->
+		<Error Condition="!Exists('$(BureauBundleSource)')"
+			   Text="Bundle output not found: $(BureauBundleSource). Expected dist/assets/$(BureauBundleName). Did the bundler config output assets/[name]/...?" />
+
+		<!-- Copy only that bundle -->
+		<Exec Command="xcopy &quot;$(BureauBundleSource)&quot; &quot;$(BureauBundleDestination)\&quot; /E /I /Y" />
+
+	</Target>
 </Project>

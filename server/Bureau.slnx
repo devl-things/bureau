@@ -1,14 +1,36 @@
 <Solution>
+  <Configurations>
+    <BuildType Name="Debug" />
+    <BuildType Name="Release" />
+    <BuildType Name="Test" />
+  </Configurations>
   <Folder Name="/Core/">
+    <Project Path="src/Bureau.Extensions.Logging/Bureau.Extensions.Logging.csproj" Id="b4460ee3-f6ed-4e4f-9bbf-be18942cb002" />
+    <Project Path="src/Bureau.Extensions.Time/Bureau.Extensions.Time.csproj" Id="48e39c90-2d89-499d-897f-fa55220793c5" />
     <Project Path="src/Bureau.Primitives/Bureau.Primitives.csproj" Id="9797915e-e401-4e8b-9151-4fbe6f8383a7" />
+    <Project Path="src/Bureau.Server.Contracts/Bureau.Server.Contracts.csproj" Id="e307a7c2-1a19-4f9e-9a2c-66242b9086a5" />
     <Project Path="src/Niles.Chores.Abstractions/Niles.Chores.Abstractions.csproj" />
+    <Project Path="src/Niles.Chores.Contracts/Niles.Chores.Contracts.csproj" Id="cceee822-c9c6-48d0-8325-13962aec13a6" />
     <Project Path="src/Niles.Chores/Niles.Chores.csproj" />
     <Project Path="src/Watson.Items/Watson.Items.csproj" Id="c58caa5d-063e-41d7-8846-efd863ac5bd3" />
   </Folder>
   <Folder Name="/Infrastructure/">
     <Project Path="src/Watson.Items.Ingest/Watson.Items.Ingest.csproj" Id="b0ac60f2-7fb4-4c37-b6af-b815f24c34c9" />
   </Folder>
+  <Folder Name="/Infrastructure/">
+    <Project Path="src/Bureau.Admin.Hosting/Bureau.Admin.Hosting.csproj" Id="4508800a-7a76-4f99-895b-b2078e2dd40b">
+      <Build Solution="Debug|*" Project="false" />
+    </Project>
+    <Project Path="src/Bureau.AspNetCore/Bureau.AspNetCore.csproj" Id="b6f299e3-2de1-4306-8e7e-301c1c0621e1">
+      <Build Solution="Debug|*" Project="false" />
+    </Project>
+    <Project Path="src/Bureau.EntityFrameworkCore.SqlServer/Bureau.EntityFrameworkCore.SqlServer.csproj" Id="2e798e31-56ab-4538-abe0-07f6770f7dc4" />
+    <Project Path="src/Bureau.EntityFrameworkCore/Bureau.EntityFrameworkCore.csproj" Id="65335513-4834-4f55-8e76-128a56955782" />
+    <Project Path="src/Bureau.Server.Hosting/Bureau.Server.Hosting.csproj" Id="49670b92-3b7a-4c90-a802-e248675a732e" />
+  </Folder>
   <Folder Name="/Presentation/">
+    <Project Path="src/Bureau.Admin.Frame/Bureau.Admin.Frame.csproj" Id="5f1f69e7-40fd-4dde-894d-2f87bdba48a6" />
+    <Project Path="src/Bureau.Frontend.DevRunner/Bureau.Frontend.DevRunner.csproj" Id="da64ba29-3095-4163-becc-2d93c027280d" />
     <Project Path="src/Niles.Chores.Api/Niles.Chores.Api.csproj" />
     <Project Path="src/Niles.Chores.Web/Niles.Chores.Web.csproj" />
     <Project Path="src/Watson.Items.Ingest.Api/Watson.Items.Ingest.Api.csproj" Id="8b47c0b7-01a6-4db1-abc0-5edefa6a846d" />

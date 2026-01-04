@@ -9,20 +9,22 @@ namespace Niles.Chores.Models
 
         public YearsWeek(DateOnly dateOnly)
         {
-            Year = dateOnly.Year;
-            Week = ISOWeek.GetWeekOfYear(dateOnly.ToDateTime(TimeOnly.MinValue));
+            DateTime dateTime = dateOnly.ToDateTime(TimeOnly.MinValue, DateTimeKind.Unspecified);
+            Year = ISOWeek.GetYear(dateTime);
+            Week = ISOWeek.GetWeekOfYear(dateTime);
         }
 
         public YearsWeek(DateTimeOffset dateTimeOffset)
         {
-            Year = dateTimeOffset.Year;
-            Week = ISOWeek.GetWeekOfYear(dateTimeOffset.DateTime);
+            DateTime dateTime = dateTimeOffset.UtcDateTime;
+            Year = ISOWeek.GetYear(dateTime);
+            Week = ISOWeek.GetWeekOfYear(dateTime);
         }
 
         public override bool Equals(object? obj)
         {
             if (obj is null) return false;
-            if (obj.GetType() != typeof(YearsWeek)) return false;
+            if (obj is not YearsWeek) return false;
             YearsWeek yearsWeek = (YearsWeek)obj;
             return Year == yearsWeek.Year && Week == yearsWeek.Week;
         }
@@ -37,6 +39,11 @@ namespace Niles.Chores.Models
             DateTime db = ISOWeek.ToDateTime(b.Year, b.Week, DayOfWeek.Monday);
 
             return (int)((da - db).TotalDays / 7);
+        }
+
+        public override string ToString()
+        {
+            return $"{nameof(Year)}={Year};{nameof(Week)}={Week}";
         }
     }
 }

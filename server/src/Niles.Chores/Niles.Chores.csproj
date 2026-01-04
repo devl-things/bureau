@@ -4,9 +4,12 @@
     <TargetFramework>net8.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <Configurations>Debug;Release;Test</Configurations>
   </PropertyGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Bureau.EntityFrameworkCore.SqlServer\Bureau.EntityFrameworkCore.SqlServer.csproj" />
+    <ProjectReference Include="..\Bureau.Extensions.Logging\Bureau.Extensions.Logging.csproj" />
     <ProjectReference Include="..\Niles.Chores.Abstractions\Niles.Chores.Abstractions.csproj" />
   </ItemGroup>
 

@@ -1,0 +1,25 @@
+﻿@page "/admin"
+@model Niles.Chores.Web.Pages.Admin.IndexModel
+@attribute [Authorize]
+@{
+    ViewData["Title"] = "Chores Admin";
+}
+@section Styles {
+    <bureau-bundle-styles name="chores-admin" />
+}
+@section Head {
+    <bureau-app-runtime-options />
+}
+
+<div id="chores-admin-root">
+    <div style="color: var(--muted); padding: 12px 0;">
+        Loading chores admin…
+    </div>
+</div>
+
+
+@section Scripts {
+    <bureau-bundle name="chores-admin" />
+}
+
+

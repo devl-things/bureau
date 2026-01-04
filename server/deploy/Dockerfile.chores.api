@@ -4,14 +4,36 @@ ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
 
 COPY ["src/Bureau.Primitives/Bureau.Primitives.csproj", "src/Bureau.Primitives/"]
+COPY ["src/Bureau.Extensions.Logging/Bureau.Extensions.Logging.csproj", "src/Bureau.Extensions.Logging/"]
+COPY ["src/Bureau.Server.Contracts/Bureau.Server.Contracts.csproj", "src/Bureau.Server.Contracts/"]
+COPY ["src/Bureau.AspNetCore/Bureau.AspNetCore.csproj", "src/Bureau.AspNetCore/"]
+
+COPY ["src/Bureau.Server.Hosting/Bureau.Server.Hosting.csproj", "src/Bureau.Server.Hosting/"]
+
 COPY ["src/Niles.Chores.Abstractions/Niles.Chores.Abstractions.csproj", "src/Niles.Chores.Abstractions/"]
+COPY ["src/Bureau.EntityFrameworkCore/Bureau.EntityFrameworkCore.csproj", "src/Bureau.EntityFrameworkCore/"]
+COPY ["src/Bureau.EntityFrameworkCore.SqlServer/Bureau.EntityFrameworkCore.SqlServer.csproj", "src/Bureau.EntityFrameworkCore.SqlServer/"]
 COPY ["src/Niles.Chores/Niles.Chores.csproj", "src/Niles.Chores/"]
+
+COPY ["src/Niles.Chores.Contracts/Niles.Chores.Contracts.csproj", "src/Niles.Chores.Contracts/"]
+
 COPY ["src/Niles.Chores.Api/Niles.Chores.Api.csproj", "src/Niles.Chores.Api/"]
 RUN dotnet restore "./src/Niles.Chores.Api/Niles.Chores.Api.csproj"
 
 COPY ["src/Bureau.Primitives/", "src/Bureau.Primitives/"]
+COPY ["src/Bureau.Extensions.Logging/", "src/Bureau.Extensions.Logging/"]
+COPY ["src/Bureau.Server.Contracts/", "src/Bureau.Server.Contracts/"]
+COPY ["src/Bureau.AspNetCore/", "src/Bureau.AspNetCore/"]
+
+COPY ["src/Bureau.Server.Hosting/", "src/Bureau.Server.Hosting/"]
+
 COPY ["src/Niles.Chores.Abstractions/", "src/Niles.Chores.Abstractions/"]
+COPY ["src/Bureau.EntityFrameworkCore/", "src/Bureau.EntityFrameworkCore/"]
+COPY ["src/Bureau.EntityFrameworkCore.SqlServer/", "src/Bureau.EntityFrameworkCore.SqlServer/"]
 COPY ["src/Niles.Chores/", "src/Niles.Chores/"]
+
+COPY ["src/Niles.Chores.Contracts/", "src/Niles.Chores.Contracts/"]
+
 COPY ["src/Niles.Chores.Api/", "src/Niles.Chores.Api/"]
 
 
