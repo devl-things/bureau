@@ -52,7 +52,7 @@ export class Endpoints {
 
         for (const routeKey of Object.keys(route)) {
             const token: string = `{${routeKey}}`;
-            const raw: unknown = route[routeKey];
+            const raw: ParamValue = route[routeKey];
             const replaced: string = raw === null || raw === undefined ? "" : encodeURIComponent(String(raw));
             result = result.split(token).join(replaced);
         }

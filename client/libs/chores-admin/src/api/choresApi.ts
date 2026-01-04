@@ -55,8 +55,7 @@ export class ChoresApi {
         }
 
         if (isPagedResponse<ChoreDto>(payload)) {
-            const paged = payload as PagedResponse<ChoreDto>;
-            return { items: paged.data ?? [], meta: paged.meta ?? null };
+            return { items: payload.data ?? [], meta: payload.meta ?? null };
         }
 
         return { items: [], meta: null };

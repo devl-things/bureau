@@ -1,5 +1,5 @@
 //candidate for admin-ui
-type EmptyStateProps<TItem> = {
+type EmptyStateProps<TItem> = Readonly<{
     loading: boolean;
     items: readonly TItem[];
     search: string;
@@ -8,7 +8,7 @@ type EmptyStateProps<TItem> = {
     emptyText: string;
     emptyWhenSearchingText: string;
     renderRows: (items: readonly TItem[]) => React.ReactNode;
-};
+}>;
 
 export function TableBodyRows<TItem>(props: EmptyStateProps<TItem>): React.ReactElement {
     const trimmed: string = props.search.trim();
