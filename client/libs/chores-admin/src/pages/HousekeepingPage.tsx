@@ -110,9 +110,8 @@ export function HousekeepingPage(props: Readonly<Props>): React.ReactElement {
                 setItems(payload as HousekeepingLogDto[]);
                 setMeta(null);
             } else if (isPagedResponse<HousekeepingLogDto>(payload)) {
-                const paged = payload as PagedResponse<HousekeepingLogDto>;
-                setItems(paged.data ?? []);
-                setMeta(paged.meta ?? null);
+                setItems(payload.data ?? []);
+                setMeta(payload.meta ?? null);
             } else {
                 setItems([]);
                 setMeta(null);

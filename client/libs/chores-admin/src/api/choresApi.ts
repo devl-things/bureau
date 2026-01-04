@@ -1,4 +1,4 @@
-import type { AppRuntimeOptions, PagedMeta, PagedResponse } from "@bureau/client-core";
+import type { AppRuntimeOptions, PagedMeta } from "@bureau/client-core";
 import { ApiClient, Endpoints, isPagedResponse } from "@bureau/client-core";
 
 

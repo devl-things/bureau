@@ -453,7 +453,7 @@ input[type="checkbox"] {
     border: none;
     font-size: 0.85rem;
     font-weight: 500;
-    background: linear-gradient(135deg, #16a34a, #15803d);
+    background: linear-gradient(135deg, #15803d, #166534);
     color: #f9fafb;
     cursor: pointer;
     box-shadow: 0 4px 10px rgba(22, 163, 74, 0.35);
@@ -662,7 +662,7 @@ input[type="checkbox"] {
     }
 
 .btn-primary {
-    background: linear-gradient(135deg, #16a34a, #15803d);
+    background: linear-gradient(135deg, #15803d, #166534);
     color: #f9fafb;
     box-shadow: 0 4px 10px rgba(22, 163, 74, 0.35);
 }
