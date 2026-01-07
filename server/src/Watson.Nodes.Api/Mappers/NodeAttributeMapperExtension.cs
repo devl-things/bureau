@@ -4,18 +4,28 @@ namespace Watson.Nodes.Api.Mappers
 {
     public static class NodeAttributeMapperExtension
     {
+        public static NodeAttributeKey ToDomain(this AttributeKeyDto dto)
+        {
+            return new NodeAttributeKey
+            {
+                Key = dto.Key,
+                Locale = dto.Locale
+            };
+        }
         public static NodeAttribute ToDomain(this AttributeDto dto)
         {
-            return new NodeAttribute(
-                dto.Key,
-                dto.Locale,
-                dto.Type.ToDomain(),
-                dto.ValueString,
-                dto.ValueNumber,
-                dto.ValueBool,
-                dto.ValueJson,
-                dto.RefNodeId,
-                dto.ValueDate);
+            return new NodeAttribute()
+            {
+                Key = dto.Key,
+                Locale = dto.Locale,
+                Type = dto.Type.ToDomain(),
+                ValueString = dto.ValueString,
+                ValueNumber = dto.ValueNumber,
+                ValueBool = dto.ValueBool,
+                ValueJson = dto.ValueJson,
+                RefNodeId = dto.RefNodeId,
+                ValueDate = dto.ValueDate
+            };
         }
 
         public static AttributeDto ToDto(this NodeAttribute attribute)

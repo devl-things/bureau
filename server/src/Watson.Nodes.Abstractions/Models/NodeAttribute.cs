@@ -1,38 +1,23 @@
-﻿namespace Watson.Nodes
+﻿using System.Diagnostics.CodeAnalysis;
+
+namespace Watson.Nodes
 {
-    public sealed class NodeAttribute
+    public sealed class NodeAttribute : NodeAttributeKey
     {
-        public string Key { get; }
-        public string? Locale { get; }
-        public AttributeValueType Type { get; }
+        public AttributeValueType Type { get; init; }
 
-        public string? ValueString { get; }
-        public decimal? ValueNumber { get; }
-        public bool? ValueBool { get; }
-        public string? ValueJson { get; }
-        public Guid? RefNodeId { get; }
-        public DateTimeOffset? ValueDate { get; }
+        public string? ValueString { get; init; }
+        public decimal? ValueNumber { get; init; }
+        public bool? ValueBool { get; init; }
+        public string? ValueJson { get; init; }
+        public Guid? RefNodeId { get; init; }
+        public DateTimeOffset? ValueDate { get; init; }
 
-        public NodeAttribute(
-            string key,
-            string? locale,
-            AttributeValueType type,
-            string? valueString,
-            decimal? valueNumber,
-            bool? valueBool,
-            string? valueJson,
-            Guid? refNodeId,
-            DateTimeOffset? valueDate)
+        [SetsRequiredMembers]
+        public NodeAttribute(string key) : base(key)
         {
-            Key = key;
-            Locale = locale;
-            Type = type;
-            ValueString = valueString;
-            ValueNumber = valueNumber;
-            ValueBool = valueBool;
-            ValueJson = valueJson;
-            RefNodeId = refNodeId;
-            ValueDate = valueDate;
+
         }
+
     }
 }

@@ -1,4 +1,6 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Bureau;
+using Bureau.AspNetCore.Controllers;
+using Microsoft.AspNetCore.Mvc;
 using Watson.Nodes.Api.Mappers;
 using Watson.Nodes.Contracts;
 using Watson.Nodes.Contracts.Dtos;
@@ -8,42 +10,44 @@ namespace Watson.Nodes.Api.Controllers
 {
     [ApiController]
     [Route(ApiRoutes.Nodes.Root)]
-    public sealed class NodesController : ControllerBase
+    public sealed class NodesController : BureauApiControllerBase
     {
         private readonly INodeService _nodeService;
 
-        public NodesController(INodeService nodeService)
+        public NodesController(ILogger<NodesController> logger, INodeService nodeService) : base(logger)
         {
             _nodeService = nodeService;
         }
 
         [HttpGet(ApiRoutes.ByIdSegment)]
-        public async Task<ActionResult<NodeDto>> GetAsync(
-            [FromRoute] Guid nodeId,
-            CancellationToken cancellationToken = default)
+        public async Task<IActionResult> GetByIdAsync([FromRoute] Guid nodeId, CancellationToken cancellationToken = default)
         {
-            Node? node = await _nodeService.GetAsync(nodeId, cancellationToken);
-            if (node is null)
+            Result<Node> result = await _nodeService.GetAsync(nodeId, cancellationToken);
+            if (result.IsError)
             {
-                return NotFound();
+                return ProblemDetailsResponse(result.Error);
             }
-
-            return Ok(node.ToDto());
+            return OkResponse(result.Value.ToDto());
         }
 
         [HttpPatch(ApiRoutes.Nodes.AttributesSegment)]
-        public async Task<ActionResult<NodeDto>> PatchAttributesAsync(
-            [FromRoute] Guid nodeId,
-            [FromBody] PatchNodeAttributesRequest request,
-            CancellationToken cancellationToken = default)
+        public async Task<IActionResult> PatchAttributesAsync([FromRoute] Guid nodeId, [FromBody] PatchNodeAttributesRequest request, CancellationToken cancellationToken = default)
         {
-            IEnumerable<NodeAttribute> set = (request.Set ?? Array.Empty<AttributeDto>()).Select(a => a.ToDomain());
-
-            IEnumerable<(string Key, string? Locale)> remove = (request.Remove ?? Array.Empty<AttributeKeyDto>())
-                .Select(r => (r.Key, r.Locale));
-
-            Node updated = await _nodeService.PatchAttributesAsync(nodeId, set, remove, cancellationToken);
-            return Ok(updated.ToDto());
+            if (!ModelState.IsValid)
+            {
+                return ProblemDetailsResponse(ModelState);
+            }
+            PatchNodeAttributesCommand attributeChanges = new PatchNodeAttributesCommand()
+            {
+                Set = (request.Set ?? Array.Empty<AttributeDto>()).Select(x => x.ToDomain()),
+                Remove = (request.Remove ?? Array.Empty<AttributeKeyDto>()).Select(x => x.ToDomain())
+            };
+            Result<Node> result = await _nodeService.PatchNodeAttributesAsync(nodeId, attributeChanges, cancellationToken);
+            if (result.IsError)
+            {
+                return ProblemDetailsResponse(result.Error);
+            }
+            return OkResponse(result.Value.ToDto());
         }
     }
 }

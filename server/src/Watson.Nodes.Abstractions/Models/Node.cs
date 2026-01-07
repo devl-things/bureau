@@ -2,34 +2,21 @@
 {
     public sealed class Node
     {
-        private readonly List<NodeAttribute> _attributes;
+        private readonly List<NodeAttribute> _attributes = new List<NodeAttribute>();
 
-        public Guid NodeId { get; }
-        public NodeKind Kind { get; }
-        public string Scope { get; }
-        public string CanonicalKey { get; private set; }
+        public Guid NodeId { get; init; }
+        public NodeKind Kind { get; init; }
+        public string Scope { get; init; } = string.Empty;
+        public string CanonicalKey { get; private set; } = string.Empty;
         public NodeStatus Status { get; private set; }
         public int Version { get; private set; }
         public IReadOnlyCollection<NodeAttribute> Attributes => _attributes;
 
-        public Node(
-            Guid nodeId,
-            NodeKind kind,
-            string scope,
-            string canonicalKey,
-            NodeStatus status,
-            int version,
-            IEnumerable<NodeAttribute> attributes)
+        public Node()
         {
-            NodeId = nodeId;
-            Kind = kind;
-            Scope = scope;
-            CanonicalKey = canonicalKey;
-            Status = status;
-            Version = version;
-            _attributes = new List<NodeAttribute>(attributes);
+            Version = 1;
+            Status = NodeStatus.Active;
         }
-
         public void SetCanonicalKey(string canonicalKey)
         {
             CanonicalKey = canonicalKey;

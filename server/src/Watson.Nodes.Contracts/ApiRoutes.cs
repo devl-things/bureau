@@ -17,6 +17,7 @@
         public static class Nodes
         {
             public const string Root = "nodes";
+            public const string ByIdRouteName = "Nodes.GetById";
             public const string ByIdUrl = $"{Root}/{ByIdSegment}";
             public const string AttributesSegment = $"{ByIdSegment}/attributes";
 

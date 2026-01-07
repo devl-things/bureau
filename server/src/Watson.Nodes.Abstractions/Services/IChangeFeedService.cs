@@ -1,9 +1,9 @@
 ﻿using Bureau;
 
-namespace Watson.Nodes.Abstractions.Services
+namespace Watson.Nodes.Services
 {
     public interface IChangeFeedService
     {
-        Task<CursorResult<ChangeEvent>> GetChangesAsync(long after, int limit, ChangeMode mode, CancellationToken cancellationToken = default);
+        Task<CursorResult<ChangeEvent>> GetChangesAsync(ChangeFeedQuery request, CancellationToken cancellationToken = default);
     }
 }

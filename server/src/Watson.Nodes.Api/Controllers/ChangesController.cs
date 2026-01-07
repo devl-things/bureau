@@ -1,8 +1,9 @@
 ﻿using Bureau;
-using Bureau.Server.Contracts;
+using Bureau.AspNetCore.Controllers;
 using Bureau.Server.Contracts.Mappers;
 using Microsoft.AspNetCore.Mvc;
 using Watson.Nodes.Abstractions.Services;
+using Watson.Nodes.Api.Factories;
 using Watson.Nodes.Api.Mappers;
 using Watson.Nodes.Contracts;
 using Watson.Nodes.Contracts.Dtos;
@@ -11,29 +12,27 @@ namespace Watson.Nodes.Api.Controllers
 {
     [ApiController]
     [Route(ApiRoutes.Changes.Root)]
-    public sealed class ChangesController : ControllerBase
+    public sealed class ChangesController : BureauApiControllerBase
     {
         private readonly IChangeFeedService _changeFeedService;
 
-        public ChangesController(IChangeFeedService changeFeedService)
+        public ChangesController(ILogger<ChangesController> logger, IChangeFeedService changeFeedService) : base(logger)
         {
             _changeFeedService = changeFeedService;
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetAsync(
-            [FromQuery] long after = 0,
-            [FromQuery] int limit = 500,
-            [FromQuery] ChangeModeContract mode = ChangeModeContract.Compact,
-            CancellationToken cancellationToken = default)
+        public async Task<IActionResult> GetAsync([FromQuery] ChangesQueryDto query, CancellationToken cancellationToken = default)
         {
-            int safeLimit = Math.Clamp(limit, 1, 2000);
+            ChangeFeedQuery request = ChangeFeedQueryFactory.Create(query);
 
-            CursorResult<ChangeEvent> feed = await _changeFeedService.GetChangesAsync(after, safeLimit, mode.ToDomain(), cancellationToken);
+            CursorResult<ChangeEvent> feedResult = await _changeFeedService.GetChangesAsync(request, cancellationToken);
 
-            BureauCursorResponse<ChangeEventDto> dto = feed.ToCursorResponse(x => x.ToDto());
-
-            return Ok(dto);
+            if (feedResult.IsError)
+            {
+                return ProblemDetailsResponse(feedResult.Error);
+            }
+            return Ok(feedResult.ToCursorResponse(x => x.ToDto()));
         }
     }
 }
