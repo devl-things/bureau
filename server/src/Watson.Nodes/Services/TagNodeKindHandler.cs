@@ -11,15 +11,16 @@ namespace Watson.Nodes.Services
 
         public override Result ValidateCreate(CreateNodeCommand command)
         {
+            base.ValidateCreate(command);
             return RequireCanonicalKey(command, Kind.ToString());
         }
 
-        public override IReadOnlyList<NodeAttributeKey> GetSearchAttributeKeys()
+        public override List<string> GetDefaultSearchAttributeKeys()
         {
             return DefaultSearchKeys;
         }
 
-        public override IReadOnlyList<NodeAttributeKey> GetSummaryAttributeKeys()
+        public override List<string> GetDefaultSummaryAttributeKeys()
         {
             return DefaultSummaryKeys;
         }

@@ -7,15 +7,16 @@
         public Guid NodeId { get; init; }
         public NodeKind Kind { get; init; }
         public string Scope { get; init; } = string.Empty;
-        public string CanonicalKey { get; private set; } = string.Empty;
+        public string CanonicalKey { get; private set; }
         public NodeStatus Status { get; private set; }
         public int Version { get; private set; }
         public IReadOnlyCollection<NodeAttribute> Attributes => _attributes;
 
-        public Node()
+        public Node(string canonicalKey, int version, NodeStatus status)
         {
-            Version = 1;
-            Status = NodeStatus.Active;
+            CanonicalKey = canonicalKey;
+            Version = version;
+            Status = status;
         }
         public void SetCanonicalKey(string canonicalKey)
         {

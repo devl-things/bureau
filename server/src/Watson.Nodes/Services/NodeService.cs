@@ -1,6 +1,7 @@
 ﻿using Bureau;
 using Bureau.Primitives.Errors;
 using Microsoft.EntityFrameworkCore;
+using Watson.Nodes.Abstractions.Conventions;
 using Watson.Nodes.Constants;
 using Watson.Nodes.Contexts;
 using Watson.Nodes.Mappers;
@@ -55,7 +56,7 @@ namespace Watson.Nodes.Services
             {
                 return validation.Error;
             }
-            //TODO add check for existing canonical key?
+
             Guid nodeId = Guid.NewGuid();
 
             NodeDb nodeDb = new NodeDb
@@ -99,7 +100,6 @@ namespace Watson.Nodes.Services
             {
                 return ResultError.From(ProblemCodes.Resource.NotFound, string.Format("Not found, {0} with identifier {1}", nameof(Node), nodeId));
             }
-
             INodeKindHandler handler = GetHandler(nodeDb.Kind);
 
             Result validation = handler.ValidatePatch(nodeId, attributeChanges);
@@ -135,140 +135,153 @@ namespace Watson.Nodes.Services
             return node;
         }
 
-        //TODO check from here on
         public async Task<CursorResult<Node>> SearchAsync(SearchNodesQuery query, CancellationToken cancellationToken = default)
         {
             SearchNodesFilter filter = query.Filter;
 
             INodeKindHandler handler = GetHandler(filter.Kind);
 
-            CursorParameters cursor = query.Cursor;
-            cursor.SetLimit(cursor.Limit);
-
-            // Determine which attributes are searched (matching)
-            IReadOnlyList<NodeAttributeKey> searchKeys = ResolveQueryKeys(filter, handler);
-
-            // Determine which attributes are returned (projection)
-            IReadOnlyList<NodeAttributeKey> projectionKeys = ResolveProjectionKeys(filter, handler);
-
-            long after = cursor.Cursor;
-            int limit = cursor.Limit;
-
-            IQueryable<NodeDb> baseQuery = _context.Nodes.AsNoTracking()
-                .Where(x => x.Kind == filter.Kind)
-                .Where(x => filter.Scope == null || x.Scope == filter.Scope)
-                .Where(x => x.CreatedSequence > after);
+            IQueryable<NodeDb> baseQuery = BuildBaseSearchQuery(filter, query.Cursor.Cursor);
 
             if (!string.IsNullOrWhiteSpace(filter.Query))
             {
-                string q = filter.Query.Trim();
-
-                List<string> searchKeyStrings = searchKeys.Select(x => x.Key).Distinct().ToList();
-
-                IQueryable<Guid> matched =
-                    _context.NodeAttributes.AsNoTracking()
-                        .Where(a => a.ValueString != null)
-                        .Where(a => searchKeyStrings.Contains(a.Key))
-                        .Where(a => filter.Locale == null || a.Locale == filter.Locale || a.Locale == null)
-                        .Where(a => EF.Functions.Like(a.ValueString!, "%" + q + "%"))
-                        .Select(a => a.NodeId);
-
-                baseQuery = baseQuery.Where(n => matched.Contains(n.NodeId));
+                baseQuery = ApplyFilterOnSearchQuery(baseQuery, filter, handler);
             }
 
+            int limit = query.Cursor.Limit;
             // Limit+1 pattern for HasMore
-            List<NodeDb> page = await baseQuery
-                .OrderBy(x => x.CreatedSequence)
-                .Take(limit + 1)
-                .ToListAsync(cancellationToken);
+            List<NodeDb> page = await baseQuery.OrderBy(x => x.CreatedSequence).Take(limit + 1).ToListAsync(cancellationToken);
 
             bool hasMore = page.Count > limit;
             if (hasMore)
             {
-                page = page.Take(limit).ToList();
+                page.RemoveAt(page.Count - 1);
             }
-
-            long nextCursor = after;
+            long cursor = query.Cursor.Cursor;
             if (page.Count > 0)
             {
-                nextCursor = page[page.Count - 1].CreatedSequence;
+                cursor = page[page.Count - 1].CreatedSequence;
             }
 
-            List<Guid> nodeIds = page.Select(x => x.NodeId).ToList();
-
-            List<NodeAttributeDb> attrs = await LoadProjectedAttributesAsync(nodeIds, projectionKeys, filter.Locale, cancellationToken);
+            List<Guid> nodeIds = [.. page.Select(x => x.NodeId)];
+            List<string> projectionKeys = handler.GetProjectionAttributeKeys(filter.AttributeKeys);
+            Dictionary<Guid, List<NodeAttributeDb>> attrs = await LoadProjectedAttributesAsync(nodeIds, projectionKeys, filter.Locale, cancellationToken);
 
             List<Node> resultNodes = new List<Node>();
             foreach (NodeDb nodeDb in page)
             {
-                List<NodeAttributeDb> nodeAttrs = attrs.Where(a => a.NodeId == nodeDb.NodeId).ToList();
+                attrs.TryGetValue(nodeDb.NodeId, out List<NodeAttributeDb>? nodeAttrs);
                 Node node = nodeDb.ToDomain(nodeAttrs);
                 resultNodes.Add(node);
             }
 
-            CursorResult<Node> result = new CursorResult<Node>(
-                resultNodes,
-                cursor,
-                nextCursor,
-                hasMore,
-                mode: null,
-                next: null);
-
-            return result;
+            return new CursorResult<Node>(resultNodes, query.Cursor, cursor, hasMore);
         }
 
-        private static IReadOnlyList<NodeAttributeKey> ResolveQueryKeys(SearchNodesFilter filter, INodeKindHandler handler)
+        private IQueryable<NodeDb> ApplyFilterOnSearchQuery(IQueryable<NodeDb> baseQuery, SearchNodesFilter filter, INodeKindHandler handler)
         {
-            if (filter.QueryAttributeKeys != null && filter.QueryAttributeKeys.Count > 0)
+            string q = filter.Query!.Trim();
+
+            // Determine which attributes are searched (matching)
+            List<string> searchKeys = handler.GetSearchAttributeKeys(filter.QueryAttributeKeys);
+
+            bool hasNumber = decimal.TryParse(q, out decimal parsedNumber);
+            bool hasBool = TryParseBool(q, out bool parsedBool);
+            bool hasGuid = Guid.TryParse(q, out Guid parsedGuid);
+            //TODO prepare so convention for dates like in chores
+            bool hasDate = DateTimeOffset.TryParse(q, out DateTimeOffset parsedDate);
+
+            IQueryable<NodeAttributeDb> attrQuery = _context.NodeAttributes.AsNoTracking()
+                    .Where(a => searchKeys.Contains(a.Key));
+
+            if (!string.IsNullOrWhiteSpace(filter.Locale))
             {
-                List<NodeAttributeKey> keys = new List<NodeAttributeKey>();
-                foreach (string key in filter.QueryAttributeKeys)
-                {
-                    keys.Add(new NodeAttributeKey(key));
-                }
-                return keys;
+                string requested = filter.Locale!;
+                attrQuery = attrQuery.Where(a => a.Locale == requested || a.Locale == null || a.Locale == LocaleConventions.FallbackLocale);
             }
 
-            return handler.GetSearchAttributeKeys();
-        }
+            IQueryable<NodeAttributeDb> matchPredicate = attrQuery.Where(a => false);
 
-        private static IReadOnlyList<NodeAttributeKey> ResolveProjectionKeys(SearchNodesFilter filter, INodeKindHandler handler)
-        {
-            if (filter.AttributeKeys != null && filter.AttributeKeys.Count > 0)
+            matchPredicate = matchPredicate.Concat(
+                attrQuery.Where(a => a.Type == AttributeValueType.String && a.ValueString != null && EF.Functions.Like(a.ValueString, "%" + q + "%")));
+
+            matchPredicate = matchPredicate.Concat(
+                attrQuery.Where(a => a.Type == AttributeValueType.Json && a.ValueJson != null && EF.Functions.Like(a.ValueJson, "%" + q + "%")));
+
+            if (hasNumber)
             {
-                List<NodeAttributeKey> keys = new List<NodeAttributeKey>();
-                foreach (string key in filter.AttributeKeys)
-                {
-                    keys.Add(new NodeAttributeKey(key));
-                }
-                return keys;
+                matchPredicate = matchPredicate.Concat(
+                    attrQuery.Where(a => a.Type == AttributeValueType.Number && a.ValueNumber != null && a.ValueNumber == parsedNumber));
+            }
+            if (hasBool)
+            {
+                matchPredicate = matchPredicate.Concat(
+                    attrQuery.Where(a => a.Type == AttributeValueType.Bool && a.ValueBool != null && a.ValueBool == parsedBool));
+            }
+            if (hasGuid)
+            {
+                matchPredicate = matchPredicate.Concat(
+                    attrQuery.Where(a => a.Type == AttributeValueType.Ref && a.RefNodeId != null && a.RefNodeId == parsedGuid));
             }
 
-            return handler.GetSummaryAttributeKeys();
+            if (hasDate)
+            {
+                matchPredicate = matchPredicate.Concat(
+                    attrQuery.Where(a => a.Type == AttributeValueType.Date && a.ValueDate != null && a.ValueDate == parsedDate));
+            }
+            IQueryable<Guid> matched = matchPredicate.Select(a => a.NodeId).Distinct();
+            baseQuery = baseQuery.Where(n => matched.Contains(n.NodeId));
+            return baseQuery;
         }
 
-        private async Task<List<NodeAttributeDb>> LoadProjectedAttributesAsync(List<Guid> nodeIds, IReadOnlyList<NodeAttributeKey> projectionKeys, string? locale, CancellationToken cancellationToken)
+        private IQueryable<NodeDb> BuildBaseSearchQuery(SearchNodesFilter filter, long cursor)
         {
-            List<string> keyStrings = projectionKeys.Select(x => x.Key).Distinct().ToList();
+            IQueryable<NodeDb> query = _context.Nodes.AsNoTracking()
+                .Where(x => x.Kind == filter.Kind)
+                .Where(x => filter.Scope == null || x.Scope == filter.Scope)
+                .Where(x => x.CreatedSequence > cursor);
 
+            return query;
+        }
+        private static bool TryParseBool(string input, out bool value)
+        {
+            string normalized = input.Trim().ToLowerInvariant();
+
+            if (normalized == "true" || normalized == "1" || normalized == "yes")
+            {
+                value = true;
+                return true;
+            }
+
+            if (normalized == "false" || normalized == "0" || normalized == "no")
+            {
+                value = false;
+                return true;
+            }
+
+            value = default;
+            return false;
+        }
+
+        private async Task<Dictionary<Guid, List<NodeAttributeDb>>> LoadProjectedAttributesAsync(List<Guid> nodeIds, List<string> projectionKeys, string? locale, CancellationToken cancellationToken)
+        {
             IQueryable<NodeAttributeDb> query = _context.NodeAttributes.AsNoTracking()
                 .Where(a => nodeIds.Contains(a.NodeId))
-                .Where(a => keyStrings.Contains(a.Key));
+                .Where(a => projectionKeys.Contains(a.Key));
 
             if (!string.IsNullOrWhiteSpace(locale))
             {
-                string requested = locale!;
-                query = query.Where(a => a.Locale == requested || a.Locale == null || a.Locale == "en");
+                query = query.Where(a => a.Locale == locale || a.Locale == null || a.Locale == LocaleConventions.FallbackLocale);
             }
 
             List<NodeAttributeDb> candidates = await query.ToListAsync(cancellationToken);
 
-            if (string.IsNullOrWhiteSpace(locale))
+            if (!string.IsNullOrWhiteSpace(locale))
             {
-                return candidates;
+                candidates = PickBestLocaleAttributes(candidates, locale);
             }
 
-            return PickBestLocaleAttributes(candidates, locale!);
+            return candidates.GroupBy(x => x.NodeId).ToDictionary(g => g.Key, g => g.ToList());
         }
 
         private static List<NodeAttributeDb> PickBestLocaleAttributes(List<NodeAttributeDb> candidates, string requestedLocale)
@@ -279,42 +292,22 @@ namespace Watson.Nodes.Services
             {
                 (Guid NodeId, string Key) groupKey = (attribute.NodeId, attribute.Key);
 
-                if (!best.TryGetValue(groupKey, out NodeAttributeDb? current))
+                if (!best.TryGetValue(groupKey, out NodeAttributeDb? currentBest))
                 {
                     best[groupKey] = attribute;
                     continue;
                 }
 
-                int currentScore = GetLocaleScore(current.Locale, requestedLocale);
-                int newScore = GetLocaleScore(attribute.Locale, requestedLocale);
+                int currentBestScore = LocaleConventions.GetLocaleScore(currentBest.Locale, requestedLocale);
+                int newScore = LocaleConventions.GetLocaleScore(attribute.Locale, requestedLocale);
 
-                if (newScore > currentScore)
+                if (newScore > currentBestScore)
                 {
                     best[groupKey] = attribute;
                 }
             }
 
-            return best.Values.ToList();
-        }
-
-        private static int GetLocaleScore(string? locale, string requestedLocale)
-        {
-            if (locale == requestedLocale)
-            {
-                return 3;
-            }
-
-            if (locale == null)
-            {
-                return 2;
-            }
-
-            if (locale == "en")
-            {
-                return 1;
-            }
-
-            return 0;
+            return [.. best.Values];
         }
 
         private async Task<Node> LoadNodeAsync(Guid nodeId, CancellationToken cancellationToken)
@@ -331,30 +324,34 @@ namespace Watson.Nodes.Services
 
         private static void ApplyPatch(Guid nodeId, List<NodeAttributeDb> existing, PatchNodeAttributesCommand patch)
         {
-            IEnumerable<NodeAttributeKey> removes = patch.Remove ?? Array.Empty<NodeAttributeKey>();
-            foreach (NodeAttributeKey remove in removes)
+            if (patch.Remove is not null)
             {
-                NodeAttributeDb? found = existing.FirstOrDefault(x => x.Key == remove.Key && x.Locale == remove.Locale);
-
-                if (found != null)
+                foreach (NodeAttributeKey remove in patch.Remove)
                 {
-                    existing.Remove(found);
+                    NodeAttributeDb? found = existing.FirstOrDefault(x => x.Key == remove.Key && x.Locale == remove.Locale);
+
+                    if (found != null)
+                    {
+                        existing.Remove(found);
+                    }
                 }
             }
 
-            IEnumerable<NodeAttribute> sets = patch.Set ?? Array.Empty<NodeAttribute>();
-            foreach (NodeAttribute set in sets)
+            if (patch.Set is not null)
             {
-                NodeAttributeDb? found = existing.FirstOrDefault(x => x.Key == set.Key && x.Locale == set.Locale);
+                foreach (NodeAttribute set in patch.Set)
+                {
+                    NodeAttributeDb? found = existing.FirstOrDefault(x => x.Key == set.Key && x.Locale == set.Locale);
 
-                if (found == null)
-                {
-                    NodeAttributeDb created = set.ToDb(nodeId);
-                    existing.Add(created);
-                }
-                else
-                {
-                    found.ApplyFromDomain(set);
+                    if (found == null)
+                    {
+                        NodeAttributeDb created = set.ToDb(nodeId);
+                        existing.Add(created);
+                    }
+                    else
+                    {
+                        found.ApplyFromDomain(set);
+                    }
                 }
             }
         }

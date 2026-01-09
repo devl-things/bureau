@@ -1,4 +1,6 @@
-﻿using Watson.Nodes.Contracts.Dtos;
+﻿using Watson.Nodes.Abstractions.Conventions;
+using Watson.Nodes.Contracts.Dtos;
+using Watson.Nodes.Conventions;
 
 namespace Watson.Nodes.Api.Mappers
 {
@@ -6,18 +8,16 @@ namespace Watson.Nodes.Api.Mappers
     {
         public static NodeAttributeKey ToDomain(this AttributeKeyDto dto)
         {
-            return new NodeAttributeKey
+            return new NodeAttributeKey(dto.Key)
             {
-                Key = dto.Key,
                 Locale = dto.Locale
             };
         }
         public static NodeAttribute ToDomain(this AttributeDto dto)
         {
-            return new NodeAttribute()
+            return new NodeAttribute(NodeAttributeConventions.NormalizeKey(dto.Key))
             {
-                Key = dto.Key,
-                Locale = dto.Locale,
+                Locale = LocaleConventions.Normalize(dto.Locale),
                 Type = dto.Type.ToDomain(),
                 ValueString = dto.ValueString,
                 ValueNumber = dto.ValueNumber,

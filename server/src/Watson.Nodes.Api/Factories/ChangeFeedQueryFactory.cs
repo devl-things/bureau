@@ -1,4 +1,5 @@
-﻿using Watson.Nodes.Api.Mappers;
+﻿using Bureau;
+using Watson.Nodes.Api.Mappers;
 using Watson.Nodes.Contracts.Dtos;
 
 namespace Watson.Nodes.Api.Factories

@@ -2,11 +2,11 @@
 using Bureau.AspNetCore.Controllers;
 using Bureau.Server.Contracts.Mappers;
 using Microsoft.AspNetCore.Mvc;
-using Watson.Nodes.Abstractions.Services;
 using Watson.Nodes.Api.Factories;
 using Watson.Nodes.Api.Mappers;
 using Watson.Nodes.Contracts;
 using Watson.Nodes.Contracts.Dtos;
+using Watson.Nodes.Services;
 
 namespace Watson.Nodes.Api.Controllers
 {

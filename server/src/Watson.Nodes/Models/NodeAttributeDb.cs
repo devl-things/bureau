@@ -1,5 +1,6 @@
 ﻿namespace Watson.Nodes.Models
 {
+    //TODO add IAuditable
     internal class NodeAttributeDb
     {
         public Guid NodeId { get; set; }

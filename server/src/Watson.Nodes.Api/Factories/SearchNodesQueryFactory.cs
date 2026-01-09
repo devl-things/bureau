@@ -1,4 +1,5 @@
-﻿using Watson.Nodes.Contracts.Dtos;
+﻿using Bureau;
+using Watson.Nodes.Contracts.Dtos;
 
 namespace Watson.Nodes.Api.Factories
 {

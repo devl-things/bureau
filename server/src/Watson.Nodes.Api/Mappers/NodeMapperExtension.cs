@@ -1,4 +1,5 @@
-﻿using Watson.Nodes.Contracts.Dtos;
+﻿using Watson.Nodes.Abstractions.Conventions;
+using Watson.Nodes.Contracts.Dtos;
 
 namespace Watson.Nodes.Api.Mappers
 {
@@ -9,7 +10,7 @@ namespace Watson.Nodes.Api.Mappers
             return new CreateNodeCommand
             {
                 Kind = kind,
-                Scope = request.Scope,
+                Scope = ScopeConventions.Normalize(request.Scope),
                 CanonicalKey = request.CanonicalKey,
                 Attributes = [.. (request.Attributes ?? Array.Empty<AttributeDto>()).Select(a => a.ToDomain())]
             };

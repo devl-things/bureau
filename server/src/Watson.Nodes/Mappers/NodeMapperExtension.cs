@@ -4,21 +4,19 @@ namespace Watson.Nodes.Mappers
 {
     internal static class NodeMapperExtension
     {
-        public static Node ToDomain(this NodeDb db, IReadOnlyList<NodeAttributeDb> attributes)
+        public static Node ToDomain(this NodeDb db, List<NodeAttributeDb>? attributes)
         {
-            IReadOnlyCollection<NodeAttribute> domainAttributes =
-                attributes.Select(x => x.ToDomain()).ToList();
-            return new Node()
+            Node node = new Node(db.CanonicalKey ?? string.Empty, db.Version, db.Status)
             {
                 NodeId = db.NodeId,
                 Kind = db.Kind,
                 Scope = db.Scope,
-                //TODO
-                //CanonicalKey = db.CanonicalKey ?? string.Empty,
-                //Status = db.Status,
-                //Version = db.Version,
-                //Attributes = domainAttributes
             };
+            if (attributes != null)
+            {
+                node.SetAttributes(attributes.Select(x => x.ToDomain()));
+            }
+            return node;
         }
 
         public static NodeAttribute ToDomain(this NodeAttributeDb db)

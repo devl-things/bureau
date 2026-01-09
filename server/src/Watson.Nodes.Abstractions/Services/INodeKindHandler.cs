@@ -57,22 +57,69 @@ namespace Watson.Nodes.Services
         Task<Result> AfterCreateAsync(Node node, CreateNodeCommand command, CancellationToken cancellationToken = default);
 
         /// <summary>
-        /// Returns the default attribute keys that are searched when a caller provides a query text
-        /// but does not specify query attribute keys explicitly.
+        /// Returns the default set of attribute keys used when searching nodes of this kind.
         /// </summary>
         /// <remarks>
-        /// These keys are used for matching/search filtering (not projection). Typically includes keys like
-        /// <c>label</c> and optionally <c>description</c>.
+        /// These keys are used when the caller does not explicitly specify which attributes
+        /// should participate in search matching (e.g. label, description).
+        ///
+        /// The returned keys represent the canonical, handler-defined defaults for this
+        /// node kind and should be stable over time.
         /// </remarks>
-        IReadOnlyList<NodeAttributeKey> GetSearchAttributeKeys();
+        /// <returns>
+        /// A list of attribute keys that are searched by default.
+        /// </returns>
+        List<string> GetDefaultSearchAttributeKeys();
 
         /// <summary>
-        /// Returns the default attribute keys included in projected search responses when a caller does not
-        /// specify projection keys explicitly.
+        /// Resolves the set of attribute keys used for search matching.
         /// </summary>
         /// <remarks>
-        /// These keys affect the response payload only and do not influence search matching.
+        /// If <paramref name="attributeKeys"/> is provided and contains at least one value,
+        /// it is treated as an explicit override supplied by the caller.
+        ///
+        /// If <paramref name="attributeKeys"/> is <c>null</c> or empty, the handler-defined
+        /// default search attribute keys are used instead.
         /// </remarks>
-        IReadOnlyList<NodeAttributeKey> GetSummaryAttributeKeys();
+        /// <param name="attributeKeys">
+        /// Optional list of attribute keys requested by the caller.
+        /// </param>
+        /// <returns>
+        /// A distinct list of attribute keys to be used for search matching.
+        /// </returns>
+        List<string> GetSearchAttributeKeys(IReadOnlyList<string>? attributeKeys);
+
+        /// <summary>
+        /// Returns the default set of attribute keys included when projecting node summaries.
+        /// </summary>
+        /// <remarks>
+        /// These keys define the minimal attribute set returned by default in search
+        /// and listing scenarios (e.g. label, description).
+        ///
+        /// The returned keys are handler-defined and represent the canonical summary
+        /// projection for this node kind.
+        /// </remarks>
+        /// <returns>
+        /// A list of attribute keys included in default node projections.
+        /// </returns>
+        List<string> GetDefaultSummaryAttributeKeys();
+
+        /// <summary>
+        /// Resolves the set of attribute keys included in the node projection.
+        /// </summary>
+        /// <remarks>
+        /// If <paramref name="attributeKeys"/> is provided and contains at least one value,
+        /// it is treated as an explicit projection requested by the caller.
+        ///
+        /// If <paramref name="attributeKeys"/> is <c>null</c> or empty, the handler-defined
+        /// default summary attribute keys are used instead.
+        /// </remarks>
+        /// <param name="attributeKeys">
+        /// Optional list of attribute keys requested by the caller.
+        /// </param>
+        /// <returns>
+        /// A distinct list of attribute keys to include in the node projection.
+        /// </returns>
+        List<string> GetProjectionAttributeKeys(IReadOnlyList<string>? attributeKeys);
     }
 }
