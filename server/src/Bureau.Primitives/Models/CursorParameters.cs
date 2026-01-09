@@ -17,7 +17,7 @@
         /// <summary>
         /// Maximum allowed limit for a cursor query.
         /// </summary>
-        public const int MAX_LIMIT = 2000;
+        public const int MAX_LIMIT = 500;
 
         /// <summary>
         /// Exclusive cursor position. Results start strictly after this cursor value.
