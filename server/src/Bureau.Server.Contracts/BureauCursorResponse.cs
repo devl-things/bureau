@@ -26,9 +26,5 @@ namespace Bureau.Server.Contracts
 
         [JsonPropertyName("count")]
         public required int Count { get; init; }
-
-        // Optional extra info for feeds like /changes (compact/full)
-        [JsonPropertyName("mode")]
-        public string? Mode { get; init; }
     }
 }

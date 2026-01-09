@@ -2,7 +2,7 @@
 {
     public static class CursorResponseMapperExtension
     {
-        public static BureauCursorResponse<TDestination> ToCursorResponse<TSource, TDestination>(this CursorResult<TSource> cursorResult, Func<TSource, TDestination> mapTo, string? mode = null)
+        public static BureauCursorResponse<TDestination> ToCursorResponse<TSource, TDestination>(this CursorResult<TSource> cursorResult, Func<TSource, TDestination> mapTo)
         {
             IReadOnlyList<TDestination> mappedValues = cursorResult.Values.Select(mapTo).ToArray();
 
@@ -11,8 +11,7 @@
                 Cursor = cursorResult.Cursor,
                 NextCursor = cursorResult.NextCursor,
                 HasMore = cursorResult.HasMore,
-                Count = mappedValues.Count,
-                Mode = mode,
+                Count = mappedValues.Count
             };
 
             return new BureauCursorResponse<TDestination>
