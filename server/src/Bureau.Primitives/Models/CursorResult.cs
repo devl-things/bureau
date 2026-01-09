@@ -14,43 +14,23 @@
 
         public int Count { get { return Values.Count; } }
 
-        // Optional metadata owned by the domain
-        public string? Mode { get; }
-        public string? Next { get; }
-
-        internal CursorResult(
-            IReadOnlyList<T> values,
-            long cursor,
-            long nextCursor,
-            bool hasMore,
-            string? mode,
-            string? next,
-            bool isSuccess,
-            ResultError resultError)
+        internal CursorResult(IReadOnlyList<T> values, long cursor, long nextCursor,
+            bool hasMore, bool isSuccess, ResultError resultError)
         {
             Values = values;
             Cursor = cursor;
             NextCursor = nextCursor;
             HasMore = hasMore;
-            Mode = mode;
-            Next = next;
             IsSuccess = isSuccess;
             Error = resultError;
         }
 
-        public CursorResult(
-            IReadOnlyList<T> values,
-            CursorParameters parameters,
-            long nextCursor,
-            bool hasMore,
-            string? mode = null,
-            string? next = null)
-            : this(values, parameters.Cursor, nextCursor, hasMore, mode, next, true, default)
+        public CursorResult(IReadOnlyList<T> values, CursorParameters parameters, long nextCursor, bool hasMore)
+            : this(values, parameters.Cursor, nextCursor, hasMore, true, default)
         {
         }
 
-        public CursorResult(ResultError error)
-            : this(Array.Empty<T>(), 0, 0, false, null, null, false, error)
+        public CursorResult(ResultError error) : this(Array.Empty<T>(), 0, 0, false, false, error)
         {
         }
 
