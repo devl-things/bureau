@@ -30,10 +30,5 @@ namespace Bureau.Server.Contracts
         // Optional extra info for feeds like /changes (compact/full)
         [JsonPropertyName("mode")]
         public string? Mode { get; init; }
-
-        // Optional continuation token for non-numeric cursors (e.g. search "next")
-        // Keep it nullable; only set it for endpoints that need it.
-        [JsonPropertyName("next")]
-        public string? Next { get; init; }
     }
 }
