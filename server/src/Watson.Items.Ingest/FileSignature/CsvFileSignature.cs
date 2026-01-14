@@ -3,7 +3,7 @@
     public sealed class CsvFileSignature : IFileSignature
     {
         private const int MaxProbeBytes = 8192;
-        private static readonly byte[] Utf8Bom = new byte[] { 0xEF, 0xBB, 0xBF };
+        private static readonly byte[] Utf8Bom = [0xEF, 0xBB, 0xBF];
         private static readonly byte[] DelimiterCandidates = new byte[] { (byte)',', (byte)';', (byte)'\t', (byte)'|' };
 
         public IEnumerable<string> Extensions
@@ -11,14 +11,14 @@
             get { return new[] { "csv" }; }
         }
 
-        public bool IsMatch(ReadOnlySpan<byte> buffer)
+        public bool IsMatch(ReadOnlySpan<byte> bytes)
         {
-            if (buffer.Length == 0) return false;
+            if (bytes.Length == 0) return false;
 
             // Quick reject: ZIP/XLSX etc.
-            if (new ZipFileSignature().IsMatch(buffer)) return false;
+            if (new ZipFileSignature().IsMatch(bytes)) return false;
 
-            ReadOnlySpan<byte> probe = buffer.Slice(0, Math.Min(MaxProbeBytes, buffer.Length));
+            ReadOnlySpan<byte> probe = bytes.Slice(0, Math.Min(MaxProbeBytes, bytes.Length));
 
             if (ContainsNullByte(probe)) return false;
             if (!LooksLikeText(probe)) return false;

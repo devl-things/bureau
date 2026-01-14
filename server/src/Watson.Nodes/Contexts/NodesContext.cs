@@ -8,7 +8,7 @@ namespace Watson.Nodes.Contexts
         public DbSet<NodeDb> Nodes { get; set; } = null!;
         public DbSet<NodeAttributeDb> NodeAttributes { get; set; } = null!;
 
-        public NodesContext(DbContextOptions options) : base(options)
+        internal NodesContext(DbContextOptions options) : base(options)
         {
         }
     }
