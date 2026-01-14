@@ -1,4 +1,5 @@
 ﻿using Bureau;
+using Watson.Nodes.Abstractions.Conventions;
 
 namespace Watson.Nodes.Services
 {
@@ -12,7 +13,7 @@ namespace Watson.Nodes.Services
         public override Result ValidateCreate(CreateNodeCommand command)
         {
             base.ValidateCreate(command);
-            return RequireCanonicalKey(command, Kind.ToString());
+            return CanonicalKeyConventions.RequireCanonicalKey(command.CanonicalKey, Kind.ToString());
         }
 
         public override List<string> GetDefaultSearchAttributeKeys()

@@ -35,7 +35,7 @@ namespace Watson.Nodes.Abstractions.Conventions
     /// </remarks>
     public static class ScopeConventions
     {
-        private const int MaxScopeLength = 64;
+        public const int MaxScopeLength = 64;
 
         // lowercase, a-z 0-9 _ - :
         private static readonly Regex ScopeRegex =
@@ -84,24 +84,18 @@ namespace Watson.Nodes.Abstractions.Conventions
         {
             if (string.IsNullOrWhiteSpace(scope))
             {
-                return ResultError.From(
-                    ProblemCodes.Validation.Required,
-                    "Scope is required.");
+                return ResultError.From(ProblemCodes.Validation.Required, "Scope is required.");
             }
 
             if (scope.Length > MaxScopeLength)
             {
-                return ResultError.From(
-                    ProblemCodes.Validation.TooLong,
-                    "Invalid scope length. Scopes must be 1–64 characters long.");
+                return ResultError.From(ProblemCodes.Validation.TooLong, $"Invalid scope length. Scopes must be 1–{MaxScopeLength} characters long.");
             }
 
             if (!ScopeRegex.IsMatch(scope))
             {
-                return ResultError.From(
-                    ProblemCodes.Validation.InvalidFormat,
-                    "Invalid scope. Scopes must be lowercase, 1–64 characters long, " +
-                    "and contain only a–z, 0–9, '_', '-', ':' characters.");
+                return ResultError.From(ProblemCodes.Validation.InvalidFormat,
+                    $"Invalid scope. Scopes must be lowercase, 1–{MaxScopeLength} characters long, and contain only a–z, 0–9, '_', '-', ':' characters.");
             }
 
             return true;

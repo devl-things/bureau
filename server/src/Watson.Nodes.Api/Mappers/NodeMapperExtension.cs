@@ -11,7 +11,7 @@ namespace Watson.Nodes.Api.Mappers
             {
                 Kind = kind,
                 Scope = ScopeConventions.Normalize(request.Scope),
-                CanonicalKey = request.CanonicalKey,
+                CanonicalKey = CanonicalKeyConventions.Normalize(request.CanonicalKey),
                 Attributes = [.. (request.Attributes ?? Array.Empty<AttributeDto>()).Select(a => a.ToDomain())]
             };
         }

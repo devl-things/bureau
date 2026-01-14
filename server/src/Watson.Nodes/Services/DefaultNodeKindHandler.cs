@@ -31,6 +31,11 @@ namespace Watson.Nodes.Services
         /// <inheritdoc />
         public virtual Result ValidateCreate(CreateNodeCommand command)
         {
+            Result canonicalKey = CanonicalKeyConventions.Validate(command.CanonicalKey);
+            if (canonicalKey.IsError)
+            {
+                return canonicalKey.Error;
+            }
             Result scopeValidation = ScopeConventions.Validate(command.Scope);
             if (scopeValidation.IsError)
             {
@@ -141,16 +146,6 @@ namespace Watson.Nodes.Services
             }
 
             return GetDefaultSummaryAttributeKeys();
-        }
-
-        protected static Result RequireCanonicalKey(CreateNodeCommand command, string nodeKindName)
-        {
-            if (string.IsNullOrWhiteSpace(command.CanonicalKey))
-            {
-                return ResultError.From(ProblemCodes.Validation.Required, $"{nameof(command.CanonicalKey)} is required", $"{nameof(command.CanonicalKey)} is required for " + nodeKindName + " nodes.");
-            }
-
-            return true;
         }
     }
 }

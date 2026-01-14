@@ -1,53 +1,36 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Bureau.EntityFrameworkCore.TypeConfigurations;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using Watson.Nodes.Abstractions.Conventions;
 using Watson.Nodes.Models;
 
 namespace Watson.Nodes.TypeConfigurations
 {
-    internal class NodeTypeConfiguration : IEntityTypeConfiguration<NodeDb>
+    internal class NodeTypeConfiguration : AuditTypeConfiguration<NodeDb>, IEntityTypeConfiguration<NodeDb>
     {
-        public void Configure(EntityTypeBuilder<NodeDb> builder)
+        public override void Configure(EntityTypeBuilder<NodeDb> builder)
         {
-            //TODO
-            //builder.ToTable("Nodes");
+            base.Configure(builder);
 
             builder.HasKey(x => x.NodeId);
+            builder.Property(x => x.NodeId).ValueGeneratedNever();
 
-            builder.Property(x => x.NodeId)
-                .ValueGeneratedNever();
+            builder.Property(x => x.CreatedSequence).ValueGeneratedOnAdd();
 
-            // Cursor paging key for SearchAsync: BIGINT IDENTITY
-            builder.Property(x => x.CreatedSequence)
-                .ValueGeneratedOnAdd();
+            builder.Property(x => x.Kind).IsRequired();
 
-            builder.HasIndex(x => x.CreatedSequence);
+            builder.Property(x => x.Scope).HasMaxLength(ScopeConventions.MaxScopeLength).IsRequired();
 
-            builder.Property(x => x.Kind)
-                .HasConversion<int>()
-                .IsRequired();
+            builder.Property(x => x.CanonicalKey).HasMaxLength(CanonicalKeyConventions.MaxCanonicalKeyLength).IsRequired(false);
 
-            builder.Property(x => x.Scope)
-                .HasMaxLength(64)
-                .IsRequired();
+            builder.Property(x => x.Status).IsRequired();
 
-            builder.Property(x => x.CanonicalKey)
-                .HasMaxLength(128)
-                .IsRequired(false);
+            builder.Property(x => x.Version).IsRequired();
 
-            builder.Property(x => x.Status)
-                .HasConversion<int>()
-                .IsRequired();
-
-            builder.Property(x => x.Version)
-                .IsRequired();
-
-            // Uniqueness for canonical key (when present).
-            // NOTE: SQL Server unique index allows multiple NULLs, which is what we want.
-            builder.HasIndex(x => new { x.Kind, x.Scope, x.CanonicalKey })
-                .IsUnique();
-
-            // Main paging index for search
-            builder.HasIndex(x => new { x.Kind, x.Scope, x.CreatedSequence });
+            builder.HasMany(x => x.NodeAttributes)
+                .WithOne(x => x.Node)
+                .HasForeignKey(x => x.NodeId)
+                .OnDelete(DeleteBehavior.Cascade);
         }
     }
 }

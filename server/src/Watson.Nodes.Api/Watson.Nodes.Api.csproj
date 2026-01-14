@@ -13,8 +13,10 @@
   <ItemGroup>
     <ProjectReference Include="..\Bureau.AspNetCore\Bureau.AspNetCore.csproj" />
     <ProjectReference Include="..\Bureau.Server.Contracts\Bureau.Server.Contracts.csproj" />
+    <ProjectReference Include="..\Bureau.Server.Hosting\Bureau.Server.Hosting.csproj" />
     <ProjectReference Include="..\Watson.Nodes.Abstractions\Watson.Nodes.Abstractions.csproj" />
     <ProjectReference Include="..\Watson.Nodes.Contracts\Watson.Nodes.Contracts.csproj" />
+    <ProjectReference Include="..\Watson.Nodes.Data.SqlServer\Watson.Nodes.Data.SqlServer.csproj" />
   </ItemGroup>
 
 </Project>

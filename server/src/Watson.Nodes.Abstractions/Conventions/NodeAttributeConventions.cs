@@ -34,11 +34,11 @@ namespace Watson.Nodes.Conventions
     /// </remarks>
     public static class NodeAttributeConventions
     {
-        private const int MaxKeyLength = 64;
+        public const int MaxKeyLength = 128;
 
         // lowercase snake_case with optional namespace (e.g. catalog:ean)
         private static readonly Regex AttributeKeyRegex =
-            new Regex("^[a-z0-9:_]{1,64}$", RegexOptions.Compiled, TimeSpan.FromMilliseconds(100));
+            new Regex("^[a-z0-9:_]{1,128}$", RegexOptions.Compiled, TimeSpan.FromMilliseconds(100));
 
         private static readonly Dictionary<AttributeValueType, Func<NodeAttribute, object?>> _valueAccessors = new()
             {

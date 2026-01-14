@@ -85,7 +85,7 @@ If a helper requires a specific technology/framework (EF Core, ASP.NET Core, Log
 
 ---
 
-### 2.5 `Bureau.Extensions.TimeProvider`
+### 2.5 `Bureau.Extensions.Time`
 **Use for:** time/date helpers and `TimeProvider` extensions
 
 **Examples**
@@ -100,7 +100,7 @@ If a helper requires a specific technology/framework (EF Core, ASP.NET Core, Log
 
 ---
 
-### 2.6 `Bureau.Extensions.AspNetCore`
+### 2.6 `Bureau.AspNetCore`
 **Use for:** ASP.NET Core presentation-layer helpers
 
 **Examples**
@@ -112,6 +112,8 @@ If a helper requires a specific technology/framework (EF Core, ASP.NET Core, Log
 - ✅ may depend on `Microsoft.Extensions.Primitives`
 - ❌ no domain logic
 - ❌ no controllers/middleware pipelines
+
+Note: ASP.NET Core–specific helpers that implement or extend framework types (for example, an `IHealthCheck` implementation like `ProbeHealthCheck<TProbe>`) belong in `Bureau.AspNetCore`. The probe contract itself (`IHealthProbe`) should be a minimal, framework-agnostic contract placed in `Bureau.Primitives`.
 
 ---
 
@@ -127,13 +129,13 @@ Use this checklist to place a helper:
    - ✅ And if provider-specific → `Bureau.EntityFrameworkCore.SqlServer`
 
 3. **Does it extend ASP.NET Core types (`HttpRequest`, `HttpContext`, etc.)?**
-   - ✅ Yes → `Bureau.Extensions.AspNetCore`
+    - ✅ Yes → `Bureau.AspNetCore`
 
 4. **Is it purely logging-related (`ILogger`)?**
    - ✅ Yes → `Bureau.Extensions.Logging`
 
 5. **Is it time-related (`TimeProvider`, date/time helpers)?**
-   - ✅ Yes → `Bureau.Extensions.TimeProvider`
+    - ✅ Yes → `Bureau.Extensions.Time`
 
 6. **Is it domain-specific?**
    - ✅ Yes → keep it in the domain project (don’t share it)
@@ -165,7 +167,7 @@ Do not centralize:
 - `IAuditable` → `Bureau.Primitives`
 - `AuditTypeConfiguration<TEntity>` → `Bureau.EntityFrameworkCore`
 - SQL Server `datetimeoffset` column type → `Bureau.EntityFrameworkCore.SqlServer`
-- `HttpRequest` query/form/cookie helpers → `Bureau.Extensions.AspNetCore`
+- `HttpRequest` query/form/cookie helpers → `Bureau.AspNetCore`
 - `ILogger` convenience methods → `Bureau.Extensions.Logging`
-- `TimeProvider` helpers → `Bureau.Extensions.TimeProvider`
+- `TimeProvider` helpers → `Bureau.Extensions.Time`
 

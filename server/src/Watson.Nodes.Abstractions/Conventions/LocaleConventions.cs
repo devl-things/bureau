@@ -30,6 +30,7 @@ namespace Watson.Nodes.Abstractions.Conventions
     public static class LocaleConventions
     {
         public const string FallbackLocale = "en";
+        public const int MaxLocaleLength = 16;
         /// <summary>
         /// Normalizes a locale value to its canonical form.
         /// </summary>

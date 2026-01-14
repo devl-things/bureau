@@ -11,6 +11,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Bureau.EntityFrameworkCore\Bureau.EntityFrameworkCore.csproj" />
     <ProjectReference Include="..\Watson.Nodes.Abstractions\Watson.Nodes.Abstractions.csproj" />
   </ItemGroup>
 
