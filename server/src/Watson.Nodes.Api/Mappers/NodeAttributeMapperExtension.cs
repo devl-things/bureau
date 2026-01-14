@@ -18,7 +18,7 @@ namespace Watson.Nodes.Api.Mappers
             return new NodeAttribute(NodeAttributeConventions.NormalizeKey(dto.Key))
             {
                 Locale = LocaleConventions.Normalize(dto.Locale),
-                Type = dto.Type.ToDomain(),
+                Type = dto.Type.ToDomainValueType(),
                 ValueString = dto.ValueString,
                 ValueNumber = dto.ValueNumber,
                 ValueBool = dto.ValueBool,
@@ -34,7 +34,7 @@ namespace Watson.Nodes.Api.Mappers
             {
                 Key = attribute.Key,
                 Locale = attribute.Locale,
-                Type = attribute.Type.ToContract(),
+                Type = attribute.Type.ToContractValueType(),
                 ValueString = attribute.ValueString,
                 ValueNumber = attribute.ValueNumber,
                 ValueBool = attribute.ValueBool,

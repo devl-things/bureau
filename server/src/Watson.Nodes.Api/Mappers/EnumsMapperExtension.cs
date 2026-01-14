@@ -4,28 +4,28 @@ namespace Watson.Nodes.Api.Mappers
 {
     public static class EnumsMapperExtension
     {
-        public static NodeKind ToDomain(this NodeKindContract kind)
+        public static NodeKind ToDomainKind(this NodeKindContract kind)
         {
             return (NodeKind)kind;
         }
-        public static NodeKindContract ToContract(this NodeKind kind)
+        public static NodeKindContract ToContractKind(this NodeKind kind)
         {
             return (NodeKindContract)kind;
         }
-        public static NodeStatus ToDomain(this NodeStatusContract status)
+        public static NodeStatus ToDomainStatus(this NodeStatusContract status)
         {
             return (NodeStatus)status;
         }
-        public static NodeStatusContract ToContract(this NodeStatus status)
+        public static NodeStatusContract ToContractStatus(this NodeStatus status)
         {
             return (NodeStatusContract)status;
         }
-        public static AttributeValueType ToDomain(this AttributeValueTypeContract type)
+        public static AttributeValueType ToDomainValueType(this AttributeValueTypeContract type)
         {
             return (AttributeValueType)type;
         }
 
-        public static AttributeValueTypeContract ToContract(this AttributeValueType type)
+        public static AttributeValueTypeContract ToContractValueType(this AttributeValueType type)
         {
             return (AttributeValueTypeContract)type;
         }

@@ -10,7 +10,7 @@ namespace Watson.Nodes.Api.Mappers
             {
                 Scope = e.Payload.Scope,
                 CanonicalKey = e.Payload.CanonicalKey,
-                Status = e.Payload.Status.ToContract(),
+                Status = e.Payload.Status.ToContractStatus(),
                 Attributes = e.Payload.Attributes is null ? null : e.Payload.Attributes.Select(a => a.ToDto()).ToList()
             };
 
@@ -18,7 +18,7 @@ namespace Watson.Nodes.Api.Mappers
             {
                 Sequence = e.Sequence,
                 Type = e.Type,
-                Kind = e.Kind.ToContract(),
+                Kind = e.Kind.ToContractKind(),
                 NodeId = e.NodeId,
                 Version = e.Version,
                 Payload = payload

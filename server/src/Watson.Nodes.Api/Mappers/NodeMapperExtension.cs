@@ -21,10 +21,10 @@ namespace Watson.Nodes.Api.Mappers
             return new NodeDto
             {
                 NodeId = node.NodeId,
-                Kind = node.Kind.ToContract(),
+                Kind = node.Kind.ToContractKind(),
                 Scope = node.Scope,
                 CanonicalKey = node.CanonicalKey,
-                Status = node.Status.ToContract(),
+                Status = node.Status.ToContractStatus(),
                 Version = node.Version,
                 Attributes = node.Attributes.Select(a => a.ToDto()).ToList()
             };
