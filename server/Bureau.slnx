@@ -14,12 +14,8 @@
     <Project Path="src/Niles.Chores/Niles.Chores.csproj" />
   </Folder>
   <Folder Name="/Infrastructure/">
-    <Project Path="src/Bureau.Admin.Hosting/Bureau.Admin.Hosting.csproj" Id="4508800a-7a76-4f99-895b-b2078e2dd40b">
-      <Build Solution="Debug|*" Project="false" />
-    </Project>
-    <Project Path="src/Bureau.AspNetCore/Bureau.AspNetCore.csproj" Id="b6f299e3-2de1-4306-8e7e-301c1c0621e1">
-      <Build Solution="Debug|*" Project="false" />
-    </Project>
+    <Project Path="src/Bureau.Admin.Hosting/Bureau.Admin.Hosting.csproj" Id="4508800a-7a76-4f99-895b-b2078e2dd40b" />
+    <Project Path="src/Bureau.AspNetCore/Bureau.AspNetCore.csproj" Id="b6f299e3-2de1-4306-8e7e-301c1c0621e1" />
     <Project Path="src/Bureau.EntityFrameworkCore.SqlServer/Bureau.EntityFrameworkCore.SqlServer.csproj" Id="2e798e31-56ab-4538-abe0-07f6770f7dc4" />
     <Project Path="src/Bureau.EntityFrameworkCore/Bureau.EntityFrameworkCore.csproj" Id="65335513-4834-4f55-8e76-128a56955782" />
     <Project Path="src/Bureau.Server.Hosting/Bureau.Server.Hosting.csproj" Id="49670b92-3b7a-4c90-a802-e248675a732e" />
