@@ -5,46 +5,46 @@
     <BuildType Name="Test" />
   </Configurations>
   <Folder Name="/Core/">
-    <Project Path="../../../../../../../../030220_repos/bureau/server/src/Bureau.Extensions.Logging/Bureau.Extensions.Logging.csproj" Id="b4460ee3-f6ed-4e4f-9bbf-be18942cb002" />
-    <Project Path="../../../../../../../../030220_repos/bureau/server/src/Bureau.Extensions.Time/Bureau.Extensions.Time.csproj" Id="48e39c90-2d89-499d-897f-fa55220793c5" />
-    <Project Path="../../../../../../../../030220_repos/bureau/server/src/Bureau.Primitives/Bureau.Primitives.csproj" Id="9797915e-e401-4e8b-9151-4fbe6f8383a7" />
-    <Project Path="../../../../../../../../030220_repos/bureau/server/src/Bureau.Server.Contracts/Bureau.Server.Contracts.csproj" Id="e307a7c2-1a19-4f9e-9a2c-66242b9086a5" />
-    <Project Path="../../../../../../../../030220_repos/bureau/server/src/Niles.Chores.Abstractions/Niles.Chores.Abstractions.csproj" />
-    <Project Path="../../../../../../../../030220_repos/bureau/server/src/Niles.Chores.Contracts/Niles.Chores.Contracts.csproj" Id="cceee822-c9c6-48d0-8325-13962aec13a6" />
-    <Project Path="../../../../../../../../030220_repos/bureau/server/src/Niles.Chores/Niles.Chores.csproj" />
-    <Project Path="../../../../../../../../030220_repos/bureau/server/src/Watson.Items/Watson.Items.csproj" Id="c58caa5d-063e-41d7-8846-efd863ac5bd3" />
-    <Project Path="../../../../../../../../030220_repos/bureau/server/src/Watson.Nodes.Abstractions/Watson.Nodes.Abstractions.csproj" Id="82c923f0-3ba9-410e-8043-27237a6e0bbf">
+    <Project Path="src/Bureau.Extensions.Logging/Bureau.Extensions.Logging.csproj" Id="b4460ee3-f6ed-4e4f-9bbf-be18942cb002" />
+    <Project Path="src/Bureau.Extensions.Time/Bureau.Extensions.Time.csproj" Id="48e39c90-2d89-499d-897f-fa55220793c5" />
+    <Project Path="src/Bureau.Primitives/Bureau.Primitives.csproj" Id="9797915e-e401-4e8b-9151-4fbe6f8383a7" />
+    <Project Path="src/Bureau.Server.Contracts/Bureau.Server.Contracts.csproj" Id="e307a7c2-1a19-4f9e-9a2c-66242b9086a5" />
+    <Project Path="src/Niles.Chores.Abstractions/Niles.Chores.Abstractions.csproj" />
+    <Project Path="src/Niles.Chores.Contracts/Niles.Chores.Contracts.csproj" Id="cceee822-c9c6-48d0-8325-13962aec13a6" />
+    <Project Path="src/Niles.Chores/Niles.Chores.csproj" />
+    <Project Path="src/Watson.Items/Watson.Items.csproj" Id="c58caa5d-063e-41d7-8846-efd863ac5bd3" />
+    <Project Path="src/Watson.Nodes.Abstractions/Watson.Nodes.Abstractions.csproj" Id="82c923f0-3ba9-410e-8043-27237a6e0bbf">
       <BuildType Solution="Test|*" Project="Debug" />
     </Project>
-    <Project Path="../../../../../../../../030220_repos/bureau/server/src/Watson.Nodes.Contracts/Watson.Nodes.Contracts.csproj" Id="5b1ac847-33d7-4f70-9ce7-88f65f14e2f5">
+    <Project Path="src/Watson.Nodes.Contracts/Watson.Nodes.Contracts.csproj" Id="5b1ac847-33d7-4f70-9ce7-88f65f14e2f5">
       <BuildType Solution="Test|*" Project="Debug" />
     </Project>
-    <Project Path="../../../../../../../../030220_repos/bureau/server/src/Watson.Nodes/Watson.Nodes.csproj" Id="be9cbb41-4ff8-4e42-aa1a-caf5417e1e95">
+    <Project Path="src/Watson.Nodes/Watson.Nodes.csproj" Id="be9cbb41-4ff8-4e42-aa1a-caf5417e1e95">
       <BuildType Solution="Test|*" Project="Debug" />
     </Project>
   </Folder>
   <Folder Name="/Infrastructure/">
-    <Project Path="../../../../../../../../030220_repos/bureau/server/src/Bureau.Admin.Hosting/Bureau.Admin.Hosting.csproj" Id="4508800a-7a76-4f99-895b-b2078e2dd40b">
+    <Project Path="src/Bureau.Admin.Hosting/Bureau.Admin.Hosting.csproj" Id="4508800a-7a76-4f99-895b-b2078e2dd40b">
       <Build Solution="Debug|*" Project="false" />
     </Project>
-    <Project Path="../../../../../../../../030220_repos/bureau/server/src/Bureau.AspNetCore/Bureau.AspNetCore.csproj" Id="b6f299e3-2de1-4306-8e7e-301c1c0621e1">
+    <Project Path="src/Bureau.AspNetCore/Bureau.AspNetCore.csproj" Id="b6f299e3-2de1-4306-8e7e-301c1c0621e1">
       <Build Solution="Debug|*" Project="false" />
     </Project>
-    <Project Path="../../../../../../../../030220_repos/bureau/server/src/Bureau.EntityFrameworkCore.SqlServer/Bureau.EntityFrameworkCore.SqlServer.csproj" Id="2e798e31-56ab-4538-abe0-07f6770f7dc4" />
-    <Project Path="../../../../../../../../030220_repos/bureau/server/src/Bureau.EntityFrameworkCore/Bureau.EntityFrameworkCore.csproj" Id="65335513-4834-4f55-8e76-128a56955782" />
-    <Project Path="../../../../../../../../030220_repos/bureau/server/src/Bureau.Server.Hosting/Bureau.Server.Hosting.csproj" Id="49670b92-3b7a-4c90-a802-e248675a732e" />
-    <Project Path="../../../../../../../../030220_repos/bureau/server/src/Watson.Items.Ingest/Watson.Items.Ingest.csproj" Id="b0ac60f2-7fb4-4c37-b6af-b815f24c34c9" />
-    <Project Path="../../../../../../../../030220_repos/bureau/server/src/Watson.Nodes.Data.SqlServer/Watson.Nodes.Data.SqlServer.csproj" Id="ff2ac295-4a2b-4bd8-86c5-d6f4f47355b0">
+    <Project Path="src/Bureau.EntityFrameworkCore.SqlServer/Bureau.EntityFrameworkCore.SqlServer.csproj" Id="2e798e31-56ab-4538-abe0-07f6770f7dc4" />
+    <Project Path="src/Bureau.EntityFrameworkCore/Bureau.EntityFrameworkCore.csproj" Id="65335513-4834-4f55-8e76-128a56955782" />
+    <Project Path="src/Bureau.Server.Hosting/Bureau.Server.Hosting.csproj" Id="49670b92-3b7a-4c90-a802-e248675a732e" />
+    <Project Path="src/Watson.Items.Ingest/Watson.Items.Ingest.csproj" Id="b0ac60f2-7fb4-4c37-b6af-b815f24c34c9" />
+    <Project Path="src/Watson.Nodes.Data.SqlServer/Watson.Nodes.Data.SqlServer.csproj" Id="ff2ac295-4a2b-4bd8-86c5-d6f4f47355b0">
       <BuildType Solution="Test|*" Project="Debug" />
     </Project>
   </Folder>
   <Folder Name="/Presentation/">
-    <Project Path="../../../../../../../../030220_repos/bureau/server/src/Bureau.Admin.Frame/Bureau.Admin.Frame.csproj" Id="5f1f69e7-40fd-4dde-894d-2f87bdba48a6" />
-    <Project Path="../../../../../../../../030220_repos/bureau/server/src/Bureau.Frontend.DevRunner/Bureau.Frontend.DevRunner.csproj" Id="da64ba29-3095-4163-becc-2d93c027280d" />
-    <Project Path="../../../../../../../../030220_repos/bureau/server/src/Niles.Chores.Api/Niles.Chores.Api.csproj" />
-    <Project Path="../../../../../../../../030220_repos/bureau/server/src/Niles.Chores.Web/Niles.Chores.Web.csproj" />
-    <Project Path="../../../../../../../../030220_repos/bureau/server/src/Watson.Items.Ingest.Api/Watson.Items.Ingest.Api.csproj" Id="8b47c0b7-01a6-4db1-abc0-5edefa6a846d" />
-    <Project Path="../../../../../../../../030220_repos/bureau/server/src/Watson.Nodes.Api/Watson.Nodes.Api.csproj" Id="88bb0e56-f63c-466a-a4b6-40655f17a8a7">
+    <Project Path="src/Bureau.Admin.Frame/Bureau.Admin.Frame.csproj" Id="5f1f69e7-40fd-4dde-894d-2f87bdba48a6" />
+    <Project Path="src/Bureau.Frontend.DevRunner/Bureau.Frontend.DevRunner.csproj" Id="da64ba29-3095-4163-becc-2d93c027280d" />
+    <Project Path="src/Niles.Chores.Api/Niles.Chores.Api.csproj" />
+    <Project Path="src/Niles.Chores.Web/Niles.Chores.Web.csproj" />
+    <Project Path="src/Watson.Items.Ingest.Api/Watson.Items.Ingest.Api.csproj" Id="8b47c0b7-01a6-4db1-abc0-5edefa6a846d" />
+    <Project Path="src/Watson.Nodes.Api/Watson.Nodes.Api.csproj" Id="88bb0e56-f63c-466a-a4b6-40655f17a8a7">
       <BuildType Solution="Test|*" Project="Debug" />
     </Project>
   </Folder>
