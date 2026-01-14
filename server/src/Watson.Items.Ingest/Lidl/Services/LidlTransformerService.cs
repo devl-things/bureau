@@ -1,14 +1,11 @@
-﻿using Bureau.Core;
-using Niles.Data;
-using Niles.Etl.Configurations;
+﻿using Niles.Etl.Configurations;
 using Niles.Etl.Extract;
 using Niles.Etl.Jobs;
 using Niles.Etl.Lidl.Models;
 using Niles.Etl.Models;
-using Niles.IO;
-using Niles.Models;
 using System.Globalization;
 using System.Text;
+using System.Text.RegularExpressions;
 
 namespace Niles.Etl.Lidl.Services
 {
@@ -187,9 +184,9 @@ namespace Niles.Etl.Lidl.Services
         private static string CleanBarcode(string raw)
         {
             string s = raw.Trim().Replace(" ", string.Empty).Replace(".", string.Empty).Replace(",", string.Empty);
-            if (System.Text.RegularExpressions.Regex.IsMatch(s, @"^[0-9]+(\.[0-9]+)?E\+\d+$", System.Text.RegularExpressions.RegexOptions.IgnoreCase))
+            if (System.Text.RegularExpressions.Regex.IsMatch(s, @"^[0-9]+(\.[0-9]+)?E\+\d+$", System.Text.RegularExpressions.RegexOptions.IgnoreCase, TimeSpan.FromMilliseconds(100)))
             {
-                s = System.Text.RegularExpressions.Regex.Replace(s, @"\D", "");
+                s = System.Text.RegularExpressions.Regex.Replace(s, @"\D", "", RegexOptions.CultureInvariant, TimeSpan.FromMilliseconds(100));
             }
             return s;
         }

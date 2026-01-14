@@ -1,6 +1,5 @@
 ﻿using Niles.Etl.Configurations;
 using Niles.Etl.Extract;
-using Niles.Models;
 using System.Globalization;
 using System.Text.RegularExpressions;
 
@@ -24,7 +23,7 @@ namespace Niles.Etl.Lidl.Services
             string? city = null;
             for (int i = 0; i < parts.Length; i++)
             {
-                if (Regex.IsMatch(parts[i], @"^\d{4,5}$"))
+                if (Regex.IsMatch(parts[i], @"^\d{4,5}$", RegexOptions.CultureInvariant, TimeSpan.FromMilliseconds(100)))
                 {
                     postal = parts[i];
                     if (i + 1 < parts.Length) city = parts[i + 1];

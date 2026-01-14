@@ -1,11 +1,11 @@
 
 using Bureau.AspNetCore.Cors;
+using Bureau.AspNetCore.HealthChecks;
 using Bureau.AspNetCore.Logging;
 using Bureau.AspNetCore.Middleware;
 using Bureau.AspNetCore.Serialization;
+using Bureau.Primitives.Health;
 using Bureau.Server.Hosting.Configurations;
-using Microsoft.AspNetCore.Diagnostics.HealthChecks;
-using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Watson.Nodes.Contracts;
 using Watson.Nodes.Data.SqlServer.Configurations;
 
@@ -30,12 +30,9 @@ namespace Watson.Nodes.Api
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
 
-            //TODO health checks
-            builder.Services.AddHealthChecks()
-                .AddCheck<ChoresHealthCheck>("chores", failureStatus: HealthStatus.Unhealthy, tags: new[] { "ready" });
+            builder.Services.AddHealthChecks().AddProbes("nodes", ProbeTags.Database);
 
-
-            var app = builder.Build();
+            WebApplication app = builder.Build();
 
             app.Services.MigrateWatsonNodes();
 
@@ -59,27 +56,7 @@ namespace Watson.Nodes.Api
 
             app.MapControllers();
 
-            app.MapHealthChecks(ApiRoutes.Health.Root,
-                new HealthCheckOptions
-                {
-                    ResponseWriter = async (context, report) =>
-                    {
-                        context.Response.ContentType = "application/json";
-
-                        var response = new
-                        {
-                            status = report.Status.ToString(),
-                            entries = report.Entries.Select(x => new
-                            {
-                                key = x.Key,
-                                status = x.Value.Status.ToString(),
-                                description = x.Value.Description
-                            })
-                        };
-
-                        await context.Response.WriteAsJsonAsync(response);
-                    }
-                });
+            app.MapBureauHealthChecksJson(ApiRoutes.Health.Root);
 
             await app.RunAsync();
         }

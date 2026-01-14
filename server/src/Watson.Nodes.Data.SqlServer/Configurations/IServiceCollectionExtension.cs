@@ -1,9 +1,11 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Bureau.Primitives.Health;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Watson.Nodes.Configurations;
 using Watson.Nodes.Contexts;
 using Watson.Nodes.Data.SqlServer.Contexts;
+using Watson.Nodes.Data.SqlServer.Health;
 
 namespace Watson.Nodes.Data.SqlServer.Configurations
 {
@@ -38,6 +40,8 @@ namespace Watson.Nodes.Data.SqlServer.Configurations
                 SqlServerNodesContext db = sp.GetRequiredService<SqlServerNodesContext>();
                 return db;
             });
+
+            services.AddScoped<IHealthProbe, NodesHealthProbe>();
 
             services.AddWatsonNodesCore();
 

@@ -1,9 +1,11 @@
-﻿using Bureau.Primitives;
+﻿using Bureau;
+using Bureau.Primitives.Health;
+using System.Diagnostics;
 using Watson.Nodes.Contexts;
 
 namespace Watson.Nodes.Data.SqlServer.Health
 {
-    public class NodesHealthProbe : IHealthProbe
+    internal class NodesHealthProbe : IHealthProbe
     {
         private readonly NodesContext _context;
 
@@ -11,10 +13,31 @@ namespace Watson.Nodes.Data.SqlServer.Health
         {
             _context = context;
         }
-        public Task<bool> IsHealthyAsync(CancellationToken cancellationToken = default)
+
+        public string Key => "nodes-db";
+
+        public IReadOnlySet<string> Tags { get; } =
+            new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+            {
+                ProbeTags.Database,
+                ProbeTags.Critical
+            };
+
+        public async Task<Result<IReadOnlyDictionary<string, object>?>> CheckAsync(CancellationToken cancellationToken = default)
         {
-            // keep it super cheap
-            return await _context.Database.CanConnectAsync(cancellationToken);
+            Stopwatch sw = Stopwatch.StartNew();
+
+            bool ok = await _context.Database.CanConnectAsync(cancellationToken);
+
+            sw.Stop();
+
+            if (ok)
+            {
+                return new Result<IReadOnlyDictionary<string, object>?>(null);
+            }
+
+            return ResultError.From(code: "db_unreachable", errorMessage: "Database is not reachable.",
+                logMessage: $"Probe '{Key}' failed. ElapsedMs={sw.ElapsedMilliseconds}. Provider={_context.Database.ProviderName}");
         }
     }
 }
