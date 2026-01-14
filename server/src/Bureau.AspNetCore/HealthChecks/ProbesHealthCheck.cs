@@ -10,13 +10,13 @@ namespace Bureau.AspNetCore.HealthChecks
     {
         private readonly IServiceScopeFactory _scopeFactory;
         private readonly ILogger<ProbesHealthCheck> _logger;
-        private readonly string? _tag;
+        private readonly IReadOnlySet<string>? _tags;
 
-        public ProbesHealthCheck(IServiceScopeFactory scopeFactory, ILogger<ProbesHealthCheck> logger, string? tag)
+        public ProbesHealthCheck(IServiceScopeFactory scopeFactory, ILogger<ProbesHealthCheck> logger, IReadOnlySet<string>? tags)
         {
             _scopeFactory = scopeFactory;
             _logger = logger;
-            _tag = tag;
+            _tags = tags;
         }
 
         public async Task<HealthCheckResult> CheckHealthAsync(HealthCheckContext context, CancellationToken cancellationToken = default)
@@ -24,12 +24,12 @@ namespace Bureau.AspNetCore.HealthChecks
             using (IServiceScope scope = _scopeFactory.CreateScope())
             {
                 List<IHealthProbe> probes = scope.ServiceProvider.GetServices<IHealthProbe>()
-                    .Where(p => _tag == null || p.Tags.Contains(_tag))
+                    .Where(p => _tags == null || _tags.Count == 0 || p.Tags.Overlaps(_tags))
                     .ToList();
 
                 if (probes.Count == 0)
                 {
-                    return HealthCheckResult.Unhealthy($"No probes registered{(_tag != null ? $" for tag '{_tag}'" : string.Empty)}.");
+                    return HealthCheckResult.Unhealthy("No probes registered for the configured tags.");
                 }
                 ProbeRunSummary summary = await RunProbesAsync(probes, context.Registration.Name, cancellationToken);
 
