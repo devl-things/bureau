@@ -87,6 +87,27 @@ namespace Watson.Nodes.Abstractions.Conventions
                 return ResultError.From(ProblemCodes.Validation.Required, "Scope is required.");
             }
 
+            return ValidateNotRequired(scope);
+        }
+
+        /// <summary>
+        /// Validates whether a scope value conforms to the canonical convention.
+        /// </summary>
+        /// <remarks>
+        /// This method assumes the input has already been normalized.
+        /// </remarks>
+        /// <param name="scope">Scope value to validate (expected normalized).</param>
+        /// <returns>
+        /// A successful <see cref="Result"/> if the scope is valid; otherwise
+        /// an error result describing the validation failure.
+        /// </returns>
+        public static Result ValidateNotRequired(string? scope)
+        {
+            if (string.IsNullOrWhiteSpace(scope))
+            {
+                return true;
+            }
+
             if (scope.Length > MaxScopeLength)
             {
                 return ResultError.From(ProblemCodes.Validation.TooLong, $"Invalid scope length. Scopes must be 1–{MaxScopeLength} characters long.");

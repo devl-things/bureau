@@ -13,11 +13,12 @@ namespace Watson.Nodes
         public Guid? RefNodeId { get; init; }
         public DateTimeOffset? ValueDate { get; init; }
 
+        public int OrderIndex { get; init; }
+
         [SetsRequiredMembers]
         public NodeAttribute(string key) : base(key)
         {
 
         }
-
     }
 }

@@ -27,6 +27,7 @@ namespace Watson.Nodes.Data.SqlServer.TypeConfigurations
 
             // Useful for search matching by label/description etc.
             builder.HasIndex(x => new { x.NodeId, x.Key, x.Locale });
+            builder.HasIndex(x => new { x.NodeId, x.Key, x.Locale, x.OrderIndex });
 
             // Helps when you filter by (Key, Locale) before matching ValueString / etc.
             builder.HasIndex(x => new { x.Key, x.Locale, x.Type, x.NodeId }).IncludeProperties(nameof(NodeAttributeDb.ValueString), nameof(NodeAttributeDb.ValueJson));

@@ -30,6 +30,8 @@ namespace Watson.Nodes.TypeConfigurations
 
             builder.Property(x => x.ValueDate).IsRequired(false);
 
+            builder.Property(x => x.OrderIndex).IsRequired();
+
             builder.HasOne(x => x.Node)
                 .WithMany()
                 .HasForeignKey(x => x.NodeId)

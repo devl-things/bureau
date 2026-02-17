@@ -1,4 +1,5 @@
 ﻿using Bureau;
+using Watson.Nodes.Abstractions.Conventions;
 using Watson.Nodes.Contracts.Dtos;
 
 namespace Watson.Nodes.Api.Factories
@@ -13,9 +14,10 @@ namespace Watson.Nodes.Api.Factories
             {
                 Kind = kind,
                 Query = dto.Query,
-                Scope = dto.Scope,
-                Locale = dto.Locale,
-                AttributeKeys = dto.Attributes
+                Scope = ScopeConventions.Normalize(dto.Scope),
+                Locale = LocaleConventions.Normalize(dto.Locale),
+                AttributeKeys = dto.Attributes,
+                QueryAttributeKeys = dto.QueryAttributes
             };
             return new SearchNodesQuery(filter, cursorParameters);
         }

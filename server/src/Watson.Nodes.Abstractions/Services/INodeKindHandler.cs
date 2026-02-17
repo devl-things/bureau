@@ -42,6 +42,15 @@ namespace Watson.Nodes.Services
         Result ValidatePatch(Guid nodeId, PatchNodeAttributesCommand command);
 
         /// <summary>
+        /// Validates an node search request for this node kind.
+        /// </summary>
+        /// <param name="query">Search query request.</param>
+        /// <returns>
+        /// A successful <see cref="Result"/> when valid; otherwise an error <see cref="Result"/> describing the failure.
+        /// </returns>
+        Result ValidateSearch(SearchNodesQuery query);
+
+        /// <summary>
         /// Executes optional post-create logic after the node has been persisted.
         /// </summary>
         /// <remarks>

@@ -197,5 +197,130 @@ namespace Watson.Nodes.Conventions
             return ResultError.From(ProblemCodes.Validation.InvalidFormat, $"Attribute value does not match declared type '{attribute.Type}'.",
                 $"Attribute type is '{attribute.Type}', but value was provided via '{writtenType}' with value '{writtenValue}'.");
         }
+
+        /// <summary>
+        /// Validates that an attribute value matches its declared <see cref="AttributeValueType"/>,
+        /// enforces single populated value semantics, and optionally requires a value to be present.
+        /// If valid, returns the populated value (or <c>null</c> if not set and not required).
+        /// </summary>
+        /// <remarks>
+        /// Structural validation rules:
+        /// <list type="bullet">
+        /// <item>
+        /// <description>
+        /// Zero value fields populated is valid <b>only if</b> <paramref name="required"/> is <c>false</c>.
+        /// </description>
+        /// </item>
+        /// <item>
+        /// <description>
+        /// If a value field is populated, it MUST correspond to the field implied by
+        /// <see cref="NodeAttribute.Type"/>.
+        /// </description>
+        /// </item>
+        /// <item>
+        /// <description>
+        /// No more than one value field may be populated at any time.
+        /// </description>
+        /// </item>
+        /// </list>
+        /// </remarks>
+        /// <param name="attribute">
+        /// Attribute to validate. The attribute key and locale are expected to be normalized
+        /// prior to calling this method.
+        /// </param>
+        /// <param name="required">
+        /// Whether the attribute must have a value populated.
+        /// </param>
+        /// <returns>
+        /// A successful <see cref="Result{T}"/> containing the attribute value (or <c>null</c>);
+        /// otherwise an error result describing the validation failure.
+        /// </returns>
+        public static Result<object?> ValidateAttributeValue(NodeAttribute attribute, bool required)
+        {
+            if (attribute == null)
+            {
+                return ResultError.From(ProblemCodes.Validation.Required, "Attribute is required.");
+            }
+
+            if (!_valueAccessors.ContainsKey(attribute.Type))
+            {
+                return ResultError.From(ProblemCodes.Validation.InvalidFormat, $"Invalid attribute type '{attribute.Type}'.");
+            }
+
+            int populated = 0;
+            object? wantedValue = null;
+            object? writtenValue = null;
+            AttributeValueType? writtenType = null;
+
+            foreach (KeyValuePair<AttributeValueType, Func<NodeAttribute, object?>> pair in _valueAccessors)
+            {
+                AttributeValueType type = pair.Key;
+                Func<NodeAttribute, object?> accessor = pair.Value;
+
+                object? value = accessor(attribute);
+
+                if (type == attribute.Type)
+                {
+                    wantedValue = value;
+                }
+
+                if (value != null)
+                {
+                    populated++;
+                    writtenValue = value;
+                    writtenType = type;
+                }
+            }
+
+            if (populated > 1)
+            {
+                return ResultError.From(ProblemCodes.Validation.InvalidFormat, "Invalid attribute value. Only one value field may be set.");
+            }
+
+            if (required && populated == 0)
+            {
+                return ResultError.From(ProblemCodes.Validation.Required, $"Attribute '{attribute.Key}' is required and must have a value.");
+            }
+
+            if (populated == 0)
+            {
+                // valid, explicitly unset
+                return new Result<object?>(null);
+            }
+
+            if (wantedValue != null)
+            {
+                // valid and correctly typed
+                return new Result<object?>(wantedValue);
+            }
+
+            return ResultError.From(ProblemCodes.Validation.InvalidFormat, $"Attribute value does not match declared type '{attribute.Type}'.", $"Attribute type is '{attribute.Type}', but value was provided via '{writtenType}' with value '{writtenValue}'.");
+        }
+
+        public static Result ValidateAttributeByDefinition(NodeAttribute attribute, NodeAttributeDefinition definition)
+        {
+            if (attribute.Key != definition.Key)
+            {
+                return ResultError.From(ProblemCodes.Validation.InvalidFormat, $"Attribute key '{attribute.Key}' does not match definition key '{definition.Key}'.");
+            }
+            if (attribute.Type != definition.Type)
+            {
+                return ResultError.From(ProblemCodes.Validation.InvalidFormat, $"Attribute '{definition.Key}' must be of type '{definition.Type}'.");
+            }
+            if (definition.OrderIndex < 0 && attribute.OrderIndex != definition.OrderIndex)
+            {
+                return ResultError.From(ProblemCodes.Validation.InvalidFormat, $"Attribute '{definition.Key}' must be of with order index '{definition.OrderIndex}' but it's {attribute.OrderIndex}.");
+            }
+            Result<object?> valueValidation = NodeAttributeConventions.ValidateAttributeValue(attribute, definition.IsRequired);
+            if (valueValidation.IsError)
+            {
+                return valueValidation.Error;
+            }
+            if (definition.IsRequired && string.IsNullOrWhiteSpace(valueValidation.Value?.ToString()))
+            {
+                return ResultError.From(ProblemCodes.Validation.Required, $"Attribute '{definition.Key}' value is required.");
+            }
+            return true;
+        }
     }
 }

@@ -24,7 +24,8 @@ namespace Watson.Nodes.Api.Mappers
                 ValueBool = dto.ValueBool,
                 ValueJson = dto.ValueJson,
                 RefNodeId = dto.RefNodeId,
-                ValueDate = dto.ValueDate
+                ValueDate = dto.ValueDate,
+                OrderIndex = ToOrderIndex(dto.Cardinality, dto.Position)
             };
         }
 
@@ -40,8 +41,39 @@ namespace Watson.Nodes.Api.Mappers
                 ValueBool = attribute.ValueBool,
                 ValueJson = attribute.ValueJson,
                 RefNodeId = attribute.RefNodeId,
-                ValueDate = attribute.ValueDate
+                ValueDate = attribute.ValueDate,
+                Cardinality = ToCardinalityContract(attribute.OrderIndex),
+                Position = attribute.OrderIndex >= 0 ? attribute.OrderIndex : null
             };
+        }
+
+        private static int ToOrderIndex(AttributeCardinalityContract cardinality, int? position)
+        {
+            switch (cardinality)
+            {
+                case AttributeCardinalityContract.ManyUnordered:
+                    return OrderIndexConventions.ManyUnorderedOrderIndex;
+                case AttributeCardinalityContract.ManyOrdered:
+                    if (position.HasValue && position.Value >= 0)
+                    {
+                        return position.Value;
+                    }
+                    return 0;
+                default:
+                    return OrderIndexConventions.SingleOrderIndex;
+            }
+        }
+        private static AttributeCardinalityContract ToCardinalityContract(int orderIndex)
+        {
+            if (orderIndex >= 0)
+            {
+                return AttributeCardinalityContract.ManyOrdered;
+            }
+            if (orderIndex == OrderIndexConventions.ManyUnorderedOrderIndex)
+            {
+                return AttributeCardinalityContract.ManyUnordered;
+            }
+            return AttributeCardinalityContract.Single;
         }
     }
 }

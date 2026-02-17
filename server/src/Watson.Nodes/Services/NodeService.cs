@@ -1,6 +1,8 @@
 ﻿using Bureau;
 using Bureau.Primitives.Errors;
 using Microsoft.EntityFrameworkCore;
+using System.Globalization;
+using System.Linq.Expressions;
 using Watson.Nodes.Abstractions.Conventions;
 using Watson.Nodes.Constants;
 using Watson.Nodes.Contexts;
@@ -141,6 +143,12 @@ namespace Watson.Nodes.Services
 
             INodeKindHandler handler = GetHandler(filter.Kind);
 
+            Result validation = handler.ValidateSearch(query);
+            if (validation.IsError)
+            {
+                return validation.Error;
+            }
+
             IQueryable<NodeDb> baseQuery = BuildBaseSearchQuery(filter, query.Cursor.Cursor);
 
             if (!string.IsNullOrWhiteSpace(filter.Query))
@@ -180,58 +188,32 @@ namespace Watson.Nodes.Services
 
         private IQueryable<NodeDb> ApplyFilterOnSearchQuery(IQueryable<NodeDb> baseQuery, SearchNodesFilter filter, INodeKindHandler handler)
         {
-            string q = filter.Query!.Trim();
-
-            // Determine which attributes are searched (matching)
             List<string> searchKeys = handler.GetSearchAttributeKeys(filter.QueryAttributeKeys);
 
-            bool hasNumber = decimal.TryParse(q, out decimal parsedNumber);
-            bool hasBool = TryParseBool(q, out bool parsedBool);
-            bool hasGuid = Guid.TryParse(q, out Guid parsedGuid);
-            //TODO prepare so convention for dates like in chores
-            bool hasDate = DateTimeOffset.TryParse(q, out DateTimeOffset parsedDate);
+            ParsedQuery parsed = new ParsedQuery(filter.Query);
 
             IQueryable<NodeAttributeDb> attrQuery = _context.NodeAttributes.AsNoTracking()
                     .Where(a => searchKeys.Contains(a.Key));
 
             if (!string.IsNullOrWhiteSpace(filter.Locale))
             {
-                string requested = filter.Locale!;
-                attrQuery = attrQuery.Where(a => a.Locale == requested || a.Locale == null || a.Locale == LocaleConventions.FallbackLocale);
+                attrQuery = attrQuery.Where(a => a.Locale == filter.Locale || a.Locale == null || a.Locale == LocaleConventions.FallbackLocale);
             }
 
-            IQueryable<NodeAttributeDb> matchPredicate = attrQuery.Where(a => false);
+            Expression<Func<NodeAttributeDb, bool>> match = BuildMatchPredicate(parsed);
 
-            matchPredicate = matchPredicate.Concat(
-                attrQuery.Where(a => a.Type == AttributeValueType.String && a.ValueString != null && EF.Functions.Like(a.ValueString, "%" + q + "%")));
+            return baseQuery.Where(n => attrQuery.Where(a => a.NodeId == n.NodeId).Any(match));
+        }
 
-            matchPredicate = matchPredicate.Concat(
-                attrQuery.Where(a => a.Type == AttributeValueType.Json && a.ValueJson != null && EF.Functions.Like(a.ValueJson, "%" + q + "%")));
-
-            if (hasNumber)
-            {
-                matchPredicate = matchPredicate.Concat(
-                    attrQuery.Where(a => a.Type == AttributeValueType.Number && a.ValueNumber != null && a.ValueNumber == parsedNumber));
-            }
-            if (hasBool)
-            {
-                matchPredicate = matchPredicate.Concat(
-                    attrQuery.Where(a => a.Type == AttributeValueType.Bool && a.ValueBool != null && a.ValueBool == parsedBool));
-            }
-            if (hasGuid)
-            {
-                matchPredicate = matchPredicate.Concat(
-                    attrQuery.Where(a => a.Type == AttributeValueType.Ref && a.RefNodeId != null && a.RefNodeId == parsedGuid));
-            }
-
-            if (hasDate)
-            {
-                matchPredicate = matchPredicate.Concat(
-                    attrQuery.Where(a => a.Type == AttributeValueType.Date && a.ValueDate != null && a.ValueDate == parsedDate));
-            }
-            IQueryable<Guid> matched = matchPredicate.Select(a => a.NodeId).Distinct();
-            baseQuery = baseQuery.Where(n => matched.Contains(n.NodeId));
-            return baseQuery;
+        private static Expression<Func<NodeAttributeDb, bool>> BuildMatchPredicate(ParsedQuery parsed)
+        {
+            return a =>
+                (parsed.HasText && a.Type == AttributeValueType.String && a.ValueString != null && EF.Functions.Like(a.ValueString, "%" + parsed.Text + "%")) ||
+                (parsed.HasText && a.Type == AttributeValueType.Json && a.ValueJson != null && EF.Functions.Like(a.ValueJson, "%" + parsed.Text + "%")) ||
+                (parsed.HasNumber && a.Type == AttributeValueType.Number && a.ValueNumber != null && a.ValueNumber == parsed.Number) ||
+                (parsed.HasBool && a.Type == AttributeValueType.Bool && a.ValueBool != null && a.ValueBool == parsed.Bool) ||
+                (parsed.HasGuid && a.Type == AttributeValueType.Ref && a.RefNodeId != null && a.RefNodeId == parsed.Guid) ||
+                (parsed.HasDate && a.Type == AttributeValueType.Date && a.ValueDate != null && a.ValueDate == parsed.Date);
         }
 
         private IQueryable<NodeDb> BuildBaseSearchQuery(SearchNodesFilter filter, long cursor)
@@ -242,25 +224,6 @@ namespace Watson.Nodes.Services
                 .Where(x => x.CreatedSequence > cursor);
 
             return query;
-        }
-        private static bool TryParseBool(string input, out bool value)
-        {
-            string normalized = input.Trim().ToLowerInvariant();
-
-            if (normalized == "true" || normalized == "1" || normalized == "yes")
-            {
-                value = true;
-                return true;
-            }
-
-            if (normalized == "false" || normalized == "0" || normalized == "no")
-            {
-                value = false;
-                return true;
-            }
-
-            value = default;
-            return false;
         }
 
         private async Task<Dictionary<Guid, List<NodeAttributeDb>>> LoadProjectedAttributesAsync(List<Guid> nodeIds, List<string> projectionKeys, string? locale, CancellationToken cancellationToken)
@@ -353,6 +316,58 @@ namespace Watson.Nodes.Services
                         found.ApplyFromDomain(set);
                     }
                 }
+            }
+        }
+
+        private sealed class ParsedQuery
+        {
+            public string Text { get; }
+            public bool HasText { get; }
+            public bool HasNumber { get; }
+            public decimal Number { get; }
+            public bool HasBool { get; }
+            public bool Bool { get; }
+            public bool HasGuid { get; }
+            public Guid Guid { get; }
+            public bool HasDate { get; }
+            public DateTimeOffset Date { get; }
+
+            public ParsedQuery(string? text)
+            {
+                Text = text!.Trim();
+                HasText = !string.IsNullOrWhiteSpace(Text);
+
+                HasNumber = decimal.TryParse(text, NumberStyles.Number, CultureInfo.InvariantCulture, out decimal n);
+                Number = n;
+
+                HasBool = TryParseBool(text, out bool b);
+                Bool = b;
+
+                HasGuid = Guid.TryParse(text, out Guid g);
+                Guid = g;
+
+                HasDate = DateTimeOffset.TryParse(text, CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal | DateTimeStyles.AdjustToUniversal, out DateTimeOffset d);
+                Date = d;
+            }
+
+            private static bool TryParseBool(string input, out bool value)
+            {
+                string normalized = input.Trim().ToLowerInvariant();
+
+                if (normalized == "true" || normalized == "1" || normalized == "yes")
+                {
+                    value = true;
+                    return true;
+                }
+
+                if (normalized == "false" || normalized == "0" || normalized == "no")
+                {
+                    value = false;
+                    return true;
+                }
+
+                value = default;
+                return false;
             }
         }
     }

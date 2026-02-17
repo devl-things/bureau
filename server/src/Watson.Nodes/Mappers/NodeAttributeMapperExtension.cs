@@ -17,7 +17,8 @@ namespace Watson.Nodes.Mappers
                 ValueBool = attribute.ValueBool,
                 ValueJson = attribute.ValueJson,
                 RefNodeId = attribute.RefNodeId,
-                ValueDate = attribute.ValueDate
+                ValueDate = attribute.ValueDate,
+                OrderIndex = attribute.OrderIndex
             };
         }
     }

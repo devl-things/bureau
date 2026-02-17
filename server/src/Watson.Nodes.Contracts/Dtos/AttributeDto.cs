@@ -74,5 +74,17 @@ namespace Watson.Nodes.Contracts.Dtos
         /// </summary>
         [JsonPropertyName("valueDate")]
         public DateTimeOffset? ValueDate { get; init; }
+
+        /// <summary>
+        /// Attribute cardinality.
+        /// </summary>
+        [JsonPropertyName("cardinality")]
+        public AttributeCardinalityContract Cardinality { get; init; }
+
+        /// <summary>
+        /// Attribute position in a list of same attributes.
+        /// </summary>
+        [JsonPropertyName("position")]
+        public int? Position { get; init; }
     }
 }

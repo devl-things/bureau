@@ -14,6 +14,11 @@
             public const string Root = "tags";
         }
 
+        public static class Variants
+        {
+            public const string Root = "variants";
+        }
+
         public static class Nodes
         {
             public const string Root = "nodes";

@@ -112,6 +112,48 @@ namespace Watson.Nodes.Services
             }
             return true;
         }
+
+        protected virtual Result ValidateKeys(IReadOnlyList<string>? keys)
+        {
+            if (keys != null)
+            {
+                foreach (string key in keys)
+                {
+                    Result attributeKeyValidation = NodeAttributeConventions.ValidateKey(key);
+                    if (attributeKeyValidation.IsError)
+                    {
+                        return attributeKeyValidation.Error;
+                    }
+                }
+            }
+            return true;
+        }
+        /// <inheritdoc />
+        public Result ValidateSearch(SearchNodesQuery query)
+        {
+            Result scopeValidation = ScopeConventions.ValidateNotRequired(query.Filter.Scope);
+            if (scopeValidation.IsError)
+            {
+                return scopeValidation.Error;
+            }
+            Result localeValidation = LocaleConventions.Validate(query.Filter.Locale);
+            if (localeValidation.IsError)
+            {
+                return localeValidation.Error;
+            }
+            // Open to any number of keys, but this needs to be changed eventually
+            Result queryKeysValidation = ValidateKeys(query.Filter.QueryAttributeKeys);
+            if (queryKeysValidation.IsError)
+            {
+                return queryKeysValidation.Error;
+            }
+            Result projectionKeysValidation = ValidateKeys(query.Filter.AttributeKeys);
+            if (projectionKeysValidation.IsError)
+            {
+                return projectionKeysValidation.Error;
+            }
+            return true;
+        }
         /// <inheritdoc />
         public virtual Task<Result> AfterCreateAsync(Node node, CreateNodeCommand command, CancellationToken cancellationToken = default)
         {
@@ -146,6 +188,55 @@ namespace Watson.Nodes.Services
             }
 
             return GetDefaultSummaryAttributeKeys();
+        }
+
+        protected virtual Result ValidateAttributesByDefinition(CreateNodeCommand command, Dictionary<string, NodeAttributeDefinition> definitions, Dictionary<string, bool> required)
+        {
+            foreach (NodeAttribute attribute in command.Attributes)
+            {
+                Result attributeKeyValidation = ValidateAttributeKey(attribute);
+                if (attributeKeyValidation.IsError)
+                {
+                    return attributeKeyValidation.Error;
+                }
+                Result attributeValueValidation = ValidateAttributeValue(attribute, definitions, required);
+                if (attributeValueValidation.IsError)
+                {
+                    return attributeValueValidation.Error;
+                }
+            }
+            if (required.Any(kvp => !kvp.Value))
+            {
+                string missingKeys = string.Join(", ", required.Where(kvp => !kvp.Value).Select(kvp => kvp.Key));
+                return ResultError.From(ProblemCodes.Validation.Required, $"Missing required attributes: {missingKeys}");
+            }
+            return true;
+        }
+
+        private static Result ValidateAttributeValue(NodeAttribute attribute, Dictionary<string, NodeAttributeDefinition> definitions, Dictionary<string, bool> required)
+        {
+            if (definitions.TryGetValue(attribute.Key, out NodeAttributeDefinition? definition))
+            {
+                Result attributeResult = NodeAttributeConventions.ValidateAttributeByDefinition(attribute, definition);
+                if (attributeResult.IsError)
+                {
+                    return attributeResult.Error;
+                }
+                if (required.ContainsKey(attribute.Key))
+                {
+                    required[attribute.Key] = true;
+                }
+            }
+            else
+            {
+                Result attributeResult = NodeAttributeConventions.ValidateAttributeValue(attribute);
+                if (attributeResult.IsError)
+                {
+                    return attributeResult.Error;
+                }
+            }
+
+            return true;
         }
     }
 }

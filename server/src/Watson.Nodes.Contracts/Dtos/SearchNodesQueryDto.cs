@@ -30,8 +30,6 @@
         /// Attribute keys that should be searched when applying <see cref="Query"/>.
         /// </summary>
         /// <remarks>
-        /// This value is a comma-separated list of attribute keys.
-        ///
         /// When specified, the search operation evaluates the query text only against
         /// the listed attribute keys.
         ///
@@ -40,7 +38,7 @@
         ///
         /// Only string-valued attributes are considered for text search.
         /// </remarks>
-        public string? QueryAttributes { get; set; }
+        public IReadOnlyList<string>? QueryAttributes { get; set; }
 
         /// <summary>
         /// Optional scope filter applied to the search.

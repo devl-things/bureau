@@ -19,6 +19,7 @@ namespace Watson.Nodes.Models
         public Guid? RefNodeId { get; set; }
         public DateTimeOffset? ValueDate { get; set; }
 
+        public int OrderIndex { get; set; }
         public NodeDb? Node { get; set; }
 
         public DateTimeOffset CreatedAt { get; set; }
