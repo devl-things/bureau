@@ -12,6 +12,9 @@ namespace Watson.Nodes.Configurations
             services.AddScoped<INodeKindHandler, DefaultNodeKindHandler>();
             services.AddScoped<INodeKindHandler, ItemNodeKindHandler>();
             services.AddScoped<INodeKindHandler, TagNodeKindHandler>();
+            services.AddScoped<INodeKindHandler, ProjectNodeKindHandler>();
+
+            services.AddScoped<INodeEdgeService, NodeEdgeService>();
             return services;
         }
     }

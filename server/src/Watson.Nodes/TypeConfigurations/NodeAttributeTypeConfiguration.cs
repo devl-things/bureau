@@ -16,7 +16,7 @@ namespace Watson.Nodes.TypeConfigurations
 
             builder.Property(x => x.Key).HasMaxLength(NodeAttributeConventions.MaxKeyLength).IsRequired();
 
-            builder.Property(x => x.Locale).HasMaxLength(LocaleConventions.MaxLocaleLength).IsRequired(false);
+            builder.Property(x => x.Locale).HasMaxLength(LocaleConventions.MaxLocaleLength).IsRequired();
 
             builder.Property(x => x.Type).IsRequired();
 

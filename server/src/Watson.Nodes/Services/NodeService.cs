@@ -197,7 +197,7 @@ namespace Watson.Nodes.Services
 
             if (!string.IsNullOrWhiteSpace(filter.Locale))
             {
-                attrQuery = attrQuery.Where(a => a.Locale == filter.Locale || a.Locale == null || a.Locale == LocaleConventions.FallbackLocale);
+                attrQuery = attrQuery.Where(a => a.Locale == filter.Locale || a.Locale == LocaleConventions.DefaultLocale || a.Locale == LocaleConventions.FallbackLocale);
             }
 
             Expression<Func<NodeAttributeDb, bool>> match = BuildMatchPredicate(parsed);
@@ -234,7 +234,7 @@ namespace Watson.Nodes.Services
 
             if (!string.IsNullOrWhiteSpace(locale))
             {
-                query = query.Where(a => a.Locale == locale || a.Locale == null || a.Locale == LocaleConventions.FallbackLocale);
+                query = query.Where(a => a.Locale == locale || a.Locale == LocaleConventions.DefaultLocale || a.Locale == LocaleConventions.FallbackLocale);
             }
 
             List<NodeAttributeDb> candidates = await query.ToListAsync(cancellationToken);

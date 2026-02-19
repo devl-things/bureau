@@ -23,7 +23,7 @@ namespace Bureau.Frontend.DevRunner
             startInfo.ArgumentList.Add("/c");
             startInfo.ArgumentList.Add("pnpm");
             startInfo.ArgumentList.Add("-C");
-            startInfo.ArgumentList.Add("client/apps/bureau-bundles");
+            startInfo.ArgumentList.Add("app/client/apps/bureau-bundles");
             startInfo.ArgumentList.Add("dev");
 
             using (Process process = new Process())
@@ -108,7 +108,7 @@ namespace Bureau.Frontend.DevRunner
 
             while (directory.Parent != null)
             {
-                if (Directory.Exists(Path.Combine(directory.FullName, "client")))
+                if (Directory.Exists(Path.Combine(directory.FullName, "app", "client")))
                 {
                     return directory.FullName;
                 }

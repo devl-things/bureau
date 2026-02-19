@@ -29,6 +29,7 @@ namespace Watson.Nodes.Abstractions.Conventions
     /// </remarks>
     public static class LocaleConventions
     {
+        public const string DefaultLocale = "default";
         public const string FallbackLocale = "en";
         public const int MaxLocaleLength = 16;
         /// <summary>
@@ -50,11 +51,11 @@ namespace Watson.Nodes.Abstractions.Conventions
         /// The normalized locale value, or <c>null</c> if the input is <c>null</c>
         /// or consists only of whitespace.
         /// </returns>
-        public static string? Normalize(string? locale)
+        public static string Normalize(string? locale)
         {
             if (string.IsNullOrWhiteSpace(locale))
             {
-                return null;
+                return DefaultLocale;
             }
 
             return locale.Trim();
@@ -88,7 +89,7 @@ namespace Watson.Nodes.Abstractions.Conventions
         /// </returns>
         public static Result Validate(string? locale)
         {
-            if (locale is null)
+            if (locale is null || locale == DefaultLocale)
             {
                 return true;
             }
@@ -159,7 +160,7 @@ namespace Watson.Nodes.Abstractions.Conventions
                 return 3;
             }
 
-            if (locale == null)
+            if (locale == null || locale == DefaultLocale)
             {
                 return 2;
             }

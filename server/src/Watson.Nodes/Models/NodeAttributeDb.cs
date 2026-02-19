@@ -1,4 +1,5 @@
 ﻿using Bureau;
+using Watson.Nodes.Abstractions.Conventions;
 
 namespace Watson.Nodes.Models
 {
@@ -8,7 +9,7 @@ namespace Watson.Nodes.Models
 
         public string Key { get; set; } = string.Empty;
 
-        public string? Locale { get; set; }
+        public string Locale { get; set; } = LocaleConventions.DefaultLocale;
 
         public AttributeValueType Type { get; set; }
 

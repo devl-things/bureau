@@ -1,11 +1,12 @@
-﻿using System.Diagnostics.CodeAnalysis;
+using System.Diagnostics.CodeAnalysis;
+using Watson.Nodes.Abstractions.Conventions;
 
 namespace Watson.Nodes
 {
     public class NodeAttributeKey
     {
         public required string Key { get; init; }
-        public string? Locale { get; init; } = null;
+        public string Locale { get; init; } = LocaleConventions.DefaultLocale;
 
         [SetsRequiredMembers]
         public NodeAttributeKey(string key)
@@ -16,7 +17,7 @@ namespace Watson.Nodes
         [SetsRequiredMembers]
         public NodeAttributeKey(string key, string? locale) : this(key)
         {
-            Locale = locale;
+            Locale = locale ?? LocaleConventions.DefaultLocale;
         }
     }
 }

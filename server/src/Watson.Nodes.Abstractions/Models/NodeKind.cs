@@ -5,6 +5,7 @@
         None = 0,
         Item = 1,
         Tag = 2,
-        Variant = 3
+        Variant = 3,
+        Project = 4
     }
 }

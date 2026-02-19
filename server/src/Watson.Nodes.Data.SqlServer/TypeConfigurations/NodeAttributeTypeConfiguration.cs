@@ -1,6 +1,7 @@
 ﻿using Bureau.EntityFrameworkCore.SqlServer.TypeConfigurations;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using Watson.Nodes.Abstractions.Conventions;
 using Watson.Nodes.Models;
 
 namespace Watson.Nodes.Data.SqlServer.TypeConfigurations
@@ -12,6 +13,8 @@ namespace Watson.Nodes.Data.SqlServer.TypeConfigurations
             new Nodes.TypeConfigurations.NodeAttributeTypeConfiguration().Configure(builder);
 
             builder.ToTable("NodeAttributes");
+
+            builder.Property(x => x.Locale).HasDefaultValue(LocaleConventions.DefaultLocale);
 
             builder.ConfigureAuditFields();
 

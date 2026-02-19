@@ -1,15 +1,14 @@
 FROM node:18-alpine AS frontend
 # -------------------- frontend build --------------------
-WORKDIR /work/client
+WORKDIR /work/app
 
 RUN corepack enable
 
-COPY client/package.json client/pnpm-lock.yaml client/pnpm-workspace.yaml ./
+COPY app/package.json app/pnpm-lock.yaml app/pnpm-workspace.yaml ./
+COPY app/client/apps ./client/apps
+COPY app/client/libs ./client/libs
 
 RUN pnpm fetch --frozen-lockfile
-
-COPY client/apps ./apps
-COPY client/libs ./libs
 
 RUN pnpm install --offline --frozen-lockfile
 RUN pnpm --filter @bureau/bureau-bundles build
@@ -51,7 +50,7 @@ USER appuser
 
 WORKDIR /app
 COPY --from=publish /app/publish ./
-COPY --from=frontend /work/client/apps/bureau-bundles/dist/assets ./wwwroot/assets
+COPY --from=frontend /work/app/client/apps/bureau-bundles/dist/assets ./wwwroot/assets
 
 ENV ASPNETCORE_URLS=http://0.0.0.0:5000
 EXPOSE 5000

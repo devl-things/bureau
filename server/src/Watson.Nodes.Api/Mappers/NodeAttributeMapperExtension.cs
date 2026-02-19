@@ -10,7 +10,7 @@ namespace Watson.Nodes.Api.Mappers
         {
             return new NodeAttributeKey(dto.Key)
             {
-                Locale = dto.Locale
+                Locale = LocaleConventions.Normalize(dto.Locale)
             };
         }
         public static NodeAttribute ToDomain(this AttributeDto dto)
@@ -34,7 +34,7 @@ namespace Watson.Nodes.Api.Mappers
             return new AttributeDto
             {
                 Key = attribute.Key,
-                Locale = attribute.Locale,
+                Locale = attribute.Locale == LocaleConventions.DefaultLocale ? null : attribute.Locale,
                 Type = attribute.Type.ToContractValueType(),
                 ValueString = attribute.ValueString,
                 ValueNumber = attribute.ValueNumber,
