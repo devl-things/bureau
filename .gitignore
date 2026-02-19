@@ -4,6 +4,9 @@
 ## sonarqube test coverage script
 docs/test-coverage.md
 
+# Claude files
+.claude/
+
 # ignore local settings
 appsettings.Development.json
 appsettings.Test.json
