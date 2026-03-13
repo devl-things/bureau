@@ -1,6 +1,6 @@
 [
   {
-    "Name": "Niles.Chores[Dev]",
+    "Name": "Bureau[Dev]",
     "Projects": [
       {
         "Path": "src\\Niles.Chores.Api\\Niles.Chores.Api.csproj",
@@ -8,9 +8,9 @@
         "DebugTarget": "http"
       },
       {
-        "Path": "src\\Niles.Chores.Web\\Niles.Chores.Web.csproj",
+        "Path": "src\\Watson.Nodes.Api\\Watson.Nodes.Api.csproj",
         "Action": "Start",
-        "DebugTarget": "http-dev"
+        "DebugTarget": "http"
       },
       {
         "Path": "src\\Bureau.Frontend.DevRunner\\Bureau.Frontend.DevRunner.csproj",
@@ -20,7 +20,7 @@
     ]
   },
   {
-    "Name": "Niles.Chores[Test]",
+    "Name": "Niles.Chores[Dev]",
     "Projects": [
       {
         "Path": "src\\Niles.Chores.Api\\Niles.Chores.Api.csproj",
@@ -28,9 +28,24 @@
         "DebugTarget": "http"
       },
       {
-        "Path": "src\\Niles.Chores.Web\\Niles.Chores.Web.csproj",
+        "Path": "src\\Bureau.Frontend.DevRunner\\Bureau.Frontend.DevRunner.csproj",
         "Action": "Start",
-        "DebugTarget": "http-test"
+        "DebugTarget": "Bureau.Frontend.DevRunner"
+      }
+    ]
+  },
+  {
+    "Name": "Watson.Nodes[Dev]",
+    "Projects": [
+      {
+        "Path": "src\\Watson.Nodes.Api\\Watson.Nodes.Api.csproj",
+        "Action": "Start",
+        "DebugTarget": "http"
+      },
+      {
+        "Path": "src\\Bureau.Frontend.DevRunner\\Bureau.Frontend.DevRunner.csproj",
+        "Action": "Start",
+        "DebugTarget": "Bureau.Frontend.DevRunner"
       }
     ]
   }

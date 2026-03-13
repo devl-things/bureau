@@ -1,4 +1,4 @@
-﻿using System.Data;
+﻿using Bureau.Primitives.Features;
 using System.Security.Claims;
 
 namespace Bureau.Server.Hosting.Dev
@@ -21,6 +21,16 @@ namespace Bureau.Server.Hosting.Dev
                 {
                     claims.Add(new Claim(ClaimTypes.Role, role));
                 }
+            }
+
+            // Inject feature scope claims. Empty list = all features (full dev access).
+            IEnumerable<string> featureScopes = (options.Features is { Count: > 0 })
+                ? options.Features
+                : FeatureKeys.AllKeys;
+
+            foreach (string scope in featureScopes)
+            {
+                claims.Add(new Claim("scope", scope));
             }
 
             ClaimsIdentity identity = new(claims, "Dev");

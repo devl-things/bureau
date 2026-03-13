@@ -1,0 +1,6 @@
+@Watson.Nodes.Api_HostAddress = http://localhost:5272
+
+GET {{Watson.Nodes.Api_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

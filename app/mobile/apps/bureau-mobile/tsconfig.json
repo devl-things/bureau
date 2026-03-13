@@ -1,0 +1,14 @@
+{
+    "extends": "expo/tsconfig.base",
+    "compilerOptions": {
+        "strict": true,
+        "paths": {
+            "@bureau/client-core": [
+                "../../client/libs/client-core/src/index.ts"
+            ],
+            "@bureau/nodes-core": [
+                "../../shared/nodes-core/src/index.ts"
+            ]
+        }
+    }
+}

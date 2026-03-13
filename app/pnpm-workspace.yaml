@@ -1,0 +1,6 @@
+packages:
+  - "client/apps/*"
+  - "client/libs/*"
+  - "shared/*"
+  - "mobile/apps/*"
+  - "mobile/libs/*"

@@ -1,0 +1,16 @@
+{
+    "environment": "${BUREAU_ENVIRONMENT}",
+    "auth": {
+        "mode": "${BUREAU_AUTH_MODE}",
+        "oidc": {
+            "authority": "${BUREAU_OIDC_AUTHORITY}",
+            "clientId": "${BUREAU_OIDC_CLIENT_ID}",
+            "redirectUri": "${BUREAU_OIDC_REDIRECT_URI}"
+        }
+    },
+    "apis": {
+        "chores": "${BUREAU_API_CHORES}",
+        "nodes": "${BUREAU_API_NODES}",
+        "itemsIngest": "${BUREAU_API_ITEMS_INGEST}"
+    }
+}

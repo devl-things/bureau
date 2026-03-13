@@ -25,30 +25,18 @@ services:
       - nuc-network
     restart: unless-stopped
 
-  niles-chores-web:
+  bureau-web:
     build:
       context: ../..
-      dockerfile: server/deploy/Dockerfile.chores.web
-    container_name: niles-chores-web
+      dockerfile: app/client/apps/bureau-web/Dockerfile
+    container_name: bureau-web
     environment:
-      ASPNETCORE_ENVIRONMENT: "${ASPNETCORE_ENVIRONMENT}"
-      # chores web settings
-      Admin__CurrentApp: "${Admin__CurrentApp}"
-      Admin__Apps__0__Key: "${Admin__Apps__0__Key}"
-      Admin__Apps__0__Title: "${Admin__Apps__0__Title}"
-      Admin__Apps__0__Url: "${Admin__Apps__0__Url}"
-      Admin__Apps__0__Icon: "${Admin__Apps__0__Icon}"
-      AppRuntime__Environment: "${AppRuntime__Environment}"
-      AppRuntime__Version: "${AppRuntime__Version}"
-      AppRuntime__DefaultApiKey: "${AppRuntime__DefaultApiKey}"
-      AppRuntime__ApiBaseUrls__choresApi: "${AppRuntime__ApiBaseUrls__choresApi}"
-      Auth__Mode: "${Auth__Mode}"
-      Auth__Dev__ScopePath: "${Auth__Dev__ScopePath}"
-      Auth__Dev__UserName: "${Auth__Dev__UserName}"
-      Auth__Dev__Email: "${Auth__Dev__Email}"
-      Auth__Dev__Roles__0: "${Auth__Dev__Roles__0}"
-      Frontend__UseViteDevServer: "${Frontend__UseViteDevServer}"
-      Frontend__BundlesPublicPath: "${Frontend__BundlesPublicPath}"
+      # Substituted into config.json by docker-entrypoint.sh at startup
+      BUREAU_ENVIRONMENT: "${BUREAU_ENVIRONMENT:-test}"
+      BUREAU_AUTH_MODE: "${BUREAU_AUTH_MODE:-dev}"
+      BUREAU_API_CHORES: "${BUREAU_API_CHORES:-http://niles-chores-api}"
+      BUREAU_API_NODES: "${BUREAU_API_NODES:-http://watson-nodes-api}"
+      BUREAU_API_ITEMS_INGEST: "${BUREAU_API_ITEMS_INGEST:-http://watson-items-ingest-api}"
     networks:
       - nuc-network
     restart: unless-stopped
