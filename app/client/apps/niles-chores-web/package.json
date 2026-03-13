@@ -1,0 +1,19 @@
+{
+    "name": "@bureau/niles-chores-web",
+    "private": true,
+    "version": "0.1.0",
+    "type": "module",
+    "scripts": {
+        "dev": "vite",
+        "build": "tsc --noEmit && vite build",
+        "preview": "vite preview"
+    },
+    "dependencies": {
+        "@bureau/client-core": "workspace:*",
+        "@bureau/chores-core": "workspace:*"
+    },
+    "devDependencies": {
+        "typescript": "^5.6.3",
+        "vite": "^6.0.3"
+    }
+}

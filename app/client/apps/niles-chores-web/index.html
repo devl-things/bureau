@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <title>Daily Chores</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="/chores.css" />
+</head>
+<body>
+    <div class="app">
+        <div class="app-inner">
+            <header>
+                <div class="title-block">
+                    <div class="app-title">Today's Chores</div>
+                    <div id="today-date" class="date"></div>
+                </div>
+            </header>
+
+            <div class="status-row">
+                <div class="status-left">
+                    <div class="status-text">
+                        <span id="status-message">Checking connection…</span>
+                    </div>
+                </div>
+                <div class="status-actions">
+                    <button class="refresh-btn" id="refresh-btn" type="button" title="Refresh" aria-label="Refresh">
+                        <span class="refresh-icon">⟳</span>
+                    </button>
+                    <div class="status-pill" id="status-pill">
+                        <span class="status-indicator"></span>
+                        <span class="status-label" id="status-label">Online</span>
+                    </div>
+                </div>
+            </div>
+
+            <form id="chores-form" style="display:flex;flex-direction:column;flex:1;min-height:0;">
+                <div class="chores-card">
+                    <div class="chores-header-row">
+                        <div class="chores-title">
+                            <span>Checklist</span>
+                            <span class="badge-offline" id="offline-badge" style="display:none;">(offline)</span>
+                        </div>
+                        <div class="chores-count" id="chores-count">0 done · 0 total</div>
+                    </div>
+
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="progress-fill"></div>
+                    </div>
+
+                    <div class="chores-scroll">
+                        <div class="loading-row" id="loading-row">
+                            <span class="loading-dot"></span>
+                            <span>Loading your tasks…</span>
+                        </div>
+                        <ul id="chores-list" class="chores-list"></ul>
+                        <div class="empty-state" id="empty-state" style="display:none;">
+                            No chores found for today.
+                        </div>
+                    </div>
+
+                    <div class="submit-row">
+                        <button type="button" id="submit-btn" class="submit-btn">Submit</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Submit modal -->
+    <div class="modal-backdrop" id="summary-modal">
+        <div class="modal-panel">
+            <div class="modal-title">Finish today's chores</div>
+            <div class="modal-subtitle">Add how long it took and any short note before submitting.</div>
+            <div class="modal-fields">
+                <div class="modal-field">
+                    <label for="modal-hours">Hours</label>
+                    <input type="number" id="modal-hours" min="0" placeholder="e.g. 1" />
+                </div>
+                <div class="modal-field">
+                    <label for="modal-minutes">Minutes</label>
+                    <input type="number" id="modal-minutes" min="0" max="59" placeholder="e.g. 35" />
+                </div>
+                <div class="modal-field">
+                    <label for="modal-note">Note</label>
+                    <textarea id="modal-note" placeholder="Optional note about today's chores..."></textarea>
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="btn btn-secondary" id="modal-cancel-btn">Cancel</button>
+                <button type="button" class="btn btn-primary" id="modal-confirm-btn">Confirm</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Note modal -->
+    <div class="modal-backdrop" id="note-modal">
+        <div class="modal-panel">
+            <div class="modal-title">Chore note</div>
+            <div class="modal-subtitle" id="note-modal-chore-title"></div>
+            <div class="modal-fields">
+                <div class="modal-field">
+                    <label>Note</label>
+                    <div id="note-modal-content" style="border:1px solid #d1d5db;border-radius:10px;padding:10px;font-size:0.85rem;white-space:pre-wrap;max-height:45vh;overflow:auto;"></div>
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="btn btn-secondary" id="note-modal-close-btn">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast" id="toast">
+        <span class="toast-icon" id="toast-icon">✓</span>
+        <span class="toast-text" id="toast-text">Saved</span>
+    </div>
+
+    <script type="module" src="/src/app.ts"></script>
+</body>
+</html>

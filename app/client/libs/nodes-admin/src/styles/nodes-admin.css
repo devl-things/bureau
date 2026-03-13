@@ -1,0 +1,267 @@
+/* nodes-admin.css
+   Content styles aligned to bureau-admin-frame.css
+   Extends the same patterns as chores-admin.css
+*/
+
+.admin-content * {
+    box-sizing: border-box;
+}
+
+.shell {
+    max-width: 1080px;
+    margin: 0;
+    padding: 0;
+}
+
+.admin-content header {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 18px;
+}
+
+.title {
+    font-size: 1.2rem;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    margin: 0;
+}
+
+.subtitle {
+    color: var(--muted);
+    font-size: 0.95rem;
+    margin: 0;
+}
+
+.meta-line {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 8px 0 0;
+}
+
+.muted-label {
+    color: var(--muted);
+}
+
+/* Controls */
+.controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-top: 10px;
+}
+
+.controls input[type="search"] {
+    flex: 1;
+    min-width: 220px;
+    padding: 10px 12px;
+    border-radius: var(--radius);
+    border: 1px solid var(--line);
+    background: var(--surface);
+    color: var(--ink);
+    font-size: 0.95rem;
+    outline: none;
+}
+
+.controls input[type="search"]::placeholder {
+    color: color-mix(in srgb, var(--muted) 85%, transparent);
+}
+
+.controls button {
+    padding: 10px 14px;
+    border-radius: var(--radius);
+    border: 1px solid var(--line);
+    background: transparent;
+    color: var(--ink);
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    cursor: pointer;
+    transition: background var(--ease), border-color var(--ease), color var(--ease);
+}
+
+.controls button:hover {
+    background: var(--hover);
+    border-color: color-mix(in srgb, var(--accent) 45%, var(--line));
+}
+
+/* Panel */
+.panel {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 8px 0;
+    box-shadow: none;
+}
+
+/* Table */
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+thead th {
+    text-align: left;
+    padding: 10px 20px;
+    font-size: 0.78rem;
+    letter-spacing: 0.10em;
+    text-transform: uppercase;
+    color: var(--muted);
+    font-weight: 600;
+    border-bottom: 1px solid var(--line);
+}
+
+tbody tr {
+    border-top: 1px solid var(--line);
+}
+
+tbody td {
+    padding: 14px 20px;
+    font-size: 0.95rem;
+}
+
+tbody tr:hover {
+    background: color-mix(in srgb, var(--hover) 65%, transparent);
+}
+
+/* Buttons */
+.btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 7px 10px;
+    border-radius: var(--radius);
+    border: 1px solid var(--line);
+    font-size: 0.82rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    cursor: pointer;
+    background: transparent;
+    color: var(--ink);
+    transition: background var(--ease), border-color var(--ease), color var(--ease);
+}
+
+.btn:hover {
+    background: var(--hover);
+    border-color: color-mix(in srgb, var(--accent) 45%, var(--line));
+}
+
+.btn-danger {
+    color: #b54a4a;
+}
+
+:root[data-theme="dark"] .btn-danger {
+    color: #e08a8a;
+}
+
+.ghost {
+    background: transparent;
+    border: 1px solid var(--line);
+    color: var(--muted);
+}
+
+.ghost:hover {
+    background: var(--hover);
+    color: var(--ink);
+}
+
+/* Form fields */
+.form-field {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin-bottom: 10px;
+}
+
+.form-field label {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--muted);
+}
+
+.form-field input,
+.form-field textarea {
+    width: 100%;
+    padding: 10px 12px;
+    border-radius: var(--radius);
+    border: 1px solid var(--line);
+    background: var(--surface-2);
+    color: var(--ink);
+    font-size: 0.95rem;
+}
+
+.form-field textarea {
+    min-height: 110px;
+    resize: vertical;
+}
+
+.field-error {
+    color: #b54a4a;
+    font-size: 0.82rem;
+}
+
+:root[data-theme="dark"] .field-error {
+    color: #e08a8a;
+}
+
+/* Modal actions */
+.modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 6px;
+}
+
+/* Node form */
+.node-form {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+/* Edge list */
+.edge-list input {
+    padding: 8px 10px;
+    border-radius: var(--radius);
+    border: 1px solid var(--line);
+    background: var(--surface-2);
+    color: var(--ink);
+    font-size: 0.9rem;
+}
+
+/* Empty */
+.empty {
+    text-align: center;
+    padding: 24px 10px;
+    color: var(--muted);
+    font-size: 0.95rem;
+}
+
+/* Breadcrumbs */
+.breadcrumbs a {
+    color: color-mix(in srgb, var(--accent) 80%, var(--ink));
+    text-decoration: none;
+    font-size: 0.9rem;
+}
+
+.breadcrumbs a:hover {
+    text-decoration: underline;
+}
+
+/* Badge */
+.badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: var(--radius);
+    font-size: 0.78rem;
+    background: color-mix(in srgb, var(--accent) 12%, var(--surface));
+    border: 1px solid color-mix(in srgb, var(--accent) 24%, var(--line));
+    color: color-mix(in srgb, var(--accent) 88%, var(--ink));
+}
+
+@media (max-width: 640px) {
+    thead th, tbody td {
+        padding-left: 14px;
+        padding-right: 14px;
+    }
+}

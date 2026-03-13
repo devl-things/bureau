@@ -1,0 +1,9 @@
+{
+  "environment": "dev",
+  "auth": {
+    "mode": "dev"
+  },
+  "apis": {
+    "chores": "http://localhost:5300"
+  }
+}

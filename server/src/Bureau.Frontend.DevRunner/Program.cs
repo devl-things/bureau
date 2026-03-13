@@ -6,7 +6,8 @@ namespace Bureau.Frontend.DevRunner
     {
         public static int Main(string[] args)
         {
-            string workingDirectory = FindRepoRoot();
+            string repoRoot = FindRepoRoot();
+            string workingDirectory = Path.Combine(repoRoot, "app");
             string cmdPath = Path.Combine(Environment.SystemDirectory, "cmd.exe");
 
             ProcessStartInfo startInfo = new ProcessStartInfo
@@ -22,8 +23,6 @@ namespace Bureau.Frontend.DevRunner
             };
             startInfo.ArgumentList.Add("/c");
             startInfo.ArgumentList.Add("pnpm");
-            startInfo.ArgumentList.Add("-C");
-            startInfo.ArgumentList.Add("app/client/apps/bureau-bundles");
             startInfo.ArgumentList.Add("dev");
 
             using (Process process = new Process())
@@ -108,7 +107,7 @@ namespace Bureau.Frontend.DevRunner
 
             while (directory.Parent != null)
             {
-                if (Directory.Exists(Path.Combine(directory.FullName, "app", "client")))
+                if (File.Exists(Path.Combine(directory.FullName, "app", "pnpm-workspace.yaml")))
                 {
                     return directory.FullName;
                 }
@@ -116,7 +115,7 @@ namespace Bureau.Frontend.DevRunner
                 directory = directory.Parent;
             }
 
-            throw new InvalidOperationException("Repo root not found.");
+            throw new InvalidOperationException("Repo root not found (no app/pnpm-workspace.yaml).");
         }
     }
 }

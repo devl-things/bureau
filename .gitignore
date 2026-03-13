@@ -22,6 +22,10 @@ temp/
 # Vite
 .vite/
 
+# Frontend apps — local runtime config (generated from config.template.json)
+app/client/apps/bureau-web/public/config.json
+app/client/apps/niles-chores-web/public/config.json
+
 # build output
 dist/
 **/wwwroot/assets/

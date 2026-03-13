@@ -1,0 +1,17 @@
+{
+    "expo": {
+        "name": "Bureau Mobile",
+        "slug": "bureau-mobile",
+        "version": "0.1.0",
+        "orientation": "portrait",
+        "platforms": ["ios", "android"],
+        "ios": {
+            "supportsTablet": true
+        },
+        "android": {
+            "adaptiveIcon": {
+                "backgroundColor": "#ffffff"
+            }
+        }
+    }
+}

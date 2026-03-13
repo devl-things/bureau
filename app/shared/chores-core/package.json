@@ -1,0 +1,12 @@
+{
+    "name": "@bureau/chores-core",
+    "private": true,
+    "version": "0.1.0",
+    "type": "module",
+    "exports": {
+        ".": "./src/index.ts"
+    },
+    "peerDependencies": {
+        "@bureau/client-core": "workspace:*"
+    }
+}

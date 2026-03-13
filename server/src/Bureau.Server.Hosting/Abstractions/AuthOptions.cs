@@ -30,6 +30,13 @@
         /// Example header: Authorization: Bearer dev-token
         /// </summary>
         public string ApiToken { get; set; } = "dev-token";
+
+        /// <summary>
+        /// Feature scopes to inject as "scope" claims in dev mode.
+        /// Leave empty to inject all feature keys (grant full access).
+        /// Use to simulate a restricted user: ["niles.chores"] gives only chores access.
+        /// </summary>
+        public List<string> Features { get; set; } = [];
     }
 
     public sealed class OidcAuthOptions

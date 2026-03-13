@@ -24,9 +24,6 @@
     </Project>
   </Folder>
   <Folder Name="/Infrastructure/">
-    <Project Path="src/Bureau.Admin.Hosting/Bureau.Admin.Hosting.csproj" Id="4508800a-7a76-4f99-895b-b2078e2dd40b">
-      <Build Solution="Debug|*" Project="false" />
-    </Project>
     <Project Path="src/Bureau.AspNetCore/Bureau.AspNetCore.csproj" Id="b6f299e3-2de1-4306-8e7e-301c1c0621e1">
       <Build Solution="Debug|*" Project="false" />
     </Project>
@@ -39,10 +36,8 @@
     </Project>
   </Folder>
   <Folder Name="/Presentation/">
-    <Project Path="src/Bureau.Admin.Frame/Bureau.Admin.Frame.csproj" Id="5f1f69e7-40fd-4dde-894d-2f87bdba48a6" />
     <Project Path="src/Bureau.Frontend.DevRunner/Bureau.Frontend.DevRunner.csproj" Id="da64ba29-3095-4163-becc-2d93c027280d" />
     <Project Path="src/Niles.Chores.Api/Niles.Chores.Api.csproj" />
-    <Project Path="src/Niles.Chores.Web/Niles.Chores.Web.csproj" />
     <Project Path="src/Watson.Items.Ingest.Api/Watson.Items.Ingest.Api.csproj" Id="8b47c0b7-01a6-4db1-abc0-5edefa6a846d" />
     <Project Path="src/Watson.Nodes.Api/Watson.Nodes.Api.csproj" Id="88bb0e56-f63c-466a-a4b6-40655f17a8a7">
       <BuildType Solution="Test|*" Project="Debug" />
