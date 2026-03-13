@@ -10,27 +10,36 @@ services:
     environment:
       ASPNETCORE_ENVIRONMENT: "${ASPNETCORE_ENVIRONMENT}"
       # chores api settings
+      Auth__Mode: "${Auth__Mode}"
+      Auth__Dev__ScopePath: "${Auth__Dev__ScopePath}"
+      Auth__Dev__UserName: "${Auth__Dev__UserName}"
+      Auth__Dev__Email: "${Auth__Dev__Email}"
+      Auth__Dev__Roles__0: "${Auth__Dev__Roles__0}"
       ConnectionStrings__NilesDb: "${ConnectionStrings__NilesDb}"
+      Cors__AllowedOrigins__0: "${Cors__AllowedOrigins__0}"
+      Cors__AllowedHeaders__0: "${Cors__AllowedHeaders__0}"
+      Cors__AllowedMethods__0: "${Cors__AllowedMethods__0}"
       Logging__LogLevel__Default: "${Logging__LogLevel__Default}"
       Logging__LogLevel__Microsoft.AspNetCore: "${Logging__LogLevel__Microsoft_AspNetCore}"
     networks:
       - nuc-network
+    restart: unless-stopped
 
-  niles-chores-web:
+  bureau-web:
     build:
-      context: ..
-      dockerfile: deploy/Dockerfile.chores.web
-    container_name: niles-chores-web
+      context: ../..
+      dockerfile: app/client/apps/bureau-web/Dockerfile
+    container_name: bureau-web
     environment:
-      ASPNETCORE_ENVIRONMENT: "${ASPNETCORE_ENVIRONMENT}"
-      # chores web settings
-      Api__BaseUrl: "${Api__BaseUrl}"
-      Api__ChoresUrl: "${Api__ChoresUrl}"
-      Api__HealthUrl: "${Api__HealthUrl}"
-      Api__HousekeepingUrl: "${Api__HousekeepingUrl}"
-      Api__HousekeepingSubmitSegment: "${Api__HousekeepingSubmitSegment}"
+      # Substituted into config.json by docker-entrypoint.sh at startup
+      BUREAU_ENVIRONMENT: "${BUREAU_ENVIRONMENT:-test}"
+      BUREAU_AUTH_MODE: "${BUREAU_AUTH_MODE:-dev}"
+      BUREAU_API_CHORES: "${BUREAU_API_CHORES:-http://niles-chores-api}"
+      BUREAU_API_NODES: "${BUREAU_API_NODES:-http://watson-nodes-api}"
+      BUREAU_API_ITEMS_INGEST: "${BUREAU_API_ITEMS_INGEST:-http://watson-items-ingest-api}"
     networks:
       - nuc-network
+    restart: unless-stopped
 
 networks:
   nuc-network:

@@ -1,26 +1,34 @@
 ﻿using Bureau;
+using Bureau.AspNetCore.Controllers;
+using Bureau.Primitives.Errors;
+using Bureau.Server.Contracts;
+using Bureau.Server.Contracts.Mappers;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Niles.Chores.Api.Dtos;
 using Niles.Chores.Api.Factories;
 using Niles.Chores.Api.Mappers;
-using Niles.Chores.Api.Utilities;
+using Niles.Chores.Contracts;
 using Niles.Chores.Services;
 
 namespace Niles.Chores.Api.Controllers
 {
-    [Route("api/[controller]")]
+    [Route(ApiRoutes.Chores.Root)]
     [ApiController]
-    public class ChoresController : ControllerBase
+    public class ChoresController : BureauApiControllerBase
     {
         private readonly IChoreService _choreService;
+        private readonly IIdObfuscator _idObfuscator;
 
-        public ChoresController(IChoreService choreService)
+        public ChoresController(ILogger<ChoresController> logger,
+            IChoreService choreService, IIdObfuscator idObfuscator) : base(logger)
         {
             _choreService = choreService;
+            _idObfuscator = idObfuscator;
         }
 
-        // GET: api/chores?search=term&page=1&pageSize=10 (returns paginated chores with search)
-        // GET: api/chores (returns first page)
+        // GET: chores?search=term&page=1&pageSize=10 (returns paginated chores with search)
+        // GET: chores (returns first page)
         [HttpGet]
         public async Task<IActionResult> GetAsync([FromQuery] SearchQueryDto queryParams, CancellationToken cancellationToken)
         {
@@ -28,101 +36,91 @@ namespace Niles.Chores.Api.Controllers
 
             PagedResult<Chore> pagedResult = await _choreService.GetChoresAsync(searchParameters, cancellationToken);
 
-            return Ok(pagedResult.ToPagedResponse(x => x.ToDto(IdObfuscator.Encode)));
+            return Ok(pagedResult.ToPagedResponse(x => x.ToDto(_idObfuscator)));
         }
 
-        // GET api/chores/{id}
-        [HttpGet("{id}")]
-        public async Task<IActionResult> GetByIdAsync(string id, CancellationToken cancellationToken)
+        [HttpGet(ApiRoutes.ByIdSegment)]
+        [Authorize]
+        public async Task<IActionResult> GetByIdAsync([FromRoute] string id, CancellationToken cancellationToken)
         {
-            if (!IdObfuscator.TryDecode(id, out int intId))
+            Result<int> idResult = _idObfuscator.Decode(id);
+            if (idResult.IsError)
             {
-                return BadRequest(new { error = ErrorMessages.InvalidIdFormat });
+                return ProblemDetailsResponse(idResult.Error);
             }
-            Result<Chore> result = await _choreService.GetChoreAsync(intId, cancellationToken);
+
+            Result<Chore> result = await _choreService.GetChoreAsync(idResult.Value, cancellationToken);
             if (result.IsError)
             {
-                return NotFound();
+                return ProblemDetailsResponse(result.Error);
             }
-            return Ok(result.Value.ToDto(IdObfuscator.Encode));
+            return OkResponse(result.Value.ToDto(_idObfuscator));
         }
 
-        // POST api/chores
         [HttpPost]
-        public async Task<IActionResult> PostAsync([FromBody] ChoreDto dto, CancellationToken cancellationToken)
+        public async Task<IActionResult> PostAsync([FromBody] CreateChoreRequest dto, CancellationToken cancellationToken)
         {
             if (!ModelState.IsValid)
             {
-                return BadRequest(ModelState);
+                return ProblemDetailsResponse(ModelState);
             }
 
-            Result<Chore> resultModel = dto.ToResultModel();
-            if (resultModel.IsError)
+            Result<Chore> modelResult = dto.ToResultModel();
+            if (modelResult.IsError)
             {
-                return BadRequest(new { error = resultModel.Error.ErrorMessage });
+                return ProblemDetailsResponse(modelResult.Error);
             }
 
-            Result<Chore> result = await _choreService.CreateChoreAsync(resultModel.Value!, cancellationToken);
+            Result<Chore> result = await _choreService.CreateChoreAsync(modelResult.Value!, cancellationToken);
             if (result.IsError)
             {
-                return StatusCode(StatusCodes.Status500InternalServerError, new { error = result.Error.ErrorMessage ?? "Failed to create chore." });
+                return ProblemDetailsResponse(result.Error);
             }
 
-            string encodedId = IdObfuscator.Encode(result.Value!.Id);
-            dto.Id = encodedId;
-            return CreatedAtAction(nameof(GetAsync), new { id = encodedId }, dto);
+            ChoreDto chore = result.Value.ToDto(_idObfuscator);
+            return CreatedAtAction(nameof(GetByIdAsync), new { id = chore.Id }, new BureauResponse<ChoreDto>(chore));
         }
 
-        // PUT api/chores/{id}
-        [HttpPut("{id}")]
-        public async Task<IActionResult> PutAsync(string id, [FromBody] ChoreDto dto, CancellationToken cancellationToken)
+        [HttpPut(ApiRoutes.ByIdSegment)]
+        public async Task<IActionResult> PutAsync([FromRoute] string id, [FromBody] UpdateChoreRequest dto, CancellationToken cancellationToken)
         {
             if (!ModelState.IsValid)
             {
-                return BadRequest(ModelState);
+                return ProblemDetailsResponse(ModelState);
             }
 
             if (dto.Id != null && dto.Id != id)
             {
-                return BadRequest(new { error = "Id in body does not match route id." });
-            }
-            if (!IdObfuscator.TryDecode(id, out int intId))
-            {
-                return BadRequest(new { error = ErrorMessages.InvalidIdFormat });
+                return ProblemDetailsResponse(ResultError.From(ProblemCodes.Request.IdMismatch, "Id in body does not match route id."));
             }
 
-            Result<Chore> modelResult = dto.ToResultModel(intId);
-
+            Result<Chore> modelResult = dto.ToResultModel(_idObfuscator);
             if (modelResult.IsError)
             {
-                return BadRequest(new { error = modelResult.Error.ErrorMessage });
+                return ProblemDetailsResponse(modelResult.Error);
             }
 
             Result<Chore> result = await _choreService.UpdateChoreAsync(modelResult.Value!, cancellationToken);
             if (result.IsError)
             {
-                if (result.Error.ErrorMessage?.Contains("not found") == true)
-                {
-                    return NotFound();
-                }
-                return StatusCode(StatusCodes.Status500InternalServerError, new { error = result.Error.ErrorMessage ?? "Failed to update chore." });
+                return ProblemDetailsResponse(result.Error);
             }
             return NoContent();
         }
 
-        // DELETE api/chores/{id}
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteAsync(string id, CancellationToken cancellationToken)
+        [HttpDelete(ApiRoutes.ByIdSegment)]
+        public async Task<IActionResult> DeleteAsync([FromRoute] string id, CancellationToken cancellationToken)
         {
-            if (!IdObfuscator.TryDecode(id, out int intId))
+            Result<int> idResult = _idObfuscator.Decode(id);
+            if (idResult.IsError)
             {
-                return BadRequest(new { error = ErrorMessages.InvalidIdFormat });
+                return ProblemDetailsResponse(idResult.Error);
             }
 
-            Result result = await _choreService.DeleteChoreAsync(intId, cancellationToken);
+            Result result = await _choreService.DeleteChoreAsync(idResult.Value, cancellationToken);
             if (result.IsError)
             {
-                return NotFound();
+                return ProblemDetailsResponse(result.Error);
             }
             return NoContent();
         }

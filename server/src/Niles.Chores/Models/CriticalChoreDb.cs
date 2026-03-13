@@ -1,4 +1,5 @@
-﻿namespace Niles.Chores.Models
+﻿using Bureau;
+namespace Niles.Chores.Models
 {
     internal class CriticalChoreDb : IAuditable
     {

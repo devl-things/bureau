@@ -1,9 +1,11 @@
 ﻿using Bureau;
+using Bureau.Primitives.Errors;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
 using Niles.Chores.Contexts;
 using Niles.Chores.Mappers;
 using Niles.Chores.Models;
+using Niles.Chores.Utilities;
 
 namespace Niles.Chores.Services
 {
@@ -26,7 +28,7 @@ namespace Niles.Chores.Services
         {
             if (housekeeping == null)
             {
-                return "Housekeeping cannot be null";
+                return ResultError.From(ProblemCodes.Operation.UnexpectedError, "Housekeeping cannot be null");
             }
 
             DateTimeOffset now = _timeProvider.GetUtcNow();
@@ -85,7 +87,7 @@ namespace Niles.Chores.Services
                     .ThenInclude(cc => cc.Chore)
                 .FirstOrDefaultAsync(h => h.Id == id, cancellationToken);
 
-            if (housekeepingDb == null) return "Not found";
+            if (housekeepingDb == null) return ResultError.FromLogMessage(ProblemCodes.Resource.NotFound, string.Format(LogMessages.EntityNotFound, nameof(Housekeeping), id));
 
             return housekeepingDb.ToHousekeeping();
         }
@@ -140,19 +142,20 @@ namespace Niles.Chores.Services
 
         public async Task<Result<Housekeeping>> UpdateHousekeepingAsync(Housekeeping housekeeping, CancellationToken cancellationToken = default)
         {
-            if (housekeeping == null || !housekeeping.Id.HasValue)
+            if (housekeeping == null || housekeeping.Id == 0)
             {
-                return "Housekeeping cannot be null and must have a valid Id";
+                return ResultError.From(ProblemCodes.Operation.UnexpectedError, "Housekeeping is null or it has invalid Id");
+
             }
 
             HousekeepingDb? housekeepingDb = await _context.Housekeeping
                 .Include(h => h.CompletedChores)
                     .ThenInclude(cc => cc.Chore)
-                .FirstOrDefaultAsync(h => h.Id == housekeeping.Id.Value, cancellationToken);
+                .FirstOrDefaultAsync(h => h.Id == housekeeping.Id, cancellationToken);
 
             if (housekeepingDb == null)
             {
-                return $"Housekeeping with Id {housekeeping.Id.Value} not found";
+                return ResultError.FromLogMessage(ProblemCodes.Resource.NotFound, string.Format(LogMessages.EntityNotFound, nameof(Housekeeping), housekeeping.Id));
             }
 
             housekeepingDb.Timestamp = housekeeping.DateTime;
@@ -198,7 +201,7 @@ namespace Niles.Chores.Services
 
             if (housekeepingDb == null)
             {
-                return $"Housekeeping with Id {id} not found";
+                return ResultError.FromLogMessage(ProblemCodes.Resource.NotFound, string.Format(LogMessages.EntityNotFound, nameof(Housekeeping), id));
             }
 
             // Remove completed chores first

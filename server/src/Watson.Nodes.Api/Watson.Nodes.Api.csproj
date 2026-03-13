@@ -1,0 +1,26 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.22">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="Swashbuckle.AspNetCore" Version="6.6.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Bureau.AspNetCore\Bureau.AspNetCore.csproj" />
+    <ProjectReference Include="..\Bureau.Server.Contracts\Bureau.Server.Contracts.csproj" />
+    <ProjectReference Include="..\Bureau.Server.Hosting\Bureau.Server.Hosting.csproj" />
+    <ProjectReference Include="..\Watson.Nodes.Abstractions\Watson.Nodes.Abstractions.csproj" />
+    <ProjectReference Include="..\Watson.Nodes.Contracts\Watson.Nodes.Contracts.csproj" />
+    <ProjectReference Include="..\Watson.Nodes.Data.SqlServer\Watson.Nodes.Data.SqlServer.csproj" />
+  </ItemGroup>
+
+</Project>

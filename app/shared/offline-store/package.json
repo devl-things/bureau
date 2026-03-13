@@ -1,0 +1,15 @@
+{
+    "name": "@bureau/offline-store",
+    "private": true,
+    "version": "0.1.0",
+    "type": "module",
+    "exports": {
+        ".": "./src/index.ts"
+    },
+    "dependencies": {
+        "@bureau/nodes-core": "workspace:*"
+    },
+    "peerDependencies": {
+        "react": ">=18.0.0"
+    }
+}
