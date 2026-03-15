@@ -17,7 +17,7 @@ alongside the specs.
 
 Decimal phases appear between their surrounding integers in numeric order.
 
-- [x] **Phase 1: Security Hardening** - Fix confirmed vulnerabilities before building new features (completed 2026-03-15)
+- [ ] **Phase 1: Security Hardening** - Fix confirmed vulnerabilities before building new features (gap closure in progress)
 - [ ] **Phase 2: Client Credentials Grant** - Add service-to-service token issuance and confidential client auth
 - [ ] **Phase 3: Token Introspection** - Enable resource servers to validate any Sven-issued token
 - [ ] **Phase 4: end_session Security** - Close the RP-initiated logout open redirect and complete OIDC Session compliance
@@ -38,13 +38,15 @@ Decimal phases appear between their surrounding integers in numeric order.
   3. Submitting a previously used authorization code returns an error and produces a structured security-event log entry
   4. The AES-256 encryption key is read from an environment variable or secrets manager; `appsettings.json` contains no key material
   5. `Sven.Abstractions`, `Sven.Contracts`, `Sven`, and `Sven.Web` compile with no cross-layer reference violations; all service classes are named `*Service`/`I*Service` and all repository classes are named `*Repository`/`I*Repository`
-**Plans**: 4 plans
+**Plans**: 6 plans
 
 Plans:
 - [x] 01-01-PLAN.md — Wave 0: Create failing test stubs for SEC-01, SEC-02, SEC-03, SEC-04
 - [x] 01-02-PLAN.md — Layer boundary enforcement (CODE-01) and naming convention rename (CODE-02)
 - [x] 01-03-PLAN.md — Security fixes: verification code TTL (SEC-01), atomic auth code (SEC-03), AES key startup guard (SEC-04)
-- [ ] 01-04-PLAN.md — Rate limiting middleware on token/authorize/sign-in endpoints (SEC-02)
+- [x] 01-04-PLAN.md — Rate limiting middleware on token/authorize/sign-in endpoints (SEC-02)
+- [ ] 01-05-PLAN.md — Gap closure: SEC-03 atomic exchange fix + SEC-02 appsettings defaults + middleware ordering
+- [ ] 01-06-PLAN.md — Gap closure: CODE-01 layer cleanup + CODE-02 naming completion (delete old provider files, fix SvenTokenProvider)
 
 ### Phase 2: Client Credentials Grant
 **Goal**: Bureau daemons and service-to-service callers can obtain access tokens without user context using standard confidential client authentication
@@ -131,7 +133,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Security Hardening | 4/4 | Complete   | 2026-03-15 |
+| 1. Security Hardening | 5/6 | In Progress|  |
 | 2. Client Credentials Grant | 0/TBD | Not started | - |
 | 3. Token Introspection | 0/TBD | Not started | - |
 | 4. end_session Security | 0/TBD | Not started | - |
