@@ -9,6 +9,7 @@ using Microsoft.Extensions.Options;
 using Sven.Data.Contexts;
 using Sven.Data.Models;
 using Sven.Data.TypeConfigurations;
+using Sven.Tests.TestData;
 using Sven.Tests.TestUtils;
 using System.Security.Claims;
 using System.Text.Encodings.Web;
@@ -58,6 +59,7 @@ namespace Sven.Tests.Fixtures
             ["Google:ClientSecret"] = "test-google-client-secret",
             ["Microsoft:ClientId"] = "test-microsoft-client-id",
             ["Microsoft:ClientSecret"] = "test-microsoft-client-secret",
+            ["Sven:InitialAccessToken"] = TestDataConstants.TestIat,
         };
 
         public SvenWebAppFactory WithExtraConfig(Dictionary<string, string?> extraConfig)

@@ -28,7 +28,7 @@ namespace Sven.Services
             {
                 return ResultError.From("Only supported client types are public and confidential", $"Received {nameof(clientRequest.TokenEndpointAuthMethod)} = {clientRequest.TokenEndpointAuthMethod};");
             }
-            if (DiscoveryService.ScopeSupported.IsScopeSameOrSubset(clientRequest.Scope))
+            if (!DiscoveryService.ScopeSupported.IsScopeSameOrSubset(clientRequest.Scope))
             {
                 return ResultError.From("Scope not supported", $"Received {nameof(clientRequest.Scope)} = {clientRequest.Scope};");
             }

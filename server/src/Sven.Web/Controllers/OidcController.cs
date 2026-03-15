@@ -1,6 +1,8 @@
 ﻿using Bureau;
 using Bureau.AspNetCore.Controllers;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Primitives;
 using Sven.Configurations;
 using Sven;
 using Sven.Services;
@@ -13,16 +15,37 @@ namespace Sven.Controllers
     public class OidcController : BureauApiControllerBase
     {
         private readonly IClientService _clientService;
+        private readonly IConfiguration _configuration;
 
-        public OidcController(ILogger<OidcController> logger, IClientService clientService) : base(logger)
+        public OidcController(ILogger<OidcController> logger, IClientService clientService, IConfiguration configuration) : base(logger)
         {
             _clientService = clientService;
+            _configuration = configuration;
         }
         [HttpPost(Endpoints.Oidc.RegisterPath)]
         [Consumes(MediaTypeNames.Application.Json)]
         public async Task<IActionResult> RegisterAsync([FromBody] ClientRegistrationRequest request, CancellationToken cancellationToken = default)
         {
-            if (AreRedirectUrisInvalid(request.RedirectUris, out OAuthError? redirectUrisError))
+            bool isConfidentialRequest =
+                AuthConstants.OAuth.TokenAuthMethods.ClientSecretBasic.Equals(request.TokenEndpointAuthMethod)
+                || AuthConstants.OAuth.TokenAuthMethods.ClientSecretPost.Equals(request.TokenEndpointAuthMethod);
+
+            if (isConfidentialRequest)
+            {
+                string? expectedIat = _configuration["Sven:InitialAccessToken"];
+                if (string.IsNullOrWhiteSpace(expectedIat))
+                {
+                    return StatusCode(501, "Confidential client registration is not configured.");
+                }
+                if (!Request.Headers.TryGetValue("Authorization", out StringValues authHeader)
+                    || !authHeader.ToString().StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase)
+                    || !authHeader.ToString()["Bearer ".Length..].Trim().Equals(expectedIat, StringComparison.Ordinal))
+                {
+                    return Unauthorized();
+                }
+            }
+
+            if (!isConfidentialRequest && AreRedirectUrisInvalid(request.RedirectUris, out OAuthError? redirectUrisError))
             {
                 return BadRequest(redirectUrisError);
             }
@@ -56,7 +79,7 @@ namespace Sven.Controllers
                 JwksUri = request.JwksUri,
                 LogoUri = request.LogoUri,
                 PolicyUri = request.PolicyUri,
-                RedirectUris = request.RedirectUris!,
+                RedirectUris = request.RedirectUris ?? [],
                 ResponseTypes = responseTypes!,
                 Scope = scope!,
                 SoftwareId = request.SoftwareId,
