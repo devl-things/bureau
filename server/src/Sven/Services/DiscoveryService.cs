@@ -9,10 +9,20 @@ namespace Sven.Services
         private readonly DiscoveryDocument _document;
 
         private static readonly HashSet<string> _responseTypesSupported = [AuthConstants.OAuth.ResponseTypes.Code];
-        private static readonly HashSet<string> _grantTypesSupported = [AuthConstants.OAuth.GrantTypes.AuthorizationCode, AuthConstants.OAuth.GrantTypes.RefreshToken];
+        private static readonly HashSet<string> _grantTypesSupported =
+        [
+            AuthConstants.OAuth.GrantTypes.AuthorizationCode,
+            AuthConstants.OAuth.GrantTypes.RefreshToken,
+            AuthConstants.OAuth.GrantTypes.ClientCredentials
+        ];
         private static readonly HashSet<string> _subjectTypesSupported = [AuthConstants.OAuth.SubjectTypes.Public];
         private static readonly HashSet<string> _idTokenSigningAlgValuesSupported = [AuthConstants.OAuth.SigningAlgorithms.Rsa256];
-        private static readonly HashSet<string> _tokenEndpointAuthMethodsSupported = [AuthConstants.OAuth.TokenAuthMethods.None];
+        private static readonly HashSet<string> _tokenEndpointAuthMethodsSupported =
+        [
+            AuthConstants.OAuth.TokenAuthMethods.None,
+            AuthConstants.OAuth.TokenAuthMethods.ClientSecretBasic,
+            AuthConstants.OAuth.TokenAuthMethods.ClientSecretPost
+        ];
         private static readonly HashSet<string> _codeChallengeMethodsSupported = [AuthConstants.OAuth.CodeChallengeMethods.Sha256];
         private static readonly HashSet<string> _scopesSupported =
         [
@@ -48,8 +58,15 @@ namespace Sven.Services
         internal static bool TryGetSupportedAuthMethod(string? tokenEndpointAuthMethod, out string? authMethod)
         {
             authMethod = AuthConstants.OAuth.TokenAuthMethods.None;
-            if (string.IsNullOrWhiteSpace(tokenEndpointAuthMethod) || AuthConstants.OAuth.TokenAuthMethods.None.Equals(tokenEndpointAuthMethod))
+            if (string.IsNullOrWhiteSpace(tokenEndpointAuthMethod)
+                || AuthConstants.OAuth.TokenAuthMethods.None.Equals(tokenEndpointAuthMethod))
             {
+                return true;
+            }
+            if (AuthConstants.OAuth.TokenAuthMethods.ClientSecretBasic.Equals(tokenEndpointAuthMethod)
+                || AuthConstants.OAuth.TokenAuthMethods.ClientSecretPost.Equals(tokenEndpointAuthMethod))
+            {
+                authMethod = tokenEndpointAuthMethod;
                 return true;
             }
             return false;

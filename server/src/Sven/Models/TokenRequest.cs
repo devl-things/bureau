@@ -13,7 +13,6 @@ namespace Sven.Models
         [Required]
         public string ClientId { get; set; } = string.Empty;
         [FromForm(Name = AuthConstants.OAuth.FieldNames.RedirectUri)]
-        [Required]
         public string RedirectUri { get; set; } = string.Empty;
         [FromForm(Name = AuthConstants.OAuth.FieldNames.Code)]
         public string? Code { get; set; } = string.Empty;
@@ -23,5 +22,7 @@ namespace Sven.Models
         public string? RefreshToken { get; set; } = string.Empty;
         [FromForm(Name = AuthConstants.OAuth.FieldNames.Scope)]
         public string? Scope { get; set; }
+        [FromForm(Name = AuthConstants.OAuth.FieldNames.ClientSecret)]
+        public string? ClientSecret { get; set; }
     }
 }

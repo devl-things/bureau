@@ -51,19 +51,14 @@
             public static class TokenAuthMethods
             {
                 public const string None = "none";
-                /// <summary>
-                /// not implemented and shouldn't be
-                /// </summary>
                 public const string ClientSecretPost = "client_secret_post";
-                /// <summary>
-                /// not implemented
-                /// </summary>
                 public const string ClientSecretBasic = "client_secret_basic";
             }
             public static class GrantTypes
             {
                 public const string AuthorizationCode = "authorization_code";
                 public const string RefreshToken = "refresh_token";
+                public const string ClientCredentials = "client_credentials";
             }
 
             public static class FieldNames
