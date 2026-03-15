@@ -141,7 +141,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Security Hardening | 6/6 | Complete   | 2026-03-15 |
-| 2. Client Credentials Grant | 1/5 | In Progress|  |
+| 2. Client Credentials Grant | 4/5 | In Progress|  |
 | 3. Token Introspection | 0/TBD | Not started | - |
 | 4. end_session Security | 0/TBD | Not started | - |
 | 5. bureau_features Registration | 0/TBD | Not started | - |
