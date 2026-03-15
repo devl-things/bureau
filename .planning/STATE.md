@@ -3,11 +3,27 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: planning
+stopped_at: Completed 01-security-hardening 01-04-PLAN.md
+last_updated: "2026-03-15T11:01:13.951Z"
+last_activity: 2026-03-15 — Completed SEC-01/SEC-03/SEC-04 security fixes (TTL, atomic auth code, AES key guard)
+progress:
+  total_phases: 8
+  completed_phases: 1
+  total_plans: 4
+  completed_plans: 4
+  percent: 100
+---
+
+---
+gsd_state_version: 1.0
+milestone: v1.0
+milestone_name: milestone
+status: planning
 stopped_at: Completed 01-security-hardening 01-03-PLAN.md
 last_updated: "2026-03-15T12:00:00Z"
 last_activity: 2026-03-15 — Completed CODE-01/CODE-02 layer boundary and naming convention refactor
 progress:
-  total_phases: 8
+  [██████████] 100%
   completed_phases: 0
   total_plans: 4
   completed_plans: 3
@@ -53,6 +69,7 @@ Progress: [███████░░░] 75%
 | Phase 01-security-hardening P01 | 8 | 2 tasks | 4 files |
 | Phase 01-security-hardening P02 | 15 | 2 tasks | 28 files |
 | Phase 01-security-hardening P03 | 2 sessions | 2 tasks | 11 files |
+| Phase 01-security-hardening P04 | 90 | 2 tasks | 8 files |
 
 ## Accumulated Context
 
@@ -73,6 +90,8 @@ Recent decisions affecting current work:
 - [Phase 01-security-hardening P03]: EncryptionKeyStartupFilter added alongside ValidateOnStart guard on EncryptionKeysOptions; both fire at startup ensuring dual-layer key validation
 - [Phase 01-security-hardening P03]: ExchangeCodeAsync uses RemoveAsync on InMemoryStore (ConcurrentDictionary.TryRemove) which is atomic; TryRemoveAtomic added as explicit public method for direct callers
 - [Phase 01-security-hardening P03]: AesEncryptorTests use ThrowsAny<Exception> + ContainsGuardException helper because OptionsValidationException fires before IStartupFilter in minimal hosting
+- [Phase 01-security-hardening]: IP-based partitioning chosen for rate limiting on all three auth endpoints; client_id partitioning deferred, documented via _note in appsettings.json
+- [Phase 01-security-hardening]: QueueLimit=0 on all rate-limit policies — reject immediately on exhaustion, no queuing to avoid latency spikes under attack
 
 ### Pending Todos
 
@@ -86,6 +105,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-15T12:00:00Z
-Stopped at: Completed 01-security-hardening 01-03-PLAN.md
+Last session: 2026-03-15T11:01:13.947Z
+Stopped at: Completed 01-security-hardening 01-04-PLAN.md
 Resume file: None
