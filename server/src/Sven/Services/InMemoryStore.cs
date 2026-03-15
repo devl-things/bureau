@@ -41,5 +41,10 @@ namespace Sven.Services
             _store[key] = request;
             return Task.FromResult(new Result());
         }
+
+        public bool TryRemoveAtomic(TKey key, out TValue? value)
+        {
+            return _store.TryRemove(key, out value);
+        }
     }
 }
