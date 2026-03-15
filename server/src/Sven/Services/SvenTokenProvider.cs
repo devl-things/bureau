@@ -13,15 +13,15 @@ namespace Sven.Services
     {
         private readonly ILogger<SvenTokenProvider> _logger;
         private readonly JwtOptions _jwtOptions;
-        private readonly IClientProvider _clientProvider;
+        private readonly IClientService _clientService;
         private readonly RsaSecurityKey _rsaKey;
         private readonly IStore<string, RefreshToken> _refreshTokenStore;
         private readonly TimeProvider _timeProvider;
 
         private Client? _currentClient;
         private readonly TokenLifetimeOptions _tokenLifetimeOptions;
-        public SvenTokenProvider(ILogger<SvenTokenProvider> logger, IOptions<JwtOptions> jwtOptions,
-            RsaSecurityKey rsaKey, IStore<string, RefreshToken> refreshTokenStore, TimeProvider timeProvider, IClientProvider clientProvider)
+        internal SvenTokenProvider(ILogger<SvenTokenProvider> logger, IOptions<JwtOptions> jwtOptions,
+            RsaSecurityKey rsaKey, IStore<string, RefreshToken> refreshTokenStore, TimeProvider timeProvider, IClientService clientService)
         {
             _logger = logger;
             _jwtOptions = jwtOptions.Value;
@@ -29,7 +29,7 @@ namespace Sven.Services
             _rsaKey = rsaKey;
             _refreshTokenStore = refreshTokenStore;
             _timeProvider = timeProvider;
-            _clientProvider = clientProvider;
+            _clientService = clientService;
             _currentClient = null;
         }
 
@@ -105,7 +105,7 @@ namespace Sven.Services
         {
             if (_currentClient == null || _currentClient.Identifier != clientClaims.ClientId)
             {
-                Result<Client> clientResult = await _clientProvider.GetClientAsync(clientClaims.ClientId, cancellationToken);
+                Result<Client> clientResult = await _clientService.GetClientAsync(clientClaims.ClientId, cancellationToken);
                 if (clientResult.IsError)
                 {
                     _logger.LogResultError(clientResult.Error);

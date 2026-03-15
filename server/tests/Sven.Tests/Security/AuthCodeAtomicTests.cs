@@ -18,8 +18,8 @@ namespace Sven.Tests.Security
             {
                 AuthorizationCodeLifetime = TimeSpan.FromMinutes(5)
             });
-            IStore<string, OAuthRequest> pkceStore = new InMemoryStore<string, OAuthRequest>();
-            IStore<string, AuthCode> authCodeStore = new InMemoryStore<string, AuthCode>();
+            InMemoryStore<string, OAuthRequest> pkceStore = new InMemoryStore<string, OAuthRequest>();
+            InMemoryStore<string, AuthCode> authCodeStore = new InMemoryStore<string, AuthCode>();
             ILogger<AuthCodeService> log = logger ?? Substitute.For<ILogger<AuthCodeService>>();
             return new AuthCodeService(authOptions, TimeProvider.System, pkceStore, authCodeStore, log);
         }
@@ -47,7 +47,7 @@ namespace Sven.Tests.Security
             // Seed a code
             string code = "concurrent-test-code";
             AuthCode authCode = BuildAuthCode(code);
-            IStore<string, AuthCode> authCodeStore = new InMemoryStore<string, AuthCode>();
+            InMemoryStore<string, AuthCode> authCodeStore = new InMemoryStore<string, AuthCode>();
             await authCodeStore.StoreAsync(code, authCode, CancellationToken.None);
 
             // Build service with the pre-seeded store
@@ -55,7 +55,7 @@ namespace Sven.Tests.Security
             {
                 AuthorizationCodeLifetime = TimeSpan.FromMinutes(5)
             });
-            IStore<string, OAuthRequest> pkceStore = new InMemoryStore<string, OAuthRequest>();
+            InMemoryStore<string, OAuthRequest> pkceStore = new InMemoryStore<string, OAuthRequest>();
             ILogger<AuthCodeService> logger = Substitute.For<ILogger<AuthCodeService>>();
             AuthCodeService serviceWithStore = new AuthCodeService(authOptions, TimeProvider.System, pkceStore, authCodeStore, logger);
 
@@ -82,8 +82,8 @@ namespace Sven.Tests.Security
             {
                 AuthorizationCodeLifetime = TimeSpan.FromMinutes(5)
             });
-            IStore<string, AuthCode> authCodeStore = new InMemoryStore<string, AuthCode>();
-            IStore<string, OAuthRequest> pkceStore = new InMemoryStore<string, OAuthRequest>();
+            InMemoryStore<string, AuthCode> authCodeStore = new InMemoryStore<string, AuthCode>();
+            InMemoryStore<string, OAuthRequest> pkceStore = new InMemoryStore<string, OAuthRequest>();
             AuthCodeService service = new AuthCodeService(authOptions, TimeProvider.System, pkceStore, authCodeStore, logger);
 
             string code = "reuse-test-code";

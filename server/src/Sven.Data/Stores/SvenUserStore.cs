@@ -7,7 +7,7 @@ using Sven.Models;
 
 namespace Sven.Data.Stores
 {
-    internal class SvenUserStore : IUserStore
+    internal class SvenUserStore
     {
         private readonly SvenContext _context;
         private readonly TimeProvider _timeProvider;

@@ -288,7 +288,7 @@ namespace Sven.Tests.Pages.Connect.SignIn
 
         private static AuthCodeService BuildAuthCodeService(string pkceKey = TestPkceKey, bool pkceKeyExists = false)
         {
-            IStore<string, AuthCode> authCodeStore = Substitute.For<IStore<string, AuthCode>>();
+            InMemoryStore<string, AuthCode> authCodeStore = new InMemoryStore<string, AuthCode>();
             IStore<string, OAuthRequest> pkceRequestStore = Substitute.For<IStore<string, OAuthRequest>>();
             pkceRequestStore.Exists(pkceKey).Returns(pkceKeyExists);
             IOptions<AuthOptions> authOptions = Options.Create(new AuthOptions

@@ -1,7 +1,6 @@
-﻿using Bureau;
+using Bureau;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.IdentityModel.JsonWebTokens;
-using Sven.Data;
 using Sven.Models;
 using System.Security.Claims;
 
@@ -9,12 +8,12 @@ namespace Sven.Services
 {
     public class UserClaimsProvider : IUserClaimsProvider, ICurrentUserProvider
     {
-        private readonly IUserStore _userStore;
+        private readonly IUserService _userService;
         private SvenUser _user = null!;
         private bool _userSet = false;
-        public UserClaimsProvider(IUserStore userStore)
+        public UserClaimsProvider(IUserService userService)
         {
-            _userStore = userStore;
+            _userService = userService;
         }
 
         public SvenUser CurrentUser { get { return _userSet ? _user : null!; } }
@@ -23,7 +22,7 @@ namespace Sven.Services
 
         public async Task<Result<ClaimsPrincipal>> GetClaimsPrincipalAsync(string username, string password, CancellationToken cancellationToken = default)
         {
-            Result<SvenUser> userResult = await _userStore.GetByUsernameAsync(username, cancellationToken);
+            Result<SvenUser> userResult = await _userService.GetUserByUsernameAsync(username, cancellationToken);
             if (userResult.IsError)
             {
                 return userResult.Error;
@@ -37,7 +36,7 @@ namespace Sven.Services
 
         public async Task<Result<ClaimsPrincipal>> GetClaimsPrincipalAsync(string userId, CancellationToken cancellationToken = default)
         {
-            Result<SvenUser> userResult = await _userStore.GetByIdentifierAsync(userId, cancellationToken);
+            Result<SvenUser> userResult = await _userService.GetUserByIdAsync(userId, cancellationToken);
             if (userResult.IsError)
             {
                 return userResult.Error;
@@ -58,7 +57,7 @@ namespace Sven.Services
                 _userSet = false;
                 return;
             }
-            Result<SvenUser> userResult = await _userStore.GetByIdentifierAsync(userId, cancellationToken);
+            Result<SvenUser> userResult = await _userService.GetUserByIdAsync(userId, cancellationToken);
             if (userResult.IsError)
             {
                 _userSet = false;
@@ -70,7 +69,7 @@ namespace Sven.Services
 
         private ClaimsPrincipal CreatePrincipal(SvenUser user)
         {
-            List<Claim> claims = new()
+            List<Claim> claims = new List<Claim>
             {
                 new Claim(JwtRegisteredClaimNames.Sub, user.SubjectId),
                 new Claim(JwtRegisteredClaimNames.Name, user.DisplayName),

@@ -7,7 +7,7 @@ using System.Text.Json;
 
 namespace Sven.Data.Stores
 {
-    internal class ClientStore : IClientStore
+    internal class ClientStore
     {
         private readonly SvenContext _context;
         public ClientStore(SvenContext context)

@@ -66,11 +66,6 @@ namespace Sven
             builder.Services.AddSingleton<ISymEncryptor, AesEncryptor>();
             builder.Services.AddSingleton(TimeProvider.System);
             builder.Services.AddSingleton<DiscoveryService>();
-            builder.Services.AddSingleton<InMemoryStore<string, AuthCode>>();
-            builder.Services.AddSingleton<IStore<string, AuthCode>>(sp => sp.GetRequiredService<InMemoryStore<string, AuthCode>>());
-            builder.Services.AddSingleton<IStore<string, OAuthRequest>, InMemoryStore<string, OAuthRequest>>();
-            builder.Services.AddSingleton<IStore<string, string>, InMemoryStore<string, string>>();
-            builder.Services.AddSingleton<IStore<string, UserVerificationCode>, InMemoryStore<string, UserVerificationCode>>();
             builder.Services.AddSingleton<IAuthCodeService, AuthCodeService>();
             builder.Services.AddScoped<INotificationService<UserVerificationCodeNotification>, EmailNotificationService<UserVerificationCodeNotification>>();
             builder.Services.AddScoped<INotificationService<PasswordResetNotification>, EmailNotificationService<PasswordResetNotification>>();
@@ -80,7 +75,6 @@ namespace Sven
             builder.Services.AddScoped<IClientService, ClientService>();
             builder.Services.AddScoped<ITokenProvider, SvenTokenProvider>();
             builder.Services.AddScoped<OAuthValidationFilter>();
-            builder.Services.AddScoped<IExternalTokenRefresher, ExternalTokenRefresher>();
             builder.Services.AddHttpClient();
             builder.Services.AddHostedService<TokenRefreshBackgroundService>();
 

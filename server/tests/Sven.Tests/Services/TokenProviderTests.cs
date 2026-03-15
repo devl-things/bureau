@@ -16,7 +16,7 @@ namespace Sven.Tests.Services
         private readonly ILogger<SvenTokenProvider> _logger;
         private readonly IStore<string, RefreshToken> _refreshTokenStore;
         private readonly TimeProvider _timeProvider;
-        private readonly IClientProvider _clientProvider;
+        private readonly IClientService _clientService;
         private readonly SvenTokenProvider _provider;
 
         private readonly string _clientId = "client1";
@@ -27,14 +27,14 @@ namespace Sven.Tests.Services
             _logger = Substitute.For<ILogger<SvenTokenProvider>>();
             _refreshTokenStore = Substitute.For<IStore<string, RefreshToken>>();
             _timeProvider = Substitute.For<TimeProvider>();
-            _clientProvider = Substitute.For<IClientProvider>();
+            _clientService = Substitute.For<IClientService>();
             _provider = new SvenTokenProvider(
                 _logger,
                 Options.Create(new JwtOptions()), // Mock JwtOptions
                 new RsaSecurityKey(RSA.Create(2048)), // Mock RSA key
                 _refreshTokenStore,
                 _timeProvider,
-                _clientProvider
+                _clientService
             );
         }
 

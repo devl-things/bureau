@@ -8,6 +8,7 @@ namespace Sven.Services
         public int MinVerificationCode { get; }
         public int MaxVerificationCode { get; }
         Task<Result<SvenUser>> GetUserByIdAsync(string userId, CancellationToken cancellationToken = default);
+        Task<Result<SvenUser>> GetUserByUsernameAsync(string username, CancellationToken cancellationToken = default);
         Task<Result<string>> CreateUserAsync(string email, string password, CancellationToken cancellationToken = default);
         Task<bool> ExistsUserWithEmailAsync(string email, CancellationToken cancellationToken = default);
         Task<Result<UserVerificationCode>> GenerateVerificationCodeAsync(string email, CancellationToken cancellationToken = default);

@@ -182,8 +182,8 @@ namespace Sven.Tests.Pages.Connect.SignUp
             {
                 using (IServiceScope scope = _factory.Services.CreateScope())
                 {
-                    IUserProvider _userProvider = scope.ServiceProvider.GetRequiredService<IUserProvider>();
-                    _userProvider.DeleteUserAsync(_newUserEmail, CancellationToken.None).GetAwaiter().GetResult();
+                    IUserService _userService = scope.ServiceProvider.GetRequiredService<IUserService>();
+                    _userService.DeleteUserAsync(_newUserEmail, CancellationToken.None).GetAwaiter().GetResult();
                 }
             }
             _client.Dispose();

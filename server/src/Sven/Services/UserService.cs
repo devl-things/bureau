@@ -33,6 +33,11 @@ namespace Sven.Services
             return _userRepository.GetByIdentifierAsync(userId, cancellationToken);
         }
 
+        public Task<Result<SvenUser>> GetUserByUsernameAsync(string username, CancellationToken cancellationToken = default)
+        {
+            return _userRepository.GetByUsernameAsync(username, cancellationToken);
+        }
+
         public async Task<Result<string>> CreateUserAsync(string email, string password, CancellationToken cancellationToken = default)
         {
             SvenUser user = new SvenUser()

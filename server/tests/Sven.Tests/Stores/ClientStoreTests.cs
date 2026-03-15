@@ -1,9 +1,8 @@
-﻿using Bureau;
+using Bureau;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.DependencyInjection;
-
-
 using Sven.Configurations;
+using Sven.Data.Repositories;
 using Sven.Models;
 using Sven.Tests.TestData;
 
@@ -40,7 +39,7 @@ namespace Sven.Data.Tests.Stores
 
             using (IServiceScope scope = _factory.Services.CreateScope())
             {
-                IClientStore store = scope.ServiceProvider.GetRequiredService<IClientStore>();
+                IClientRepository store = scope.ServiceProvider.GetRequiredService<IClientRepository>();
 
                 Result result = await store.StoreAsync(client, CancellationToken.None);
                 Assert.True(result.IsSuccess);
