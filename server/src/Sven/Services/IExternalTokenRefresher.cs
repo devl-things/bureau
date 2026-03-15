@@ -2,7 +2,7 @@ using Sven;
 
 namespace Sven.Services
 {
-    public interface IExternalTokenRefresher
+    internal interface IExternalTokenRefresher
     {
         Task RefreshAsync(UserExternalToken token, CancellationToken cancellationToken = default);
     }

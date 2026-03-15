@@ -2,7 +2,7 @@ using Sven;
 
 namespace Sven.Services
 {
-    public interface IExternalProviderRegistry
+    internal interface IExternalProviderRegistry
     {
         /// <summary>All providers registered at startup.</summary>
         IReadOnlyList<RegisteredExternalProvider> Providers { get; }
