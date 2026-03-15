@@ -18,24 +18,32 @@ namespace Sven.Services
 
         public async Task<Result<Client>> CreateClientAsync(ClientRequest clientRequest, CancellationToken cancellationToken)
         {
-            if (!AuthConstants.OAuth.TokenAuthMethods.None.Equals(clientRequest.TokenEndpointAuthMethod))
+            bool isConfidential =
+                AuthConstants.OAuth.TokenAuthMethods.ClientSecretBasic.Equals(
+                    clientRequest.TokenEndpointAuthMethod)
+                || AuthConstants.OAuth.TokenAuthMethods.ClientSecretPost.Equals(
+                    clientRequest.TokenEndpointAuthMethod);
+
+            if (!isConfidential && !AuthConstants.OAuth.TokenAuthMethods.None.Equals(clientRequest.TokenEndpointAuthMethod))
             {
-                return ResultError.From("Only supported client type is public", $"Received {nameof(clientRequest.TokenEndpointAuthMethod)} = {clientRequest.TokenEndpointAuthMethod};");
+                return ResultError.From("Only supported client types are public and confidential", $"Received {nameof(clientRequest.TokenEndpointAuthMethod)} = {clientRequest.TokenEndpointAuthMethod};");
             }
             if (DiscoveryService.ScopeSupported.IsScopeSameOrSubset(clientRequest.Scope))
             {
                 return ResultError.From("Scope not supported", $"Received {nameof(clientRequest.Scope)} = {clientRequest.Scope};");
             }
-            if (clientRequest.RedirectUris.Count == 0 || clientRequest.RedirectUris.Any(x => !UriValidator.IsRedirectUriValid(x)))
+            if (!isConfidential && (clientRequest.RedirectUris == null
+                || clientRequest.RedirectUris.Count == 0
+                || clientRequest.RedirectUris.Any(x => !UriValidator.IsRedirectUriValid(x))))
             {
-                return ResultError.From("Redirect Uris are invalid", $"Received {nameof(clientRequest.RedirectUris)} = {string.Join(',', clientRequest.RedirectUris)};");
+                return ResultError.From("Redirect Uris are invalid", $"Received {nameof(clientRequest.RedirectUris)} = {string.Join(',', clientRequest.RedirectUris ?? [])};");
             }
             string clientId = CreateNewClientId();
             Client client = new()
             {
                 Identifier = clientId,
                 AuthMethod = clientRequest.TokenEndpointAuthMethod,
-                // #38 ClientSecret, ClientSecretExpiresAt
+                Type = isConfidential ? AuthConstants.ClientTypes.Confidential : AuthConstants.ClientTypes.Public,
                 ClientUri = clientRequest.ClientUri,
                 Contacts = clientRequest.Contacts,
                 CreatedAt = _timeProvider.GetUtcNow(),
@@ -45,13 +53,22 @@ namespace Sven.Services
                 LogoUri = clientRequest.LogoUri,
                 Name = clientRequest.ClientName ?? clientId,
                 PolicyUri = clientRequest.PolicyUri,
-                RedirectUris = [.. clientRequest.RedirectUris],
+                RedirectUris = [.. clientRequest.RedirectUris ?? []],
                 ResponseTypes = clientRequest.ResponseTypes,
                 Scope = new ScopeParameter(clientRequest.Scope),
                 SoftwareId = clientRequest.SoftwareId,
                 SoftwareVersion = clientRequest.SoftwareVersion,
                 TosUri = clientRequest.TosUri,
             };
+            if (isConfidential)
+            {
+                byte[] secretBytes = new byte[32];
+                System.Security.Cryptography.RandomNumberGenerator.Fill(secretBytes);
+                string rawSecret = Convert.ToBase64String(secretBytes);
+                client.HashedSecret = PasswordHasher.HashPassword(rawSecret);
+                client.ClientSecret = rawSecret;
+                client.ClientSecretExpiresAt = DateTimeOffset.FromUnixTimeSeconds(0);
+            }
             Result result = await _clientRepository.StoreAsync(client, cancellationToken);
             if (result.IsError)
             {
