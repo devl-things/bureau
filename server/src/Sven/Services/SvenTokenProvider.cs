@@ -243,6 +243,42 @@ namespace Sven.Services
             return new JwtSecurityTokenHandler().WriteToken(token);
         }
 
+        public async Task<Result<SvenToken>> CreateMachineTokenAsync(Client client, string effectiveScope, CancellationToken cancellationToken = default)
+        {
+            // Resolve per-client lifetime override
+            TokenLifetimeOptions lifetime = new TokenLifetimeOptions(_jwtOptions);
+            if (client.AccessTokenLifetime.HasValue)
+            {
+                lifetime.AccessTokenLifetime = client.AccessTokenLifetime.Value;
+            }
+
+            // RFC 9068 §2.2 — machine token claim set; no sub (client credentials has no resource owner)
+            List<Claim> machineClaims = new List<Claim>
+            {
+                new Claim(JwtRegisteredClaimNames.Iss, _jwtOptions.Issuer),
+                new Claim(JwtRegisteredClaimNames.Aud, _jwtOptions.Issuer),
+                new Claim(JwtRegisteredClaimNames.Exp,
+                    _timeProvider.GetFutureUnixTimeSeconds(lifetime.AccessTokenLifetime).ToString(),
+                    ClaimValueTypes.Integer64),
+                new Claim(JwtRegisteredClaimNames.Iat,
+                    _timeProvider.GetUtcNow().ToUnixTimeSeconds().ToString(),
+                    ClaimValueTypes.Integer64),
+                new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
+                new Claim("scope", effectiveScope),
+                new Claim("client_id", client.Identifier),
+            };
+
+            SigningCredentials creds = new SigningCredentials(_rsaKey, SecurityAlgorithms.RsaSha256);
+            JwtSecurityToken token = new JwtSecurityToken(
+                claims: machineClaims,
+                signingCredentials: creds
+            );
+            string accessToken = new JwtSecurityTokenHandler().WriteToken(token);
+
+            // No id_token. No refresh_token. RFC 6749 §4.4 explicitly excludes refresh tokens.
+            return await Task.FromResult(new SvenToken(accessToken, refreshToken: null, idToken: null));
+        }
+
         public async Task<Result<bool>> RevokeAsync(string token, string clientId, string? tokenTypeHint, CancellationToken cancellationToken = default)
         {
             Result<RefreshToken> storedRefreshTokenResult = await _refreshTokenStore.GetAsync(token, cancellationToken);
