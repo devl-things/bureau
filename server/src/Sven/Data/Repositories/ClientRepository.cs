@@ -35,7 +35,6 @@ namespace Sven.Data.Repositories
             {
                 Active = client.Active,
                 AuthMethod = addendum?.AuthMethod,
-                // #38 ClientSecret, ClientSecretExpiresAt
                 ClientUri = addendum?.ClientUri,
                 Contacts = client.Contacts,
                 CreatedAt = client.CreatedAt,
@@ -53,6 +52,7 @@ namespace Sven.Data.Repositories
                 SoftwareVersion = addendum?.SoftwareVersion,
                 TosUri = addendum?.TosUri,
                 Type = client.Type,
+                HashedSecret = client.HashedSecret,
                 UpdatedAt = client.UpdatedAt,
                 AccessTokenLifetime = client.AccessTokenLifetime,
                 RefreshTokenLifetime = client.RefreshTokenLifetime,
@@ -88,8 +88,8 @@ namespace Sven.Data.Repositories
 
             dbEntity.AccessTokenLifetime = client.AccessTokenLifetime;
             dbEntity.ClientAddendum = addendum;
-            // #38 ClientSecret, ClientSecretExpiresAt
             dbEntity.Contacts = client.Contacts;
+            dbEntity.HashedSecret = client.HashedSecret;
             dbEntity.IdTokenLifetime = client.IdTokenLifetime;
             dbEntity.Name = client.Name;
             dbEntity.RedirectUris = [.. client.RedirectUris];

@@ -54,6 +54,10 @@ namespace Sven.Data.SqlServer.Migrations
                     b.Property<long?>("IdTokenLifetime")
                         .HasColumnType("bigint");
 
+                    b.Property<string>("HashedSecret")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
                     b.Property<string>("Identifier")
                         .IsRequired()
                         .HasMaxLength(100)
