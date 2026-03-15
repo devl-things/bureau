@@ -13,5 +13,9 @@
         public const string NewUserEmail = "new.user@test.local";
         public const string NewUserPassword = "MyS3cr3t!";
 
+        public const string TestConfidentialClientId = "test-confidential-client";
+        public const string TestConfidentialClientSecret = "test-confidential-secret-32bytes!";
+        public const string TestIat = "test-initial-access-token";
+
     }
 }
