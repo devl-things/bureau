@@ -1,5 +1,8 @@
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
+using Microsoft.IdentityModel.Tokens;
 using Sven.Data;
 using Sven.Data.Repositories;
 using Sven.Data.Stores;
@@ -15,6 +18,17 @@ namespace Sven.Configurations
             services.AddScoped<UserRepository>();
             services.AddScoped<IUserRepository>(sp => sp.GetRequiredService<UserRepository>());
             services.AddScoped<IClientRepository, ClientRepository>();
+            services.AddScoped<IClientAuthService, ClientAuthService>();
+            // SvenTokenProvider constructor is internal (requires IStore<> also internal); register via
+            // factory so the DI container does not use reflection-based constructor discovery.
+            services.AddScoped<ITokenProvider>(sp => new SvenTokenProvider(
+                sp.GetRequiredService<ILogger<SvenTokenProvider>>(),
+                sp.GetRequiredService<IOptions<JwtOptions>>(),
+                sp.GetRequiredService<RsaSecurityKey>(),
+                sp.GetRequiredService<IStore<string, RefreshToken>>(),
+                sp.GetRequiredService<TimeProvider>(),
+                sp.GetRequiredService<IClientService>()
+            ));
             services.AddScoped<IRefreshTokenService, RefreshTokenService>();
             services.AddScoped<IExternalTokenService, ExternalTokenService>();
             services.AddScoped<IHouseholdService, HouseholdService>();

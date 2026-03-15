@@ -73,7 +73,7 @@ namespace Sven
             builder.Services.AddScoped<ICurrentUserProvider, UserClaimsProvider>();
             builder.Services.AddScoped<IUserService, UserService>();
             builder.Services.AddScoped<IClientService, ClientService>();
-            builder.Services.AddScoped<ITokenProvider, SvenTokenProvider>();
+            // ITokenProvider is registered in AddSvenCore() via factory (SvenTokenProvider has internal ctor)
             builder.Services.AddScoped<OAuthValidationFilter>();
             builder.Services.AddHttpClient();
             builder.Services.AddHostedService<TokenRefreshBackgroundService>();

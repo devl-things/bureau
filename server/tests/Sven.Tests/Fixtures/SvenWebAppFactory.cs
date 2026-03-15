@@ -7,6 +7,8 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Sven.Data.Contexts;
+using Sven.Data.Models;
+using Sven.Data.TypeConfigurations;
 using Sven.Tests.TestUtils;
 using System.Security.Claims;
 using System.Text.Encodings.Web;
@@ -18,6 +20,18 @@ namespace Sven.Tests.Fixtures
     {
         public SvenTestContext(DbContextOptions<SvenTestContext> options) : base(options)
         {
+        }
+
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            base.OnModelCreating(modelBuilder);
+            // In-memory EF discovers SerializedData as a keyless entity via navigation scanning;
+            // ignore it because it is stored as a JSON column (not a separate table).
+            modelBuilder.Ignore<SerializedData>();
+            // Apply the base entity configuration for ClientDb. The generic
+            // ApplyConfigurationsFromAssembly cannot resolve open-generic configurations;
+            // apply the closed concrete configuration directly instead.
+            new ClientBaseTypeConfiguration<ClientDb>().Configure(modelBuilder.Entity<ClientDb>());
         }
     }
 

@@ -5,6 +5,7 @@ using Sven.AutoValidation;
 using Sven.Configurations;
 using Sven.Extensions;
 using Sven;
+using Sven.Models;
 using Sven.Services;
 
 namespace Sven.Controllers.Connect
@@ -17,7 +18,8 @@ namespace Sven.Controllers.Connect
         private readonly IAuthCodeService _authCodeManager;
         private readonly ITokenProvider _tokenProvider;
 
-        public TokenController(ILogger<TokenController> logger, ITokenProvider tokenProvider, IAuthCodeService authCodeManager) : base(logger)
+        public TokenController(ILogger<TokenController> logger, ITokenProvider tokenProvider,
+            IAuthCodeService authCodeManager) : base(logger)
         {
             _authCodeManager = authCodeManager;
             _tokenProvider = tokenProvider;
@@ -34,6 +36,10 @@ namespace Sven.Controllers.Connect
             else if (IsGrantType(request.GrantType, AuthConstants.OAuth.GrantTypes.RefreshToken))
             {
                 return await HandleRefreshTokenFlow(request, cancellationToken);
+            }
+            else if (IsGrantType(request.GrantType, AuthConstants.OAuth.GrantTypes.ClientCredentials))
+            {
+                return await HandleClientCredentialsFlow(request, cancellationToken);
             }
 
             return OAuthError(AuthConstants.OAuth.Errors.UnsupportedGrantType, AuthConstants.OAuth.ErrorDescriptions.UnsupportedGrantType);
@@ -92,6 +98,57 @@ namespace Sven.Controllers.Connect
             await _authCodeManager.ClearAuthCodeAsync(request.Code!, cancellationToken);
 
             return HandleTokenResult(jwtResult);
+        }
+
+        // RFC 6749 §4.4.2 — Access Token Request (Client Credentials Grant)
+        private async Task<IActionResult> HandleClientCredentialsFlow(
+            TokenRequest request, CancellationToken cancellationToken)
+        {
+            // Step 1: authenticate the client (RFC 6749 §2.3)
+            // IClientAuthService is internal to Sven; resolved via RequestServices to avoid
+            // public constructor accessibility violation.
+            IClientAuthService clientAuthService = HttpContext.RequestServices.GetRequiredService<IClientAuthService>();
+            Result<Client> clientResult = await clientAuthService.AuthenticateClientAsync(
+                Request, cancellationToken);
+            if (clientResult.IsError)
+            {
+                _logger.LogResultError(clientResult.Error);
+                if (AuthConstants.OAuth.Errors.InvalidRequest.Equals(clientResult.Error.Code))
+                {
+                    return OAuthError(AuthConstants.OAuth.Errors.InvalidRequest,
+                        clientResult.Error.ErrorMessage);
+                }
+                // RFC 6749 §5.2: invalid_client MUST be 401 with WWW-Authenticate header
+                Response.Headers["WWW-Authenticate"] = "Basic realm=\"Sven\"";
+                return OAuthError(AuthConstants.OAuth.Errors.InvalidClient,
+                    "Client authentication failed.", System.Net.HttpStatusCode.Unauthorized);
+            }
+
+            // Step 2: validate scope (RFC 6749 §4.4.2)
+            string? effectiveScope = DetermineEffectiveScope(clientResult.Value, request.Scope);
+            if (effectiveScope is null)
+            {
+                return OAuthError(AuthConstants.OAuth.Errors.InvalidScope,
+                    "Requested scope exceeds registered client scope.");
+            }
+
+            // Step 3: issue machine token (RFC 9068)
+            Result<SvenToken> tokenResult = await _tokenProvider.CreateMachineTokenAsync(
+                clientResult.Value, effectiveScope, cancellationToken);
+            return HandleTokenResult(tokenResult);
+        }
+
+        private static string? DetermineEffectiveScope(Client client, string? requestedScope)
+        {
+            if (string.IsNullOrWhiteSpace(requestedScope))
+            {
+                return client.Scope.Scope;   // omitted → issue all registered scopes
+            }
+            if (!client.IsScopeGranted(requestedScope))
+            {
+                return null;   // exceeds registered → reject (invalid_scope)
+            }
+            return requestedScope;
         }
 
         private IActionResult HandleTokenResult(Result<SvenToken> result)
