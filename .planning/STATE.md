@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: planning
-stopped_at: Completed 02-client-credentials-grant 02-01-PLAN.md
-last_updated: "2026-03-15T18:03:28.167Z"
+stopped_at: Completed 02-client-credentials-grant 02-02-PLAN.md
+last_updated: "2026-03-15T18:11:20.192Z"
 last_activity: 2026-03-15 — Completed SEC-01/SEC-03/SEC-04 security fixes (TTL, atomic auth code, AES key guard)
 progress:
   total_phases: 8
   completed_phases: 1
   total_plans: 11
-  completed_plans: 7
+  completed_plans: 8
   percent: 100
 ---
 
@@ -73,6 +73,7 @@ Progress: [███████░░░] 75%
 | Phase 01-security-hardening P05 | 15 | 2 tasks | 3 files |
 | Phase 01-security-hardening P06 | 25 | 2 tasks | 25 files |
 | Phase 02-client-credentials-grant P01 | 7 | 3 tasks | 4 files |
+| Phase 02-client-credentials-grant P02 | 10 | 2 tasks | 8 files |
 
 ## Accumulated Context
 
@@ -103,6 +104,8 @@ Recent decisions affecting current work:
 - [Phase 01-security-hardening]: SvenServiceCollectionExtensions.AddSvenCore is single DI registration point for all Sven-internal services including IStore variants, IExternalTokenRefresher
 - [Phase 02-client-credentials-grant]: Assert.Fail used for stubs (same pattern as Phase 1) — xUnit 2.5.3 has no SkipException
 - [Phase 02-client-credentials-grant]: Integration test stubs are synchronous void Facts — no async needed since body is Assert.Fail only
+- [Phase 02-client-credentials-grant]: ClientDb in Sven.Data/Models/ is the active EF entity; Sven/Data/Models/ClientDb.cs is excluded from Sven.csproj compile
+- [Phase 02-client-credentials-grant]: HashedSecret stored as first-class column (not in ClientAddendum JSON) — enables direct SQL indexing and avoids JSON deserialization for auth path
 
 ### Pending Todos
 
@@ -116,6 +119,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-15T18:03:28.145Z
-Stopped at: Completed 02-client-credentials-grant 02-01-PLAN.md
+Last session: 2026-03-15T18:11:20.163Z
+Stopped at: Completed 02-client-credentials-grant 02-02-PLAN.md
 Resume file: None
