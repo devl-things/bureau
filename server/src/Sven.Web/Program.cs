@@ -176,7 +176,6 @@ namespace Sven
                 ];
             });
 
-            app.MapRazorPages();
             if (app.Environment.IsDevelopment())
             {
                 app.UseSwagger();
@@ -185,11 +184,12 @@ namespace Sven
             app.UseHttpsRedirection();
             app.UseBureauCors();
             app.UseAuthentication();
-            // Rate limiting: after UseRouting, before UseAuthorization — order is mandatory
+            // Rate limiting: after UseAuthentication, before UseAuthorization — order is mandatory
             app.UseRateLimiter();
             app.UseAuthorization();
             app.UseMiddleware<CurrentUserMiddleware>();
             app.UseMiddleware<ApiExceptionHandlingMiddleware>();
+            app.MapRazorPages();
             app.MapControllers();
 
             app.Run();
