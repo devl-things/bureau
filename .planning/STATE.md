@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: planning
-stopped_at: Completed 01-security-hardening 01-05-PLAN.md
-last_updated: "2026-03-15T15:30:59.292Z"
+stopped_at: Completed 01-security-hardening 01-06-PLAN.md
+last_updated: "2026-03-15T15:44:39.965Z"
 last_activity: 2026-03-15 — Completed SEC-01/SEC-03/SEC-04 security fixes (TTL, atomic auth code, AES key guard)
 progress:
   total_phases: 8
-  completed_phases: 0
+  completed_phases: 1
   total_plans: 6
-  completed_plans: 5
+  completed_plans: 6
   percent: 100
 ---
 
@@ -71,6 +71,7 @@ Progress: [███████░░░] 75%
 | Phase 01-security-hardening P03 | 2 sessions | 2 tasks | 11 files |
 | Phase 01-security-hardening P04 | 90 | 2 tasks | 8 files |
 | Phase 01-security-hardening P05 | 15 | 2 tasks | 3 files |
+| Phase 01-security-hardening P06 | 25 | 2 tasks | 25 files |
 
 ## Accumulated Context
 
@@ -96,6 +97,9 @@ Recent decisions affecting current work:
 - [Phase 01-security-hardening]: AuthCodeService constructor accepts InMemoryStore<string, AuthCode> directly; both IStore and concrete type registered as singletons sharing one instance
 - [Phase 01-security-hardening]: GetAuthCodeAsync and ClearAuthCodeAsync retained on IAuthCodeService — still used by TokenController two-step flow
 - [Phase 01-security-hardening]: MapRazorPages and MapControllers moved after UseRateLimiter + UseAuthorization to ensure rate-limit policies apply to Razor Pages
+- [Phase 01-security-hardening]: IExternalProviderRegistry kept public in Sven/Services — Sven.Web page models inject it directly; making internal would break eight files
+- [Phase 01-security-hardening]: GetUserByUsernameAsync added to IUserService — UserClaimsProvider needed username lookup after IUserStore removal
+- [Phase 01-security-hardening]: SvenServiceCollectionExtensions.AddSvenCore is single DI registration point for all Sven-internal services including IStore variants, IExternalTokenRefresher
 
 ### Pending Todos
 
@@ -109,6 +113,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-15T15:30:59.289Z
-Stopped at: Completed 01-security-hardening 01-05-PLAN.md
+Last session: 2026-03-15T15:44:39.961Z
+Stopped at: Completed 01-security-hardening 01-06-PLAN.md
 Resume file: None

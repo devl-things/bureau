@@ -17,7 +17,7 @@ alongside the specs.
 
 Decimal phases appear between their surrounding integers in numeric order.
 
-- [ ] **Phase 1: Security Hardening** - Fix confirmed vulnerabilities before building new features (gap closure in progress)
+- [x] **Phase 1: Security Hardening** - Fix confirmed vulnerabilities before building new features (gap closure in progress) (completed 2026-03-15)
 - [ ] **Phase 2: Client Credentials Grant** - Add service-to-service token issuance and confidential client auth
 - [ ] **Phase 3: Token Introspection** - Enable resource servers to validate any Sven-issued token
 - [ ] **Phase 4: end_session Security** - Close the RP-initiated logout open redirect and complete OIDC Session compliance
@@ -133,7 +133,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Security Hardening | 5/6 | In Progress|  |
+| 1. Security Hardening | 6/6 | Complete   | 2026-03-15 |
 | 2. Client Credentials Grant | 0/TBD | Not started | - |
 | 3. Token Introspection | 0/TBD | Not started | - |
 | 4. end_session Security | 0/TBD | Not started | - |
