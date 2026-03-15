@@ -20,6 +20,7 @@ namespace Sven.Data.Models
         public List<string>? Contacts { get; set; }
 
         public SerializedData ClientAddendum { get; set; } = null!;
+        public string? HashedSecret { get; set; }
 
         public TimeSpan? IdTokenLifetime { get; set; }
         public TimeSpan? RefreshTokenLifetime { get; set; }

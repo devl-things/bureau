@@ -27,9 +27,9 @@ namespace Sven.Models
         public DateTimeOffset CreatedAt { get; set; }
         public DateTimeOffset UpdatedAt { get; set; }
 
-        // #38 ClientSecret, ClientSecretExpiresAt
         public string? ClientSecret { get; set; }
         public DateTimeOffset? ClientSecretExpiresAt { get; set; }
+        public string? HashedSecret { get; set; }
         public string? ClientUri { get; set; }
         public List<string>? Contacts { get; set; }
         public List<string>? GrantTypes { get; set; }

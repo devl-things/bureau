@@ -30,6 +30,9 @@ namespace Sven.Data.TypeConfigurations
             ConfigureJsonConversion(builder.Property(e => e.Scope));
 
             builder.HasIndex(x => x.Identifier).IsUnique();
+
+            builder.Property(x => x.HashedSecret)
+                .HasMaxLength(200);
         }
 
         public static void ConfigureJsonConversion<T>(PropertyBuilder<T> propertyBuilder)
