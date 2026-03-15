@@ -17,7 +17,7 @@ alongside the specs.
 
 Decimal phases appear between their surrounding integers in numeric order.
 
-- [x] **Phase 1: Security Hardening** - Fix confirmed vulnerabilities before building new features (gap closure in progress) (completed 2026-03-15)
+- [x] **Phase 1: Security Hardening** - Fix confirmed vulnerabilities before building new features (gap closure in progress) (completed 2026-03-15)
 - [ ] **Phase 2: Client Credentials Grant** - Add service-to-service token issuance and confidential client auth
 - [ ] **Phase 3: Token Introspection** - Enable resource servers to validate any Sven-issued token
 - [ ] **Phase 4: end_session Security** - Close the RP-initiated logout open redirect and complete OIDC Session compliance
@@ -57,7 +57,14 @@ Plans:
   2. A confidential client can POST with `client_secret_post` body authentication and receive the same result
   3. The issued token contains no `sub` claim and contains only the scopes registered for that client
   4. An unknown client or wrong secret receives HTTP 401 with an RFC 6749 error response
-**Plans**: TBD
+**Plans**: 5 plans
+
+Plans:
+- [ ] 02-01-PLAN.md — Wave 0: Failing test stubs (ClientAuthServiceTests, Rfc6749ClientCredentialsGrantTests, Rfc7591ConfidentialClientRegistrationTests)
+- [ ] 02-02-PLAN.md — Wave 1: Data layer — Client.HashedSecret, ClientDb column, migrations (SQL Server + Postgres), repository round-trip
+- [ ] 02-03-PLAN.md — Wave 1: AuthConstants + DiscoveryService expansion, IClientAuthService + ClientAuthService, TokenRequest fix
+- [ ] 02-04-PLAN.md — Wave 2: HandleClientCredentialsFlow in TokenController, CreateMachineTokenAsync in SvenTokenProvider, DI registration
+- [ ] 02-05-PLAN.md — Wave 3: OidcController IAT guard + confidential client registration, ClientService confidential branch
 
 ### Phase 3: Token Introspection
 **Goal**: Resource servers (Watson.Nodes, Niles.Chores) can validate any Sven-issued token at runtime via a standard introspection endpoint
@@ -134,7 +141,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Security Hardening | 6/6 | Complete   | 2026-03-15 |
-| 2. Client Credentials Grant | 0/TBD | Not started | - |
+| 2. Client Credentials Grant | 1/5 | In Progress|  |
 | 3. Token Introspection | 0/TBD | Not started | - |
 | 4. end_session Security | 0/TBD | Not started | - |
 | 5. bureau_features Registration | 0/TBD | Not started | - |
