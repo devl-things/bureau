@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: planning
-stopped_at: Completed 02-client-credentials-grant 02-04-PLAN.md
-last_updated: "2026-03-15T19:06:56.838Z"
+stopped_at: Completed 02-client-credentials-grant 02-05-PLAN.md
+last_updated: "2026-03-15T19:21:28.373Z"
 last_activity: 2026-03-15 — Completed SEC-01/SEC-03/SEC-04 security fixes (TTL, atomic auth code, AES key guard)
 progress:
   total_phases: 8
-  completed_phases: 1
+  completed_phases: 2
   total_plans: 11
-  completed_plans: 10
+  completed_plans: 11
   percent: 100
 ---
 
@@ -76,6 +76,7 @@ Progress: [███████░░░] 75%
 | Phase 02-client-credentials-grant P02 | 10 | 2 tasks | 8 files |
 | Phase 02-client-credentials-grant P03 | 15 | 2 tasks | 5 files |
 | Phase 02-client-credentials-grant P04 | 40 | 2 tasks | 8 files |
+| Phase 02-client-credentials-grant P05 | 12 | 2 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -114,6 +115,9 @@ Recent decisions affecting current work:
 - [Phase 02-client-credentials-grant]: ITokenProvider registered via factory lambda inside AddSvenCore() — SvenTokenProvider constructor is internal and uses internal IStore<>; reflection-based DI fails at runtime
 - [Phase 02-client-credentials-grant]: Machine token aud = issuer (not Audience) — RFC 9068 §2.2: for client_credentials aud identifies the authorization server itself
 - [Phase 02-client-credentials-grant]: EF in-memory: ApplyConfigurationsFromAssembly fails for open-generic IEntityTypeConfiguration<T>; test context must call Configure() directly on the concrete type
+- [Phase 02-client-credentials-grant]: IConfiguration injected into OidcController via constructor for IAT (Sven:InitialAccessToken) access
+- [Phase 02-client-credentials-grant]: IAT guard runs before all other registration checks; 501 if key unconfigured, 401 on wrong token
+- [Phase 02-client-credentials-grant]: Raw client secret generated in CreateClientAsync, stored on client.ClientSecret (ephemeral), never persisted — only HashedSecret stored in DB
 
 ### Pending Todos
 
@@ -127,6 +131,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-15T19:06:56.798Z
-Stopped at: Completed 02-client-credentials-grant 02-04-PLAN.md
+Last session: 2026-03-15T19:21:28.331Z
+Stopped at: Completed 02-client-credentials-grant 02-05-PLAN.md
 Resume file: None
