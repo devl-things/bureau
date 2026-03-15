@@ -21,13 +21,13 @@ namespace Sven.Data.Stores
         {
             if (string.IsNullOrWhiteSpace(username))
             {
-                return new ResultError($"{nameof(username)} field not defined.");
+                return ResultError.From($"{nameof(username)} field not defined.");
             }
             UserDb? user = await _context.Users.Where(x => x.Username.Equals(username)).FirstOrDefaultAsync(cancellationToken);
 
             if (user == null)
             {
-                return new ResultError($"User does not exist.");
+                return ResultError.From($"User does not exist.");
             }
 
             return user.ToSvenUser();
@@ -37,13 +37,13 @@ namespace Sven.Data.Stores
         {
             if (string.IsNullOrWhiteSpace(userId))
             {
-                return new ResultError($"{nameof(userId)} field not defined.");
+                return ResultError.From($"{nameof(userId)} field not defined.");
             }
             UserDb? user = await GetUserDbAsync(userId, cancellationToken);
 
             if (user == null)
             {
-                return new ResultError($"User does not exist.");
+                return ResultError.From($"User does not exist.");
             }
             return user.ToSvenUser();
         }
@@ -90,7 +90,7 @@ namespace Sven.Data.Stores
 
             if (dbEntity == null)
             {
-                return new ResultError($"User does not exist.");
+                return ResultError.From($"User does not exist.");
             }
             _context.Users.Remove(dbEntity);
             await _context.SaveChangesAsync(cancellationToken);

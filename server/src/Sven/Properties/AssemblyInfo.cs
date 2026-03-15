@@ -18,3 +18,7 @@ using System.Runtime.InteropServices;
 [assembly: Guid("9e360289-5088-43c9-8512-e7e17b385dda")]
 
 [assembly: InternalsVisibleTo("Sven.Tests")]
+[assembly: InternalsVisibleTo("Sven.Web")]
+[assembly: InternalsVisibleTo("Sven.Data.SqlServer")]
+[assembly: InternalsVisibleTo("Sven.Data.Postgres")]
+[assembly: InternalsVisibleTo("DynamicProxyGenAssembly2")]

@@ -1,0 +1,35 @@
+﻿@page
+@using Sven.Configurations;
+@using Sven.PageModels.Connect;
+@using Sven.PageModels.Connect.ExternalProviders;
+@model Sven.Pages.Connect.SignInModel
+@{
+    Layout = "_SignLayout";
+}
+
+@section Header {
+    <h2>@Model.T9n.Welcome</h2>
+}
+
+@await Html.PartialAsync("_ErrorMessage", Model.ErrorMessage)
+
+<form method="post">
+    <input type="text" name="@ViewConstants.PropertyNames.Username" placeholder="@Model.T9n.UsernameOrEmail" required autocomplete="on" />
+    <br />
+    <input type="password" name="@ViewConstants.PropertyNames.Password" placeholder="@Model.T9n.Password" required />
+    <br />
+    <input type="hidden" name="@AuthConstants.PropertyNames.Mode" value="@Model.Mode" />
+    <button type="submit" asp-page-handler="Login">@Model.T9n.Login</button>
+</form>
+
+<div class="divider">@Model.T9n.Or</div>
+
+@await Html.PartialAsync("_ExternalProviders", Model.ExternalProvidersViewModel)
+
+@section Footer {
+    <div class="links">
+        <a href="@Endpoints.Connect.ForgotPassword">@Model.T9n.ForgotPassword</a>
+        <span>|</span>
+        <a href="@Endpoints.Connect.SignUp">@Model.T9n.SignUp</a>
+    </div>
+}

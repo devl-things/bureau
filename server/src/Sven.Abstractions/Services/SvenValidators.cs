@@ -17,7 +17,7 @@ namespace Sven.Services
         /// <returns></returns>
         public static ValidationResult? ValidateEmailDomain(string email, ValidationContext context)
         {
-            var regex = new Regex(@"^[a-zA-Z0-9._+-]+@[a-zA-Z0-9-]+(\.[a-zA-Z0-9-]+)*\.[a-zA-Z]{2,}$", RegexOptions.None, TimeSpan.FromMilliseconds(100));
+            Regex regex = new Regex(@"^[a-zA-Z0-9._+-]+@[a-zA-Z0-9-]+(\.[a-zA-Z0-9-]+)*\.[a-zA-Z]{2,}$", RegexOptions.None, TimeSpan.FromMilliseconds(100));
             if (!regex.IsMatch(email))
             {
                 return new ValidationResult("Email malformed, well formed emails are alike this-is@example.com");
@@ -36,12 +36,12 @@ namespace Sven.Services
         {
             if (string.IsNullOrWhiteSpace(email))
             {
-                return new ResultError(ErrorMessages.EmailEmpty);
+                return ResultError.From("validation.email_empty", ErrorMessages.EmailEmpty);
             }
-            var regex = new Regex(@"^[a-zA-Z0-9._+-]+@[a-zA-Z0-9-]+(\.[a-zA-Z0-9-]+)*\.[a-zA-Z]{2,}$", RegexOptions.None, TimeSpan.FromMilliseconds(100));
+            Regex regex = new Regex(@"^[a-zA-Z0-9._+-]+@[a-zA-Z0-9-]+(\.[a-zA-Z0-9-]+)*\.[a-zA-Z]{2,}$", RegexOptions.None, TimeSpan.FromMilliseconds(100));
             if (!regex.IsMatch(email))
             {
-                return new ResultError("Email malformed, well formed emails are alike this-is@example.com");
+                return ResultError.From("validation.email_malformed", "Email malformed, well formed emails are alike this-is@example.com");
             }
             return true;
         }
@@ -50,11 +50,11 @@ namespace Sven.Services
         {
             if (string.IsNullOrWhiteSpace(model.Password) || string.IsNullOrWhiteSpace(model.ConfirmPassword))
             {
-                return new ResultError(ErrorMessages.PasswordEmpty);
+                return ResultError.From("validation.password_empty", ErrorMessages.PasswordEmpty);
             }
             if (model.Password != model.ConfirmPassword)
             {
-                return new ResultError("Confirmation password does not match with password.");
+                return ResultError.From("validation.password_mismatch", "Confirmation password does not match with password.");
             }
             return true;
         }

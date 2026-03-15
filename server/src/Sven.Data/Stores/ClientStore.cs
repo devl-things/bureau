@@ -18,12 +18,12 @@ namespace Sven.Data.Stores
         {
             if (string.IsNullOrWhiteSpace(clientId))
             {
-                return new ResultError("Key cannot be empty");
+                return ResultError.From("Key cannot be empty");
             }
             ClientDb? client = await GetClientDbAsync(clientId, cancellationToken);
             if (client == null)
             {
-                return new ResultError("Client doesn't exist.");
+                return ResultError.From("Client doesn't exist.");
             }
             IClientAddendum? addendum = JsonSerializer.Deserialize<ClientAddendum>(client.ClientAddendum.Data);
             return ToClient(client, addendum);

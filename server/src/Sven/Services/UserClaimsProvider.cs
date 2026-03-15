@@ -30,7 +30,7 @@ namespace Sven.Services
             }
             if (!PasswordHasher.VerifyPassword(userResult.Value.PasswordHash, password))
             {
-                return new ResultError("Password not matching");
+                return ResultError.From("auth.password_mismatch", "Password not matching");
             }
             return CreatePrincipal(userResult.Value);
         }

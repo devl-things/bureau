@@ -7,6 +7,8 @@
     <UserSecretsId>84fc99e2-8226-40a7-b3ae-cbe5ad97935b</UserSecretsId>
     <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
     <DockerfileContext>..\..</DockerfileContext>
+    <OutputType>Library</OutputType>
+    <StaticWebAssetsEnabled>false</StaticWebAssetsEnabled>
   </PropertyGroup>
 
   <ItemGroup>
@@ -14,6 +16,34 @@
     <Content Remove="ViewComponents\**" />
     <EmbeddedResource Remove="ViewComponents\**" />
     <None Remove="ViewComponents\**" />
+    <!-- Extensions moved to Sven.Web -->
+    <Compile Remove="Extensions\HttpRequestExtension.cs" />
+    <!-- Old configuration files moved to Sven.Contracts -->
+    <Compile Remove="Configurations\Endpoints.cs" />
+    <Compile Remove="Configurations\FeScriptNames.cs" />
+    <Compile Remove="Configurations\Modes.cs" />
+    <Compile Remove="Configurations\TempDataNames.cs" />
+    <!-- Controllers, PageModels, Pages, and related files moved to Sven.Web project -->
+    <Compile Remove="Controllers\**" />
+    <Compile Remove="PageModels\**" />
+    <Compile Remove="Pages\**" />
+    <Compile Remove="Middleware\**" />
+    <Compile Remove="Services\ISymEncryptor.cs" />
+    <Compile Remove="Services\UserProvider.cs" />
+    <Compile Remove="Services\AuthCodeProvider.cs" />
+    <Compile Remove="Services\ClientProvider.cs" />
+    <Compile Remove="Program.cs" />
+    <Compile Remove="Models\StepChallengeRequest.cs" />
+    <Compile Remove="Models\StepModelRequest.cs" />
+    <!-- Contexts, Mappers and Data/Models moved to Sven.Data project -->
+    <Compile Remove="Contexts\**" />
+    <Compile Remove="Mappers\**" />
+    <Compile Remove="Data\Models\**" />
+    <!-- Resources moved to Sven.Web project -->
+    <Compile Remove="Resources\**" />
+    <EmbeddedResource Remove="Resources\**" />
+    <Content Remove="Pages\**" />
+    <None Remove="Pages\**" />
   </ItemGroup>
 
   <ItemGroup>
@@ -21,6 +51,7 @@
     <PackageReference Include="JavaScriptEngineSwitcher.V8" Version="3.29.1" />
     <PackageReference Include="JavaScriptEngineSwitcher.V8.Native.win-x64" Version="3.29.0" />
     <PackageReference Include="LigerShark.WebOptimizer.Sass" Version="3.0.123" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.0" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.Cookies" Version="2.3.0" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.Google" Version="8.0.14" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.MicrosoftAccount" Version="8.0.14" />
@@ -32,7 +63,8 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Sven.Abstractions\Sven.Abstractions.csproj" />
-    <ProjectReference Include="..\Sven.Data.SqlServer\Sven.Data.SqlServer.csproj" />
+    <ProjectReference Include="..\Sven.Contracts\Sven.Contracts.csproj" />
+    <ProjectReference Include="..\Sven.Data\Sven.Data.csproj" />
   </ItemGroup>
 
   <ItemGroup>

@@ -62,7 +62,7 @@ namespace Sven.Tests.Services
         [Trait("Category", "Unit")]
         public async Task IsRefreshTokenValidAsync_TokenNotFound_ReturnsInvalidGrant()
         {
-            ResultError resultErrorExpected = new ResultError(AuthConstants.OAuth.Errors.InvalidGrant, AuthConstants.OAuth.ErrorDescriptions.RefreshTokenNotFound);
+            ResultError resultErrorExpected = ResultError.From(AuthConstants.OAuth.Errors.InvalidGrant, AuthConstants.OAuth.ErrorDescriptions.RefreshTokenNotFound);
             _refreshTokenStore.GetAsync(Arg.Any<string>(), Arg.Any<CancellationToken>())
                 .Returns(new Result<RefreshToken>(resultErrorExpected));
 

@@ -40,7 +40,7 @@ namespace Sven.Services
             if (storedRefreshTokenResult.IsError)
             {
                 _logger.LogResultError(storedRefreshTokenResult.Error);
-                return new ResultError(AuthConstants.OAuth.Errors.InvalidGrant, "Refresh token not found.");
+                return ResultError.From(AuthConstants.OAuth.Errors.InvalidGrant, "Refresh token not found.");
             }
             await SetTokenLifetimeOptions(storedRefreshTokenResult.Value, cancellationToken);
             // create a new refresh token
@@ -135,7 +135,7 @@ namespace Sven.Services
                 if (storeResult.IsError)
                 {
                     _logger.LogResultError(storeResult.Error);
-                    return new ResultError(AuthConstants.OAuth.Errors.ServerError, "Failed create token.");
+                    return ResultError.From(AuthConstants.OAuth.Errors.ServerError, "Failed create token.");
                 }
                 refreshToken = refreshTokenObject.Token;
             }
@@ -210,20 +210,20 @@ namespace Sven.Services
             if (storedRefreshTokenResult.IsError)
             {
                 _logger.LogResultError(storedRefreshTokenResult.Error);
-                return new ResultError(AuthConstants.OAuth.Errors.InvalidGrant, AuthConstants.OAuth.ErrorDescriptions.RefreshTokenNotFound);
+                return ResultError.From(AuthConstants.OAuth.Errors.InvalidGrant, AuthConstants.OAuth.ErrorDescriptions.RefreshTokenNotFound);
             }
             RefreshToken storedToken = storedRefreshTokenResult.Value;
             if (!storedToken.IsScopeSameOrSubset(scope))
             {
-                return new ResultError(AuthConstants.OAuth.Errors.InvalidScope, AuthConstants.OAuth.ErrorDescriptions.RequestedScopeExceedsGranted);
+                return ResultError.From(AuthConstants.OAuth.Errors.InvalidScope, AuthConstants.OAuth.ErrorDescriptions.RequestedScopeExceedsGranted);
             }
             if (storedToken.ClientId != clientId || storedToken.RedirectUri != redirectUri)
             {
-                return new ResultError(AuthConstants.OAuth.Errors.InvalidClient, "Refresh token does not belong to this client.");
+                return ResultError.From(AuthConstants.OAuth.Errors.InvalidClient, "Refresh token does not belong to this client.");
             }
             if (storedToken.ExpiresAt <= _timeProvider.GetUtcNow())
             {
-                return new ResultError(AuthConstants.OAuth.Errors.InvalidGrant, "Refresh token has expired.");
+                return ResultError.From(AuthConstants.OAuth.Errors.InvalidGrant, "Refresh token has expired.");
             }
 
             return true;
@@ -262,7 +262,7 @@ namespace Sven.Services
             if (removeResult.IsError)
             {
                 _logger.LogResultError(storedRefreshTokenResult.Error);
-                return new ResultError(AuthConstants.OAuth.Errors.ServerError, "Token couldn't be revoked.");
+                return ResultError.From(AuthConstants.OAuth.Errors.ServerError, "Token couldn't be revoked.");
             }
 
             return true;

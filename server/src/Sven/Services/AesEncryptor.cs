@@ -37,7 +37,7 @@ namespace Sven.Services
             }
             catch (Exception ex)
             {
-                return new ResultError(ex);
+                return ResultError.From("encryption_error", ex);
             }
         }
 
@@ -77,7 +77,7 @@ namespace Sven.Services
             }
             catch (Exception ex)
             {
-                return new ResultError(ex);
+                return ResultError.From("encryption_error", ex);
             }
         }
 
@@ -103,7 +103,7 @@ namespace Sven.Services
             }
             catch (Exception ex)
             {
-                return new ResultError(ex);
+                return ResultError.From("encryption_error", ex);
             }
         }
         private Result<byte[]> DecryptWithCombinedIV(string encrypted)
@@ -129,7 +129,7 @@ namespace Sven.Services
             }
             catch (Exception ex)
             {
-                return new ResultError(ex);
+                return ResultError.From("encryption_error", ex);
             }
         }
 
