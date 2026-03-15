@@ -66,7 +66,8 @@ namespace Sven
             builder.Services.AddSingleton<ISymEncryptor, AesEncryptor>();
             builder.Services.AddSingleton(TimeProvider.System);
             builder.Services.AddSingleton<DiscoveryService>();
-            builder.Services.AddSingleton<IStore<string, AuthCode>, InMemoryStore<string, AuthCode>>();
+            builder.Services.AddSingleton<InMemoryStore<string, AuthCode>>();
+            builder.Services.AddSingleton<IStore<string, AuthCode>>(sp => sp.GetRequiredService<InMemoryStore<string, AuthCode>>());
             builder.Services.AddSingleton<IStore<string, OAuthRequest>, InMemoryStore<string, OAuthRequest>>();
             builder.Services.AddSingleton<IStore<string, string>, InMemoryStore<string, string>>();
             builder.Services.AddSingleton<IStore<string, UserVerificationCode>, InMemoryStore<string, UserVerificationCode>>();

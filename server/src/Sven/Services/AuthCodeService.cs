@@ -11,13 +11,13 @@ namespace Sven.Services
 {
     internal sealed class AuthCodeService : IAuthCodeService
     {
-        private readonly IStore<string, AuthCode> _authCodeStore;
+        private readonly InMemoryStore<string, AuthCode> _authCodeStore;
         private readonly IStore<string, OAuthRequest> _pkceRequestStore;
         private readonly TimeProvider _timeProvider;
         private readonly AuthOptions _authOptions;
         private readonly ILogger<AuthCodeService> _logger;
 
-        public AuthCodeService(IOptions<AuthOptions> authOptions, TimeProvider timeProvider, IStore<string, OAuthRequest> pkceRequestStore, IStore<string, AuthCode> authCodeStore, ILogger<AuthCodeService> logger)
+        public AuthCodeService(IOptions<AuthOptions> authOptions, TimeProvider timeProvider, IStore<string, OAuthRequest> pkceRequestStore, InMemoryStore<string, AuthCode> authCodeStore, ILogger<AuthCodeService> logger)
         {
             _authOptions = authOptions.Value;
             _timeProvider = timeProvider;
@@ -88,24 +88,14 @@ namespace Sven.Services
             return _authCodeStore.RemoveAsync(code, cancellationToken);
         }
 
-        public async Task<Result<AuthCode>> ExchangeCodeAsync(string code, CancellationToken cancellationToken = default)
+        public Task<Result<AuthCode>> ExchangeCodeAsync(string code, CancellationToken cancellationToken = default)
         {
-            Result<AuthCode> getResult = await _authCodeStore.GetAsync(code, cancellationToken);
-            if (getResult.IsError)
+            if (_authCodeStore.TryRemoveAtomic(code, out AuthCode? authCode) && authCode != null)
             {
-                _logger.LogWarning("Security: auth code reuse or invalid code attempted for code={Code}", code);
-                return ResultError.From(AuthConstants.OAuth.Errors.InvalidGrant, "Authorization code not found or already used.");
+                return Task.FromResult(new Result<AuthCode>(authCode));
             }
-
-            Result removeResult = await _authCodeStore.RemoveAsync(code, cancellationToken);
-            if (removeResult.IsError)
-            {
-                // Code was already removed by a concurrent request — reuse detected
-                _logger.LogWarning("Security: auth code reuse detected for code={Code}", code);
-                return ResultError.From(AuthConstants.OAuth.Errors.InvalidGrant, "Authorization code has already been used.");
-            }
-
-            return getResult;
+            _logger.LogWarning("Security: auth code reuse or invalid code attempted for code={Code}", code);
+            return Task.FromResult<Result<AuthCode>>(ResultError.From(AuthConstants.OAuth.Errors.InvalidGrant, "Authorization code not found or already used."));
         }
 
         public string GetCodeChallengeMethod(string? codeChallengeMethod)
