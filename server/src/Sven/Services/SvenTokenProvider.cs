@@ -282,28 +282,26 @@ namespace Sven.Services
         public Task<Result<IntrospectionResponse>> IntrospectAsync(string token, CancellationToken cancellationToken = default)
         {
             IntrospectionResponse inactive = new IntrospectionResponse { Active = false };
-            JwtSecurityToken jwt;
             try
             {
                 JwtSecurityTokenHandler handler = new JwtSecurityTokenHandler();
-                jwt = handler.ReadJwtToken(token);
+                TokenValidationParameters validationParams = new TokenValidationParameters
+                {
+                    ValidateIssuer = true,
+                    ValidIssuer = _jwtOptions.Issuer,
+                    ValidateAudience = false,
+                    ValidateLifetime = true,
+                    IssuerSigningKey = _rsaKey,
+                    ClockSkew = TimeSpan.Zero,
+                };
+                handler.ValidateToken(token, validationParams, out SecurityToken validatedToken);
+                JwtSecurityToken jwt = (JwtSecurityToken)validatedToken;
+                return Task.FromResult<Result<IntrospectionResponse>>(BuildActiveResponse(jwt));
             }
             catch (Exception)
             {
                 return Task.FromResult<Result<IntrospectionResponse>>(inactive);
             }
-
-            if (jwt.ValidTo <= _timeProvider.GetUtcNow().UtcDateTime)
-            {
-                return Task.FromResult<Result<IntrospectionResponse>>(inactive);
-            }
-
-            if (!string.Equals(jwt.Issuer, _jwtOptions.Issuer, StringComparison.Ordinal))
-            {
-                return Task.FromResult<Result<IntrospectionResponse>>(inactive);
-            }
-
-            return Task.FromResult<Result<IntrospectionResponse>>(BuildActiveResponse(jwt));
         }
 
         private IntrospectionResponse BuildActiveResponse(JwtSecurityToken jwt)

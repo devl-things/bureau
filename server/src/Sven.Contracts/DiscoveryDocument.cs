@@ -20,6 +20,9 @@ namespace Sven
         [JsonPropertyName(AuthConstants.OAuth.FieldNames.JwksUri)]
         public string JwksUri { get; set; } = string.Empty;
 
+        [JsonPropertyName(AuthConstants.OAuth.FieldNames.IntrospectionEndpoint)]
+        public string IntrospectionEndpoint { get; set; } = string.Empty;
+
         [JsonPropertyName("revocation_endpoint")]
         public string RevocationEndpoint { get; set; } = string.Empty;
 
