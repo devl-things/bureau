@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: planning
-stopped_at: Completed 04-end-session-security 04-01-PLAN.md
-last_updated: "2026-03-16T10:40:35.362Z"
+stopped_at: Completed 04-end-session-security 04-02-PLAN.md
+last_updated: "2026-03-16T10:45:15.160Z"
 last_activity: 2026-03-15 — Completed SEC-01/SEC-03/SEC-04 security fixes (TTL, atomic auth code, AES key guard)
 progress:
   total_phases: 8
   completed_phases: 3
   total_plans: 19
-  completed_plans: 16
+  completed_plans: 17
   percent: 100
 ---
 
@@ -98,6 +98,7 @@ Progress: [███████░░░] 75%
 | Phase 03-token-introspection P03 | 25 | 2 tasks | 7 files |
 | Phase 03-token-introspection P04 | 8 | 1 tasks | 1 files |
 | Phase 04-end-session-security P01 | 8 | 1 tasks | 1 files |
+| Phase 04-end-session-security P02 | 3 | 2 tasks | 6 files |
 
 ## Accumulated Context
 
@@ -149,6 +150,8 @@ Recent decisions affecting current work:
 - [Phase 03-token-introspection]: Sven.Contracts has parallel Endpoints and DiscoveryDocument definitions that must be kept in sync with Sven project equivalents
 - [Phase 03-token-introspection]: Expired token integration test needs no time-travel: manually construct JWT with exp in past signed with real server key; ValidateLifetime=true in TokenValidationParameters rejects it at introspect time
 - [Phase 04-end-session-security]: Synchronous void [Fact] stubs (not async) used for Assert.Fail stubs — xUnit 2.5.3 pattern; AllowAutoRedirect=false on HttpClient for 302 verification
+- [Phase 04-end-session-security]: PostLogoutRedirectUris stored as nullable JSON text column (same pattern as Contacts) — not structured relational rows, appropriate for atomic client record read/write
+- [Phase 04-end-session-security]: Postgres migration uses 'text' type, SqlServer uses 'nvarchar(max)' for unbounded List<string> JSON — consistent with existing RedirectUris/Contacts migrations
 
 ### Pending Todos
 
@@ -162,6 +165,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-16T10:40:30.970Z
-Stopped at: Completed 04-end-session-security 04-01-PLAN.md
+Last session: 2026-03-16T10:45:15.156Z
+Stopped at: Completed 04-end-session-security 04-02-PLAN.md
 Resume file: None
