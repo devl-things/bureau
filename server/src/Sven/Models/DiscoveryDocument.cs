@@ -17,6 +17,8 @@ namespace Sven.Models
         public string JwksUri { get; set; } = string.Empty;
         [JsonPropertyName(AuthConstants.OAuth.FieldNames.IntrospectionEndpoint)]
         public string IntrospectionEndpoint { get; set; } = string.Empty;
+        [JsonPropertyName("end_session_endpoint")]
+        public string EndSessionEndpoint { get; set; } = string.Empty;
 
         [JsonPropertyName(AuthConstants.OAuth.FieldNames.ResponseTypesSupported)]
         public List<string>? ResponseTypesSupported { get; set; }

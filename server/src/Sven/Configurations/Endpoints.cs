@@ -63,6 +63,8 @@
             public const string SignInPkce = $"{SignIn}?{AuthConstants.PropertyNames.Mode}={Modes.Connect.SignIn.Pkce}";
             public const string SignUp = $"/{Base}/{SignUpPath}";
             public const string ForgotPassword = $"/{Base}/{ForgotPasswordPath}";
+            public const string EndSessionPath = "endsession";
+            public const string EndSession = $"/{Base}/{EndSessionPath}";
         }
     }
 }

@@ -43,6 +43,7 @@ namespace Sven.Services
                 UserInfoEndpoint = $"{_jwtOptions.Issuer}{Endpoints.Oidc.UserInfo}",
                 JwksUri = $"{_jwtOptions.Issuer}{Endpoints.WellKnown.Jwks}",
                 IntrospectionEndpoint = $"{_jwtOptions.Issuer}{Endpoints.Oidc.Introspect}",
+                EndSessionEndpoint = $"{_jwtOptions.Issuer}{Endpoints.Connect.EndSession}",
 
                 ResponseTypesSupported = [.. _responseTypesSupported],
                 SubjectTypesSupported = [.. _subjectTypesSupported],
