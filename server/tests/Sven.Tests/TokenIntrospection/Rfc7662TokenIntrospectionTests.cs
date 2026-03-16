@@ -118,8 +118,43 @@ namespace Sven.Tests.TokenIntrospection
         [Fact]
         public async Task ExpiredToken_Returns200_WithActiveFalse_NoExtraClaims()
         {
-            // authenticated client, expired JWT → 200 {"active":false} only
-            Assert.Fail("TODO: requires time-travel — implement after TimeProvider integration");
+            // authenticated client, expired JWT (server-signed, exp in past) → 200 {"active":false} only
+            await SeedConfidentialClientAsync();
+
+            RsaSecurityKey serverKey = _factory.Services.GetRequiredService<RsaSecurityKey>();
+            SigningCredentials creds = new SigningCredentials(serverKey, SecurityAlgorithms.RsaSha256);
+            JwtSecurityTokenHandler handler = new JwtSecurityTokenHandler();
+            JwtSecurityToken expiredJwt = new JwtSecurityToken(
+                issuer: "https://test.localhost",
+                claims: new[] { new Claim(JwtRegisteredClaimNames.Sub, "user1") },
+                expires: DateTime.UtcNow.AddHours(-1),
+                signingCredentials: creds);
+            string expiredToken = handler.WriteToken(expiredJwt);
+
+            Dictionary<string, string> introspectForm = new Dictionary<string, string>
+            {
+                [AuthConstants.OAuth.FieldNames.Token] = expiredToken,
+            };
+            _client.DefaultRequestHeaders.Authorization = AuthenticationHeaderValue.Parse(
+                BuildBasicAuthHeader(TestDataConstants.TestConfidentialClientId, TestDataConstants.TestConfidentialClientSecret));
+
+            HttpResponseMessage response = await _client.PostAsync(
+                Endpoints.Oidc.Introspect,
+                new FormUrlEncodedContent(introspectForm));
+            string content = await response.Content.ReadAsStringAsync();
+
+            _client.DefaultRequestHeaders.Authorization = null;
+
+            Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+            using JsonDocument doc = JsonDocument.Parse(content);
+            Assert.False(doc.RootElement.GetProperty("active").GetBoolean());
+            Assert.False(doc.RootElement.TryGetProperty("sub", out _));
+            Assert.False(doc.RootElement.TryGetProperty("scope", out _));
+            Assert.False(doc.RootElement.TryGetProperty("exp", out _));
+            Assert.False(doc.RootElement.TryGetProperty("iat", out _));
+            Assert.False(doc.RootElement.TryGetProperty("jti", out _));
+            Assert.False(doc.RootElement.TryGetProperty("iss", out _));
+            Assert.False(doc.RootElement.TryGetProperty("client_id", out _));
         }
 
         [Fact]
