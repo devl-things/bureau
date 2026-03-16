@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: planning
-stopped_at: Completed 02-client-credentials-grant 02-05-PLAN.md
-last_updated: "2026-03-15T19:21:28.373Z"
+stopped_at: Completed 03-token-introspection 03-01-PLAN.md
+last_updated: "2026-03-16T06:08:05.810Z"
 last_activity: 2026-03-15 — Completed SEC-01/SEC-03/SEC-04 security fixes (TTL, atomic auth code, AES key guard)
 progress:
   total_phases: 8
   completed_phases: 2
-  total_plans: 11
-  completed_plans: 11
+  total_plans: 14
+  completed_plans: 12
   percent: 100
 ---
 
@@ -77,6 +77,7 @@ Progress: [███████░░░] 75%
 | Phase 02-client-credentials-grant P03 | 15 | 2 tasks | 5 files |
 | Phase 02-client-credentials-grant P04 | 40 | 2 tasks | 8 files |
 | Phase 02-client-credentials-grant P05 | 12 | 2 tasks | 4 files |
+| Phase 03-token-introspection P01 | 6 | 2 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -118,6 +119,9 @@ Recent decisions affecting current work:
 - [Phase 02-client-credentials-grant]: IConfiguration injected into OidcController via constructor for IAT (Sven:InitialAccessToken) access
 - [Phase 02-client-credentials-grant]: IAT guard runs before all other registration checks; 501 if key unconfigured, 401 on wrong token
 - [Phase 02-client-credentials-grant]: Raw client secret generated in CreateClientAsync, stored on client.ClientSecret (ephemeral), never persisted — only HashedSecret stored in DB
+- [Phase 03-token-introspection]: Endpoints.Oidc.Introspect constant added in Plan 01 so integration test file compiles immediately without string literals
+- [Phase 03-token-introspection]: xUnit [Fact] methods cannot accept CancellationToken parameters — removed from test method signatures
+- [Phase 03-token-introspection]: Unit stubs compile without ITokenProvider.IntrospectAsync — pure Assert.Fail bodies with no production type references
 
 ### Pending Todos
 
@@ -131,6 +135,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-15T19:21:28.331Z
-Stopped at: Completed 02-client-credentials-grant 02-05-PLAN.md
+Last session: 2026-03-16T06:08:05.779Z
+Stopped at: Completed 03-token-introspection 03-01-PLAN.md
 Resume file: None

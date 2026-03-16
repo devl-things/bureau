@@ -18,7 +18,7 @@ alongside the specs.
 Decimal phases appear between their surrounding integers in numeric order.
 
 - [x] **Phase 1: Security Hardening** - Fix confirmed vulnerabilities before building new features (gap closure in progress) (completed 2026-03-15)
-- [x] **Phase 2: Client Credentials Grant** - Add service-to-service token issuance and confidential client auth (completed 2026-03-15)
+- [x] **Phase 2: Client Credentials Grant** - Add service-to-service token issuance and confidential client auth (completed 2026-03-15)
 - [ ] **Phase 3: Token Introspection** - Enable resource servers to validate any Sven-issued token
 - [ ] **Phase 4: end_session Security** - Close the RP-initiated logout open redirect and complete OIDC Session compliance
 - [ ] **Phase 5: bureau_features Registration** - Add the client registration extension that gates token exchange
@@ -75,7 +75,12 @@ Plans:
   2. An expired, revoked, or unknown token returns `{"active": false}` with no additional claims
   3. A caller without valid client credentials is rejected with HTTP 401 before any token data is returned
   4. `introspection_endpoint` appears in the OIDC discovery document at `/.well-known/openid-configuration`
-**Plans**: TBD
+**Plans**: 3 plans
+
+Plans:
+- [ ] 03-01-PLAN.md — Wave 1: Failing test stubs (Rfc7662TokenIntrospectionTests, TokenProviderIntrospectTests)
+- [ ] 03-02-PLAN.md — Wave 2: Models, constants, ITokenProvider.IntrospectAsync, SvenTokenProvider implementation
+- [ ] 03-03-PLAN.md — Wave 2: IntrospectionController, DiscoveryDocument + DiscoveryService wiring, integration tests green
 
 ### Phase 4: end_session Security
 **Goal**: RP-initiated logout validates the ID token hint and redirect URI with no open-redirect vulnerability; logout completes regardless of redirect URI validity
@@ -142,7 +147,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8
 |-------|----------------|--------|-----------|
 | 1. Security Hardening | 6/6 | Complete   | 2026-03-15 |
 | 2. Client Credentials Grant | 5/5 | Complete   | 2026-03-15 |
-| 3. Token Introspection | 0/TBD | Not started | - |
+| 3. Token Introspection | 1/3 | In Progress|  |
 | 4. end_session Security | 0/TBD | Not started | - |
 | 5. bureau_features Registration | 0/TBD | Not started | - |
 | 6. RFC 8693 Token Exchange | 0/TBD | Not started | - |
