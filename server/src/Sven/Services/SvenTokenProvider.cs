@@ -281,7 +281,53 @@ namespace Sven.Services
 
         public Task<Result<IntrospectionResponse>> IntrospectAsync(string token, CancellationToken cancellationToken = default)
         {
-            throw new NotImplementedException();
+            IntrospectionResponse inactive = new IntrospectionResponse { Active = false };
+            JwtSecurityToken jwt;
+            try
+            {
+                JwtSecurityTokenHandler handler = new JwtSecurityTokenHandler();
+                jwt = handler.ReadJwtToken(token);
+            }
+            catch (Exception)
+            {
+                return Task.FromResult<Result<IntrospectionResponse>>(inactive);
+            }
+
+            if (jwt.ValidTo <= _timeProvider.GetUtcNow().UtcDateTime)
+            {
+                return Task.FromResult<Result<IntrospectionResponse>>(inactive);
+            }
+
+            if (!string.Equals(jwt.Issuer, _jwtOptions.Issuer, StringComparison.Ordinal))
+            {
+                return Task.FromResult<Result<IntrospectionResponse>>(inactive);
+            }
+
+            return Task.FromResult<Result<IntrospectionResponse>>(BuildActiveResponse(jwt));
+        }
+
+        private IntrospectionResponse BuildActiveResponse(JwtSecurityToken jwt)
+        {
+            string? sub = string.IsNullOrEmpty(jwt.Subject) ? null : jwt.Subject;
+            string? scope = jwt.Claims.FirstOrDefault(c => c.Type == "scope")?.Value;
+            string? clientId = jwt.Claims.FirstOrDefault(c => c.Type == "client_id")?.Value;
+            long exp = new DateTimeOffset(jwt.ValidTo, TimeSpan.Zero).ToUnixTimeSeconds();
+            string? iatRaw = jwt.Claims.FirstOrDefault(c => c.Type == System.IdentityModel.Tokens.Jwt.JwtRegisteredClaimNames.Iat)?.Value;
+            long iat = long.TryParse(iatRaw, out long parsedIat) ? parsedIat : 0;
+            string? jti = string.IsNullOrEmpty(jwt.Id) ? null : jwt.Id;
+            string? iss = string.IsNullOrEmpty(jwt.Issuer) ? null : jwt.Issuer;
+
+            return new IntrospectionResponse
+            {
+                Active = true,
+                Sub = sub,
+                Scope = scope,
+                ClientId = clientId,
+                Exp = exp,
+                Iat = iat,
+                Jti = jti,
+                Iss = iss,
+            };
         }
 
         public async Task<Result<bool>> RevokeAsync(string token, string clientId, string? tokenTypeHint, CancellationToken cancellationToken = default)

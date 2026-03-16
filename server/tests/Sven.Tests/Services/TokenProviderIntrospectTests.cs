@@ -1,8 +1,4 @@
-// TODO: IntrospectAsync not yet on ITokenProvider — added in 03-02.
-// These stubs compile without the interface method by using Assert.Fail bodies only.
-// When Plan 03-02 adds ITokenProvider.IntrospectAsync and IntrospectionResponse,
-// replace Assert.Fail with the real assertions shown in each TODO comment.
-
+using Bureau;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
@@ -11,6 +7,7 @@ using Sven.Configurations;
 using Sven.Models;
 using Sven.Services;
 using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
 using System.Security.Cryptography;
 using Xunit;
 
@@ -23,6 +20,8 @@ namespace Sven.Tests.Services
         private readonly IStore<string, RefreshToken> _refreshTokenStore;
         private readonly IClientService _clientService;
         private readonly SvenTokenProvider _provider;
+        private readonly RsaSecurityKey _rsaKey;
+        private const string TestIssuer = "https://sven.test";
 
         public TokenProviderIntrospectTests()
         {
@@ -30,64 +29,105 @@ namespace Sven.Tests.Services
             _refreshTokenStore = Substitute.For<IStore<string, RefreshToken>>();
             IStore<string, RefreshToken> refreshTokenStore = _refreshTokenStore;
             _clientService = Substitute.For<IClientService>();
+            _rsaKey = new RsaSecurityKey(RSA.Create(2048));
+            JwtOptions jwtOptions = new JwtOptions { Issuer = TestIssuer };
             _provider = new SvenTokenProvider(
                 _logger,
-                Options.Create(new JwtOptions()),
-                new RsaSecurityKey(RSA.Create(2048)),
+                Options.Create(jwtOptions),
+                _rsaKey,
                 refreshTokenStore,
                 TimeProvider.System,
                 _clientService
             );
         }
 
+        private string CreateToken(string issuer, DateTime? expires, string? subject, string? scope, string? clientId)
+        {
+            List<Claim> claims = new List<Claim>();
+            claims.Add(new Claim(JwtRegisteredClaimNames.Iat, DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString(), ClaimValueTypes.Integer64));
+            claims.Add(new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()));
+            if (subject != null)
+            {
+                claims.Add(new Claim(JwtRegisteredClaimNames.Sub, subject));
+            }
+            if (scope != null)
+            {
+                claims.Add(new Claim("scope", scope));
+            }
+            if (clientId != null)
+            {
+                claims.Add(new Claim("client_id", clientId));
+            }
+
+            SigningCredentials creds = new SigningCredentials(_rsaKey, SecurityAlgorithms.RsaSha256);
+            JwtSecurityToken token = new JwtSecurityToken(
+                issuer: issuer,
+                claims: claims,
+                expires: expires ?? DateTime.UtcNow.AddHours(1),
+                signingCredentials: creds
+            );
+            return new JwtSecurityTokenHandler().WriteToken(token);
+        }
+
         [Fact]
         public async Task IntrospectAsync_ExpiredToken_ReturnsActiveFalse()
         {
-            // ValidTo in the past → IntrospectionResponse { Active = false }
-            Assert.Fail("not implemented");
-            // TODO: create expired JWT (ValidTo = DateTime.UtcNow.AddHours(-1));
-            //       call provider.IntrospectAsync(expiredToken);
-            //       assert result.Active == false.
+            string expiredToken = CreateToken(TestIssuer, DateTime.UtcNow.AddHours(-1), "user1", "openid", null);
+
+            Result<IntrospectionResponse> result = await _provider.IntrospectAsync(expiredToken);
+
+            Assert.True(result.IsSuccess);
+            Assert.False(result.Value.Active);
         }
 
         [Fact]
         public async Task IntrospectAsync_WrongIssuer_ReturnsActiveFalse()
         {
-            // JWT with issuer != _jwtOptions.Issuer → { Active = false }
-            Assert.Fail("not implemented");
-            // TODO: create JWT with Issuer = "https://wrong.issuer";
-            //       call provider.IntrospectAsync(wrongIssuerToken);
-            //       assert result.Active == false.
+            string wrongIssuerToken = CreateToken("https://wrong.issuer", DateTime.UtcNow.AddHours(1), "user1", "openid", null);
+
+            Result<IntrospectionResponse> result = await _provider.IntrospectAsync(wrongIssuerToken);
+
+            Assert.True(result.IsSuccess);
+            Assert.False(result.Value.Active);
         }
 
         [Fact]
         public async Task IntrospectAsync_MalformedString_ReturnsActiveFalse()
         {
-            // ReadJwtToken throws → { Active = false }
-            Assert.Fail("not implemented");
-            // TODO: pass "not-a-jwt" to provider.IntrospectAsync;
-            //       assert result.Active == false.
+            Result<IntrospectionResponse> result = await _provider.IntrospectAsync("not-a-jwt");
+
+            Assert.True(result.IsSuccess);
+            Assert.False(result.Value.Active);
         }
 
         [Fact]
         public async Task IntrospectAsync_ValidToken_ReturnsActiveTrueWithClaims()
         {
-            // well-formed non-expired JWT from test issuer → Active = true, Sub, Scope, Jti, Iss populated
-            Assert.Fail("not implemented");
-            // TODO: create valid JWT with correct issuer and future ValidTo;
-            //       call provider.IntrospectAsync(validToken);
-            //       assert result.Active == true, result.Sub != null, result.Scope != null,
-            //       result.Jti != null, result.Iss == testIssuer.
+            string validToken = CreateToken(TestIssuer, DateTime.UtcNow.AddHours(1), "user1", "openid profile", "client1");
+
+            Result<IntrospectionResponse> result = await _provider.IntrospectAsync(validToken);
+
+            Assert.True(result.IsSuccess);
+            Assert.True(result.Value.Active);
+            Assert.Equal("user1", result.Value.Sub);
+            Assert.Equal("openid profile", result.Value.Scope);
+            Assert.Equal("client1", result.Value.ClientId);
+            Assert.NotNull(result.Value.Jti);
+            Assert.Equal(TestIssuer, result.Value.Iss);
+            Assert.True(result.Value.Exp > 0);
         }
 
         [Fact]
         public async Task IntrospectAsync_MachineToken_ReturnsActiveTrueWithNoSub()
         {
-            // machine token (no sub claim) → Active = true, Sub null
-            Assert.Fail("not implemented");
-            // TODO: create machine token JWT (no sub claim) with correct issuer;
-            //       call provider.IntrospectAsync(machineToken);
-            //       assert result.Active == true, result.Sub == null.
+            string machineToken = CreateToken(TestIssuer, DateTime.UtcNow.AddHours(1), null, "sven:read", "machine-client");
+
+            Result<IntrospectionResponse> result = await _provider.IntrospectAsync(machineToken);
+
+            Assert.True(result.IsSuccess);
+            Assert.True(result.Value.Active);
+            Assert.Null(result.Value.Sub);
+            Assert.Equal("sven:read", result.Value.Scope);
         }
     }
 }
