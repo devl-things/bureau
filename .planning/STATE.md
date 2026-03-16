@@ -3,14 +3,29 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: planning
-stopped_at: Completed 04-end-session-security 04-02-PLAN.md
-last_updated: "2026-03-16T10:45:15.160Z"
+stopped_at: Completed 04-end-session-security 04-04-PLAN.md
+last_updated: "2026-03-16T10:57:12.804Z"
+last_activity: 2026-03-15 — Completed SEC-01/SEC-03/SEC-04 security fixes (TTL, atomic auth code, AES key guard)
+progress:
+  total_phases: 8
+  completed_phases: 4
+  total_plans: 19
+  completed_plans: 19
+---
+
+---
+gsd_state_version: 1.0
+milestone: v1.0
+milestone_name: milestone
+status: planning
+stopped_at: Completed 04-end-session-security 04-03-PLAN.md
+last_updated: "2026-03-16T10:50:19.660Z"
 last_activity: 2026-03-15 — Completed SEC-01/SEC-03/SEC-04 security fixes (TTL, atomic auth code, AES key guard)
 progress:
   total_phases: 8
   completed_phases: 3
   total_plans: 19
-  completed_plans: 17
+  completed_plans: 18
   percent: 100
 ---
 
@@ -99,6 +114,8 @@ Progress: [███████░░░] 75%
 | Phase 03-token-introspection P04 | 8 | 1 tasks | 1 files |
 | Phase 04-end-session-security P01 | 8 | 1 tasks | 1 files |
 | Phase 04-end-session-security P02 | 3 | 2 tasks | 6 files |
+| Phase 04-end-session-security P03 | 10 | 2 tasks | 6 files |
+| Phase 04-end-session-security P04-04 | 15 | 2 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -152,6 +169,11 @@ Recent decisions affecting current work:
 - [Phase 04-end-session-security]: Synchronous void [Fact] stubs (not async) used for Assert.Fail stubs — xUnit 2.5.3 pattern; AllowAutoRedirect=false on HttpClient for 302 verification
 - [Phase 04-end-session-security]: PostLogoutRedirectUris stored as nullable JSON text column (same pattern as Contacts) — not structured relational rows, appropriate for atomic client record read/write
 - [Phase 04-end-session-security]: Postgres migration uses 'text' type, SqlServer uses 'nvarchar(max)' for unbounded List<string> JSON — consistent with existing RedirectUris/Contacts migrations
+- [Phase 04-end-session-security]: Sven.Contracts references Sven.Abstractions so AuthConstants.FieldNames.PostLogoutRedirectUris constant is used in both registration request models
+- [Phase 04-end-session-security]: ClientRegistrationResponse inherits ClientRegistrationRequest — adding PostLogoutRedirectUris to request covers response without separate update
+- [Phase 04-end-session-security]: Endpoints.Connect.EndSession added to Sven/Configurations/Endpoints.cs (mirrors Sven.Contracts) — DiscoveryService cannot reference Sven.Contracts
+- [Phase 04-end-session-security]: ValidateLifetime=false in EndSessionController TokenValidationParameters — OIDC Session §5 requires expired id_token_hint to be accepted
+- [Phase 04-end-session-security]: IClientService injected via EndSessionController constructor (not RequestServices) — public interface, no CS0051 constraint
 
 ### Pending Todos
 
@@ -165,6 +187,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-16T10:45:15.156Z
-Stopped at: Completed 04-end-session-security 04-02-PLAN.md
+Last session: 2026-03-16T10:57:03.521Z
+Stopped at: Completed 04-end-session-security 04-04-PLAN.md
 Resume file: None
