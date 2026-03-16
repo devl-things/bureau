@@ -16,9 +16,11 @@
             public const string Base = "oidc";
             public const string UserInfoPath = "userinfo";
             public const string RegisterPath = "register";
+            public const string IntrospectPath = "introspect";
 
             public const string UserInfo = $"/{Base}/{UserInfoPath}";
             public const string Register = $"/{Base}/{RegisterPath}";
+            public const string Introspect = $"/{Base}/{IntrospectPath}";
         }
         public static class WellKnown
         {
