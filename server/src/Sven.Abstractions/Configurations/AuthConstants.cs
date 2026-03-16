@@ -104,6 +104,7 @@
                 public const string ClientSecretExpiresAt = "client_secret_expires_at";
 
                 //Discovery field names
+                public const string IntrospectionEndpoint = "introspection_endpoint";
                 public const string Issuer = "issuer";
                 public const string AuthorizationEndpoint = "authorization_endpoint";
                 public const string TokenEndpoint = "token_endpoint";

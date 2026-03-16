@@ -279,6 +279,11 @@ namespace Sven.Services
             return await Task.FromResult(new SvenToken(accessToken, refreshToken: null, idToken: null));
         }
 
+        public Task<Result<IntrospectionResponse>> IntrospectAsync(string token, CancellationToken cancellationToken = default)
+        {
+            throw new NotImplementedException();
+        }
+
         public async Task<Result<bool>> RevokeAsync(string token, string clientId, string? tokenTypeHint, CancellationToken cancellationToken = default)
         {
             Result<RefreshToken> storedRefreshTokenResult = await _refreshTokenStore.GetAsync(token, cancellationToken);

@@ -10,5 +10,6 @@ namespace Sven.Services
         Task<Result<bool>> IsRefreshTokenValidAsync(string refreshToken, string clientId, string redirectUri, string? scope, CancellationToken cancellationToken = default);
         Task<Result<bool>> RevokeAsync(string token, string clientId, string? tokenTypeHint, CancellationToken cancellationToken = default);
         Task<Result<SvenToken>> CreateMachineTokenAsync(Client client, string effectiveScope, CancellationToken cancellationToken = default);
+        Task<Result<IntrospectionResponse>> IntrospectAsync(string token, CancellationToken cancellationToken = default);
     }
 }
