@@ -14,6 +14,10 @@
         /// as json
         /// </summary>
         public List<string> RedirectUris { get; set; } = null!;
+        /// <summary>
+        /// as json
+        /// </summary>
+        public List<string>? PostLogoutRedirectUris { get; set; }
         public bool Active { get; set; }
         public List<string>? Contacts { get; set; }
 

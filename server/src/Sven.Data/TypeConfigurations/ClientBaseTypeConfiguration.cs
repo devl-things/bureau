@@ -27,6 +27,7 @@ namespace Sven.Data.TypeConfigurations
             ConfigureJsonConversion(builder.Property(e => e.ClientAddendum));
             ConfigureJsonConversion(builder.Property(e => e.Contacts));
             ConfigureJsonConversion(builder.Property(e => e.RedirectUris));
+            ConfigureJsonConversion(builder.Property(e => e.PostLogoutRedirectUris));
             ConfigureJsonConversion(builder.Property(e => e.Scope));
 
             builder.HasIndex(x => x.Identifier).IsUnique();

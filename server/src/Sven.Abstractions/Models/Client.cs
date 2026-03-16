@@ -19,6 +19,7 @@ namespace Sven.Models
         public required ScopeParameter Scope { get; set; }
 
         public required HashSet<string> RedirectUris { get; set; }
+        public List<string>? PostLogoutRedirectUris { get; set; }
         public bool Active { get; set; }
 
         public TimeSpan? IdTokenLifetime { get; set; }
