@@ -46,6 +46,7 @@ namespace Sven.Data.Repositories
                 Name = client.Name,
                 PolicyUri = addendum?.PolicyUri,
                 RedirectUris = [.. client.RedirectUris],
+                PostLogoutRedirectUris = client.PostLogoutRedirectUris,
                 ResponseTypes = addendum?.ResponseTypes,
                 Scope = new ScopeParameter([.. client.Scope]),
                 SoftwareId = addendum?.SoftwareId,
@@ -93,6 +94,7 @@ namespace Sven.Data.Repositories
             dbEntity.IdTokenLifetime = client.IdTokenLifetime;
             dbEntity.Name = client.Name;
             dbEntity.RedirectUris = [.. client.RedirectUris];
+            dbEntity.PostLogoutRedirectUris = client.PostLogoutRedirectUris;
             dbEntity.RefreshTokenLifetime = client.RefreshTokenLifetime;
             dbEntity.Scope = client.Scope.ScopeList;
             dbEntity.Type = client.Type;
