@@ -19,7 +19,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 
 - [x] **Phase 1: Security Hardening** - Fix confirmed vulnerabilities before building new features (gap closure in progress) (completed 2026-03-15)
 - [x] **Phase 2: Client Credentials Grant** - Add service-to-service token issuance and confidential client auth (completed 2026-03-15)
-- [ ] **Phase 3: Token Introspection** - Enable resource servers to validate any Sven-issued token
+- [x] **Phase 3: Token Introspection** - Enable resource servers to validate any Sven-issued token (completed 2026-03-16)
 - [ ] **Phase 4: end_session Security** - Close the RP-initiated logout open redirect and complete OIDC Session compliance
 - [ ] **Phase 5: bureau_features Registration** - Add the client registration extension that gates token exchange
 - [ ] **Phase 6: RFC 8693 Token Exchange** - Implement the token broker core: Sven JWTs exchanged for external provider tokens
@@ -147,7 +147,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8
 |-------|----------------|--------|-----------|
 | 1. Security Hardening | 6/6 | Complete   | 2026-03-15 |
 | 2. Client Credentials Grant | 5/5 | Complete   | 2026-03-15 |
-| 3. Token Introspection | 1/3 | In Progress|  |
+| 3. Token Introspection | 3/3 | Complete   | 2026-03-16 |
 | 4. end_session Security | 0/TBD | Not started | - |
 | 5. bureau_features Registration | 0/TBD | Not started | - |
 | 6. RFC 8693 Token Exchange | 0/TBD | Not started | - |

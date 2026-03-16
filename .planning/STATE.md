@@ -3,14 +3,30 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: planning
-stopped_at: Completed 03-token-introspection 03-01-PLAN.md
-last_updated: "2026-03-16T06:08:05.810Z"
+stopped_at: Completed 03-token-introspection 03-03-PLAN.md
+last_updated: "2026-03-16T06:40:43.237Z"
 last_activity: 2026-03-15 — Completed SEC-01/SEC-03/SEC-04 security fixes (TTL, atomic auth code, AES key guard)
 progress:
   total_phases: 8
+  completed_phases: 3
+  total_plans: 14
+  completed_plans: 14
+  percent: 100
+---
+
+---
+gsd_state_version: 1.0
+milestone: v1.0
+milestone_name: milestone
+status: planning
+stopped_at: Completed 03-token-introspection 03-02-PLAN.md
+last_updated: "2026-03-16T06:21:59.709Z"
+last_activity: 2026-03-15 — Completed SEC-01/SEC-03/SEC-04 security fixes (TTL, atomic auth code, AES key guard)
+progress:
+  [██████████] 100%
   completed_phases: 2
   total_plans: 14
-  completed_plans: 12
+  completed_plans: 13
   percent: 100
 ---
 
@@ -78,6 +94,8 @@ Progress: [███████░░░] 75%
 | Phase 02-client-credentials-grant P04 | 40 | 2 tasks | 8 files |
 | Phase 02-client-credentials-grant P05 | 12 | 2 tasks | 4 files |
 | Phase 03-token-introspection P01 | 6 | 2 tasks | 3 files |
+| Phase 03-token-introspection P02 | 10 | 2 tasks | 6 files |
+| Phase 03-token-introspection P03 | 25 | 2 tasks | 7 files |
 
 ## Accumulated Context
 
@@ -122,6 +140,11 @@ Recent decisions affecting current work:
 - [Phase 03-token-introspection]: Endpoints.Oidc.Introspect constant added in Plan 01 so integration test file compiles immediately without string literals
 - [Phase 03-token-introspection]: xUnit [Fact] methods cannot accept CancellationToken parameters — removed from test method signatures
 - [Phase 03-token-introspection]: Unit stubs compile without ITokenProvider.IntrospectAsync — pure Assert.Fail bodies with no production type references
+- [Phase 03-token-introspection]: IntrospectionResponse placed in Sven.Abstractions/Models — ITokenProvider cannot reference Sven project types
+- [Phase 03-token-introspection]: IntrospectAsync uses Task.FromResult (no I/O path) — JWT parsing is CPU-only, no awaitable operations needed
+- [Phase 03-token-introspection]: IntrospectionController routes under Endpoints.Oidc.Base; IClientAuthService resolved via HttpContext.RequestServices (CS0051 constraint)
+- [Phase 03-token-introspection]: SvenTokenProvider.IntrospectAsync uses TokenValidationParameters with IssuerSigningKey for full signature validation; ReadJwtToken was replaced to prevent wrong-key tokens returning active:true
+- [Phase 03-token-introspection]: Sven.Contracts has parallel Endpoints and DiscoveryDocument definitions that must be kept in sync with Sven project equivalents
 
 ### Pending Todos
 
@@ -135,6 +158,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-16T06:08:05.779Z
-Stopped at: Completed 03-token-introspection 03-01-PLAN.md
+Last session: 2026-03-16T06:40:28.143Z
+Stopped at: Completed 03-token-introspection 03-03-PLAN.md
 Resume file: None
