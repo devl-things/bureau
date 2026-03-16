@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: planning
-stopped_at: Completed 03-token-introspection 03-04-PLAN.md
-last_updated: "2026-03-16T07:14:10.493Z"
+stopped_at: Completed 04-end-session-security 04-01-PLAN.md
+last_updated: "2026-03-16T10:40:35.362Z"
 last_activity: 2026-03-15 — Completed SEC-01/SEC-03/SEC-04 security fixes (TTL, atomic auth code, AES key guard)
 progress:
   total_phases: 8
   completed_phases: 3
-  total_plans: 15
-  completed_plans: 15
+  total_plans: 19
+  completed_plans: 16
   percent: 100
 ---
 
@@ -97,6 +97,7 @@ Progress: [███████░░░] 75%
 | Phase 03-token-introspection P02 | 10 | 2 tasks | 6 files |
 | Phase 03-token-introspection P03 | 25 | 2 tasks | 7 files |
 | Phase 03-token-introspection P04 | 8 | 1 tasks | 1 files |
+| Phase 04-end-session-security P01 | 8 | 1 tasks | 1 files |
 
 ## Accumulated Context
 
@@ -147,6 +148,7 @@ Recent decisions affecting current work:
 - [Phase 03-token-introspection]: SvenTokenProvider.IntrospectAsync uses TokenValidationParameters with IssuerSigningKey for full signature validation; ReadJwtToken was replaced to prevent wrong-key tokens returning active:true
 - [Phase 03-token-introspection]: Sven.Contracts has parallel Endpoints and DiscoveryDocument definitions that must be kept in sync with Sven project equivalents
 - [Phase 03-token-introspection]: Expired token integration test needs no time-travel: manually construct JWT with exp in past signed with real server key; ValidateLifetime=true in TokenValidationParameters rejects it at introspect time
+- [Phase 04-end-session-security]: Synchronous void [Fact] stubs (not async) used for Assert.Fail stubs — xUnit 2.5.3 pattern; AllowAutoRedirect=false on HttpClient for 302 verification
 
 ### Pending Todos
 
@@ -160,6 +162,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-16T07:14:10.489Z
-Stopped at: Completed 03-token-introspection 03-04-PLAN.md
+Last session: 2026-03-16T10:40:30.970Z
+Stopped at: Completed 04-end-session-security 04-01-PLAN.md
 Resume file: None

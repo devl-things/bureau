@@ -15,9 +15,9 @@
 ### Protocol Completeness
 
 - [x] **PROT-01**: Client application can obtain an access token via the Client Credentials grant (`grant_type=client_credentials`) using `client_secret_basic` or `client_secret_post` authentication
-- [ ] **PROT-02**: Resource server can validate any Sven-issued token via `POST /oidc/introspect`; the `introspection_endpoint` is advertised in the discovery document
+- [x] **PROT-02**: Resource server can validate any Sven-issued token via `POST /oidc/introspect`; the `introspection_endpoint` is advertised in the discovery document
 - [ ] **PROT-03**: Bureau app can exchange a Sven access token for an external provider access token via `POST /connect/token` with `grant_type=urn:ietf:params:oauth:grant-type:token-exchange`; all six RFC 8693 subject token validation steps are enforced
-- [ ] **PROT-04**: RP-initiated logout validates `id_token_hint` against the issuer and validates `post_logout_redirect_uri` by exact string match against registered client URIs; logout completes even if the redirect URI is absent or invalid
+- [x] **PROT-04**: RP-initiated logout validates `id_token_hint` against the issuer and validates `post_logout_redirect_uri` by exact string match against registered client URIs; logout completes even if the redirect URI is absent or invalid
 
 ### Token Vault
 
@@ -94,8 +94,8 @@ Which phases cover which requirements. Updated during roadmap creation.
 | CODE-01 | Phase 1 | Complete |
 | CODE-02 | Phase 1 | Complete |
 | PROT-01 | Phase 2 | Complete |
-| PROT-02 | Phase 3 | Pending |
-| PROT-04 | Phase 4 | Pending |
+| PROT-02 | Phase 3 | Complete |
+| PROT-04 | Phase 4 | Complete |
 | VAULT-01 | Phase 5 | Pending |
 | PROT-03 | Phase 6 | Pending |
 | VAULT-03 | Phase 6 | Pending |

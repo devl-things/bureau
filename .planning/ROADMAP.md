@@ -92,7 +92,13 @@ Plans:
   2. A logout request with a `post_logout_redirect_uri` not registered for the client completes the logout but does not redirect (returns 200 or redirects to a safe default)
   3. A logout request with a valid `post_logout_redirect_uri` completes and redirects to that URI
   4. Logout with no `post_logout_redirect_uri` completes successfully
-**Plans**: TBD
+**Plans**: 4 plans
+
+Plans:
+- [ ] 04-01-PLAN.md — Wave 0: Failing test stubs for all four PROT-04 scenarios (RpInitiatedLogoutTests)
+- [ ] 04-02-PLAN.md — Wave 1: Data layer — PostLogoutRedirectUris on Client, ClientDb, EF config, migrations (Postgres + SqlServer), ClientRepository mapping
+- [ ] 04-03-PLAN.md — Wave 2: Registration pipeline — ClientRequest, ClientRegistrationRequest (Sven + Contracts), ClientService, OidcController
+- [ ] 04-04-PLAN.md — Wave 3: EndSessionController hardening, DiscoveryDocument EndSessionEndpoint, integration tests green
 
 ### Phase 5: bureau_features Registration
 **Goal**: Client applications can declare which Bureau feature scopes they expose and which external provider scopes each feature requires at registration time; Sven persists and validates these declarations
@@ -149,7 +155,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8
 | 1. Security Hardening | 6/6 | Complete   | 2026-03-15 |
 | 2. Client Credentials Grant | 5/5 | Complete   | 2026-03-15 |
 | 3. Token Introspection | 4/4 | Complete   | 2026-03-16 |
-| 4. end_session Security | 0/TBD | Not started | - |
+| 4. end_session Security | 1/4 | In Progress|  |
 | 5. bureau_features Registration | 0/TBD | Not started | - |
 | 6. RFC 8693 Token Exchange | 0/TBD | Not started | - |
 | 7. Household Identity + Modular Providers | 0/TBD | Not started | - |
