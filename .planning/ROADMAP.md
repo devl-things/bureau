@@ -169,6 +169,6 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8
 | 3. Token Introspection | 4/4 | Complete   | 2026-03-16 |
 | 4. end_session Security | 4/4 | Complete   | 2026-03-16 |
 | 5. bureau_features Registration | 2/3 | In Progress|  |
-| 6. RFC 8693 Token Exchange | 1/5 | In Progress|  |
+| 6. RFC 8693 Token Exchange | 2/5 | In Progress|  |
 | 7. Household Identity + Modular Providers | 0/TBD | Not started | - |
 | 8. RFC Compliance Test Suite + Documentation | 0/TBD | Not started | - |

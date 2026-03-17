@@ -27,7 +27,8 @@ namespace Sven.Configurations
                 sp.GetRequiredService<RsaSecurityKey>(),
                 sp.GetRequiredService<IStore<string, RefreshToken>>(),
                 sp.GetRequiredService<TimeProvider>(),
-                sp.GetRequiredService<IClientService>()
+                sp.GetRequiredService<IClientService>(),
+                sp.GetRequiredService<IHouseholdService>()
             ));
             services.AddScoped<IRefreshTokenService, RefreshTokenService>();
             services.AddScoped<IExternalTokenService, ExternalTokenService>();

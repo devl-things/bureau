@@ -2,6 +2,7 @@
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Sven.Configurations;
+using Sven.Data;
 using Sven.Extensions;
 using Sven.Models;
 using System.IdentityModel.Tokens.Jwt;
@@ -17,11 +18,13 @@ namespace Sven.Services
         private readonly RsaSecurityKey _rsaKey;
         private readonly IStore<string, RefreshToken> _refreshTokenStore;
         private readonly TimeProvider _timeProvider;
+        private readonly IHouseholdService _householdService;
 
         private Client? _currentClient;
         private readonly TokenLifetimeOptions _tokenLifetimeOptions;
         internal SvenTokenProvider(ILogger<SvenTokenProvider> logger, IOptions<JwtOptions> jwtOptions,
-            RsaSecurityKey rsaKey, IStore<string, RefreshToken> refreshTokenStore, TimeProvider timeProvider, IClientService clientService)
+            RsaSecurityKey rsaKey, IStore<string, RefreshToken> refreshTokenStore, TimeProvider timeProvider, IClientService clientService,
+            IHouseholdService householdService)
         {
             _logger = logger;
             _jwtOptions = jwtOptions.Value;
@@ -30,6 +33,7 @@ namespace Sven.Services
             _refreshTokenStore = refreshTokenStore;
             _timeProvider = timeProvider;
             _clientService = clientService;
+            _householdService = householdService;
             _currentClient = null;
         }
 
@@ -68,6 +72,27 @@ namespace Sven.Services
         public async Task<Result<SvenToken>> CreateTokenAsync(ClientClaims clientClaims, CancellationToken cancellationToken = default)
         {
             await SetTokenLifetimeOptions(clientClaims, cancellationToken);
+
+            string userId = clientClaims.GetClaimValue(JwtRegisteredClaimNames.Sub);
+            try
+            {
+                Result<HouseholdMembership> membershipResult =
+                    await _householdService.GetMembershipAsync(userId, cancellationToken);
+                if (!membershipResult.IsError)
+                {
+                    clientClaims.Claims.Add(new Claim("household_id", membershipResult.Value.HouseholdId));
+                    clientClaims.Claims.Add(new Claim("household_role", membershipResult.Value.Role));
+                }
+                // membershipResult.IsError == true means user is not a household member — omit claims, continue
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "IHouseholdService failed during token issuance for user {UserId}", userId);
+                return ResultError.From(
+                    AuthConstants.OAuth.Errors.ServerError,
+                    "Failed to resolve household membership.");
+            }
+
             Result<string?> refreshTokenResult = await CreateRefreshTokenAsync(clientClaims, cancellationToken);
             if (refreshTokenResult.IsError)
             {
