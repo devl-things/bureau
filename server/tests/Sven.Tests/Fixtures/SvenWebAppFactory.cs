@@ -33,6 +33,8 @@ namespace Sven.Tests.Fixtures
             // ApplyConfigurationsFromAssembly cannot resolve open-generic configurations;
             // apply the closed concrete configuration directly instead.
             new ClientBaseTypeConfiguration<ClientDb>().Configure(modelBuilder.Entity<ClientDb>());
+            new ClientFeatureBaseTypeConfiguration().Configure(modelBuilder.Entity<ClientFeatureDb>());
+            new ClientFeatureExternalRequirementBaseTypeConfiguration().Configure(modelBuilder.Entity<ClientFeatureExternalRequirementDb>());
         }
     }
 
