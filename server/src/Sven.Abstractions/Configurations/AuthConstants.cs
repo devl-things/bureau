@@ -86,6 +86,8 @@
 
                 //Dynamic registration
                 public const string RedirectUris = "redirect_uris";
+                public const string PostLogoutRedirectUris = "post_logout_redirect_uris";
+                public const string BureauFeatures = "bureau_features";
                 public const string TokenEndpointAuthMethod = "token_endpoint_auth_method";
                 public const string GrantTypesField = "grant_types";
                 public const string ResponseTypesField = "response_types";

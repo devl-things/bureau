@@ -12,6 +12,12 @@ namespace Sven.Models
         [JsonPropertyName(AuthConstants.OAuth.FieldNames.RedirectUris)]
         public List<string>? RedirectUris { get; set; }
         [FromBody]
+        [JsonPropertyName(AuthConstants.OAuth.FieldNames.PostLogoutRedirectUris)]
+        public List<string>? PostLogoutRedirectUris { get; set; }
+        [FromBody]
+        [JsonPropertyName(AuthConstants.OAuth.FieldNames.BureauFeatures)]
+        public Dictionary<string, List<string>>? BureauFeatures { get; set; }
+        [FromBody]
         [JsonPropertyName(AuthConstants.OAuth.FieldNames.TokenEndpointAuthMethod)]
         public string? TokenEndpointAuthMethod { get; set; }
         [FromBody]

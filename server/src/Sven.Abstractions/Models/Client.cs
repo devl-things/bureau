@@ -20,6 +20,7 @@ namespace Sven.Models
 
         public required HashSet<string> RedirectUris { get; set; }
         public List<string>? PostLogoutRedirectUris { get; set; }
+        public Dictionary<string, List<string>>? BureauFeatures { get; set; }
         public bool Active { get; set; }
 
         public TimeSpan? IdTokenLifetime { get; set; }

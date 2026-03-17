@@ -47,6 +47,11 @@ namespace Sven.Data.Repositories
                 PolicyUri = addendum?.PolicyUri,
                 RedirectUris = [.. client.RedirectUris],
                 PostLogoutRedirectUris = client.PostLogoutRedirectUris,
+                BureauFeatures = client.ClientFeatures != null && client.ClientFeatures.Count > 0
+                    ? client.ClientFeatures.ToDictionary(
+                        f => f.FeatureKey,
+                        f => f.ExternalRequirements.Select(r => r.ExternalScopeKey).ToList())
+                    : null,
                 ResponseTypes = addendum?.ResponseTypes,
                 Scope = new ScopeParameter([.. client.Scope]),
                 SoftwareId = addendum?.SoftwareId,
@@ -63,7 +68,10 @@ namespace Sven.Data.Repositories
 
         private Task<ClientDb?> GetClientDbAsync(string identifier, CancellationToken cancellationToken = default)
         {
-            return _context.Clients.FirstOrDefaultAsync(x => x.Identifier.Equals(identifier), cancellationToken);
+            return _context.Clients
+                .Include(x => x.ClientFeatures)
+                    .ThenInclude(f => f.ExternalRequirements)
+                .FirstOrDefaultAsync(x => x.Identifier.Equals(identifier), cancellationToken);
         }
 
         public async Task<Result> StoreAsync(Client client, CancellationToken cancellationToken = default)
@@ -102,7 +110,33 @@ namespace Sven.Data.Repositories
             dbEntity.UpdatedAt = client.UpdatedAt;
             dbEntity.UpdatedBy = "admin";
 
-            return await _context.SaveChangesAsync(cancellationToken) > 0;
+            await _context.SaveChangesAsync(cancellationToken);
+
+            List<ClientFeatureDb> existingFeatures = await _context.Set<ClientFeatureDb>()
+                .Where(f => f.ClientId == dbEntity.Id)
+                .Include(f => f.ExternalRequirements)
+                .ToListAsync(cancellationToken);
+            _context.Set<ClientFeatureDb>().RemoveRange(existingFeatures);
+
+            if (client.BureauFeatures != null)
+            {
+                foreach (KeyValuePair<string, List<string>> feature in client.BureauFeatures)
+                {
+                    ClientFeatureDb featureDb = new ClientFeatureDb
+                    {
+                        ClientId = dbEntity.Id,
+                        FeatureKey = feature.Key,
+                        ExternalRequirements = feature.Value.Select(s => new ClientFeatureExternalRequirementDb
+                        {
+                            ClientId = dbEntity.Id,
+                            FeatureKey = feature.Key,
+                            ExternalScopeKey = s
+                        }).ToList()
+                    };
+                    _context.Set<ClientFeatureDb>().Add(featureDb);
+                }
+            }
+            return await _context.SaveChangesAsync(cancellationToken) >= 0;
         }
     }
 }

@@ -3,6 +3,8 @@
     public class ClientRequest
     {
         public required List<string> RedirectUris { get; set; }
+        public List<string>? PostLogoutRedirectUris { get; set; }
+        public Dictionary<string, List<string>>? BureauFeatures { get; set; }
         public string TokenEndpointAuthMethod { get; set; } = string.Empty;
         public required List<string> GrantTypes { get; set; }
         public required List<string> ResponseTypes { get; set; }

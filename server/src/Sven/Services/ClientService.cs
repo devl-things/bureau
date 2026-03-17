@@ -1,4 +1,5 @@
 using Bureau;
+using Bureau.Primitives.Features;
 using Sven.Configurations;
 using Sven.Data.Repositories;
 using Sven;
@@ -9,11 +10,13 @@ namespace Sven.Services
     {
         private readonly IClientRepository _clientRepository;
         private readonly TimeProvider _timeProvider;
+        private readonly IExternalProviderRegistry _externalProviderRegistry;
 
-        public ClientService(IClientRepository clientRepository, TimeProvider timeProvider)
+        public ClientService(IClientRepository clientRepository, TimeProvider timeProvider, IExternalProviderRegistry externalProviderRegistry)
         {
             _clientRepository = clientRepository;
             _timeProvider = timeProvider;
+            _externalProviderRegistry = externalProviderRegistry;
         }
 
         public async Task<Result<Client>> CreateClientAsync(ClientRequest clientRequest, CancellationToken cancellationToken)
@@ -38,6 +41,32 @@ namespace Sven.Services
             {
                 return ResultError.From("Redirect Uris are invalid", $"Received {nameof(clientRequest.RedirectUris)} = {string.Join(',', clientRequest.RedirectUris ?? [])};");
             }
+            if (clientRequest.BureauFeatures != null)
+            {
+                HashSet<string> validFeatureKeys = new HashSet<string>(FeatureKeys.AllKeys);
+                HashSet<string> validScopeKeys = new HashSet<string>(
+                    _externalProviderRegistry.Providers
+                        .SelectMany(p => _externalProviderRegistry.GetScopes(p.Key))
+                        .Select(s => s.BureauKey));
+                foreach (KeyValuePair<string, List<string>> feature in clientRequest.BureauFeatures)
+                {
+                    if (!validFeatureKeys.Contains(feature.Key))
+                    {
+                        return ResultError.From(
+                            "Unknown bureau feature key",
+                            $"Feature key '{feature.Key}' is not a registered Bureau feature.");
+                    }
+                    foreach (string scopeKey in feature.Value)
+                    {
+                        if (!validScopeKeys.Contains(scopeKey))
+                        {
+                            return ResultError.From(
+                                "Unknown external scope key",
+                                $"External scope key '{scopeKey}' is not registered in any provider.");
+                        }
+                    }
+                }
+            }
             string clientId = CreateNewClientId();
             Client client = new()
             {
@@ -54,6 +83,8 @@ namespace Sven.Services
                 Name = clientRequest.ClientName ?? clientId,
                 PolicyUri = clientRequest.PolicyUri,
                 RedirectUris = [.. clientRequest.RedirectUris ?? []],
+                PostLogoutRedirectUris = clientRequest.PostLogoutRedirectUris,
+                BureauFeatures = clientRequest.BureauFeatures,
                 ResponseTypes = clientRequest.ResponseTypes,
                 Scope = new ScopeParameter(clientRequest.Scope),
                 SoftwareId = clientRequest.SoftwareId,
