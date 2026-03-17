@@ -34,5 +34,6 @@
         public DateTimeOffset UpdatedAt { get; set; }
         public string UpdatedBy { get; set; } = null!;
 
+        public ICollection<ClientFeatureDb> ClientFeatures { get; set; } = null!;
     }
 }
