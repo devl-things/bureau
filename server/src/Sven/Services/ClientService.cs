@@ -1,4 +1,5 @@
 using Bureau;
+using Bureau.Primitives.Errors;
 using Bureau.Primitives.Features;
 using Sven.Configurations;
 using Sven.Data.Repositories;
@@ -46,14 +47,14 @@ namespace Sven.Services
                 HashSet<string> validFeatureKeys = new HashSet<string>(FeatureKeys.AllKeys);
                 HashSet<string> validScopeKeys = new HashSet<string>(
                     _externalProviderRegistry.Providers
-                        .SelectMany(p => _externalProviderRegistry.GetScopes(p.Key))
+                        .SelectMany(p => _externalProviderRegistry.GetScopes(p.ProviderKey))
                         .Select(s => s.BureauKey));
                 foreach (KeyValuePair<string, List<string>> feature in clientRequest.BureauFeatures)
                 {
                     if (!validFeatureKeys.Contains(feature.Key))
                     {
                         return ResultError.From(
-                            "Unknown bureau feature key",
+                            ProblemCodes.Request.InvalidPayload,
                             $"Feature key '{feature.Key}' is not a registered Bureau feature.");
                     }
                     foreach (string scopeKey in feature.Value)
@@ -61,7 +62,7 @@ namespace Sven.Services
                         if (!validScopeKeys.Contains(scopeKey))
                         {
                             return ResultError.From(
-                                "Unknown external scope key",
+                                ProblemCodes.Request.InvalidPayload,
                                 $"External scope key '{scopeKey}' is not registered in any provider.");
                         }
                     }
