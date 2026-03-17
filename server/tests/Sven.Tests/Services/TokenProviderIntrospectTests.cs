@@ -4,6 +4,7 @@ using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using NSubstitute;
 using Sven.Configurations;
+using Sven.Data;
 using Sven.Models;
 using Sven.Services;
 using System.IdentityModel.Tokens.Jwt;
@@ -19,6 +20,7 @@ namespace Sven.Tests.Services
         private readonly ILogger<SvenTokenProvider> _logger;
         private readonly IStore<string, RefreshToken> _refreshTokenStore;
         private readonly IClientService _clientService;
+        private readonly IHouseholdService _householdService;
         private readonly SvenTokenProvider _provider;
         private readonly RsaSecurityKey _rsaKey;
         private const string TestIssuer = "https://sven.test";
@@ -29,6 +31,7 @@ namespace Sven.Tests.Services
             _refreshTokenStore = Substitute.For<IStore<string, RefreshToken>>();
             IStore<string, RefreshToken> refreshTokenStore = _refreshTokenStore;
             _clientService = Substitute.For<IClientService>();
+            _householdService = Substitute.For<IHouseholdService>();
             _rsaKey = new RsaSecurityKey(RSA.Create(2048));
             JwtOptions jwtOptions = new JwtOptions { Issuer = TestIssuer };
             _provider = new SvenTokenProvider(
@@ -37,7 +40,8 @@ namespace Sven.Tests.Services
                 _rsaKey,
                 refreshTokenStore,
                 TimeProvider.System,
-                _clientService
+                _clientService,
+                _householdService
             );
         }
 

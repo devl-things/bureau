@@ -14,7 +14,7 @@ namespace Sven.Services
         private readonly IClientService _clientService;
         private readonly IExternalTokenService _externalTokenService;
         private readonly IHouseholdService _householdService;
-        private readonly ExternalTokenRefresher _externalTokenRefresher;
+        private readonly IExternalTokenRefresher _externalTokenRefresher;
         private readonly JwtOptions _jwtOptions;
         private readonly RsaSecurityKey _rsaKey;
         private readonly TimeProvider _timeProvider;
@@ -24,7 +24,7 @@ namespace Sven.Services
             IClientService clientService,
             IExternalTokenService externalTokenService,
             IHouseholdService householdService,
-            ExternalTokenRefresher externalTokenRefresher,
+            IExternalTokenRefresher externalTokenRefresher,
             IOptions<JwtOptions> jwtOptions,
             RsaSecurityKey rsaKey,
             TimeProvider timeProvider,
@@ -87,7 +87,7 @@ namespace Sven.Services
                 handler.ValidateToken(subjectToken, validationParams, out SecurityToken validatedToken);
                 jwt = (JwtSecurityToken)validatedToken;
             }
-            catch (SecurityTokenException ex)
+            catch (Exception ex) when (ex is SecurityTokenException || ex is ArgumentException)
             {
                 _logger.LogWarning(
                     "TokenExchange step=3 failure: ClientId={ClientId} Reason=invalid_subject_token Timestamp={Timestamp} Result=failure Message={Message}",

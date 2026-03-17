@@ -4,6 +4,7 @@ using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using NSubstitute;
 using Sven.Configurations;
+using Sven.Data;
 using Sven.Extensions;
 using Sven.Models;
 using Sven.Services;
@@ -17,6 +18,7 @@ namespace Sven.Tests.Services
         private readonly IStore<string, RefreshToken> _refreshTokenStore;
         private readonly TimeProvider _timeProvider;
         private readonly IClientService _clientService;
+        private readonly IHouseholdService _householdService;
         private readonly SvenTokenProvider _provider;
 
         private readonly string _clientId = "client1";
@@ -28,13 +30,15 @@ namespace Sven.Tests.Services
             _refreshTokenStore = Substitute.For<IStore<string, RefreshToken>>();
             _timeProvider = Substitute.For<TimeProvider>();
             _clientService = Substitute.For<IClientService>();
+            _householdService = Substitute.For<IHouseholdService>();
             _provider = new SvenTokenProvider(
                 _logger,
                 Options.Create(new JwtOptions()), // Mock JwtOptions
                 new RsaSecurityKey(RSA.Create(2048)), // Mock RSA key
                 _refreshTokenStore,
                 _timeProvider,
-                _clientService
+                _clientService,
+                _householdService
             );
         }
 
