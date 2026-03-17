@@ -24,5 +24,11 @@ namespace Sven.Models
         public string? Scope { get; set; }
         [FromForm(Name = AuthConstants.OAuth.FieldNames.ClientSecret)]
         public string? ClientSecret { get; set; }
+        [FromForm(Name = "subject_token")]
+        public string? SubjectToken { get; set; }
+        [FromForm(Name = "subject_token_type")]
+        public string? SubjectTokenType { get; set; }
+        [FromForm(Name = "resource")]
+        public string? Resource { get; set; }
     }
 }

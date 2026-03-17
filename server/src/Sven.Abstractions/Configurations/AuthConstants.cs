@@ -59,6 +59,7 @@
                 public const string AuthorizationCode = "authorization_code";
                 public const string RefreshToken = "refresh_token";
                 public const string ClientCredentials = "client_credentials";
+                public const string TokenExchange = "urn:ietf:params:oauth:grant-type:token-exchange";
             }
 
             public static class FieldNames
