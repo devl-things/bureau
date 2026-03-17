@@ -62,5 +62,29 @@ namespace Sven.Data.Stores
                 SharedAt = db.SharedAt,
             });
         }
+
+        public async Task<Result<IReadOnlyList<SharedExternalTokenConsent>>> GetAllActiveSharedTokensAsync(
+            string householdId, string provider, string featureKey, CancellationToken cancellationToken = default)
+        {
+            List<SharedExternalTokenDb> rows = await _context.SharedExternalTokens
+                .Where(x =>
+                    x.HouseholdIdentifier == householdId &&
+                    x.Provider == provider &&
+                    x.FeatureKey == featureKey &&
+                    x.RevokedAt == null)
+                .ToListAsync(cancellationToken);
+
+            List<SharedExternalTokenConsent> mapped = rows.Select(db => new SharedExternalTokenConsent
+            {
+                Identifier = db.Identifier,
+                HouseholdId = db.HouseholdIdentifier,
+                OwnerUserId = db.OwnerUserId,
+                Provider = db.Provider,
+                FeatureKey = db.FeatureKey,
+                SharedAt = db.SharedAt,
+            }).ToList();
+
+            return new Result<IReadOnlyList<SharedExternalTokenConsent>>(mapped);
+        }
     }
 }

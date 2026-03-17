@@ -16,15 +16,15 @@
 
 - [x] **PROT-01**: Client application can obtain an access token via the Client Credentials grant (`grant_type=client_credentials`) using `client_secret_basic` or `client_secret_post` authentication
 - [x] **PROT-02**: Resource server can validate any Sven-issued token via `POST /oidc/introspect`; the `introspection_endpoint` is advertised in the discovery document
-- [ ] **PROT-03**: Bureau app can exchange a Sven access token for an external provider access token via `POST /connect/token` with `grant_type=urn:ietf:params:oauth:grant-type:token-exchange`; all six RFC 8693 subject token validation steps are enforced
+- [x] **PROT-03**: Bureau app can exchange a Sven access token for an external provider access token via `POST /connect/token` with `grant_type=urn:ietf:params:oauth:grant-type:token-exchange`; all six RFC 8693 subject token validation steps are enforced
 - [x] **PROT-04**: RP-initiated logout validates `id_token_hint` against the issuer and validates `post_logout_redirect_uri` by exact string match against registered client URIs; logout completes even if the redirect URI is absent or invalid
 
 ### Token Vault
 
-- [ ] **VAULT-01**: Client application can include a `bureau_features` field in dynamic registration (`POST /oidc/register`) declaring which Bureau feature scopes it exposes and which external provider scopes each feature requires; Sven persists and validates this data
+- [x] **VAULT-01**: Client application can include a `bureau_features` field in dynamic registration (`POST /oidc/register`) declaring which Bureau feature scopes it exposes and which external provider scopes each feature requires; Sven persists and validates this data
 - [ ] **VAULT-02**: Each external provider (Google, Microsoft, future) is implemented as a self-contained module (`IExternalProviderModule`); adding a new provider requires only a new module with no changes to core token refresh or token exchange code
-- [ ] **VAULT-03**: Sven access tokens for household members include `household_id` and `household_role` JWT claims sourced from the live database
-- [ ] **VAULT-04**: Token exchange falls back to a household member's shared external token when the requesting user has no token for the requested feature; `IHouseholdService` is fully implemented
+- [x] **VAULT-03**: Sven access tokens for household members include `household_id` and `household_role` JWT claims sourced from the live database
+- [x] **VAULT-04**: Token exchange aggregates all available tokens for a feature/provider into a single RFC 8693 + custom extension response: the requesting user's own external token (if any) is returned in `access_token`; all other household members' active shared tokens are returned in a `bureau_tokens` extension array (RFC 8693 §7), each entry containing `access_token`, `expires_in`, `source_user_id`, and `provider`. Step 5 validation fails only when zero tokens are available (user has none and no household shared tokens exist). `IHouseholdService` is fully implemented
 
 ### Code Structure
 
@@ -96,10 +96,10 @@ Which phases cover which requirements. Updated during roadmap creation.
 | PROT-01 | Phase 2 | Complete |
 | PROT-02 | Phase 3 | Complete |
 | PROT-04 | Phase 4 | Complete |
-| VAULT-01 | Phase 5 | Pending |
-| PROT-03 | Phase 6 | Pending |
-| VAULT-03 | Phase 6 | Pending |
-| VAULT-04 | Phase 6 | Pending |
+| VAULT-01 | Phase 5 | Complete |
+| PROT-03 | Phase 6 | Complete |
+| VAULT-03 | Phase 6 | Complete |
+| VAULT-04 | Phase 6 | Complete |
 | VAULT-02 | Phase 7 | Pending |
 | TEST-01 | Phase 8 | Pending |
 | TEST-02 | Phase 8 | Pending |

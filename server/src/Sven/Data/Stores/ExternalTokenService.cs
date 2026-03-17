@@ -20,6 +20,17 @@ namespace Sven.Data.Stores
             _timeProvider = timeProvider;
         }
 
+        public async Task<Result<UserExternalToken>> GetByUserAndProviderAsync(string userId, string provider, CancellationToken cancellationToken = default)
+        {
+            UserExternalTokenDb? db = await _context.UserExternalTokens
+                .FirstOrDefaultAsync(x => x.UserId == userId && x.Provider == provider, cancellationToken);
+
+            if (db == null)
+                return ResultError.From("not_found", "No external token found for user and provider.");
+
+            return MapToModel(db);
+        }
+
         public async Task<Result<UserExternalToken>> GetAsync(string userId, string provider, string externalAccountId, CancellationToken cancellationToken = default)
         {
             UserExternalTokenDb? db = await _context.UserExternalTokens

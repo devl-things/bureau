@@ -126,7 +126,14 @@ Plans:
   3. An exchange request that fails any of the six validation steps (invalid signature, wrong issuer, audience mismatch, expired token, inactive user, feature not in client's `bureau_features` allowlist) returns the appropriate RFC 8693 error
   4. Every token exchange attempt — success or failure — produces a structured audit log entry containing `client_id`, `user_id`, `feature`, `provider`, `source_user_id`, `timestamp`, and `result`
   5. Sven access tokens for household members include `household_id` and `household_role` JWT claims sourced from the live database
-**Plans**: TBD
+**Plans**: 5 plans
+
+Plans:
+- [ ] 06-01-PLAN.md — Wave 0: Failing test stubs for all 12 PROT-03/VAULT-03/VAULT-04 scenarios (Rfc8693TokenExchangeTests)
+- [ ] 06-02-PLAN.md — Wave 1: Interface gaps + response models (IExternalTokenService, IHouseholdService extensions, TokenExchangeResponse, BureauTokenEntry, AuthConstants, TokenRequest fields)
+- [ ] 06-03-PLAN.md — Wave 1: Household claim injection into SvenTokenProvider auth-code path (VAULT-03)
+- [ ] 06-04-PLAN.md — Wave 2: ITokenExchangeService + TokenExchangeService six-step chain + HandleTokenExchangeFlow in TokenController + DI registration
+- [ ] 06-05-PLAN.md — Wave 3: DiscoveryDocument grant_types_supported + all 12 integration tests green
 
 ### Phase 7: Household Identity + Modular Providers
 **Goal**: External provider token refresh is handled by self-contained provider modules with no switch statements in core code; household JWT claims are live-wired; Microsoft provider is fully tested
@@ -162,6 +169,6 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8
 | 3. Token Introspection | 4/4 | Complete   | 2026-03-16 |
 | 4. end_session Security | 4/4 | Complete   | 2026-03-16 |
 | 5. bureau_features Registration | 2/3 | In Progress|  |
-| 6. RFC 8693 Token Exchange | 0/TBD | Not started | - |
+| 6. RFC 8693 Token Exchange | 1/5 | In Progress|  |
 | 7. Household Identity + Modular Providers | 0/TBD | Not started | - |
 | 8. RFC Compliance Test Suite + Documentation | 0/TBD | Not started | - |
