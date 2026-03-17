@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: planning
-stopped_at: Completed 05-bureau-features-registration 05-01-PLAN.md
-last_updated: "2026-03-17T13:26:25.762Z"
+stopped_at: Completed 05-bureau-features-registration 05-03-PLAN.md
+last_updated: "2026-03-17T13:35:08.944Z"
 last_activity: 2026-03-15 — Completed SEC-01/SEC-03/SEC-04 security fixes (TTL, atomic auth code, AES key guard)
 progress:
   total_phases: 8
-  completed_phases: 4
+  completed_phases: 5
   total_plans: 22
-  completed_plans: 21
+  completed_plans: 22
 ---
 
 ---
@@ -118,6 +118,7 @@ Progress: [███████░░░] 75%
 | Phase 04-end-session-security P04-04 | 15 | 2 tasks | 5 files |
 | Phase 05-bureau-features-registration P02 | 20 | 2 tasks | 12 files |
 | Phase 05-bureau-features-registration P01 | 5 | 1 tasks | 5 files |
+| Phase 05-bureau-features-registration P03 | 7 | 2 tasks | 9 files |
 
 ## Accumulated Context
 
@@ -180,6 +181,9 @@ Recent decisions affecting current work:
 - [Phase 05-bureau-features-registration]: BureauFeaturesRegistrationTests uses synchronous void [Fact] Assert.Fail stubs — xUnit 2.5.3 pattern
 - [Phase 05-bureau-features-registration]: ClientFeatureDb/ClientFeatureExternalRequirementDb changed from internal to public — public navigation property on public ClientDb requires public type
 - [Phase 05-bureau-features-registration]: ToTable() removed from Sven.Data base type configs — relational extension not in EF Core base package; convention naming used
+- [Phase 05-bureau-features-registration]: ProblemCodes.Request.InvalidPayload used for bureau_features validation errors — maps to HTTP 400
+- [Phase 05-bureau-features-registration]: IExternalProviderRegistry injected into ClientService for scope key validation — registry is a singleton always available via AddSvenAuthentication
+- [Phase 05-bureau-features-registration]: Two-save EF pattern in StoreAsync: first save persists ClientDb parent to get Id, second save persists ClientFeatureDb children
 
 ### Pending Todos
 
@@ -193,6 +197,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-17T13:26:25.743Z
-Stopped at: Completed 05-bureau-features-registration 05-01-PLAN.md
+Last session: 2026-03-17T13:35:08.940Z
+Stopped at: Completed 05-bureau-features-registration 05-03-PLAN.md
 Resume file: None
