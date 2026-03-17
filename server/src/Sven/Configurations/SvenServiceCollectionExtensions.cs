@@ -46,6 +46,19 @@ namespace Sven.Configurations
             // IExternalTokenRefresher — internal to Sven; registered here so Sven.Web uses AddSvenCore()
             services.AddScoped<IExternalTokenRefresher, ExternalTokenRefresher>();
 
+            // ITokenExchangeService — TokenExchangeService is internal; register via factory so Sven.Web
+            // can resolve ITokenExchangeService without referencing the internal concrete type.
+            services.AddScoped<ITokenExchangeService>(sp => new TokenExchangeService(
+                sp.GetRequiredService<IClientService>(),
+                sp.GetRequiredService<IExternalTokenService>(),
+                sp.GetRequiredService<IHouseholdService>(),
+                sp.GetRequiredService<IExternalTokenRefresher>(),
+                sp.GetRequiredService<IOptions<JwtOptions>>(),
+                sp.GetRequiredService<RsaSecurityKey>(),
+                sp.GetRequiredService<TimeProvider>(),
+                sp.GetRequiredService<ILogger<TokenExchangeService>>()
+            ));
+
             return services;
         }
     }

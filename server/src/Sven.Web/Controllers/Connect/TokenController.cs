@@ -41,6 +41,10 @@ namespace Sven.Controllers.Connect
             {
                 return await HandleClientCredentialsFlow(request, cancellationToken);
             }
+            else if (IsGrantType(request.GrantType, AuthConstants.OAuth.GrantTypes.TokenExchange))
+            {
+                return await HandleTokenExchangeFlow(request, cancellationToken);
+            }
 
             return OAuthError(AuthConstants.OAuth.Errors.UnsupportedGrantType, AuthConstants.OAuth.ErrorDescriptions.UnsupportedGrantType);
         }
@@ -136,6 +140,42 @@ namespace Sven.Controllers.Connect
             Result<SvenToken> tokenResult = await _tokenProvider.CreateMachineTokenAsync(
                 clientResult.Value, effectiveScope, cancellationToken);
             return HandleTokenResult(tokenResult);
+        }
+
+        // RFC 8693 — Token Exchange
+        private async Task<IActionResult> HandleTokenExchangeFlow(
+            TokenRequest request, CancellationToken cancellationToken)
+        {
+            if (string.IsNullOrWhiteSpace(request.SubjectToken))
+                return OAuthError(AuthConstants.OAuth.Errors.InvalidRequest, "subject_token is required.");
+            if (string.IsNullOrWhiteSpace(request.Resource))
+                return OAuthError(AuthConstants.OAuth.Errors.InvalidRequest, "resource (provider) is required.");
+            if (string.IsNullOrWhiteSpace(request.Scope))
+                return OAuthError(AuthConstants.OAuth.Errors.InvalidRequest, "scope (feature key) is required.");
+
+            IClientAuthService clientAuthService =
+                HttpContext.RequestServices.GetRequiredService<IClientAuthService>();
+            Result<Client> clientAuthResult = await clientAuthService.AuthenticateClientAsync(Request, cancellationToken);
+            if (clientAuthResult.IsError)
+            {
+                Response.Headers["WWW-Authenticate"] = "Basic realm=\"Sven\"";
+                return OAuthError(AuthConstants.OAuth.Errors.InvalidClient, "Client authentication failed.",
+                    System.Net.HttpStatusCode.Unauthorized);
+            }
+
+            ITokenExchangeService tokenExchangeService =
+                HttpContext.RequestServices.GetRequiredService<ITokenExchangeService>();
+            Result<TokenExchangeResponse> result = await tokenExchangeService.ExchangeAsync(
+                clientAuthResult.Value.Identifier,
+                request.SubjectToken!,
+                request.Resource!,
+                request.Scope!,
+                cancellationToken);
+
+            if (result.IsError)
+                return OAuthError(result.Error.Code, result.Error.ErrorMessage);
+
+            return Ok(result.Value);
         }
 
         private static string? DetermineEffectiveScope(Client client, string? requestedScope)
