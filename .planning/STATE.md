@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: planning
-stopped_at: Completed 04-end-session-security 04-04-PLAN.md
-last_updated: "2026-03-16T10:57:12.804Z"
+stopped_at: Completed 05-bureau-features-registration 05-01-PLAN.md
+last_updated: "2026-03-17T13:26:25.762Z"
 last_activity: 2026-03-15 — Completed SEC-01/SEC-03/SEC-04 security fixes (TTL, atomic auth code, AES key guard)
 progress:
   total_phases: 8
   completed_phases: 4
-  total_plans: 19
-  completed_plans: 19
+  total_plans: 22
+  completed_plans: 21
 ---
 
 ---
@@ -116,6 +116,8 @@ Progress: [███████░░░] 75%
 | Phase 04-end-session-security P02 | 3 | 2 tasks | 6 files |
 | Phase 04-end-session-security P03 | 10 | 2 tasks | 6 files |
 | Phase 04-end-session-security P04-04 | 15 | 2 tasks | 5 files |
+| Phase 05-bureau-features-registration P02 | 20 | 2 tasks | 12 files |
+| Phase 05-bureau-features-registration P01 | 5 | 1 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -174,6 +176,10 @@ Recent decisions affecting current work:
 - [Phase 04-end-session-security]: Endpoints.Connect.EndSession added to Sven/Configurations/Endpoints.cs (mirrors Sven.Contracts) — DiscoveryService cannot reference Sven.Contracts
 - [Phase 04-end-session-security]: ValidateLifetime=false in EndSessionController TokenValidationParameters — OIDC Session §5 requires expired id_token_hint to be accepted
 - [Phase 04-end-session-security]: IClientService injected via EndSessionController constructor (not RequestServices) — public interface, no CS0051 constraint
+- [Phase 05-bureau-features-registration]: ClientFeatureDb/ClientFeatureExternalRequirementDb are public (consistent with ClientDb); relationship defined from ClientFeatureDb side only to avoid shadow FK columns; base configs omit ToTable() for in-memory test compatibility
+- [Phase 05-bureau-features-registration]: BureauFeaturesRegistrationTests uses synchronous void [Fact] Assert.Fail stubs — xUnit 2.5.3 pattern
+- [Phase 05-bureau-features-registration]: ClientFeatureDb/ClientFeatureExternalRequirementDb changed from internal to public — public navigation property on public ClientDb requires public type
+- [Phase 05-bureau-features-registration]: ToTable() removed from Sven.Data base type configs — relational extension not in EF Core base package; convention naming used
 
 ### Pending Todos
 
@@ -187,6 +193,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-16T10:57:03.521Z
-Stopped at: Completed 04-end-session-security 04-04-PLAN.md
+Last session: 2026-03-17T13:26:25.743Z
+Stopped at: Completed 05-bureau-features-registration 05-01-PLAN.md
 Resume file: None

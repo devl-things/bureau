@@ -20,7 +20,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 1: Security Hardening** - Fix confirmed vulnerabilities before building new features (gap closure in progress) (completed 2026-03-15)
 - [x] **Phase 2: Client Credentials Grant** - Add service-to-service token issuance and confidential client auth (completed 2026-03-15)
 - [x] **Phase 3: Token Introspection** - Enable resource servers to validate any Sven-issued token (completed 2026-03-16)
-- [x] **Phase 4: end_session Security** - Close the RP-initiated logout open redirect and complete OIDC Session compliance (completed 2026-03-16)
+- [x] **Phase 4: end_session Security** - Close the RP-initiated logout open redirect and complete OIDC Session compliance (completed 2026-03-16)
 - [ ] **Phase 5: bureau_features Registration** - Add the client registration extension that gates token exchange
 - [ ] **Phase 6: RFC 8693 Token Exchange** - Implement the token broker core: Sven JWTs exchanged for external provider tokens
 - [ ] **Phase 7: Household Identity + Modular Providers** - Wire household claims into JWTs and refactor provider architecture
@@ -109,7 +109,12 @@ Plans:
   2. A registration request with an unknown feature key is rejected with a descriptive error
   3. The registered feature allowlist is retrievable via `IClientProvider` and used to gate token exchange requests in the next phase
   4. EF migrations for `ClientFeatures` and `ClientFeatureExternalRequirements` tables apply cleanly on both Postgres and SQL Server
-**Plans**: TBD
+**Plans**: 3 plans
+
+Plans:
+- [ ] 05-01-PLAN.md — Wave 0: Failing test stubs for VAULT-01 SC1/SC2/SC3 (BureauFeaturesRegistrationTests)
+- [ ] 05-02-PLAN.md — Wave 1: Data layer — ClientFeatureDb + ClientFeatureExternalRequirementDb entities, base + provider type configs, migrations (Postgres + SqlServer), SvenTestContext registration
+- [ ] 05-03-PLAN.md — Wave 2: Full pipeline — AuthConstants constant, Client/ClientRequest/ClientRegistrationRequest models, ClientService validation, ClientRepository round-trip, OidcController wiring, integration tests green
 
 ### Phase 6: RFC 8693 Token Exchange
 **Goal**: Bureau apps can exchange a Sven access token for an external provider access token; the six-step validation chain is fully enforced; household shared token fallback works; every exchange is audit-logged
@@ -156,7 +161,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8
 | 2. Client Credentials Grant | 5/5 | Complete   | 2026-03-15 |
 | 3. Token Introspection | 4/4 | Complete   | 2026-03-16 |
 | 4. end_session Security | 4/4 | Complete   | 2026-03-16 |
-| 5. bureau_features Registration | 0/TBD | Not started | - |
+| 5. bureau_features Registration | 0/3 | Not started | - |
 | 6. RFC 8693 Token Exchange | 0/TBD | Not started | - |
 | 7. Household Identity + Modular Providers | 0/TBD | Not started | - |
 | 8. RFC Compliance Test Suite + Documentation | 0/TBD | Not started | - |
