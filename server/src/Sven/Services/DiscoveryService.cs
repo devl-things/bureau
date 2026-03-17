@@ -13,7 +13,8 @@ namespace Sven.Services
         [
             AuthConstants.OAuth.GrantTypes.AuthorizationCode,
             AuthConstants.OAuth.GrantTypes.RefreshToken,
-            AuthConstants.OAuth.GrantTypes.ClientCredentials
+            AuthConstants.OAuth.GrantTypes.ClientCredentials,
+            AuthConstants.OAuth.GrantTypes.TokenExchange
         ];
         private static readonly HashSet<string> _subjectTypesSupported = [AuthConstants.OAuth.SubjectTypes.Public];
         private static readonly HashSet<string> _idTokenSigningAlgValuesSupported = [AuthConstants.OAuth.SigningAlgorithms.Rsa256];
@@ -51,6 +52,7 @@ namespace Sven.Services
                 TokenEndpointAuthMethodsSupported = [.. _tokenEndpointAuthMethodsSupported],
                 CodeChallengeMethodsSupported = [.. _codeChallengeMethodsSupported],
                 ScopesSupported = [.. _scopesSupported],
+                GrantTypesSupported = [.. _grantTypesSupported],
             };
         }
         public DiscoveryDocument GetDiscoveryDocument()

@@ -33,5 +33,8 @@ namespace Sven.Models
 
         [JsonPropertyName(AuthConstants.OAuth.FieldNames.ScopesSupported)]
         public List<string>? ScopesSupported { get; set; }
+
+        [JsonPropertyName("grant_types_supported")]
+        public List<string>? GrantTypesSupported { get; set; }
     }
 }
