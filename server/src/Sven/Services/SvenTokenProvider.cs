@@ -1,8 +1,9 @@
-﻿using Bureau;
+using Bureau;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Sven.Configurations;
 using Sven.Data;
+using Sven.Data.Repositories;
 using Sven.Extensions;
 using Sven.Models;
 using System.IdentityModel.Tokens.Jwt;
@@ -16,21 +17,21 @@ namespace Sven.Services
         private readonly JwtOptions _jwtOptions;
         private readonly IClientService _clientService;
         private readonly RsaSecurityKey _rsaKey;
-        private readonly IStore<string, RefreshToken> _refreshTokenStore;
+        private readonly RefreshTokenRepository _refreshTokenRepository;
         private readonly TimeProvider _timeProvider;
         private readonly IHouseholdService _householdService;
 
         private Client? _currentClient;
         private readonly TokenLifetimeOptions _tokenLifetimeOptions;
         internal SvenTokenProvider(ILogger<SvenTokenProvider> logger, IOptions<JwtOptions> jwtOptions,
-            RsaSecurityKey rsaKey, IStore<string, RefreshToken> refreshTokenStore, TimeProvider timeProvider, IClientService clientService,
+            RsaSecurityKey rsaKey, RefreshTokenRepository refreshTokenRepository, TimeProvider timeProvider, IClientService clientService,
             IHouseholdService householdService)
         {
             _logger = logger;
             _jwtOptions = jwtOptions.Value;
             _tokenLifetimeOptions = new TokenLifetimeOptions(_jwtOptions);
             _rsaKey = rsaKey;
-            _refreshTokenStore = refreshTokenStore;
+            _refreshTokenRepository = refreshTokenRepository;
             _timeProvider = timeProvider;
             _clientService = clientService;
             _householdService = householdService;
@@ -39,7 +40,7 @@ namespace Sven.Services
 
         public async Task<Result<SvenToken>> CreateTokenAsync(string refreshToken, string? scope, CancellationToken cancellationToken = default)
         {
-            Result<RefreshToken> storedRefreshTokenResult = await _refreshTokenStore.GetAsync(refreshToken, cancellationToken);
+            Result<RefreshToken> storedRefreshTokenResult = await _refreshTokenRepository.GetAsync(refreshToken, cancellationToken);
 
             if (storedRefreshTokenResult.IsError)
             {
@@ -53,7 +54,7 @@ namespace Sven.Services
             {
                 return newRefreshTokenResult.Error;
             }
-            Result removeResult = await _refreshTokenStore.RemoveAsync(refreshToken, cancellationToken);
+            Result removeResult = await _refreshTokenRepository.RemoveAsync(refreshToken, cancellationToken);
             if (removeResult.IsError)
             {
                 _logger.LogResultError(storedRefreshTokenResult.Error);
@@ -156,7 +157,7 @@ namespace Sven.Services
                     Nonce = clientClaims.Nonce,
                     ExpiresAt = _timeProvider.GetFutureTime(_tokenLifetimeOptions.RefreshTokenLifetime)
                 };
-                Result storeResult = await _refreshTokenStore.StoreAsync(refreshTokenObject.Token, refreshTokenObject, cancellationToken);
+                Result storeResult = await _refreshTokenRepository.StoreAsync(refreshTokenObject, cancellationToken);
                 if (storeResult.IsError)
                 {
                     _logger.LogResultError(storeResult.Error);
@@ -230,7 +231,7 @@ namespace Sven.Services
 
         public async Task<Result<bool>> IsRefreshTokenValidAsync(string refreshToken, string clientId, string redirectUri, string? scope, CancellationToken cancellationToken = default)
         {
-            Result<RefreshToken> storedRefreshTokenResult = await _refreshTokenStore.GetAsync(refreshToken, cancellationToken);
+            Result<RefreshToken> storedRefreshTokenResult = await _refreshTokenRepository.GetAsync(refreshToken, cancellationToken);
 
             if (storedRefreshTokenResult.IsError)
             {
@@ -355,7 +356,7 @@ namespace Sven.Services
 
         public async Task<Result<bool>> RevokeAsync(string token, string clientId, string? tokenTypeHint, CancellationToken cancellationToken = default)
         {
-            Result<RefreshToken> storedRefreshTokenResult = await _refreshTokenStore.GetAsync(token, cancellationToken);
+            Result<RefreshToken> storedRefreshTokenResult = await _refreshTokenRepository.GetAsync(token, cancellationToken);
 
             if (storedRefreshTokenResult.IsError)
             {
@@ -368,7 +369,7 @@ namespace Sven.Services
                 return new Result<bool>(false);
             }
 
-            Result removeResult = await _refreshTokenStore.RemoveAsync(token, cancellationToken);
+            Result removeResult = await _refreshTokenRepository.RemoveAsync(token, cancellationToken);
             if (removeResult.IsError)
             {
                 _logger.LogResultError(storedRefreshTokenResult.Error);

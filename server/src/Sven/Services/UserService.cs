@@ -12,14 +12,14 @@ namespace Sven.Services
         private const int MAX_VERIFICATION_CODE = 999999;
         private const int MIN_VERIFICATION_CODE = 100000;
 
-        private readonly IStore<string, string> _miscStore;
-        private readonly IStore<string, UserVerificationCode> _verificationCodeStore;
+        private readonly TicketRepository _ticketRepository;
+        private readonly VerificationCodeRepository _verificationCodeRepository;
         private readonly IUserRepository _userRepository;
         private readonly TimeProvider _timeProvider;
-        public UserService(IStore<string, string> miscStore, IStore<string, UserVerificationCode> verificationCodeStore, IUserRepository userRepository, TimeProvider timeProvider)
+        public UserService(TicketRepository ticketRepository, VerificationCodeRepository verificationCodeRepository, IUserRepository userRepository, TimeProvider timeProvider)
         {
-            _miscStore = miscStore;
-            _verificationCodeStore = verificationCodeStore;
+            _ticketRepository = ticketRepository;
+            _verificationCodeRepository = verificationCodeRepository;
             _userRepository = userRepository;
             _timeProvider = timeProvider;
         }
@@ -50,7 +50,7 @@ namespace Sven.Services
             {
                 return storedResult.Error;
             }
-            if (await _miscStore.RemoveAsync(email, cancellationToken) is { IsError: true } codeRemovalResult)
+            if (await _ticketRepository.RemoveAsync(email, cancellationToken) is { IsError: true } codeRemovalResult)
             {
                 return codeRemovalResult.Error;
             }
@@ -98,7 +98,7 @@ namespace Sven.Services
             // #53 Make sure that using this pseudorandom number generator is safe here csharpsquid:S2245
             string ticket = RandomNumberGenerator.GetInt32(MinVerificationCode, MaxVerificationCode).ToString();
             // #53 add expiration date 5min
-            if (await _miscStore.StoreAsync(ticket, userIdentifier, cancellationToken) is { IsError: true } result)
+            if (await _ticketRepository.StoreAsync(ticket, userIdentifier, cancellationToken) is { IsError: true } result)
             {
                 return result.Error;
             }
@@ -118,7 +118,7 @@ namespace Sven.Services
             // #53 Make sure that using this pseudorandom number generator is safe here csharpsquid:S2245
             string code = RandomNumberGenerator.GetInt32(MinVerificationCode, MaxVerificationCode).ToString();
             UserVerificationCode data = new(email, code, userIdResult.Value, status, _timeProvider.GetUtcNow().AddMinutes(5));
-            if (await _verificationCodeStore.StoreAsync(data.Id, data, cancellationToken) is { IsError: true } result)
+            if (await _verificationCodeRepository.StoreAsync(data.Id, data, cancellationToken) is { IsError: true } result)
             {
                 return result.Error;
             }
@@ -128,7 +128,7 @@ namespace Sven.Services
         {
             string code = RandomNumberGenerator.GetInt32(MinVerificationCode, MaxVerificationCode).ToString();
             UserVerificationCode data = new(verificationCode.Email, code, verificationCode.UserId, VerificationStatus.None, _timeProvider.GetUtcNow().AddMinutes(5));
-            if (await _verificationCodeStore.StoreAsync(data.Id, data, cancellationToken) is { IsError: true } result)
+            if (await _verificationCodeRepository.StoreAsync(data.Id, data, cancellationToken) is { IsError: true } result)
             {
                 return result.Error;
             }
@@ -145,7 +145,7 @@ namespace Sven.Services
             {
                 return ResultError.From($"Verification code Id = {id} malformed");
             }
-            Result<UserVerificationCode> result = await _verificationCodeStore.GetAsync(id, cancellationToken);
+            Result<UserVerificationCode> result = await _verificationCodeRepository.GetAsync(id, cancellationToken);
             if (result.Value.Expiration < _timeProvider.GetUtcNow())
             {
                 return ResultError.From($"Verification code Id = {id} expired");
@@ -155,22 +155,26 @@ namespace Sven.Services
 
         public async Task<Result> UpdateVerificationCodeStatusAsync(string codeId, VerificationStatus status, CancellationToken cancellationToken = default)
         {
-            Result<UserVerificationCode> result = await GetVerificationCodeAsync(codeId, cancellationToken);
-            if (result.IsError)
-            {
-                return result.Error;
-            }
-            result.Value.Status = status;
+            DateTimeOffset expiration;
             if (VerificationStatus.Invalid.Equals(status))
             {
-                result.Value.Expiration = _timeProvider.GetUtcNow(); // invalidate the code
+                expiration = _timeProvider.GetUtcNow();
             }
-            return true;
+            else
+            {
+                Result<UserVerificationCode> getResult = await _verificationCodeRepository.GetAsync(codeId, cancellationToken);
+                if (getResult.IsError)
+                {
+                    return getResult.Error;
+                }
+                expiration = getResult.Value.Expiration;
+            }
+            return await _verificationCodeRepository.UpdateStatusAsync(codeId, status, expiration, cancellationToken);
         }
 
         public Task<Result<string>> GetUserIdByTicketAsync(string ticket, CancellationToken cancellationToken = default)
         {
-            return _miscStore.GetAsync(ticket, cancellationToken);
+            return _ticketRepository.GetAsync(ticket, cancellationToken);
         }
 
         public async Task<Result> DeleteUserAsync(string email, CancellationToken cancellationToken = default)
