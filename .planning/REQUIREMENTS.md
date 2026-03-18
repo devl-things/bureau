@@ -11,7 +11,7 @@
 - [x] **SEC-02**: Rate limiting is applied to `/connect/token`, `/connect/authorize`, and sign-in endpoints using ASP.NET Core built-in middleware
 - [x] **SEC-03**: Authorization code invalidation is atomic — a single database DELETE with row-count check; any reuse attempt is logged as a security event
 - [x] **SEC-04**: AES-256 encryption key is loaded from environment variable or secrets manager, not from `appsettings.json`
-- [ ] **SEC-05**: Token exchange is rate-limited per `(client_id, user_id)` pair — after N consecutive failures within a configurable window, subsequent exchanges are refused until a cooldown expires; threshold and cooldown duration are configurable via `appsettings`; a `FailedExchangeAttemptRepository` persists the failure counts
+- [x] **SEC-05**: Token exchange is rate-limited per `(client_id, user_id)` pair — after N consecutive failures within a configurable window, subsequent exchanges are refused until a cooldown expires; threshold and cooldown duration are configurable via `appsettings`; a `FailedExchangeAttemptRepository` persists the failure counts
 
 ### Protocol Completeness
 
@@ -33,7 +33,7 @@
 - [x] **CODE-02**: All service classes are named `*Service` implementing `I*Service`; all repository classes are named `*Repository` implementing `I*Repository`; classes used only within `Sven` are `internal`
 - [ ] **CODE-03**: Service and controller classes carry XML doc comments referencing the relevant RFC section for each operation (e.g., `/// RFC 6749 §4.1 — Authorization Code Grant`); method names are clear and domain-readable
 - [ ] **CODE-04**: Token issuance, exchange, and error events are logged via `ILogger` with structured message templates compatible with future Serilog adoption; no external logging library dependency required
-- [ ] **CODE-05**: `IStore<TKey, TValue>` and `InMemoryStore<TKey, TValue>` are removed; all five in-memory stores are replaced by concrete DB-backed repositories in `Sven.Data.Repositories`: `AuthCodeRepository`, `PkceRequestRepository`, `VerificationCodeRepository`, `TicketRepository` (replaces the misc `IStore<string, string>` in `UserService`), and `RefreshTokenRepository` (DB model and type config already exist in Postgres); repositories access `SvenContext` directly; no repository interfaces unless testing requires it
+- [x] **CODE-05**: `IStore<TKey, TValue>` and `InMemoryStore<TKey, TValue>` are removed; all five in-memory stores are replaced by concrete DB-backed repositories in `Sven.Data.Repositories`: `AuthCodeRepository`, `PkceRequestRepository`, `VerificationCodeRepository`, `TicketRepository` (replaces the misc `IStore<string, string>` in `UserService`), and `RefreshTokenRepository` (DB model and type config already exist in Postgres); repositories access `SvenContext` directly; no repository interfaces unless testing requires it
 - [x] **CODE-06**: `Sven.csproj` is a Class Library (not an ASP.NET Core Web App); `Program.cs` is removed from the `Sven` project; the `Sven` project is listed under the `Core` solution folder in `Bureau.slnx`
 
 ### Tests
@@ -117,8 +117,8 @@ Which phases cover which requirements. Updated during roadmap creation.
 | VAULT-03 | Phase 6 | Complete |
 | VAULT-04 | Phase 6 | Complete |
 | VAULT-02 | Phase 7 | Pending |
-| SEC-05 | Phase 6.1 | Pending |
-| CODE-05 | Phase 6.1 | Pending |
+| SEC-05 | Phase 6.1 | Complete |
+| CODE-05 | Phase 6.1 | Complete |
 | CODE-06 | Phase 6.1 | Complete |
 | TEST-01 | Phase 8 | Pending |
 | TEST-02 | Phase 8 | Pending |

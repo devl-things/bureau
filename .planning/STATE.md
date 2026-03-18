@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: ready
-stopped_at: Completed 6.1-db-backed-stores-sven-restructure 6.1-01-PLAN.md
-last_updated: "2026-03-18T06:44:37.846Z"
+stopped_at: Completed 6.1-db-backed-stores-sven-restructure 6.1-02-PLAN.md
+last_updated: "2026-03-18T06:48:40.155Z"
 last_activity: 2026-03-18 — Phase 6.1 plans created (CODE-05, CODE-06, SEC-05)
 progress:
   total_phases: 9
   completed_phases: 6
   total_plans: 32
-  completed_plans: 28
+  completed_plans: 29
   percent: 88
 ---
 
@@ -156,6 +156,7 @@ Progress: [████████░░] 84%
 | Phase 06-rfc-8693-token-exchange P04 | 15 | 2 tasks | 5 files |
 | Phase 06-rfc-8693-token-exchange P05 | 25 | 2 tasks | 6 files |
 | Phase 6.1-db-backed-stores-sven-restructure P01 | 2 | 2 tasks | 2 files |
+| Phase 6.1 P02 | 7 | 2 tasks | 11 files |
 
 ## Accumulated Context
 
@@ -239,6 +240,7 @@ Recent decisions affecting current work:
 - [Phase 6.1-db-backed-stores-sven-restructure]: TokenExchangeOptions class in Sven/Configurations/ bound from "TokenExchange" appsettings section; defaults 5 failures / 15 min cooldown
 - [Phase 6.1-db-backed-stores-sven-restructure]: Microsoft.AspNetCore.Authentication.Cookies retained in Sven.csproj — UserClaimsProvider uses CookieAuthenticationDefaults.AuthenticationScheme
 - [Phase 6.1-db-backed-stores-sven-restructure]: FrameworkReference to Microsoft.AspNetCore.App replaces implicit web SDK ASP.NET Core references for class library SDK
+- [Phase 6.1]: FailedExchangeAttemptDb uses composite PK (ClientId, UserId) — no surrogate int Id; UserVerificationCodeDb uses GUID string PK; TicketDb keyed by Ticket only; DateTimeOffset provider mappings deferred to provider configs
 
 ### Pending Todos
 
@@ -252,6 +254,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-18T06:44:37.841Z
-Stopped at: Completed 6.1-db-backed-stores-sven-restructure 6.1-01-PLAN.md
+Last session: 2026-03-18T06:48:40.150Z
+Stopped at: Completed 6.1-db-backed-stores-sven-restructure 6.1-02-PLAN.md
 Resume file: None

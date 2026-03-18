@@ -1,0 +1,22 @@
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using Sven.Data.Models;
+
+namespace Sven.Data.SqlServer.TypeConfigurations
+{
+    internal sealed class UserVerificationCodeTypeConfiguration : IEntityTypeConfiguration<UserVerificationCodeDb>
+    {
+        public void Configure(EntityTypeBuilder<UserVerificationCodeDb> builder)
+        {
+            builder.ToTable("VerificationCodes");
+            builder.HasKey(x => x.Id);
+            builder.Property(x => x.Id).HasMaxLength(36).IsRequired();
+            builder.Property(x => x.Email).HasMaxLength(256).IsRequired();
+            builder.Property(x => x.VerificationCode).HasMaxLength(10).IsRequired();
+            builder.Property(x => x.UserId).HasMaxLength(100);
+            builder.Property(x => x.Status).IsRequired();
+            builder.Property(x => x.Expiration).HasColumnType("datetimeoffset").IsRequired();
+            builder.Property(x => x.CreatedAt).HasColumnType("datetimeoffset").IsRequired();
+        }
+    }
+}
