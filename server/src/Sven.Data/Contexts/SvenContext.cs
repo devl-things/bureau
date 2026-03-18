@@ -16,5 +16,10 @@ namespace Sven.Data.Contexts
         internal DbSet<HouseholdDb> Households { get; set; } = null!;
         internal DbSet<HouseholdMemberDb> HouseholdMembers { get; set; } = null!;
         internal DbSet<SharedExternalTokenDb> SharedExternalTokens { get; set; } = null!;
+        internal DbSet<AuthCodeDb> AuthCodes { get; set; } = null!;
+        internal DbSet<OAuthRequestDb> OAuthRequests { get; set; } = null!;
+        internal DbSet<UserVerificationCodeDb> VerificationCodes { get; set; } = null!;
+        internal DbSet<TicketDb> Tickets { get; set; } = null!;
+        internal DbSet<FailedExchangeAttemptDb> FailedExchangeAttempts { get; set; } = null!;
     }
 }
