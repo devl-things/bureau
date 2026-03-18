@@ -16,6 +16,7 @@ namespace Sven.Data.Postgres.Configurations
         public static IServiceCollection AddSvenPostgres(this IServiceCollection services, IConfiguration configuration)
         {
             string? connectionString = configuration.GetConnectionString(SvenDbConnectionStringName);
+            services.AddSvenCore(configuration);
             return services.AddSvenPostgres(connectionString);
         }
 
@@ -37,8 +38,6 @@ namespace Sven.Data.Postgres.Configurations
             });
 
             services.AddScoped<IHealthProbe, SvenHealthProbe>();
-
-            services.AddSvenCore();
 
             return services;
         }

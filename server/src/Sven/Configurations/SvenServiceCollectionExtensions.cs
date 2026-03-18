@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -13,8 +14,10 @@ namespace Sven.Configurations
 {
     public static class SvenServiceCollectionExtensions
     {
-        public static IServiceCollection AddSvenCore(this IServiceCollection services)
+        public static IServiceCollection AddSvenCore(this IServiceCollection services, IConfiguration configuration)
         {
+            // SEC-05: Bind token exchange lockout thresholds from appsettings "TokenExchange" section
+            services.Configure<TokenExchangeOptions>(configuration.GetSection(TokenExchangeOptions.SectionName));
             services.AddScoped<UserRepository>();
             services.AddScoped<IUserRepository>(sp => sp.GetRequiredService<UserRepository>());
             services.AddScoped<IClientRepository, ClientRepository>();

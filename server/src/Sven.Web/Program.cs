@@ -105,7 +105,7 @@ namespace Sven
             else
             {
                 // In testing: skip SQL Server connection validation; test factory registers the DB context
-                builder.Services.AddSvenCore();
+                builder.Services.AddSvenCore(builder.Configuration);
             }
 
             // Rate limiting (SEC-02) — all endpoints partitioned by remote IP; client_id partitioning deferred

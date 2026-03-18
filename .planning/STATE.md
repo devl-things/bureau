@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: ready
-stopped_at: Completed 6.1-db-backed-stores-sven-restructure 6.1-04-PLAN.md
-last_updated: "2026-03-18T08:31:05.738Z"
+stopped_at: Completed 6.1-db-backed-stores-sven-restructure 6.1-05-PLAN.md
+last_updated: "2026-03-18T08:35:47.456Z"
 last_activity: 2026-03-18 — Phase 6.1 plans created (CODE-05, CODE-06, SEC-05)
 progress:
   total_phases: 9
-  completed_phases: 6
+  completed_phases: 7
   total_plans: 32
-  completed_plans: 31
+  completed_plans: 32
   percent: 97
 ---
 
@@ -175,6 +175,7 @@ Progress: [████████░░] 84%
 | Phase 6.1 P02 | 7 | 2 tasks | 11 files |
 | Phase 6.1-db-backed-stores-sven-restructure P03 | 25 | 2 tasks | 19 files |
 | Phase 6.1-db-backed-stores-sven-restructure P04 | 45 | 2 tasks | 16 files |
+| Phase 6.1-db-backed-stores-sven-restructure P05 | 3 | 2 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -263,6 +264,8 @@ Recent decisions affecting current work:
 - [Phase 6.1-db-backed-stores-sven-restructure]: ExchangeCodeAsync uses SELECT-then-DELETE: FirstOrDefaultAsync to capture row then ExecuteDeleteAsync for atomicity — ExecuteDeleteAsync does not return deleted entity
 - [Phase 6.1-db-backed-stores-sven-restructure]: SQLite in-memory chosen over EF InMemory for test infrastructure — ExecuteDeleteAsync/ExecuteUpdateAsync require a relational provider
 - [Phase 6.1-db-backed-stores-sven-restructure]: OwnedContext wrapper bundles UnitTestSvenContext with SqliteConnection to ensure connection stays open for unit test lifetime
+- [Phase 6.1-db-backed-stores-sven-restructure]: SEC-05 lockout check placed after Step 3 — userId required for composite (clientId, userId) key; Steps 1-2 failures do not record to failure counter
+- [Phase 6.1-db-backed-stores-sven-restructure]: RecordFailureAsync called on four Step 4-6 failure paths; ClearAsync called on success path before final return
 
 ### Pending Todos
 
@@ -276,6 +279,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-18T08:31:05.733Z
-Stopped at: Completed 6.1-db-backed-stores-sven-restructure 6.1-04-PLAN.md
+Last session: 2026-03-18T08:35:47.452Z
+Stopped at: Completed 6.1-db-backed-stores-sven-restructure 6.1-05-PLAN.md
 Resume file: None

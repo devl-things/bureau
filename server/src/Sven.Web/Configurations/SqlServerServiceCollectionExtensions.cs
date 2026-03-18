@@ -30,7 +30,7 @@ namespace Sven.Web.Configurations
                 return db;
             });
 
-            services.AddSvenCore();
+            services.AddSvenCore(configuration);
 
             return services;
         }
