@@ -2,15 +2,46 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
+status: ready
+stopped_at: Completed 6.1-db-backed-stores-sven-restructure 6.1-01-PLAN.md
+last_updated: "2026-03-18T06:44:37.846Z"
+last_activity: 2026-03-18 — Phase 6.1 plans created (CODE-05, CODE-06, SEC-05)
+progress:
+  total_phases: 9
+  completed_phases: 6
+  total_plans: 32
+  completed_plans: 28
+  percent: 88
+---
+
+---
+gsd_state_version: 1.0
+milestone: v1.0
+milestone_name: milestone
+status: ready
+stopped_at: Phase 6.1 planned — 5 plans created (waves 1-5)
+last_updated: "2026-03-18T06:30:00.000Z"
+last_activity: 2026-03-18 — Phase 6.1 plans created (CODE-05, CODE-06, SEC-05)
+progress:
+  [█████████░] 88%
+  completed_phases: 6
+  total_plans: 32
+  completed_plans: 27
+---
+
+---
+gsd_state_version: 1.0
+milestone: v1.0
+milestone_name: milestone
 status: planning
-stopped_at: Completed 06-rfc-8693-token-exchange 06-04-PLAN.md
-last_updated: "2026-03-17T21:16:58.449Z"
+stopped_at: Phase 6.1 context gathered
+last_updated: "2026-03-18T05:37:26.621Z"
 last_activity: 2026-03-15 — Completed SEC-01/SEC-03/SEC-04 security fixes (TTL, atomic auth code, AES key guard)
 progress:
-  total_phases: 8
-  completed_phases: 5
+  total_phases: 9
+  completed_phases: 6
   total_plans: 27
-  completed_plans: 26
+  completed_plans: 27
 ---
 
 ---
@@ -35,7 +66,7 @@ milestone: v1.0
 milestone_name: milestone
 status: planning
 stopped_at: Completed 03-token-introspection 03-02-PLAN.md
-last_updated: "2026-03-16T06:21:59.709Z"
+last_updated: "2026-03-16T06:21:59.660Z"
 last_activity: 2026-03-15 — Completed SEC-01/SEC-03/SEC-04 security fixes (TTL, atomic auth code, AES key guard)
 progress:
   [██████████] 100%
@@ -68,16 +99,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-15)
 
 **Core value:** Bureau apps authenticate against one system (Sven) and request external tokens from one system (Sven) — no Bureau app implements provider-specific OAuth, and no external secret leaves Sven.
-**Current focus:** Phase 1 - Security Hardening
+**Current focus:** Phase 6.1 - DB-Backed Stores + Sven Restructure
 
 ## Current Position
 
-Phase: 1 of 8 (Security Hardening)
-Plan: 3 of 4 in current phase
-Status: In progress
-Last activity: 2026-03-15 — Completed SEC-01/SEC-03/SEC-04 security fixes (TTL, atomic auth code, AES key guard)
+Phase: 6.1 (DB-Backed Stores + Sven Restructure)
+Plan: 0 of 5 in current phase
+Status: Ready to execute
+Last activity: 2026-03-18 — Phase 6.1 plans created (CODE-05, CODE-06, SEC-05)
 
-Progress: [███████░░░] 75%
+Progress: [████████░░] 84%
 
 ## Performance Metrics
 
@@ -123,6 +154,8 @@ Progress: [███████░░░] 75%
 | Phase 06-rfc-8693-token-exchange PP02 | 15 | 2 tasks | 8 files |
 | Phase 06-rfc-8693-token-exchange P03 | 15 | 1 tasks | 2 files |
 | Phase 06-rfc-8693-token-exchange P04 | 15 | 2 tasks | 5 files |
+| Phase 06-rfc-8693-token-exchange P05 | 25 | 2 tasks | 6 files |
+| Phase 6.1-db-backed-stores-sven-restructure P01 | 2 | 2 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -195,6 +228,17 @@ Recent decisions affecting current work:
 - [Phase 06-rfc-8693-token-exchange]: IExternalTokenRefresher interface used in TokenExchangeService constructor instead of concrete type — avoids dual registration, keeps service testable
 - [Phase 06-rfc-8693-token-exchange]: Sven.Contracts.TokenRequest must mirror Sven.Models.TokenRequest RFC 8693 fields — TokenController resolves to Contracts type; both must be kept in sync
 - [Phase 06-rfc-8693-token-exchange]: ITokenExchangeService registered via factory lambda in AddSvenCore — internal sealed class not resolvable by DI reflection from Sven.Web
+- [Phase 06-rfc-8693-token-exchange]: TokenExchangeService step 3 catch broadened to include ArgumentException — IDX12741 is thrown as ArgumentException for non-JWT strings, not SecurityTokenException
+- [Phase 06-rfc-8693-token-exchange]: VAULT-03 integration tests drive the real household claims injection path by seeding auth codes via IAuthCodeService.CreateAuthCodeAsync, bypassing Razor Pages login
+- [Phase 6.1-db-backed-stores-sven-restructure]: No repository interfaces for the five new repositories — consistent with Phase 6 decision; concrete types injected directly into services
+- [Phase 6.1-db-backed-stores-sven-restructure]: SEC-05 lockout check placed after Step 3 (post JWT validation) — userId required for composite (clientId, userId) key; Steps 1-2 failures do not record to failure counter
+- [Phase 6.1-db-backed-stores-sven-restructure]: FailedExchangeAttemptDb uses composite PK (ClientId, UserId) — no surrogate int Id needed
+- [Phase 6.1-db-backed-stores-sven-restructure]: UserVerificationCodeDb uses GUID string as PK (not surrogate int) — matches UserVerificationCode.Id which is already a GUID string
+- [Phase 6.1-db-backed-stores-sven-restructure]: TicketRepository.RemoveAsync silently succeeds for non-existent keys — preserves CreateUserAsync(email) behavior where email key was never stored
+- [Phase 6.1-db-backed-stores-sven-restructure]: Microsoft.AspNetCore.Authentication.Cookies retained in Sven.csproj — UserClaimsProvider uses CookieAuthenticationDefaults.AuthenticationScheme
+- [Phase 6.1-db-backed-stores-sven-restructure]: TokenExchangeOptions class in Sven/Configurations/ bound from "TokenExchange" appsettings section; defaults 5 failures / 15 min cooldown
+- [Phase 6.1-db-backed-stores-sven-restructure]: Microsoft.AspNetCore.Authentication.Cookies retained in Sven.csproj — UserClaimsProvider uses CookieAuthenticationDefaults.AuthenticationScheme
+- [Phase 6.1-db-backed-stores-sven-restructure]: FrameworkReference to Microsoft.AspNetCore.App replaces implicit web SDK ASP.NET Core references for class library SDK
 
 ### Pending Todos
 
@@ -208,6 +252,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-17T21:16:58.419Z
-Stopped at: Completed 06-rfc-8693-token-exchange 06-04-PLAN.md
+Last session: 2026-03-18T06:44:37.841Z
+Stopped at: Completed 6.1-db-backed-stores-sven-restructure 6.1-01-PLAN.md
 Resume file: None

@@ -11,6 +11,7 @@
 - [x] **SEC-02**: Rate limiting is applied to `/connect/token`, `/connect/authorize`, and sign-in endpoints using ASP.NET Core built-in middleware
 - [x] **SEC-03**: Authorization code invalidation is atomic — a single database DELETE with row-count check; any reuse attempt is logged as a security event
 - [x] **SEC-04**: AES-256 encryption key is loaded from environment variable or secrets manager, not from `appsettings.json`
+- [ ] **SEC-05**: Token exchange is rate-limited per `(client_id, user_id)` pair — after N consecutive failures within a configurable window, subsequent exchanges are refused until a cooldown expires; threshold and cooldown duration are configurable via `appsettings`; a `FailedExchangeAttemptRepository` persists the failure counts
 
 ### Protocol Completeness
 
@@ -32,6 +33,8 @@
 - [x] **CODE-02**: All service classes are named `*Service` implementing `I*Service`; all repository classes are named `*Repository` implementing `I*Repository`; classes used only within `Sven` are `internal`
 - [ ] **CODE-03**: Service and controller classes carry XML doc comments referencing the relevant RFC section for each operation (e.g., `/// RFC 6749 §4.1 — Authorization Code Grant`); method names are clear and domain-readable
 - [ ] **CODE-04**: Token issuance, exchange, and error events are logged via `ILogger` with structured message templates compatible with future Serilog adoption; no external logging library dependency required
+- [ ] **CODE-05**: `IStore<TKey, TValue>` and `InMemoryStore<TKey, TValue>` are removed; all five in-memory stores are replaced by concrete DB-backed repositories in `Sven.Data.Repositories`: `AuthCodeRepository`, `PkceRequestRepository`, `VerificationCodeRepository`, `TicketRepository` (replaces the misc `IStore<string, string>` in `UserService`), and `RefreshTokenRepository` (DB model and type config already exist in Postgres); repositories access `SvenContext` directly; no repository interfaces unless testing requires it
+- [x] **CODE-06**: `Sven.csproj` is a Class Library (not an ASP.NET Core Web App); `Program.cs` is removed from the `Sven` project; the `Sven` project is listed under the `Core` solution folder in `Bureau.slnx`
 
 ### Tests
 
@@ -56,6 +59,11 @@
 - **INFRA-01**: JWT signing key is persisted across restarts (ASP.NET Core Data Protection or environment-injected) so Sven restarts do not invalidate all active sessions
 - **INFRA-02**: Refresh token rotation grace period is configurable to tolerate network hiccups without silent session loss
 
+### Protocol Completeness
+
+- **PROT-05**: RFC 8707 Resource Indicators — `resource` parameter is accepted on `/connect/token`; the `aud` claim in issued tokens targets the requested resource URI; `resource_indicators_supported` is advertised in the discovery document
+- **PROT-06**: RFC 7592 Client Registration Management — registered clients can be updated (`PUT /oidc/register/{client_id}`) or deleted (`DELETE /oidc/register/{client_id}`) using the original registration access token; client secret rotation is supported
+
 ### External Providers
 
 - **PROV-01**: Facebook provider module implemented as `IExternalProviderModule`
@@ -66,6 +74,14 @@
 - **HOUSE-01**: Household creation, invite, and accept flow implemented end-to-end
 - **HOUSE-02**: Sharing consent UI — account management page for per-feature external token sharing with household members
 - **HOUSE-03**: Per-feature sharing granularity in the sharing consent UI
+
+### Admin
+
+- **ADMIN-01**: Razor Pages admin UI allows authorized Sven users to create, view, update, and delete OAuth clients; displays the registration access token with rotation; shows and edits `bureau_features` declarations post-registration
+
+### Code Quality
+
+- **CODE-07**: At startup, `FeatureKeys.AllKeys` is cross-referenced against `IExternalProviderRegistry`; any feature key whose required external scope references an unregistered provider emits a structured startup warning via `ILogger`
 
 ---
 
@@ -101,6 +117,9 @@ Which phases cover which requirements. Updated during roadmap creation.
 | VAULT-03 | Phase 6 | Complete |
 | VAULT-04 | Phase 6 | Complete |
 | VAULT-02 | Phase 7 | Pending |
+| SEC-05 | Phase 6.1 | Pending |
+| CODE-05 | Phase 6.1 | Pending |
+| CODE-06 | Phase 6.1 | Complete |
 | TEST-01 | Phase 8 | Pending |
 | TEST-02 | Phase 8 | Pending |
 | TEST-03 | Phase 8 | Pending |
@@ -113,10 +132,10 @@ Which phases cover which requirements. Updated during roadmap creation.
 | CODE-04 | Phase 8 | Pending |
 
 **Coverage:**
-- v1 requirements: 24 total
-- Mapped to phases: 24
+- v1 requirements: 27 total
+- Mapped to phases: 27
 - Unmapped: 0
 
 ---
 *Requirements defined: 2026-03-15*
-*Last updated: 2026-03-15 after 01-02 plan completion (CODE-01, CODE-02 marked complete)*
+*Last updated: 2026-03-18 — added SEC-05, CODE-05, CODE-06 (from Phase 6.1 deferred), PROT-05, PROT-06, ADMIN-01, CODE-07 (from phases 2/5 deferred)*
