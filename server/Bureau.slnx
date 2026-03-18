@@ -25,6 +25,12 @@
     <Project Path="src/Sven.Abstractions/Sven.Abstractions.csproj">
       <Build Solution="Debug|*" Project="false" />
     </Project>
+    <Project Path="src/Sven.Contracts/Sven.Contracts.csproj">
+      <Build Solution="Debug|*" Project="false" />
+    </Project>
+    <Project Path="src/Sven/Sven.csproj">
+      <Build Solution="Debug|*" Project="false" />
+    </Project>
   </Folder>
   <Folder Name="/Infrastructure/">
     <Project Path="src/Sven.Data.Postgres/Sven.Data.Postgres.csproj">
@@ -33,10 +39,6 @@
     <Project Path="src/Sven.Data.SqlServer/Sven.Data.SqlServer.csproj">
       <Build Solution="Debug|*" Project="false" />
     </Project>
-    <Project Path="src/Sven.Data/Sven.Data.csproj">
-      <Build Solution="Debug|*" Project="false" />
-    </Project>
-
     <Project Path="src/Bureau.AspNetCore/Bureau.AspNetCore.csproj" Id="b6f299e3-2de1-4306-8e7e-301c1c0621e1">
       <Build Solution="Debug|*" Project="false" />
     </Project>
@@ -51,7 +53,7 @@
   <Folder Name="/Presentation/">
     <Project Path="src/Bureau.Frontend.DevRunner/Bureau.Frontend.DevRunner.csproj" Id="da64ba29-3095-4163-becc-2d93c027280d" />
     <Project Path="src/Niles.Chores.Api/Niles.Chores.Api.csproj" />
-    <Project Path="src/Sven/Sven.csproj">
+    <Project Path="src/Sven.Web/Sven.Web.csproj">
       <Build Solution="Debug|*" Project="false" />
     </Project>
     <Project Path="src/Watson.Items.Ingest.Api/Watson.Items.Ingest.Api.csproj" Id="8b47c0b7-01a6-4db1-abc0-5edefa6a846d" />
