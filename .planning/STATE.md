@@ -3,14 +3,30 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: ready
-stopped_at: Completed 6.1-db-backed-stores-sven-restructure 6.1-02-PLAN.md
-last_updated: "2026-03-18T06:48:40.155Z"
+stopped_at: Completed 6.1-db-backed-stores-sven-restructure 6.1-04-PLAN.md
+last_updated: "2026-03-18T08:31:05.738Z"
 last_activity: 2026-03-18 — Phase 6.1 plans created (CODE-05, CODE-06, SEC-05)
 progress:
   total_phases: 9
   completed_phases: 6
   total_plans: 32
-  completed_plans: 29
+  completed_plans: 31
+  percent: 97
+---
+
+---
+gsd_state_version: 1.0
+milestone: v1.0
+milestone_name: milestone
+status: ready
+stopped_at: Completed 6.1-db-backed-stores-sven-restructure 6.1-03-PLAN.md
+last_updated: "2026-03-18T06:58:13.620Z"
+last_activity: 2026-03-18 — Phase 6.1 plans created (CODE-05, CODE-06, SEC-05)
+progress:
+  [██████████] 97%
+  completed_phases: 6
+  total_plans: 32
+  completed_plans: 30
   percent: 88
 ---
 
@@ -157,6 +173,8 @@ Progress: [████████░░] 84%
 | Phase 06-rfc-8693-token-exchange P05 | 25 | 2 tasks | 6 files |
 | Phase 6.1-db-backed-stores-sven-restructure P01 | 2 | 2 tasks | 2 files |
 | Phase 6.1 P02 | 7 | 2 tasks | 11 files |
+| Phase 6.1-db-backed-stores-sven-restructure P03 | 25 | 2 tasks | 19 files |
+| Phase 6.1-db-backed-stores-sven-restructure P04 | 45 | 2 tasks | 16 files |
 
 ## Accumulated Context
 
@@ -241,6 +259,10 @@ Recent decisions affecting current work:
 - [Phase 6.1-db-backed-stores-sven-restructure]: Microsoft.AspNetCore.Authentication.Cookies retained in Sven.csproj — UserClaimsProvider uses CookieAuthenticationDefaults.AuthenticationScheme
 - [Phase 6.1-db-backed-stores-sven-restructure]: FrameworkReference to Microsoft.AspNetCore.App replaces implicit web SDK ASP.NET Core references for class library SDK
 - [Phase 6.1]: FailedExchangeAttemptDb uses composite PK (ClientId, UserId) — no surrogate int Id; UserVerificationCodeDb uses GUID string PK; TicketDb keyed by Ticket only; DateTimeOffset provider mappings deferred to provider configs
+- [Phase 6.1-db-backed-stores-sven-restructure]: Provider type configs implement IEntityTypeConfiguration<T> directly (no inheritance from base configs) — base Configure methods are non-virtual; matches existing RefreshTokenTypeConfiguration pattern
+- [Phase 6.1-db-backed-stores-sven-restructure]: ExchangeCodeAsync uses SELECT-then-DELETE: FirstOrDefaultAsync to capture row then ExecuteDeleteAsync for atomicity — ExecuteDeleteAsync does not return deleted entity
+- [Phase 6.1-db-backed-stores-sven-restructure]: SQLite in-memory chosen over EF InMemory for test infrastructure — ExecuteDeleteAsync/ExecuteUpdateAsync require a relational provider
+- [Phase 6.1-db-backed-stores-sven-restructure]: OwnedContext wrapper bundles UnitTestSvenContext with SqliteConnection to ensure connection stays open for unit test lifetime
 
 ### Pending Todos
 
@@ -254,6 +276,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-18T06:48:40.150Z
-Stopped at: Completed 6.1-db-backed-stores-sven-restructure 6.1-02-PLAN.md
+Last session: 2026-03-18T08:31:05.733Z
+Stopped at: Completed 6.1-db-backed-stores-sven-restructure 6.1-04-PLAN.md
 Resume file: None

@@ -22,7 +22,8 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 3: Token Introspection** - Enable resource servers to validate any Sven-issued token (completed 2026-03-16)
 - [x] **Phase 4: end_session Security** - Close the RP-initiated logout open redirect and complete OIDC Session compliance (completed 2026-03-16)
 - [ ] **Phase 5: bureau_features Registration** - Add the client registration extension that gates token exchange
-- [ ] **Phase 6: RFC 8693 Token Exchange** - Implement the token broker core: Sven JWTs exchanged for external provider tokens
+- [x] **Phase 6: RFC 8693 Token Exchange** - Implement the token broker core: Sven JWTs exchanged for external provider tokens (completed 2026-03-17)
+- [ ] **Phase 6.1: DB-Backed Stores + Sven Restructure** *(INSERTED)* - Replace all in-memory stores with DB-backed repositories, add token exchange lockout, and convert Sven to a Class Library
 - [ ] **Phase 7: Household Identity + Modular Providers** - Wire household claims into JWTs and refactor provider architecture
 - [ ] **Phase 8: RFC Compliance Test Suite + Documentation** - Consolidate spec-named tests across all RFCs and complete docs
 
@@ -135,6 +136,23 @@ Plans:
 - [ ] 06-04-PLAN.md — Wave 2: ITokenExchangeService + TokenExchangeService six-step chain + HandleTokenExchangeFlow in TokenController + DI registration
 - [ ] 06-05-PLAN.md — Wave 3: DiscoveryDocument grant_types_supported + all 12 integration tests green
 
+### Phase 6.1: DB-Backed Stores + Sven Restructure
+**Goal**: All five in-memory stores are replaced with DB-backed repositories; the token exchange failure counter is active; `Sven.csproj` is a Class Library under the Core solution folder
+**Depends on**: Phase 6
+**Requirements**: SEC-05, CODE-05, CODE-06
+**Success Criteria** (what must be TRUE):
+  1. `IStore<TKey, TValue>` and `InMemoryStore<TKey, TValue>` do not exist in the codebase; all five stores are replaced by concrete repositories that persist via `SvenContext`
+  2. After N consecutive token exchange failures per `(client_id, user_id)`, the next exchange attempt returns an error without proceeding to validation; N and cooldown duration are driven by `appsettings`
+  3. `Sven.csproj` outputs a Class Library; the project compiles with no `Program.cs`; `Bureau.slnx` lists `Sven` under the `Core` solution folder
+**Plans**: 5 plans
+
+Plans:
+- [ ] 6.1-01-PLAN.md — Wave 1: Sven.csproj SDK swap (Web → plain), remove 8 obsolete packages, add FrameworkReference, move to /Core/ in Bureau.slnx (CODE-06)
+- [ ] 6.1-02-PLAN.md — Wave 2: Five new EF entity models + SvenContext DbSets + base type configurations (CODE-05/SEC-05 data)
+- [ ] 6.1-03-PLAN.md — Wave 3: Provider type configs (Postgres + SqlServer), hand-authored migrations, six concrete repositories (CODE-05/SEC-05 repos)
+- [ ] 6.1-04-PLAN.md — Wave 4: Rewire AuthCodeService/UserService/SvenTokenProvider to concrete repos; delete IStore/InMemoryStore; update DI + SvenTestContext (CODE-05 wiring)
+- [ ] 6.1-05-PLAN.md — Wave 5: Wave 0 lockout test stubs + FailedExchangeAttemptRepository in TokenExchangeService (SEC-05)
+
 ### Phase 7: Household Identity + Modular Providers
 **Goal**: External provider token refresh is handled by self-contained provider modules with no switch statements in core code; household JWT claims are live-wired; Microsoft provider is fully tested
 **Depends on**: Phase 6
@@ -160,7 +178,7 @@ Plans:
 ## Progress
 
 **Execution Order:**
-Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8
+Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 6.1 → 7 → 8
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
@@ -169,6 +187,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8
 | 3. Token Introspection | 4/4 | Complete   | 2026-03-16 |
 | 4. end_session Security | 4/4 | Complete   | 2026-03-16 |
 | 5. bureau_features Registration | 2/3 | In Progress|  |
-| 6. RFC 8693 Token Exchange | 4/5 | In Progress|  |
+| 6. RFC 8693 Token Exchange | 5/5 | Complete   | 2026-03-17 |
+| 6.1. DB-Backed Stores + Sven Restructure | 0/5 | Not started | - |
 | 7. Household Identity + Modular Providers | 0/TBD | Not started | - |
 | 8. RFC Compliance Test Suite + Documentation | 0/TBD | Not started | - |
