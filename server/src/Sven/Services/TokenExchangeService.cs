@@ -3,6 +3,7 @@ using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Sven.Configurations;
 using Sven.Data;
+using Sven.Data.Repositories;
 using Sven.Models;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
@@ -19,6 +20,7 @@ namespace Sven.Services
         private readonly RsaSecurityKey _rsaKey;
         private readonly TimeProvider _timeProvider;
         private readonly ILogger<TokenExchangeService> _logger;
+        private readonly FailedExchangeAttemptRepository _failedExchangeAttemptRepository;
 
         public TokenExchangeService(
             IClientService clientService,
@@ -28,7 +30,8 @@ namespace Sven.Services
             IOptions<JwtOptions> jwtOptions,
             RsaSecurityKey rsaKey,
             TimeProvider timeProvider,
-            ILogger<TokenExchangeService> logger)
+            ILogger<TokenExchangeService> logger,
+            FailedExchangeAttemptRepository failedExchangeAttemptRepository)
         {
             _clientService = clientService;
             _externalTokenService = externalTokenService;
@@ -38,6 +41,7 @@ namespace Sven.Services
             _rsaKey = rsaKey;
             _timeProvider = timeProvider;
             _logger = logger;
+            _failedExchangeAttemptRepository = failedExchangeAttemptRepository;
         }
 
         public async Task<Result<TokenExchangeResponse>> ExchangeAsync(
@@ -98,6 +102,18 @@ namespace Sven.Services
             // Extract userId from sub claim
             string userId = jwt.Subject ?? string.Empty;
 
+            // SEC-05: Check lockout before proceeding to token gathering
+            bool isLockedOut = await _failedExchangeAttemptRepository.IsLockedOutAsync(
+                clientId, userId, cancellationToken);
+            if (isLockedOut)
+            {
+                _logger.LogWarning(
+                    "TokenExchange lockout: ClientId={ClientId} UserId={UserId} Timestamp={Timestamp}",
+                    clientId, userId, now);
+                return ResultError.From(AuthConstants.OAuth.Errors.InvalidGrant,
+                    "Token exchange temporarily disabled due to repeated failures.");
+            }
+
             // Step 4: Check scope claim contains featureKey
             Claim? scopeClaim = jwt.Claims.FirstOrDefault(c => c.Type == "scope");
             string scopeValue = scopeClaim?.Value ?? string.Empty;
@@ -106,6 +122,7 @@ namespace Sven.Services
                 _logger.LogWarning(
                     "TokenExchange step=4 failure: ClientId={ClientId} UserId={UserId} FeatureKey={FeatureKey} Reason=feature_not_in_user_claims Timestamp={Timestamp} Result=failure",
                     clientId, userId, featureKey, now);
+                await _failedExchangeAttemptRepository.RecordFailureAsync(clientId, userId, cancellationToken);
                 return ResultError.From(AuthConstants.OAuth.Errors.InvalidGrant, "Feature key not present in subject token claims.");
             }
 
@@ -141,6 +158,7 @@ namespace Sven.Services
                 _logger.LogWarning(
                     "TokenExchange step=5 failure: ClientId={ClientId} UserId={UserId} Provider={Provider} FeatureKey={FeatureKey} Reason=no_token_available Timestamp={Timestamp} Result=failure",
                     clientId, userId, provider, featureKey, now);
+                await _failedExchangeAttemptRepository.RecordFailureAsync(clientId, userId, cancellationToken);
                 return ResultError.From(AuthConstants.OAuth.Errors.InvalidGrant, "No external token available for the requested provider and feature.");
             }
 
@@ -162,6 +180,7 @@ namespace Sven.Services
                             ex,
                             "TokenExchange step=6 failure: ClientId={ClientId} UserId={UserId} Provider={Provider} Reason=refresh_failed Timestamp={Timestamp} Result=failure",
                             clientId, userId, provider, now);
+                        await _failedExchangeAttemptRepository.RecordFailureAsync(clientId, userId, cancellationToken);
                         return ResultError.From(AuthConstants.OAuth.Errors.ServerError, "Failed to refresh external token.");
                     }
                 }
@@ -191,6 +210,7 @@ namespace Sven.Services
                             ex,
                             "TokenExchange step=6 failure (shared): ClientId={ClientId} OwnerUserId={OwnerUserId} Provider={Provider} Reason=refresh_failed Timestamp={Timestamp} Result=failure",
                             clientId, consent.OwnerUserId, provider, now);
+                        await _failedExchangeAttemptRepository.RecordFailureAsync(clientId, userId, cancellationToken);
                         return ResultError.From(AuthConstants.OAuth.Errors.ServerError, "Failed to refresh shared external token.");
                     }
                 }
@@ -233,6 +253,9 @@ namespace Sven.Services
                 }
                 response.BureauTokens = bureauTokens;
             }
+
+            // SEC-05: Successful exchange — clear failure counter
+            await _failedExchangeAttemptRepository.ClearAsync(clientId, userId, cancellationToken);
 
             return response;
         }

@@ -56,7 +56,8 @@ namespace Sven.Configurations
                 sp.GetRequiredService<IOptions<JwtOptions>>(),
                 sp.GetRequiredService<RsaSecurityKey>(),
                 sp.GetRequiredService<TimeProvider>(),
-                sp.GetRequiredService<ILogger<TokenExchangeService>>()
+                sp.GetRequiredService<ILogger<TokenExchangeService>>(),
+                sp.GetRequiredService<FailedExchangeAttemptRepository>()  // SEC-05
             ));
 
             return services;
