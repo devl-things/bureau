@@ -10,8 +10,10 @@ using Microsoft.Extensions.Logging;
 using NSubstitute;
 using Sven.Configurations;
 using Sven;
+using Sven.Data.Repositories;
 using Sven.Models;
 using Sven.PageModels;
+using Sven.Tests.TestUtils;
 using Sven.PageModels.Connect.SignIn;
 using Sven.Services;
 using System.Security.Claims;
@@ -288,15 +290,29 @@ namespace Sven.Tests.Pages.Connect.SignIn
 
         private static AuthCodeService BuildAuthCodeService(string pkceKey = TestPkceKey, bool pkceKeyExists = false)
         {
-            InMemoryStore<string, AuthCode> authCodeStore = new InMemoryStore<string, AuthCode>();
-            IStore<string, OAuthRequest> pkceRequestStore = Substitute.For<IStore<string, OAuthRequest>>();
-            pkceRequestStore.Exists(pkceKey).Returns(pkceKeyExists);
+            RepositoryTestFactory.OwnedContext owned = RepositoryTestFactory.CreateContext();
+            AuthCodeRepository authCodeRepository = RepositoryTestFactory.CreateAuthCodeRepository(owned);
+            PkceRequestRepository pkceRequestRepository = RepositoryTestFactory.CreatePkceRequestRepository(owned);
+            if (pkceKeyExists)
+            {
+                // Pre-seed the pkce request so ExistsAsync returns true
+                pkceRequestRepository.StoreAsync(pkceKey, new Sven.Models.OAuthRequest
+                {
+                    ClientId = "test-client",
+                    RedirectUri = "https://example.com/callback",
+                    Scope = "openid",
+                    CodeChallenge = "challenge",
+                    CodeChallengeMethod = "S256",
+                    State = null,
+                    Nonce = null
+                }, CancellationToken.None).GetAwaiter().GetResult();
+            }
             IOptions<AuthOptions> authOptions = Options.Create(new AuthOptions
             {
                 AuthorizationCodeLifetime = TimeSpan.FromMinutes(5)
             });
             ILogger<AuthCodeService> logger = Substitute.For<ILogger<AuthCodeService>>();
-            return new AuthCodeService(authOptions, TimeProvider.System, pkceRequestStore, authCodeStore, logger);
+            return new AuthCodeService(authOptions, TimeProvider.System, pkceRequestRepository, authCodeRepository, logger);
         }
 
         private static PlainSignInHandler BuildPlainSignInHandler()

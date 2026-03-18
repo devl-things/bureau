@@ -5,8 +5,10 @@ using Microsoft.IdentityModel.Tokens;
 using NSubstitute;
 using Sven.Configurations;
 using Sven.Data;
+using Sven.Data.Repositories;
 using Sven.Models;
 using Sven.Services;
+using Sven.Tests.TestUtils;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Security.Cryptography;
@@ -18,7 +20,6 @@ namespace Sven.Tests.Services
     public class TokenProviderIntrospectTests
     {
         private readonly ILogger<SvenTokenProvider> _logger;
-        private readonly IStore<string, RefreshToken> _refreshTokenStore;
         private readonly IClientService _clientService;
         private readonly IHouseholdService _householdService;
         private readonly SvenTokenProvider _provider;
@@ -28,8 +29,8 @@ namespace Sven.Tests.Services
         public TokenProviderIntrospectTests()
         {
             _logger = Substitute.For<ILogger<SvenTokenProvider>>();
-            _refreshTokenStore = Substitute.For<IStore<string, RefreshToken>>();
-            IStore<string, RefreshToken> refreshTokenStore = _refreshTokenStore;
+            RepositoryTestFactory.OwnedContext owned = RepositoryTestFactory.CreateContext();
+            RefreshTokenRepository refreshTokenRepository = RepositoryTestFactory.CreateRefreshTokenRepository(owned);
             _clientService = Substitute.For<IClientService>();
             _householdService = Substitute.For<IHouseholdService>();
             _rsaKey = new RsaSecurityKey(RSA.Create(2048));
@@ -38,7 +39,7 @@ namespace Sven.Tests.Services
                 _logger,
                 Options.Create(jwtOptions),
                 _rsaKey,
-                refreshTokenStore,
+                refreshTokenRepository,
                 TimeProvider.System,
                 _clientService,
                 _householdService

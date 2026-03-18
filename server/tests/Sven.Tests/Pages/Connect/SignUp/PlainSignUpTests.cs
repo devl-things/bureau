@@ -1,7 +1,8 @@
-﻿using Bureau;
+using Bureau;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.DependencyInjection;
 using Sven.Configurations;
+using Sven.Data.Repositories;
 using Sven.Models;
 using Sven.PageModels.Connect.SignUp;
 using Sven.Services;
@@ -15,7 +16,6 @@ namespace Sven.Tests.Pages.Connect.SignUp
     public class PlainSignUpTests : IClassFixture<SvenWebAppFactory>, IDisposable
     {
         private readonly SvenWebAppFactory _factory;
-        private readonly IStore<string, UserVerificationCode> _userVerificationStore;
         private readonly HttpClient _client;
         private readonly string _newUserEmail = TestDataConstants.NewUserEmail;
         private readonly string _newUserPass = TestDataConstants.NewUserPassword;
@@ -29,7 +29,6 @@ namespace Sven.Tests.Pages.Connect.SignUp
                 HandleCookies = true,
                 AllowAutoRedirect = true
             });
-            _userVerificationStore = _factory.Services.GetRequiredService<IStore<string, UserVerificationCode>>();
         }
         [Fact(DisplayName = "signup flow creates user and redirects to sign-in")]
         [Trait("Category", "Integration")]
@@ -58,7 +57,13 @@ namespace Sven.Tests.Pages.Connect.SignUp
             urlStep2.CheckForParameter(AuthConstants.PropertyNames.Challenge);
 
             // Step 2: Verify Code
-            Result<UserVerificationCode> codeResult = await _userVerificationStore.GetAsync(urlStep2.GetParameterValue(AuthConstants.PropertyNames.Challenge)!);
+            string challengeId = urlStep2.GetParameterValue(AuthConstants.PropertyNames.Challenge)!;
+            Result<UserVerificationCode> codeResult;
+            using (IServiceScope scope = _factory.Services.CreateScope())
+            {
+                VerificationCodeRepository verificationCodeRepository = scope.ServiceProvider.GetRequiredService<VerificationCodeRepository>();
+                codeResult = await verificationCodeRepository.GetAsync(challengeId);
+            }
             string enterEmailResponseContent = await enterEmailResponse.Content.ReadAsStringAsync();
             string aftEnterEmail = MiscHelper.GetAntiforgeryTokenFromContent(enterEmailResponseContent);
             HttpRequestMessage step2 = new(HttpMethod.Post, urlStep2.Url)

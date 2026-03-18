@@ -5,6 +5,7 @@ using Sven.Configurations;
 using Sven.Data.Repositories;
 using Sven.Models;
 using Sven.Services;
+using Sven.Tests.TestUtils;
 using NSubstitute;
 
 namespace Sven.Tests.Security
@@ -12,25 +13,27 @@ namespace Sven.Tests.Security
     [Trait("Category", "Phase1")]
     public class VerificationCodeTests
     {
-        private static UserService BuildUserService(TimeProvider timeProvider)
+        private static UserService BuildUserService(
+            TimeProvider timeProvider,
+            RepositoryTestFactory.OwnedContext? owned = null)
         {
-            IStore<string, string> miscStore = new InMemoryStore<string, string>();
-            IStore<string, UserVerificationCode> codeStore = new InMemoryStore<string, UserVerificationCode>();
+            RepositoryTestFactory.OwnedContext ctx = owned ?? RepositoryTestFactory.CreateContext();
+            TicketRepository ticketRepo = new TicketRepository(ctx.Context, timeProvider);
+            VerificationCodeRepository codeRepo = new VerificationCodeRepository(ctx.Context, timeProvider);
             IUserRepository userRepo = Substitute.For<IUserRepository>();
             userRepo.GetByUsernameAsync(Arg.Any<string>(), Arg.Any<CancellationToken>())
                 .Returns(Task.FromResult(new Result<SvenUser>(ResultError.From("not_found"))));
-            return new UserService(miscStore, codeStore, userRepo, timeProvider);
+            return new UserService(ticketRepo, codeRepo, userRepo, timeProvider);
         }
 
         [Fact]
         public async Task VerificationCode_ExpiredAfterFiveMinutes_IsRejected()
         {
             ManualTimeProvider timeProvider = new ManualTimeProvider(DateTimeOffset.UtcNow);
-            UserService userService = BuildUserService(timeProvider);
+            RepositoryTestFactory.OwnedContext owned = RepositoryTestFactory.CreateContext();
+            VerificationCodeRepository codeRepo = new VerificationCodeRepository(owned.Context, timeProvider);
 
-            // Generate code - stores with Expiration = now + 5 minutes
-            // We bypass email lookup by seeding directly in the in-memory store
-            IStore<string, UserVerificationCode> codeStore = new InMemoryStore<string, UserVerificationCode>();
+            // Seed a code directly — bypass the email lookup
             DateTimeOffset createdAt = timeProvider.GetUtcNow();
             UserVerificationCode code = new UserVerificationCode(
                 "test@example.com",
@@ -38,15 +41,12 @@ namespace Sven.Tests.Security
                 null,
                 VerificationStatus.None,
                 createdAt.AddMinutes(5));
-            await codeStore.StoreAsync(code.Id, code, CancellationToken.None);
+            await codeRepo.StoreAsync(code.Id, code, CancellationToken.None);
 
-            // Build user service using same store
+            // Build user service using same context and time provider
             IUserRepository userRepo = Substitute.For<IUserRepository>();
-            UserService service = new UserService(
-                new InMemoryStore<string, string>(),
-                codeStore,
-                userRepo,
-                timeProvider);
+            TicketRepository ticketRepo = new TicketRepository(owned.Context, timeProvider);
+            UserService service = new UserService(ticketRepo, codeRepo, userRepo, timeProvider);
 
             // Advance time 6 minutes past code creation → past the 5-minute TTL
             timeProvider.Advance(TimeSpan.FromMinutes(6));
@@ -60,8 +60,9 @@ namespace Sven.Tests.Security
         public async Task VerificationCode_NotExpiredBeforeFiveMinutes_IsAccepted()
         {
             ManualTimeProvider timeProvider = new ManualTimeProvider(DateTimeOffset.UtcNow);
+            RepositoryTestFactory.OwnedContext owned = RepositoryTestFactory.CreateContext();
+            VerificationCodeRepository codeRepo = new VerificationCodeRepository(owned.Context, timeProvider);
 
-            IStore<string, UserVerificationCode> codeStore = new InMemoryStore<string, UserVerificationCode>();
             DateTimeOffset createdAt = timeProvider.GetUtcNow();
             UserVerificationCode code = new UserVerificationCode(
                 "test@example.com",
@@ -69,14 +70,11 @@ namespace Sven.Tests.Security
                 null,
                 VerificationStatus.None,
                 createdAt.AddMinutes(5));
-            await codeStore.StoreAsync(code.Id, code, CancellationToken.None);
+            await codeRepo.StoreAsync(code.Id, code, CancellationToken.None);
 
             IUserRepository userRepo = Substitute.For<IUserRepository>();
-            UserService service = new UserService(
-                new InMemoryStore<string, string>(),
-                codeStore,
-                userRepo,
-                timeProvider);
+            TicketRepository ticketRepo = new TicketRepository(owned.Context, timeProvider);
+            UserService service = new UserService(ticketRepo, codeRepo, userRepo, timeProvider);
 
             // Advance time only 4 minutes → still within the 5-minute TTL window
             timeProvider.Advance(TimeSpan.FromMinutes(4));

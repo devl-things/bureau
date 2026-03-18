@@ -19,13 +19,13 @@ namespace Sven.Configurations
             services.AddScoped<IUserRepository>(sp => sp.GetRequiredService<UserRepository>());
             services.AddScoped<IClientRepository, ClientRepository>();
             services.AddScoped<IClientAuthService, ClientAuthService>();
-            // SvenTokenProvider constructor is internal (requires IStore<> also internal); register via
-            // factory so the DI container does not use reflection-based constructor discovery.
+            // SvenTokenProvider constructor is internal; register via factory so the DI container
+            // does not use reflection-based constructor discovery.
             services.AddScoped<ITokenProvider>(sp => new SvenTokenProvider(
                 sp.GetRequiredService<ILogger<SvenTokenProvider>>(),
                 sp.GetRequiredService<IOptions<JwtOptions>>(),
                 sp.GetRequiredService<RsaSecurityKey>(),
-                sp.GetRequiredService<IStore<string, RefreshToken>>(),
+                sp.GetRequiredService<RefreshTokenRepository>(),
                 sp.GetRequiredService<TimeProvider>(),
                 sp.GetRequiredService<IClientService>(),
                 sp.GetRequiredService<IHouseholdService>()
@@ -35,13 +35,13 @@ namespace Sven.Configurations
             services.AddScoped<IHouseholdService, HouseholdService>();
             services.AddTransient<IStartupFilter, EncryptionKeyStartupFilter>();
 
-            // IStore registrations — internal to Sven; Sven.Web never references these types by name
-            services.AddSingleton<InMemoryStore<string, AuthCode>>();
-            services.AddSingleton<IStore<string, AuthCode>>(sp => sp.GetRequiredService<InMemoryStore<string, AuthCode>>());
-            services.AddSingleton<IStore<string, OAuthRequest>, InMemoryStore<string, OAuthRequest>>();
-            services.AddSingleton<IStore<string, string>, InMemoryStore<string, string>>();
-            services.AddSingleton<IStore<string, UserVerificationCode>, InMemoryStore<string, UserVerificationCode>>();
-            services.AddSingleton<IStore<string, RefreshToken>, InMemoryStore<string, RefreshToken>>();
+            // Scoped repository registrations — replacing former IStore singletons
+            services.AddScoped<AuthCodeRepository>();
+            services.AddScoped<PkceRequestRepository>();
+            services.AddScoped<TicketRepository>();
+            services.AddScoped<VerificationCodeRepository>();
+            services.AddScoped<RefreshTokenRepository>();
+            services.AddScoped<FailedExchangeAttemptRepository>();
 
             // IExternalTokenRefresher — internal to Sven; registered here so Sven.Web uses AddSvenCore()
             services.AddScoped<IExternalTokenRefresher, ExternalTokenRefresher>();

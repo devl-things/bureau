@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -16,7 +17,9 @@ using System.Text.Encodings.Web;
 
 namespace Sven.Tests.Fixtures
 {
-    // Concrete in-memory SvenContext used only in tests.
+    // Concrete SQLite in-memory SvenContext used only in tests.
+    // SQLite is required (instead of EF InMemory) because repositories use
+    // ExecuteDeleteAsync / ExecuteUpdateAsync which require a relational provider.
     internal sealed class SvenTestContext : SvenContext
     {
         public SvenTestContext(DbContextOptions<SvenTestContext> options) : base(options)
@@ -35,6 +38,11 @@ namespace Sven.Tests.Fixtures
             new ClientBaseTypeConfiguration<ClientDb>().Configure(modelBuilder.Entity<ClientDb>());
             new ClientFeatureBaseTypeConfiguration().Configure(modelBuilder.Entity<ClientFeatureDb>());
             new ClientFeatureExternalRequirementBaseTypeConfiguration().Configure(modelBuilder.Entity<ClientFeatureExternalRequirementDb>());
+            new AuthCodeBaseTypeConfiguration().Configure(modelBuilder.Entity<AuthCodeDb>());
+            new OAuthRequestBaseTypeConfiguration().Configure(modelBuilder.Entity<OAuthRequestDb>());
+            new UserVerificationCodeBaseTypeConfiguration().Configure(modelBuilder.Entity<UserVerificationCodeDb>());
+            new TicketBaseTypeConfiguration().Configure(modelBuilder.Entity<TicketDb>());
+            new FailedExchangeAttemptBaseTypeConfiguration().Configure(modelBuilder.Entity<FailedExchangeAttemptDb>());
         }
     }
 
@@ -43,6 +51,11 @@ namespace Sven.Tests.Fixtures
         public TestLoggerProvider LoggerProvider { get; } = new();
 
         private readonly Dictionary<string, string?> _extraConfig = new();
+
+        // Shared SQLite connection kept open for the lifetime of this factory instance.
+        // All DI-resolved SvenTestContext instances share this connection so they all
+        // operate on the same in-memory database and ExecuteDeleteAsync / ExecuteUpdateAsync work.
+        private readonly SqliteConnection _sqliteConnection;
 
         // Minimal valid configuration required to pass ValidateOnStart checks.
         // SymKey must be a base-64 string of exactly 44 characters (32-byte AES key).
@@ -63,6 +76,12 @@ namespace Sven.Tests.Fixtures
             ["Microsoft:ClientSecret"] = "test-microsoft-client-secret",
             ["Sven:InitialAccessToken"] = TestDataConstants.TestIat,
         };
+
+        public SvenWebAppFactory()
+        {
+            _sqliteConnection = new SqliteConnection("DataSource=:memory:");
+            _sqliteConnection.Open();
+        }
 
         public SvenWebAppFactory WithExtraConfig(Dictionary<string, string?> extraConfig)
         {
@@ -93,12 +112,23 @@ namespace Sven.Tests.Fixtures
 
             builder.ConfigureServices(services =>
             {
-                // Register an in-memory EF context so repositories can be resolved without a real DB.
+                // Register a SQLite in-memory EF context so repositories can be resolved
+                // without a real DB, while still supporting ExecuteDeleteAsync / ExecuteUpdateAsync.
+                // All instances share the same SqliteConnection so they see the same database.
+                SqliteConnection sharedConnection = _sqliteConnection;
                 services.AddDbContext<SvenTestContext>(options =>
-                    options.UseInMemoryDatabase("SvenTestDb"));
+                    options.UseSqlite(sharedConnection));
 
                 services.AddScoped<SvenContext>(sp =>
                     sp.GetRequiredService<SvenTestContext>());
+
+                // Ensure the schema is created on first use.
+                ServiceProvider sp2 = services.BuildServiceProvider();
+                using (IServiceScope scope = sp2.CreateScope())
+                {
+                    SvenTestContext ctx = scope.ServiceProvider.GetRequiredService<SvenTestContext>();
+                    ctx.Database.EnsureCreated();
+                }
             });
 
             builder.ConfigureLogging(logging =>
@@ -106,6 +136,15 @@ namespace Sven.Tests.Fixtures
                 logging.ClearProviders();
                 logging.AddProvider(LoggerProvider);
             });
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            base.Dispose(disposing);
+            if (disposing)
+            {
+                _sqliteConnection.Dispose();
+            }
         }
     }
 
