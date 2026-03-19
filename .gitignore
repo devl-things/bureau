@@ -6,6 +6,8 @@ docs/test-coverage.md
 
 # Claude files
 .claude/
+# GSD files
+.planning/
 
 # ignore local settings
 appsettings.Development.json
