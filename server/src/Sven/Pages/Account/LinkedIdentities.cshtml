@@ -1,9 +1,0 @@
-﻿@page "/account/linked"
-@using Sven.PageModels.Account
-@model Sven.Pages.Account.LinkedIdentitiesModel
-@{
-    Layout = "_SvenLayout";
-}
-
-@await Html.PartialAsync("_LinkedIdentities", Model.LinkedIdentitiesViewModel)
-
