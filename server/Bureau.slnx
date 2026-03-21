@@ -12,6 +12,15 @@
     <Project Path="src/Niles.Chores.Abstractions/Niles.Chores.Abstractions.csproj" />
     <Project Path="src/Niles.Chores.Contracts/Niles.Chores.Contracts.csproj" Id="cceee822-c9c6-48d0-8325-13962aec13a6" />
     <Project Path="src/Niles.Chores/Niles.Chores.csproj" />
+    <Project Path="src/Sven.Abstractions/Sven.Abstractions.csproj">
+      <Build Solution="Debug|*" Project="false" />
+    </Project>
+    <Project Path="src/Sven.Contracts/Sven.Contracts.csproj">
+      <Build Solution="Debug|*" Project="false" />
+    </Project>
+    <Project Path="src/Sven/Sven.csproj">
+      <Build Solution="Debug|*" Project="false" />
+    </Project>
     <Project Path="src/Watson.Items/Watson.Items.csproj" Id="c58caa5d-063e-41d7-8846-efd863ac5bd3" />
     <Project Path="src/Watson.Nodes.Abstractions/Watson.Nodes.Abstractions.csproj" Id="82c923f0-3ba9-410e-8043-27237a6e0bbf">
       <BuildType Solution="Test|*" Project="Debug" />
@@ -22,29 +31,20 @@
     <Project Path="src/Watson.Nodes/Watson.Nodes.csproj" Id="be9cbb41-4ff8-4e42-aa1a-caf5417e1e95">
       <BuildType Solution="Test|*" Project="Debug" />
     </Project>
-    <Project Path="src/Sven.Abstractions/Sven.Abstractions.csproj">
-      <Build Solution="Debug|*" Project="false" />
-    </Project>
-    <Project Path="src/Sven.Contracts/Sven.Contracts.csproj">
-      <Build Solution="Debug|*" Project="false" />
-    </Project>
-    <Project Path="src/Sven/Sven.csproj">
-      <Build Solution="Debug|*" Project="false" />
-    </Project>
   </Folder>
   <Folder Name="/Infrastructure/">
-    <Project Path="src/Sven.Data.Postgres/Sven.Data.Postgres.csproj">
-      <Build Solution="Debug|*" Project="false" />
-    </Project>
-    <Project Path="src/Sven.Data.SqlServer/Sven.Data.SqlServer.csproj">
-      <Build Solution="Debug|*" Project="false" />
-    </Project>
     <Project Path="src/Bureau.AspNetCore/Bureau.AspNetCore.csproj" Id="b6f299e3-2de1-4306-8e7e-301c1c0621e1">
       <Build Solution="Debug|*" Project="false" />
     </Project>
     <Project Path="src/Bureau.EntityFrameworkCore.SqlServer/Bureau.EntityFrameworkCore.SqlServer.csproj" Id="2e798e31-56ab-4538-abe0-07f6770f7dc4" />
     <Project Path="src/Bureau.EntityFrameworkCore/Bureau.EntityFrameworkCore.csproj" Id="65335513-4834-4f55-8e76-128a56955782" />
     <Project Path="src/Bureau.Server.Hosting/Bureau.Server.Hosting.csproj" Id="49670b92-3b7a-4c90-a802-e248675a732e" />
+    <Project Path="src/Sven.Data.Postgres/Sven.Data.Postgres.csproj">
+      <Build Solution="Debug|*" Project="false" />
+    </Project>
+    <Project Path="src/Sven.Data.SqlServer/Sven.Data.SqlServer.csproj">
+      <Build Solution="Debug|*" Project="false" />
+    </Project>
     <Project Path="src/Watson.Items.Ingest/Watson.Items.Ingest.csproj" Id="b0ac60f2-7fb4-4c37-b6af-b815f24c34c9" />
     <Project Path="src/Watson.Nodes.Data.SqlServer/Watson.Nodes.Data.SqlServer.csproj" Id="ff2ac295-4a2b-4bd8-86c5-d6f4f47355b0">
       <BuildType Solution="Test|*" Project="Debug" />
