@@ -1,0 +1,382 @@
+using Bureau;
+using Microsoft.Extensions.Options;
+using Microsoft.IdentityModel.Tokens;
+using Sven.Configurations;
+using Sven.Data;
+using Sven.Data.Repositories;
+using Sven.Extensions;
+using Sven.Models;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+
+namespace Sven.Services
+{
+    public class SvenTokenProvider : ITokenProvider
+    {
+        private readonly ILogger<SvenTokenProvider> _logger;
+        private readonly JwtOptions _jwtOptions;
+        private readonly IClientService _clientService;
+        private readonly RsaSecurityKey _rsaKey;
+        private readonly RefreshTokenRepository _refreshTokenRepository;
+        private readonly TimeProvider _timeProvider;
+        private readonly IHouseholdService _householdService;
+
+        private Client? _currentClient;
+        private readonly TokenLifetimeOptions _tokenLifetimeOptions;
+        internal SvenTokenProvider(ILogger<SvenTokenProvider> logger, IOptions<JwtOptions> jwtOptions,
+            RsaSecurityKey rsaKey, RefreshTokenRepository refreshTokenRepository, TimeProvider timeProvider, IClientService clientService,
+            IHouseholdService householdService)
+        {
+            _logger = logger;
+            _jwtOptions = jwtOptions.Value;
+            _tokenLifetimeOptions = new TokenLifetimeOptions(_jwtOptions);
+            _rsaKey = rsaKey;
+            _refreshTokenRepository = refreshTokenRepository;
+            _timeProvider = timeProvider;
+            _clientService = clientService;
+            _householdService = householdService;
+            _currentClient = null;
+        }
+
+        public async Task<Result<SvenToken>> CreateTokenAsync(string refreshToken, string? scope, CancellationToken cancellationToken = default)
+        {
+            Result<RefreshToken> storedRefreshTokenResult = await _refreshTokenRepository.GetAsync(refreshToken, cancellationToken);
+
+            if (storedRefreshTokenResult.IsError)
+            {
+                _logger.LogResultError(storedRefreshTokenResult.Error);
+                return ResultError.From(AuthConstants.OAuth.Errors.InvalidGrant, "Refresh token not found.");
+            }
+            await SetTokenLifetimeOptions(storedRefreshTokenResult.Value, cancellationToken);
+            // create a new refresh token
+            Result<string?> newRefreshTokenResult = await CreateRefreshTokenAsync(storedRefreshTokenResult.Value, cancellationToken);
+            if (newRefreshTokenResult.IsError)
+            {
+                return newRefreshTokenResult.Error;
+            }
+            Result removeResult = await _refreshTokenRepository.RemoveAsync(refreshToken, cancellationToken);
+            if (removeResult.IsError)
+            {
+                _logger.LogResultError(storedRefreshTokenResult.Error);
+            }
+
+            ClientClaims newClientClaims = new ClientClaims(storedRefreshTokenResult.Value, scope);
+            // id token should be explicitly requested in refresh flow
+            string? idToken = CreateIdToken(newClientClaims);
+
+            string accessToken = string.IsNullOrWhiteSpace(scope) ?
+                CreateAccessToken(storedRefreshTokenResult.Value) : CreateAccessToken(newClientClaims);
+
+            return new SvenToken(accessToken, newRefreshTokenResult.Value, idToken);
+        }
+
+        public async Task<Result<SvenToken>> CreateTokenAsync(ClientClaims clientClaims, CancellationToken cancellationToken = default)
+        {
+            await SetTokenLifetimeOptions(clientClaims, cancellationToken);
+
+            string userId = clientClaims.GetClaimValue(JwtRegisteredClaimNames.Sub);
+            try
+            {
+                Result<HouseholdMembership> membershipResult =
+                    await _householdService.GetMembershipAsync(userId, cancellationToken);
+                if (!membershipResult.IsError)
+                {
+                    clientClaims.Claims.Add(new Claim("household_id", membershipResult.Value.HouseholdId));
+                    clientClaims.Claims.Add(new Claim("household_role", membershipResult.Value.Role));
+                }
+                // membershipResult.IsError == true means user is not a household member — omit claims, continue
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "IHouseholdService failed during token issuance for user {UserId}", userId);
+                return ResultError.From(
+                    AuthConstants.OAuth.Errors.ServerError,
+                    "Failed to resolve household membership.");
+            }
+
+            Result<string?> refreshTokenResult = await CreateRefreshTokenAsync(clientClaims, cancellationToken);
+            if (refreshTokenResult.IsError)
+            {
+                return refreshTokenResult.Error;
+            }
+
+            string? idToken = CreateIdToken(clientClaims);
+
+            string accessToken = CreateAccessToken(clientClaims);
+
+            return new SvenToken(accessToken, refreshTokenResult.Value, idToken);
+        }
+
+        private async Task SetTokenLifetimeOptions(ClientClaims clientClaims, CancellationToken cancellationToken)
+        {
+            if (!(await TrySetCurrentClientAsync(clientClaims, cancellationToken)))
+            {
+                return;
+            }
+            if (_currentClient!.RefreshTokenLifetime.HasValue)
+            {
+                _tokenLifetimeOptions.RefreshTokenLifetime = _currentClient.RefreshTokenLifetime.Value;
+            }
+            if (_currentClient.IdTokenLifetime.HasValue)
+            {
+                _tokenLifetimeOptions.IdTokenLifetime = _currentClient.IdTokenLifetime.Value;
+            }
+            if (_currentClient.AccessTokenLifetime.HasValue)
+            {
+                _tokenLifetimeOptions.AccessTokenLifetime = _currentClient.AccessTokenLifetime.Value;
+            }
+        }
+
+        private async Task<bool> TrySetCurrentClientAsync(ClientClaims clientClaims, CancellationToken cancellationToken)
+        {
+            if (_currentClient == null || _currentClient.Identifier != clientClaims.ClientId)
+            {
+                Result<Client> clientResult = await _clientService.GetClientAsync(clientClaims.ClientId, cancellationToken);
+                if (clientResult.IsError)
+                {
+                    _logger.LogResultError(clientResult.Error);
+                    return false;
+                }
+                _currentClient = clientResult.Value;
+            }
+            return true;
+        }
+
+        private async Task<Result<string?>> CreateRefreshTokenAsync(ClientClaims clientClaims, CancellationToken cancellationToken)
+        {
+            string? refreshToken = null;
+            if (clientClaims.HasScope(AuthConstants.Scopes.OfflineAccess))
+            {
+                RefreshToken refreshTokenObject = new RefreshToken
+                {
+                    Token = Guid.NewGuid().ToString("N"),
+                    ClientId = clientClaims.ClientId,
+                    RedirectUri = clientClaims.RedirectUri,
+                    Claims = clientClaims.Claims,
+                    Scope = clientClaims.Scope,
+                    Nonce = clientClaims.Nonce,
+                    ExpiresAt = _timeProvider.GetFutureTime(_tokenLifetimeOptions.RefreshTokenLifetime)
+                };
+                Result storeResult = await _refreshTokenRepository.StoreAsync(refreshTokenObject, cancellationToken);
+                if (storeResult.IsError)
+                {
+                    _logger.LogResultError(storeResult.Error);
+                    return ResultError.From(AuthConstants.OAuth.Errors.ServerError, "Failed create token.");
+                }
+                refreshToken = refreshTokenObject.Token;
+            }
+            return new Result<string?>(refreshToken);
+        }
+
+        private string? CreateIdToken(ClientClaims clientClaims)
+        {
+            if (clientClaims.HasScope(AuthConstants.Scopes.OpenId))
+            {
+                List<Claim> idClaims = new List<Claim>
+                {
+                    new Claim(JwtRegisteredClaimNames.Iss, _jwtOptions.Issuer),
+                    new Claim(JwtRegisteredClaimNames.Sub, clientClaims.GetClaimValue(JwtRegisteredClaimNames.Sub)),
+                    new Claim(JwtRegisteredClaimNames.NameId, clientClaims.GetClaimValue(JwtRegisteredClaimNames.Sub)),
+                    new Claim(JwtRegisteredClaimNames.Aud, clientClaims.ClientId),
+                    new Claim(JwtRegisteredClaimNames.Exp, _timeProvider.GetFutureUnixTimeSeconds(_tokenLifetimeOptions.IdTokenLifetime).ToString(), ClaimValueTypes.Integer64),
+                    new Claim(JwtRegisteredClaimNames.Iat, _timeProvider.GetUtcNow().ToUnixTimeSeconds().ToString(), ClaimValueTypes.Integer64),
+                    new Claim(JwtRegisteredClaimNames.Acr, clientClaims.GetClaimValue(JwtRegisteredClaimNames.Acr)),
+                    new Claim(JwtRegisteredClaimNames.AuthTime, clientClaims.GetClaimValue(JwtRegisteredClaimNames.AuthTime)),
+
+                    new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
+                };
+
+                if (!string.IsNullOrWhiteSpace(clientClaims.Nonce))
+                {
+                    idClaims.Add(new Claim(JwtRegisteredClaimNames.Nonce, clientClaims.Nonce));
+                }
+
+                if (clientClaims.HasScope(AuthConstants.Scopes.Profile))
+                {
+                    idClaims.Add(new Claim(JwtRegisteredClaimNames.Name, clientClaims.GetClaimValue(JwtRegisteredClaimNames.Name)));
+                    idClaims.Add(new Claim(JwtRegisteredClaimNames.GivenName, clientClaims.GetClaimValue(JwtRegisteredClaimNames.GivenName)));
+                    idClaims.Add(new Claim(JwtRegisteredClaimNames.FamilyName, clientClaims.GetClaimValue(JwtRegisteredClaimNames.FamilyName)));
+                    idClaims.Add(new Claim(JwtRegisteredClaimNames.Nickname, clientClaims.GetClaimValue(JwtRegisteredClaimNames.Nickname)));
+                    idClaims.Add(new Claim(JwtRegisteredClaimNames.Picture, clientClaims.GetClaimValue(JwtRegisteredClaimNames.Picture)));
+                    idClaims.Add(new Claim(JwtRegisteredClaimNames.PreferredUsername, clientClaims.GetClaimValue(JwtRegisteredClaimNames.PreferredUsername)));
+                }
+
+                if (clientClaims.HasScope(AuthConstants.Scopes.Email))
+                {
+                    idClaims.Add(new Claim(JwtRegisteredClaimNames.Email, clientClaims.GetClaimValue(JwtRegisteredClaimNames.Email)));
+                    idClaims.Add(new Claim(JwtRegisteredClaimNames.EmailVerified, clientClaims.GetClaimValue(JwtRegisteredClaimNames.EmailVerified)));
+                }
+
+                if (clientClaims.HasScope(AuthConstants.Scopes.Address))
+                {
+                    idClaims.Add(new Claim(JwtRegisteredClaimNames.Address, clientClaims.GetClaimValue(JwtRegisteredClaimNames.Address)));
+                }
+
+                if (clientClaims.HasScope(AuthConstants.Scopes.Phone))
+                {
+                    idClaims.Add(new Claim(JwtRegisteredClaimNames.PhoneNumber, clientClaims.GetClaimValue(JwtRegisteredClaimNames.PhoneNumber)));
+                    idClaims.Add(new Claim(JwtRegisteredClaimNames.PhoneNumberVerified, clientClaims.GetClaimValue(JwtRegisteredClaimNames.PhoneNumberVerified)));
+                }
+
+                SigningCredentials creds = new SigningCredentials(_rsaKey, SecurityAlgorithms.RsaSha256);
+                JwtSecurityToken idToken = new JwtSecurityToken(
+                    claims: idClaims,
+                    signingCredentials: creds
+                );
+
+                return new JwtSecurityTokenHandler().WriteToken(idToken);
+            }
+            return null;
+        }
+
+        public async Task<Result<bool>> IsRefreshTokenValidAsync(string refreshToken, string clientId, string redirectUri, string? scope, CancellationToken cancellationToken = default)
+        {
+            Result<RefreshToken> storedRefreshTokenResult = await _refreshTokenRepository.GetAsync(refreshToken, cancellationToken);
+
+            if (storedRefreshTokenResult.IsError)
+            {
+                _logger.LogResultError(storedRefreshTokenResult.Error);
+                return ResultError.From(AuthConstants.OAuth.Errors.InvalidGrant, AuthConstants.OAuth.ErrorDescriptions.RefreshTokenNotFound);
+            }
+            RefreshToken storedToken = storedRefreshTokenResult.Value;
+            if (!storedToken.IsScopeSameOrSubset(scope))
+            {
+                return ResultError.From(AuthConstants.OAuth.Errors.InvalidScope, AuthConstants.OAuth.ErrorDescriptions.RequestedScopeExceedsGranted);
+            }
+            if (storedToken.ClientId != clientId || storedToken.RedirectUri != redirectUri)
+            {
+                return ResultError.From(AuthConstants.OAuth.Errors.InvalidClient, "Refresh token does not belong to this client.");
+            }
+            if (storedToken.ExpiresAt <= _timeProvider.GetUtcNow())
+            {
+                return ResultError.From(AuthConstants.OAuth.Errors.InvalidGrant, "Refresh token has expired.");
+            }
+
+            return true;
+        }
+
+        private string CreateAccessToken(ClientClaims clientClaims)
+        {
+            SigningCredentials creds = new SigningCredentials(_rsaKey, SecurityAlgorithms.RsaSha256);
+            JwtSecurityToken token = new JwtSecurityToken(
+                issuer: _jwtOptions.Issuer,
+                audience: _jwtOptions.Audience,
+                claims: clientClaims.Claims.Append(new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())),
+                expires: _timeProvider.GetFutureTime(_tokenLifetimeOptions.AccessTokenLifetime).DateTime,
+                signingCredentials: creds
+            );
+
+            return new JwtSecurityTokenHandler().WriteToken(token);
+        }
+
+        public async Task<Result<SvenToken>> CreateMachineTokenAsync(Client client, string effectiveScope, CancellationToken cancellationToken = default)
+        {
+            // Resolve per-client lifetime override
+            TokenLifetimeOptions lifetime = new TokenLifetimeOptions(_jwtOptions);
+            if (client.AccessTokenLifetime.HasValue)
+            {
+                lifetime.AccessTokenLifetime = client.AccessTokenLifetime.Value;
+            }
+
+            // RFC 9068 §2.2 — machine token claim set; no sub (client credentials has no resource owner)
+            List<Claim> machineClaims = new List<Claim>
+            {
+                new Claim(JwtRegisteredClaimNames.Iss, _jwtOptions.Issuer),
+                new Claim(JwtRegisteredClaimNames.Aud, _jwtOptions.Issuer),
+                new Claim(JwtRegisteredClaimNames.Exp,
+                    _timeProvider.GetFutureUnixTimeSeconds(lifetime.AccessTokenLifetime).ToString(),
+                    ClaimValueTypes.Integer64),
+                new Claim(JwtRegisteredClaimNames.Iat,
+                    _timeProvider.GetUtcNow().ToUnixTimeSeconds().ToString(),
+                    ClaimValueTypes.Integer64),
+                new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
+                new Claim("scope", effectiveScope),
+                new Claim("client_id", client.Identifier),
+            };
+
+            SigningCredentials creds = new SigningCredentials(_rsaKey, SecurityAlgorithms.RsaSha256);
+            JwtSecurityToken token = new JwtSecurityToken(
+                claims: machineClaims,
+                signingCredentials: creds
+            );
+            string accessToken = new JwtSecurityTokenHandler().WriteToken(token);
+
+            // No id_token. No refresh_token. RFC 6749 §4.4 explicitly excludes refresh tokens.
+            return await Task.FromResult(new SvenToken(accessToken, refreshToken: null, idToken: null));
+        }
+
+        public Task<Result<IntrospectionResponse>> IntrospectAsync(string token, CancellationToken cancellationToken = default)
+        {
+            IntrospectionResponse inactive = new IntrospectionResponse { Active = false };
+            try
+            {
+                JwtSecurityTokenHandler handler = new JwtSecurityTokenHandler();
+                TokenValidationParameters validationParams = new TokenValidationParameters
+                {
+                    ValidateIssuer = true,
+                    ValidIssuer = _jwtOptions.Issuer,
+                    ValidateAudience = false,
+                    ValidateLifetime = true,
+                    IssuerSigningKey = _rsaKey,
+                    ClockSkew = TimeSpan.Zero,
+                };
+                handler.ValidateToken(token, validationParams, out SecurityToken validatedToken);
+                JwtSecurityToken jwt = (JwtSecurityToken)validatedToken;
+                return Task.FromResult<Result<IntrospectionResponse>>(BuildActiveResponse(jwt));
+            }
+            catch (Exception)
+            {
+                return Task.FromResult<Result<IntrospectionResponse>>(inactive);
+            }
+        }
+
+        private IntrospectionResponse BuildActiveResponse(JwtSecurityToken jwt)
+        {
+            string? sub = string.IsNullOrEmpty(jwt.Subject) ? null : jwt.Subject;
+            string? scope = jwt.Claims.FirstOrDefault(c => c.Type == "scope")?.Value;
+            string? clientId = jwt.Claims.FirstOrDefault(c => c.Type == "client_id")?.Value;
+            long exp = new DateTimeOffset(jwt.ValidTo, TimeSpan.Zero).ToUnixTimeSeconds();
+            string? iatRaw = jwt.Claims.FirstOrDefault(c => c.Type == System.IdentityModel.Tokens.Jwt.JwtRegisteredClaimNames.Iat)?.Value;
+            long iat = long.TryParse(iatRaw, out long parsedIat) ? parsedIat : 0;
+            string? jti = string.IsNullOrEmpty(jwt.Id) ? null : jwt.Id;
+            string? iss = string.IsNullOrEmpty(jwt.Issuer) ? null : jwt.Issuer;
+
+            return new IntrospectionResponse
+            {
+                Active = true,
+                Sub = sub,
+                Scope = scope,
+                ClientId = clientId,
+                Exp = exp,
+                Iat = iat,
+                Jti = jti,
+                Iss = iss,
+            };
+        }
+
+        public async Task<Result<bool>> RevokeAsync(string token, string clientId, string? tokenTypeHint, CancellationToken cancellationToken = default)
+        {
+            Result<RefreshToken> storedRefreshTokenResult = await _refreshTokenRepository.GetAsync(token, cancellationToken);
+
+            if (storedRefreshTokenResult.IsError)
+            {
+                _logger.LogResultError(storedRefreshTokenResult.Error);
+                return new Result<bool>(false);
+            }
+            if (storedRefreshTokenResult.Value.ClientId != clientId)
+            {
+                _logger.LogWarning("Token's client not the same as received client");
+                return new Result<bool>(false);
+            }
+
+            Result removeResult = await _refreshTokenRepository.RemoveAsync(token, cancellationToken);
+            if (removeResult.IsError)
+            {
+                _logger.LogResultError(storedRefreshTokenResult.Error);
+                return ResultError.From(AuthConstants.OAuth.Errors.ServerError, "Token couldn't be revoked.");
+            }
+
+            return true;
+        }
+    }
+}
